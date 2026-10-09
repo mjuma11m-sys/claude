@@ -1,0 +1,10 @@
+{ "name": "sports-hub-overlays", "fps": 60, "width": 1920, "height": 1080, "bpm": 120, "beatsPerBar": 4, "beatOffset": 0,
+  "palette": { "bg": "#000000", "ink": "#EAF6FF", "acc": "#00E5FF", "clay": "#CE1126", "hi": "#D4AF37", "mut": "#5B7083" },
+  "fonts": { "display": "Tajawal", "body": "Tajawal", "num": "Inter" },
+  "post": { "grain": 0, "vignette": 0 },
+  "scenes": [
+    { "id": "speed",  "file": "scenes/speed.js",  "start": 0,    "end": 4.5 },
+    { "id": "acwr",   "file": "scenes/acwr.js",   "start": 4.5,  "end": 10.5 },
+    { "id": "ticket", "file": "scenes/ticket.js", "start": 10.5, "end": 16 },
+    { "id": "logo",   "file": "scenes/logo.js",   "start": 16,   "end": 22.5 }
+  ] }
