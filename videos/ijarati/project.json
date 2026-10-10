@@ -1,0 +1,16 @@
+{ "name": "ijarati-ad", "fps": 60, "width": 1080, "height": 1920, "bpm": 120, "beatsPerBar": 4, "beatOffset": 0,
+  "palette": { "bg": "#0B1626", "ink": "#F3F6FA", "acc": "#22C38E", "clay": "#138A63", "hi": "#7FE3BF", "mut": "#8796AB" },
+  "fonts": { "display": "Tajawal", "body": "Tajawal", "num": "Inter" },
+  "post": { "grain": 0.03, "vignette": 0.22 },
+  "timing": { "snap": "half", "startPad": 0, "tail": 0 },
+  "music": { "key": "D", "scale": "minor", "progression": [0, 5, 3, 4], "level": -4, "duck": 0, "top": { "hat": 10, "pluck": 6 } },
+  "sections": [ { "name": "intro", "at": 0 }, { "name": "build", "at": "scene:s2" }, { "name": "drop", "at": "scene:s3" }, { "name": "outro", "at": "scene:s7" } ],
+  "scenes": [
+    { "id": "s1", "file": "scenes/s1.js", "lines": [], "duration": 3.0 },
+    { "id": "s2", "file": "scenes/s2.js", "lines": [], "duration": 3.0, "transition": { "type": "zoom", "dur": 0.4 } },
+    { "id": "s3", "file": "scenes/s3.js", "lines": [], "duration": 3.0, "transition": { "type": "wipe", "dur": 0.4, "dir": "rtl" } },
+    { "id": "s4", "file": "scenes/s4.js", "lines": [], "duration": 3.0, "transition": { "type": "push", "dur": 0.4, "dir": "rtl" } },
+    { "id": "s5", "file": "scenes/s5.js", "lines": [], "duration": 3.5, "transition": { "type": "push", "dur": 0.4, "dir": "rtl" } },
+    { "id": "s6", "file": "scenes/s6.js", "lines": [], "duration": 2.5, "transition": { "type": "push", "dur": 0.4, "dir": "rtl" } },
+    { "id": "s7", "file": "scenes/s7.js", "lines": [], "duration": 3.5, "transition": { "type": "iris", "dur": 0.5 } }
+  ] }

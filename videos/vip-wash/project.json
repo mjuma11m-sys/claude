@@ -1,0 +1,14 @@
+{ "name": "vip-wash-ad", "fps": 60, "width": 1080, "height": 1920, "bpm": 110, "beatsPerBar": 4, "beatOffset": 0,
+  "palette": { "bg": "#08080A", "ink": "#F5F2EA", "acc": "#D4AF37", "clay": "#9C7A1E", "hi": "#F1D98A", "mut": "#8C8A85" },
+  "fonts": { "display": "Tajawal", "body": "Tajawal", "num": "Inter" },
+  "post": { "grain": 0.04, "vignette": 0.35 },
+  "timing": { "snap": "half", "startPad": 0, "tail": 0 },
+  "music": { "key": "F", "scale": "minor", "progression": [0, 3, 5, 4], "level": -4, "duck": 0, "top": { "hat": 10, "pluck": 6 } },
+  "sections": [ { "name": "intro", "at": 0 }, { "name": "build", "at": "scene:w2" }, { "name": "drop", "at": "scene:w3" }, { "name": "outro", "at": "scene:w5" } ],
+  "scenes": [
+    { "id": "w1", "file": "scenes/w1.js", "lines": [], "duration": 3.0 },
+    { "id": "w2", "file": "scenes/w2.js", "lines": [], "duration": 3.2, "transition": { "type": "flash", "dur": 0.3 } },
+    { "id": "w3", "file": "scenes/w3.js", "lines": [], "duration": 3.8, "transition": { "type": "wipe", "dur": 0.45, "dir": "up" } },
+    { "id": "w4", "file": "scenes/w4.js", "lines": [], "duration": 3.4, "transition": { "type": "dip", "dur": 0.5 } },
+    { "id": "w5", "file": "scenes/w5.js", "lines": [], "duration": 3.6, "transition": { "type": "zoom", "dur": 0.4 } }
+  ] }
