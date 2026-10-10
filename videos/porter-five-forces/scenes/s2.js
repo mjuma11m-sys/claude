@@ -30,6 +30,7 @@ MOTION.scene({ id: 's2',
     this.five.rotation.set(.12 * Math.sin(lt * 1.3), (1 - k5) * -2.4 + .28 * Math.sin(lt * 1.1), 0);
     this.five.position.z = -3 * (1 - k5);
     this.five.traverse(o => { if (o.material) o.material.opacity = k5; });
+    this.st.camera.position.z = 10.6 - .7 * at(lt, 0, ctx.scene.dur, 'sineInOut');
     this.sparks.update(t - w5.s);
     this.st.draw(X, { alpha: k5 > 0 ? 1 : 0 });
 
@@ -39,5 +40,5 @@ MOTION.scene({ id: 's2',
 
     // «تحدد ربح أي صناعة»
     const L = ctx.text.layout(X, 'تحدد ربح أي صناعة', { family: 'body', weight: 700, size: 72 });
-    ctx.text.drawLayout(X, L, 540, 1420, { color: P.ink, perWord: i => { const w = ctx.wordTime('l2', 5 + i), k = at(t, w.s - .08, w.s + .2, 'expoOut'); return { alpha: k, dy: (1 - k) * 34, color: i === 1 ? P.hi : P.ink }; } });
+    ctx.text.drawLayout(X, L, 540, 1420, { color: P.ink, perWord: i => { const w = ctx.wordTime('l2', 5 + i), k = at(t, w.s - .08, w.s + .2, 'expoOut'); return { alpha: k, dy: (1 - k) * 34, color: i === 1 ? P.acc : P.ink }; } });
   } });

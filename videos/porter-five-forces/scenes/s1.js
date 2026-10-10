@@ -26,7 +26,7 @@ MOTION.scene({ id: 's1',
     const hUp = .4 + 2.8 * kUp, hDn = (2.4 - 1.95 * kDn) * kIn + .01;
     this.up.scale.set(1, hUp, 1); this.up.position.set(-1.3, this.base + hUp / 2, 0);
     this.dn.scale.set(1, hDn, 1); this.dn.position.set(1.3, this.base + hDn / 2, 0);
-    this.st.orbit(-.12 + .2 * E.sineInOut(ctx.prog(lt, 0, 5.4)), .07, 17 - .8 * at(lt, 0, 5, 'sineInOut'), [0, .6, 0]);
+    this.st.orbit(-.12 + .2 * E.sineInOut(ctx.prog(lt, 0, 5.4)), .07, 16.6, [0, .6, 0]);
     this.st.camera.updateMatrixWorld();
     this.st.draw(X);
     { const [bx0, by] = this.scr(-2.4, this.base, .6), [bx1] = this.scr(2.4, this.base, .6), kb = at(lt, 0, .5, 'cubicOut'); ctx.drawPath(X, [[bx0, by], [bx1, by]], kb, { width: 4, color: P.mut, cap: 'round' }); }
@@ -45,7 +45,7 @@ MOTION.scene({ id: 's1',
     lab('وتخسر أخرى', dx, dy - 46, P.clay, 0, 3, 4);
     // «في نفس السوق؟»
     const L = ctx.text.layout(X, 'في نفس السوق؟', { family: 'display', weight: 900, size: 104 });
-    ctx.text.drawLayout(X, L, 540, 1475, { color: P.acc, perWord: i => { const w = ctx.wordTime('l1', 5 + i), k = at(t, w.s - .1, w.s + .22, 'expoOut'); return { alpha: k, clipUp: 1, dy: (1 - k) * 80 }; } });
+    ctx.text.drawLayout(X, L, 540, 1475, { color: P.ink, perWord: i => { const w = ctx.wordTime('l1', 5 + i), k = at(t, w.s - .1, w.s + .22, 'expoOut'); return { alpha: k, dy: (1 - k) * 80 }; } });
     const wl = ctx.wordTime('l1', 7), ku = at(t, wl.s + .1, wl.s + .55, 'cubicInOut');
-    if (ku > 0) ctx.drawPath(X, [[820, 1515], [540, 1522], [260, 1512]], ku, { width: 9, color: P.acc, cap: 'round' });
+    if (ku > 0) ctx.drawPath(X, [[820, 1515], [540, 1522], [260, 1512]], ku, { width: 9, color: P.mut, cap: 'round' });
   } });

@@ -38,7 +38,7 @@ MOTION.scene({ id: 's4',
 
     // «كلما اشتدت القوى»
     const L = ctx.text.layout(X, 'كلما اشتدت القوى', { family: 'display', weight: 900, size: 92 });
-    ctx.text.drawLayout(X, L, 540, 330, { color: P.ink, perWord: i => { const w = ctx.wordTime('l8', i), k = at(t, w.s - .1, w.s + .22, 'expoOut'); return { alpha: k, clipUp: 1, dy: (1 - k) * 70, color: i === 1 ? P.clay : P.ink }; } });
+    ctx.text.drawLayout(X, L, 540, 330, { color: P.ink, perWord: i => { const w = ctx.wordTime('l8', i), k = at(t, w.s - .1, w.s + .22, 'expoOut'); return { alpha: k, dy: (1 - k) * 70, color: i === 1 ? P.clay : P.ink }; } });
     // «قلّت الأرباح» — «الأرباح» shrinks with the coin
     const L2 = ctx.text.layout(X, 'قلّت الأرباح', { family: 'display', weight: 900, size: 120 });
     ctx.text.drawLayout(X, L2, 540, 1460, { color: P.ink, perWord: i => { const w = ctx.wordTime('l8', 3 + i), k = at(t, w.s - .1, w.s + .22, 'expoOut');
