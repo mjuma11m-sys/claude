@@ -1,0 +1,6 @@
+.claude/skills/video-ad-editor/node_modules/
+videos/*/renders/frames*/
+videos/*/renders/preview/
+videos/*/renders/audio/
+videos/*/vo/
+videos/*/render.log

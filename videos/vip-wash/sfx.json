@@ -1,0 +1,7 @@
+[
+ {"type":"glitch","at":"scene:w1+0.3","gain":-14},{"type":"impact","at":"scene:w1+0.85","gain":-3},
+ {"type":"reverse-whoosh","at":"scene:w2","gain":-6},{"type":"whoosh","at":"scene:w2+0.4","gain":-4,"dur":1.2},{"type":"pop","at":"scene:w2+1.0","gain":-8},
+ {"type":"swoosh-pass","at":"scene:w3","gain":-6},{"type":"tick","at":"scene:w3+0.45","gain":-6},{"type":"tick","at":"scene:w3+1.0","gain":-6},{"type":"tick","at":"scene:w3+1.55","gain":-6},
+ {"type":"shimmer","at":"scene:w4+0.3","gain":-4},{"type":"swoosh-pass","at":"scene:w4+1.2","gain":-12},
+ {"type":"riser","at":"scene:w5","gain":-8},{"type":"boom","at":"scene:w5+0.6","gain":-3},{"type":"pop","at":"scene:w5+1.3","gain":-6}
+]

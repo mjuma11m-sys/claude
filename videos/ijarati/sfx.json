@@ -1,0 +1,11 @@
+[
+ {"type":"swoosh-pass","at":"scene:s2","gain":-6},{"type":"swoosh-pass","at":"scene:s3","gain":-8},{"type":"swoosh-pass","at":"scene:s4","gain":-8},
+ {"type":"swoosh-pass","at":"scene:s5","gain":-8},{"type":"swoosh-pass","at":"scene:s6","gain":-8},
+ {"type":"impact","at":"scene:s1+1.0","gain":-3},
+ {"type":"whoosh","at":"scene:s2+0.6","gain":-6},
+ {"type":"impact","at":"scene:s3+1.53","gain":-4},{"type":"swoosh-pass","at":"scene:s3+1.95","gain":-12},
+ {"type":"pop","at":"scene:s4+0.95","gain":-4},{"type":"pop","at":"scene:s4+1.25","gain":-8},{"type":"tick","at":"scene:s4+1.9","gain":-6},
+ {"type":"typing","at":"scene:s5+0.6","dur":1.0,"gain":-10},{"type":"shimmer","at":"scene:s5+1.95","gain":-6},
+ {"type":"tick","at":"scene:s6+0.35","gain":-6},{"type":"tick","at":"scene:s6+0.85","gain":-6},{"type":"impact","at":"scene:s6+1.35","gain":-6},
+ {"type":"riser","at":"scene:s7","gain":-8},{"type":"boom","at":"scene:s7+0.7","gain":-4},{"type":"pop","at":"scene:s7+1.3","gain":-6}
+]
