@@ -1,0 +1,16 @@
+{ "name": "Porter's Five Forces — ريل تعليمي", "fps": 60, "width": 1080, "height": 1920,
+  "bpm": 120, "beatsPerBar": 4, "beatOffset": 0,
+  "palette": { "bg": "#0D1117", "ink": "#F4F1EA", "acc": "#F2B33D", "clay": "#E5484D", "hi": "#3DD68C", "mut": "#7D8590" },
+  "fonts": { "display": "Cairo", "body": "IBM Plex Sans Arabic", "num": "Inter" },
+  "post": { "grain": 0.035, "vignette": 0.3 },
+  "timing": { "snap": "half", "snapTarget": "line", "snapLines": "first", "leadIn": 0.3, "gap": 0.22, "startPad": 0.25, "tail": 0.9 },
+  "music": { "key": "D", "scale": "minor", "progression": [0, 5, 3, 4], "level": -9, "duck": -5, "top": { "hat": 15, "pluck": 3 } },
+  "sections": [ { "name": "intro", "at": 0 }, { "name": "build", "at": "scene:s2" }, { "name": "drop", "at": "scene:s3" }, { "name": "break", "at": "scene:s4" }, { "name": "outro", "at": "scene:s5" } ],
+  "scenes": [
+    { "id": "s1", "file": "scenes/s1.js", "lines": ["l1"], "minDur": 2.5 },
+    { "id": "s2", "file": "scenes/s2.js", "lines": ["l2"], "transition": { "type": "push", "dur": 0.4, "dir": "up", "ease": "expoInOut" } },
+    { "id": "s3", "file": "scenes/s3.js", "lines": ["l3", "l4", "l5", "l6", "l7"], "transition": { "type": "iris", "dur": 0.5, "at": [540, 900] } },
+    { "id": "s4", "file": "scenes/s4.js", "lines": ["l8"], "transition": { "type": "flash", "dur": 0.3 } },
+    { "id": "s5", "file": "scenes/s5.js", "lines": ["l9"], "minDur": 3.6, "transition": { "type": "wipe", "dur": 0.45, "dir": "rtl", "ease": "expoInOut" } }
+  ]
+}
