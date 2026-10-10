@@ -1,0 +1,273 @@
+{
+ "name": "أساسيات المونتاج — بحريني",
+ "fps": 60,
+ "width": 1080,
+ "height": 1920,
+ "bpm": 120,
+ "beatsPerBar": 4,
+ "beatOffset": 0,
+ "palette": {
+  "bg": "#0D1117",
+  "ink": "#F4F1EA",
+  "acc": "#F2B33D",
+  "clay": "#E5484D",
+  "hi": "#3DD68C",
+  "mut": "#7D8590"
+ },
+ "fonts": {
+  "display": "Cairo",
+  "body": "IBM Plex Sans Arabic",
+  "num": "Inter"
+ },
+ "post": {
+  "grain": 0.035,
+  "vignette": 0.3
+ },
+ "timing": {
+  "snap": "none",
+  "startPad": 0
+ },
+ "music": {
+  "key": "D",
+  "scale": "minor",
+  "progression": [
+   0,
+   5,
+   3,
+   4
+  ],
+  "level": -9,
+  "duck": -5,
+  "top": {
+   "hat": 15,
+   "pluck": 3
+  }
+ },
+ "sections": [
+  {
+   "name": "intro",
+   "at": 0
+  },
+  {
+   "name": "build",
+   "at": "scene:c1t"
+  },
+  {
+   "name": "drop",
+   "at": "scene:c1a"
+  },
+  {
+   "name": "break",
+   "at": "scene:c2t"
+  },
+  {
+   "name": "drop",
+   "at": "scene:c2a"
+  },
+  {
+   "name": "break",
+   "at": "scene:c3t"
+  },
+  {
+   "name": "drop",
+   "at": "scene:c3a"
+  },
+  {
+   "name": "outro",
+   "at": "scene:out"
+  }
+ ],
+ "scenes": [
+  {
+   "id": "h1",
+   "file": "scenes/h1.js",
+   "duration": 4.0
+  },
+  {
+   "id": "c1t",
+   "file": "scenes/c1t.js",
+   "duration": 2.2,
+   "transition": {
+    "type": "wipe",
+    "dur": 0.4,
+    "dir": "rtl",
+    "ease": "expoInOut"
+   }
+  },
+  {
+   "id": "c1a",
+   "file": "scenes/c1a.js",
+   "duration": 4.6,
+   "transition": {
+    "type": "push",
+    "dur": 0.35,
+    "dir": "up",
+    "ease": "expoInOut"
+   }
+  },
+  {
+   "id": "c1b",
+   "file": "scenes/c1b.js",
+   "duration": 5.0,
+   "transition": {
+    "type": "push",
+    "dur": 0.35,
+    "ease": "expoInOut"
+   }
+  },
+  {
+   "id": "c1c",
+   "file": "scenes/c1c.js",
+   "duration": 4.8,
+   "transition": {
+    "type": "push",
+    "dur": 0.35,
+    "ease": "expoInOut"
+   }
+  },
+  {
+   "id": "c1d",
+   "file": "scenes/c1d.js",
+   "duration": 4.6,
+   "transition": {
+    "type": "push",
+    "dur": 0.35,
+    "ease": "expoInOut"
+   }
+  },
+  {
+   "id": "c2t",
+   "file": "scenes/c2t.js",
+   "duration": 2.2,
+   "transition": {
+    "type": "wipe",
+    "dur": 0.4,
+    "dir": "rtl",
+    "ease": "expoInOut"
+   }
+  },
+  {
+   "id": "c2a",
+   "file": "scenes/c2a.js",
+   "duration": 4.8,
+   "transition": {
+    "type": "push",
+    "dur": 0.35,
+    "dir": "up",
+    "ease": "expoInOut"
+   }
+  },
+  {
+   "id": "c2b",
+   "file": "scenes/c2b.js",
+   "duration": 4.6,
+   "transition": {
+    "type": "push",
+    "dur": 0.3,
+    "ease": "expoInOut"
+   }
+  },
+  {
+   "id": "c2c",
+   "file": "scenes/c2c.js",
+   "duration": 4.8,
+   "transition": {
+    "type": "zoom",
+    "dur": 0.4
+   }
+  },
+  {
+   "id": "c2d",
+   "file": "scenes/c2d.js",
+   "duration": 4.4,
+   "transition": {
+    "type": "push",
+    "dur": 0.35,
+    "ease": "expoInOut"
+   }
+  },
+  {
+   "id": "c2e",
+   "file": "scenes/c2e.js",
+   "duration": 3.4,
+   "transition": {
+    "type": "flash",
+    "dur": 0.25
+   }
+  },
+  {
+   "id": "c3t",
+   "file": "scenes/c3t.js",
+   "duration": 2.2,
+   "transition": {
+    "type": "wipe",
+    "dur": 0.4,
+    "dir": "rtl",
+    "ease": "expoInOut"
+   }
+  },
+  {
+   "id": "c3a",
+   "file": "scenes/c3a.js",
+   "duration": 4.4,
+   "transition": {
+    "type": "push",
+    "dur": 0.35,
+    "dir": "up",
+    "ease": "expoInOut"
+   }
+  },
+  {
+   "id": "c3b",
+   "file": "scenes/c3b.js",
+   "duration": 4.4,
+   "transition": {
+    "type": "push",
+    "dur": 0.35,
+    "ease": "expoInOut"
+   }
+  },
+  {
+   "id": "c3c",
+   "file": "scenes/c3c.js",
+   "duration": 4.4,
+   "transition": {
+    "type": "push",
+    "dur": 0.35,
+    "ease": "expoInOut"
+   }
+  },
+  {
+   "id": "c3d",
+   "file": "scenes/c3d.js",
+   "duration": 4.4,
+   "transition": {
+    "type": "push",
+    "dur": 0.35,
+    "ease": "expoInOut"
+   }
+  },
+  {
+   "id": "c3e",
+   "file": "scenes/c3e.js",
+   "duration": 3.4,
+   "transition": {
+    "type": "flash",
+    "dur": 0.25
+   }
+  },
+  {
+   "id": "out",
+   "file": "scenes/out.js",
+   "duration": 5.2,
+   "transition": {
+    "type": "iris",
+    "dur": 0.5,
+    "at": [
+     540,
+     900
+    ]
+   }
+  }
+ ]
+}
