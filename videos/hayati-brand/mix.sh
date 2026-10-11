@@ -3,24 +3,24 @@
 set -e
 cd "$(dirname "$0")"
 SFX=/home/user/claude/.claude/skills/video-ad-editor/studio/sfx_prev
-XF=34.7   # بداية دخول كرت الشعار
-ffmpeg -y -v error -i device3d.mp4 -i outro/outro.mp4 -filter_complex "[0:v][1:v]xfade=transition=fade:duration=0.3:offset=$XF,format=yuv420p[v]" -map "[v]" -c:v libx264 -crf 18 -preset medium -r 60 video.mp4
+XF=${XF:-38.9}   # بداية دخول كرت الشعار
+ffmpeg -y -v error -i ${SRC:-device3d_v2.mp4} -i outro/outro.mp4 -filter_complex "[0:v][1:v]xfade=transition=fade:duration=0.3:offset=$XF,format=yuv420p[v]" -map "[v]" -c:v libx264 -crf 18 -preset medium -r 60 video.mp4
 # المؤثرات: [ملف, وقت, قوة]
 EV="whoosh_up 0.05 0.5
 thud 0.15 0.7
-whoosh_up 4.4 0.45
-tap 6.1 0.8
-whoosh_up 7.9 0.45
-whoosh_up 11.4 0.45
-whoosh_up 14.4 0.45
-tap 16.6 0.8
-whoosh_up 18.9 0.45
-tap 20.9 0.8
-whoosh_up 22.4 0.45
-whoosh_up 25.9 0.45
-whoosh_up 29.4 0.45
-whoosh_down 34.6 0.5
-thud 35.55 0.8"
+whoosh_up 7.45 0.45
+tap 8.4 0.8
+whoosh_up 10.95 0.45
+whoosh_up 14.45 0.45
+whoosh_up 17.45 0.45
+tap 20.0 0.8
+whoosh_up 23.05 0.45
+tap 24.6 0.8
+whoosh_up 26.55 0.45
+whoosh_up 30.05 0.45
+whoosh_up 33.55 0.45
+whoosh_down 38.8 0.5
+thud 39.75 0.8"
 IN=""; FC=""; i=0
 while read f t g; do
   IN="$IN -i $SFX/$f.wav"; ms=$(python3 -c "print(int($t*1000))")
