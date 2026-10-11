@@ -28,6 +28,11 @@ while read f t g; do
 done <<< "$EV"
 MIX=""; for j in $(seq 0 $((i-1))); do MIX="$MIX[a$j]"; done
 DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 video.mp4)
-ffmpeg -y -v error $IN -filter_complex "${FC}${MIX}amix=inputs=$i:normalize=0,apad,atrim=0:$DUR,loudnorm=I=-16:TP=-1.5:LRA=11[out]" -map "[out]" -ar 48000 sfx.wav
+ffmpeg -y -v error $IN -filter_complex "${FC}${MIX}amix=inputs=$i:normalize=0,apad,atrim=0:$DUR[out]" -map "[out]" -ar 48000 sfx_raw.wav
+if [ -f vo.wav ]; then   # الصوت البحريني فوق، والمؤثرات أوطى تحته
+  ffmpeg -y -v error -i vo.wav -i sfx_raw.wav -filter_complex "[0:a]apad,atrim=0:$DUR,volume=1.0[v];[1:a]volume=0.45[s];[v][s]amix=inputs=2:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=11[out]" -map "[out]" -ar 48000 sfx.wav
+else
+  ffmpeg -y -v error -i sfx_raw.wav -af "loudnorm=I=-16:TP=-1.5:LRA=11" -ar 48000 sfx.wav
+fi
 ffmpeg -y -v error -i video.mp4 -i sfx.wav -map 0:v -map 1:a -c:v copy -c:a aac -b:a 192k -shortest -movflags +faststart hayati-explainer.mp4
 echo "→ hayati-explainer.mp4 ($DUR ث)"
