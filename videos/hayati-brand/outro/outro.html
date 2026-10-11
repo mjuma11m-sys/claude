@@ -1,0 +1,28 @@
+<!doctype html><html dir="rtl"><head><meta charset="utf-8"><style>
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Bold.ttf);font-weight:700}
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Regular.ttf);font-weight:400}
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:radial-gradient(120% 70% at 50% 42%,#13535B 0%,#0E3B43 45%,#0A1A1E 100%);font-family:P}
+#w{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:56px}
+svg{width:420px;height:420px}
+h1{margin:0;color:#E8DCC4;font-size:150px;font-weight:700;line-height:1}
+p{margin:6px 0 0;color:#E8DCC4;opacity:.75;font-size:50px;font-weight:400}
+</style></head><body><div id="w">
+<svg viewBox="0 0 512 512"><rect width="512" height="512" rx="116" fill="#0E3B43" id="bgr"/>
+<path id="arc" d="M 383.3 172.7 A 160 160 0 1 1 300 102.2" fill="none" stroke="#E8DCC4" stroke-opacity=".28" stroke-width="22" stroke-linecap="round" pathLength="1"/>
+<path id="ha" d="M 304 166 L 196 166 L 264 222 C 204 222 168 254 168 292 C 168 336 206 360 256 360 C 292 360 318 348 338 332" fill="none" stroke="#E8DCC4" stroke-width="38" stroke-linecap="round" stroke-linejoin="round" pathLength="1"/>
+<circle id="dot" cx="352" cy="128" r="30" fill="#FF6B4A"/></svg>
+<h1 id="t">حياتي</h1><p id="s">يومك كله… بمكان واحد</p></div>
+<script>
+const eo=(x)=>{x=Math.max(0,Math.min(1,x));return 1-Math.pow(1-x,4)};   // ease-out
+const seg=(t,a,d)=>eo((t-a)/d);
+const $=id=>document.getElementById(id);
+window.setT=t=>{
+  const k=seg(t,0,.35); const svg=document.querySelector('svg');
+  svg.style.opacity=k; svg.style.transform='scale('+(0.94+0.06*k)+')';
+  const a=seg(t,.1,.9); $('arc').style.strokeDasharray='1'; $('arc').style.strokeDashoffset=1-a;
+  const h=seg(t,.25,.7); $('ha').style.strokeDasharray='1'; $('ha').style.strokeDashoffset=1-h;
+  const d=seg(t,.85,.3); $('dot').style.opacity=d; $('dot').style.transformOrigin='352px 128px'; $('dot').style.transform='scale('+(0.6+0.4*d)+')';
+  const ti=seg(t,.7,.35); $('t').style.opacity=ti; $('t').style.transform='translateY('+(24*(1-ti))+'px)';
+  const s=seg(t,.95,.35); $('s').style.opacity=.75*s; $('s').style.transform='translateY('+(18*(1-s))+'px)';
+};
+</script></body></html>
