@@ -42,6 +42,9 @@
       --radius: 20px;
       --radius-sm: 14px;
       --tabbar-h: 68px;
+      --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+      --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+      --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
       color-scheme: light;
     }
     @media (prefers-color-scheme: dark) {
@@ -109,7 +112,7 @@
     .sync-dot.busy { background: var(--warn); }
     .sync-dot.err { background: var(--expense); }
 
-    main { max-width: 720px; margin: 0 auto; padding: 4px 16px 16px; animation: fade .25s ease; }
+    main { max-width: 720px; margin: 0 auto; padding: 4px 16px 16px; }
     @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
     /* ---------- البطاقات ---------- */
@@ -208,7 +211,7 @@
     /* رسم آخر ٧ أيام */
     .chart { display: flex; align-items: flex-end; gap: 8px; height: 132px; padding-top: 8px; }
     .chart .col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
-    .chart .bar { width: 100%; max-width: 34px; border-radius: 9px 9px 4px 4px; background: color-mix(in srgb, var(--brand) 22%, transparent); min-height: 4px; transition: height .4s ease; }
+    .chart .bar { width: 100%; max-width: 34px; border-radius: 9px 9px 4px 4px; background: color-mix(in srgb, var(--brand) 22%, transparent); min-height: 4px; }
     .chart .col.today .bar { background: var(--hero); }
     .chart .lbl { font-size: 11px; color: var(--muted); font-weight: 600; }
     .chart .col.today .lbl { color: var(--brand); }
@@ -335,8 +338,6 @@
       margin: auto auto 0; border-radius: 26px 26px 0 0; background: var(--bg); color: var(--text);
       box-shadow: 0 -10px 40px rgba(0, 0, 0, .2);
     }
-    dialog.sheet[open] { animation: up .28s cubic-bezier(.2, .9, .3, 1); }
-    @keyframes up { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
     @media (min-width: 640px) { dialog.sheet { margin: auto; border-radius: 26px; } }
     dialog.sheet::backdrop { background: rgba(10, 12, 24, .45); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
     .grabber { width: 38px; height: 5px; border-radius: 99px; background: var(--border); margin: 8px auto 0; }
@@ -594,6 +595,20 @@
     .msg.typing { color: var(--muted); }
     .chips.quick .chip { font-size: 13px; }
     .hidden { display: none !important; }
+    /* ---------- الحركة ---------- */
+    .toast { transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out); }
+    @media (prefers-reduced-motion: no-preference) {
+      .btn, .icon-btn, .check, .habit, .cup, .chip, .tile, .action, .mood, .cat-pick, .wd, .seg button, nav.tabbar button.tab, nav.tabbar .add, .rest-btn, .alt-btn, .hero-btn, .stepper button, .grade-grid button {
+        transition: transform 160ms var(--ease-out);
+      }
+      .check:active, .cup:active, .stepper button:active { transform: scale(.88); }
+      .habit:active, .chip:active, .mood:active, .cat-pick:active, .wd:active, .rest-btn:active, .alt-btn:active, .hero-btn:active, .grade-grid button:active { transform: scale(.95); }
+      .tile:active, .action:active { transform: scale(.97); }
+      nav.tabbar button.tab:active { transform: scale(.92); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .toast, .toast.show { transform: translate(-50%, 0); }
+    }
   </style>
 
 <header class="top">
@@ -631,6 +646,7 @@
   <script src="app.js"></script>
   <script src="extras.js"></script>
   <script src="extras2.js"></script>
+  <script src="motion.js"></script>
 
 
 

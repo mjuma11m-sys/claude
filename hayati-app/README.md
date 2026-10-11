@@ -14,6 +14,7 @@ Personal life-OS PWA: expenses, budgets, bank/BenefitPay SMS parsing, study sche
 | `app.js` | Core views: Today, Expenses, Schedule, Tasks, Settings |
 | `extras.js`, `extras2.js` | Gym, health, GPA, study/focus, goals, challenges, assistant |
 | `calendar.js` | `.ics` export with alarms |
+| `motion.js` | Motion layer: view entrance, sheet enter/exit, count-up, bar/ring tweens, toggle feedback |
 | `config.js` | Supabase URL/anon key (empty) |
 
 Run locally: `npx serve hayati-app` (artifact db unavailable outside claude.ai → falls back to localStorage/Supabase).
