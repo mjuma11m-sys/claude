@@ -1,0 +1,15 @@
+{
+  "appId": "bh.hayati.app",
+  "appName": "حياتي",
+  "webDir": "www",
+  "backgroundColor": "#0E3B43",
+  "ios": {
+    "contentInset": "never",
+    "scheme": "Hayati"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "iconColor": "#0E3B43"
+    }
+  }
+}

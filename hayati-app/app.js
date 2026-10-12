@@ -170,6 +170,7 @@
 
   // حفظ ملف: داخل claude.ai عن طريق صلاحية التنزيل، وبرّا عن طريق رابط عادي
   async function saveFile(filename, text, mime) {
+    if (window.HayatiNative) return window.HayatiNative.saveFile(filename, text, mime);
     if (window.claude && typeof window.claude.use === 'function') {
       const dl = await window.claude.use('downloads');
       if (dl) {
@@ -945,7 +946,19 @@
       (subsTotal ? '<li class="row" style="cursor:default"><div class="main">الاشتراكات</div><b>' + money(subsTotal) + '</b></li>' : '') +
       (st.settings.budget ? '<li class="row" style="cursor:default"><div class="main">الميزانية</div><b class="' + (a.exp > st.settings.budget ? 'neg' : 'pos') + '">' + (a.exp > st.settings.budget ? 'تعدّيت بـ ' + fmt(a.exp - st.settings.budget) : 'باقي ' + fmt(st.settings.budget - a.exp)) + '</b></li>' : '') +
       '</ul></div>';
-    openSheet({ title: 'تقرير الشهر', cancelLabel: 'تم', body });
+    // بالآيفون: ملخص نصي يروح لقائمة المشاركة (واتساب، ملاحظات…)
+    const share = window.HayatiNative && window.HayatiNative.shareText;
+    if (share) body += '<button class="btn block" type="button" id="shareReport">' + I('upload') + 'شارك الملخص</button>';
+    openSheet({
+      title: 'تقرير الشهر', cancelLabel: 'تم', body,
+      mount(root) {
+        const b = root.querySelector('#shareReport');
+        if (b) b.onclick = () => share('تقرير ' + MONTHS[m - 1] + ' ' + y + ' · «حياتي»\n' +
+          'الصرف: ' + fmt(a.exp) + ' د.ب\nالدخل: ' + fmt(a.inc) + ' د.ب\n' +
+          (topM.length ? 'أكثر مكان: ' + topM.map(([k, v]) => k + ' (' + fmt(v.sum) + ')').join('، ') + '\n' : '') +
+          'أيام بدون صرف: ' + noSpend + ' / ' + daysCount);
+      },
+    });
   }
 
   function viewTasks() {
@@ -1651,6 +1664,7 @@
         const { text, count } = window.CalendarExport.build({ courses: st.courses, tasks: st.tasks, subscriptions: opts.subs ? st.subscriptions : [], remindBefore: opts.before, semesterEnd: opts.end, includeTasks: opts.tasks, prayers: opts.prayers ? prayerDays(30) : [] });
         if (!count) throw new Error('ما فيه شي أصدّره، أضف موادك أول');
         if (inClaude()) saveFile('hayati-calendar.txt', text, 'text/plain').then((ok) => { if (ok) toast('غيّر امتداد الملف إلى ‎.ics‎ وافتحه بالتقويم'); });
+        else if (window.HayatiNative) window.HayatiNative.saveFile('hayati.ics', text, 'text/calendar');
         else window.CalendarExport.download(text, 'hayati.ics');
         toast('تم تجهيز ' + count + ' موعد');
       },

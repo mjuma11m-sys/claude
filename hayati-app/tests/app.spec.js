@@ -439,3 +439,67 @@ test('a new user builds their own week: role-based buttons and «save and add an
   await expect(page.locator('.build-week [data-type="lecture"]')).toHaveCount(0);
   await expect(page.locator('.build-week')).toContainText('دوام أو نشاط');
 });
+
+// نسخة الآيفون: Capacitor مزيّف يسجّل اللي ينطلب منه
+test('iPhone (Capacitor): schedules «الحين وقت…» notifications, haptics on save, files go to the share sheet', async ({ page }) => {
+  await page.addInitScript(() => {
+    const log = window.__cap = { scheduled: [], cancelled: 0, asked: 0, haptics: 0, written: [], shared: [] };
+    let perm = 'prompt';
+    window.Capacitor = {
+      isNativePlatform: () => true,
+      Plugins: {
+        LocalNotifications: {
+          checkPermissions: async () => ({ display: perm }),
+          requestPermissions: async () => { log.asked++; perm = 'granted'; return { display: perm }; },
+          getPending: async () => ({ notifications: log.scheduled.map((n) => ({ id: n.id })) }),
+          cancel: async ({ notifications }) => { log.cancelled += notifications.length; log.scheduled = []; },
+          schedule: async ({ notifications }) => { log.scheduled = notifications; },
+        },
+        Haptics: { impact: async () => { log.haptics++; } },
+        Filesystem: { writeFile: async ({ path, data }) => { log.written.push({ path, size: data.length }); return { uri: 'file:///cache/' + path }; } },
+        Share: { share: async (o) => { log.shared.push(o); } },
+      },
+    };
+  });
+  await open(page);
+  // ما فيه شي بالجدول = ما نطلب إذن
+  await page.waitForTimeout(1200);
+  expect(await store(page, () => window.__cap.asked)).toBe(0);
+
+  await store(page, () => {
+    const d = (new Date().getDay() + 1) % 7;
+    App.S.upsert('courses', { id: 'n1', name: 'محاسبة إدارية', type: 'lecture', days: [d], start_time: '10:00', end_time: '11:15', room: 'S40-2050' });
+  });
+  await page.waitForFunction(() => window.__cap.scheduled.some((x) => x.title.includes('محاسبة')), null, { timeout: 5000 });
+  const log = await store(page, () => window.__cap);
+  expect(log.asked).toBe(1);
+  expect(log.haptics).toBeGreaterThan(0);
+  const n = log.scheduled.find((x) => x.title.includes('محاسبة'));
+  expect(n.title).toBe('بعد 10 دقايق: محاسبة إدارية');
+  expect(n.body).toContain('S40-2050');
+  // قبل المحاضرة بـ 10 دقايق، بتوقيت الجهاز
+  expect(await store(page, () => { const d = window.__cap.scheduled.find((x) => x.title.includes('محاسبة')).schedule.at; return d.getHours() * 60 + d.getMinutes(); })).toBe(9 * 60 + 50);
+  expect(log.scheduled.length).toBeLessThanOrEqual(60);
+
+  // تغيير الجدول = إعادة جدولة (بدون تنبيهات مكررة)
+  await store(page, () => App.S.remove('courses', 'n1'));
+  await page.waitForFunction(() => !window.__cap.scheduled.some((x) => x.title.includes('محاسبة')), null, { timeout: 5000 });
+  // الصلاة تنبيهها بوقتها بالضبط
+  const pr = (await store(page, () => window.__cap.scheduled)).find((x) => x.title.startsWith('الحين وقت صلاة'));
+  if (pr) expect(pr.body).toBe('');
+
+  // النسخة الاحتياطية تروح لقائمة المشاركة
+  expect(await store(page, () => App.saveFile('backup.json', '{"a":1}', 'application/json'))).toBe(true);
+  const after = await store(page, () => window.__cap);
+  expect(after.written[0].path).toBe('backup.json');
+  expect(after.shared[0].files).toEqual(['file:///cache/backup.json']);
+
+  // تقرير الشهر: «شارك الملخص» بالآيفون بس
+  await store(page, () => App.S.upsert('transactions', { id: 'r1', kind: 'expense', amount: 3.5, merchant: 'Costa Coffee', category: 'قهوة', occurred_at: new Date().toISOString() }));
+  await store(page, () => { App.ui.moneySeg = 'tx'; App.go('money'); });
+  await page.click('[data-action="report"]');
+  await page.click('#shareReport');
+  const text = await store(page, () => window.__cap.shared.at(-1).text);
+  expect(text).toContain('الصرف: 3.500');
+  expect(text).toContain('Costa');
+});

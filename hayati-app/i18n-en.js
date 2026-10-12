@@ -1211,5 +1211,8 @@ window.HAYATI_EN = {
 "أضف أسبوعك مرة وحدة: الأيام والوقت والمكان. وبعدها يقولك «الحين وقت…».": "Add your week once: days, times and place. Then it tells you «It's time for…».",
 "دوام أو نشاط": "Work or activity",
 "احفظ وأضف ثاني": "Save and add another",
-"انضافت ✓ · اكتب اللي بعدها": "Added ✓ · type the next one"
+"انضافت ✓ · اكتب اللي بعدها": "Added ✓ · type the next one",
+"شارك الملخص": "Share summary",
+"المشاركة مو متوفرة بهالنسخة": "Sharing isn't available in this version",
+"ما قدرت أشارك الملف": "Couldn't share the file"
 };
