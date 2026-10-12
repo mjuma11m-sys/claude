@@ -8,12 +8,12 @@ const FPS = 30, DUR = 15;
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   const p = await b.newPage({ viewport: { width: 1080, height: 1920 } });
   const errs = []; p.on('pageerror', (e) => errs.push(e.message));
-  await p.goto('file://' + path.join(__dirname, 'teaser.html'));
+  await p.goto('file://' + path.join(__dirname, 'teaser.html') + (process.env.VARIANT ? '#' + process.env.VARIANT : ''));
   await p.evaluate(() => window.READY);
   if (process.argv[2] === 'preview') {
     for (const t of process.argv.slice(3).map(Number)) { await p.evaluate((x) => setT(x), t); await p.screenshot({ path: path.join(__dirname, 'prev_' + t + '.jpg'), type: 'jpeg', quality: 85 }); }
   } else {
-    const ff = spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '17', '-preset', 'medium', '-movflags', '+faststart', path.join(__dirname, 'teaser_video.mp4')], { stdio: ['pipe', 'inherit', 'inherit'] });
+    const ff = spawn('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '17', '-preset', 'medium', '-movflags', '+faststart', path.join(__dirname, (process.env.VARIANT || 'teaser') + '_video.mp4')], { stdio: ['pipe', 'inherit', 'inherit'] });
     for (let i = 0; i < FPS * DUR; i++) {
       await p.evaluate((x) => setT(x), i / FPS);
       const buf = await p.screenshot({ type: 'jpeg', quality: 93 });
