@@ -148,6 +148,23 @@
       count++;
     }
 
+    // الصلاة: الوقت يتغير كل يوم، فكل يوم حدث بروحه (UID ثابت لليوم عشان التصدير الجديد يحدّث مو يكرر)
+    for (const p of opts.prayers || []) {
+      const start = new Date(p.date); start.setHours(0, 0, 0, 0); start.setMinutes(p.start);
+      if (start < now) continue;
+      lines.push(
+        'BEGIN:VEVENT',
+        'UID:prayer-' + p.key + '-' + local(start).slice(0, 8) + '@hayati',
+        'DTSTAMP:' + stamp,
+        'DTSTART:' + local(start),
+        'DTEND:' + local(new Date(start.getTime() + (p.dur || 20) * 60000)),
+        'SUMMARY:' + esc('🕌 ' + p.name),
+        ...alarm('PT0M', 'الحين وقت ' + p.name),
+        'END:VEVENT'
+      );
+      count++;
+    }
+
     lines.push('END:VCALENDAR');
     return { text: lines.filter(Boolean).map(fold).join('\r\n') + '\r\n', count };
   }

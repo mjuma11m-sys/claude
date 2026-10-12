@@ -12,6 +12,8 @@ module.exports = defineConfig({
     viewport: { width: 390, height: 844 },
     timezoneId: 'Asia/Bahrain',
     locale: 'ar-BH',
+    // الـ service worker يتجاوز page.route، فنطفيه إلا باختبار الأوفلاين
+    serviceWorkers: 'block',
     // بيئة Claude Code السحابية فيها Chromium جاهز هني
     launchOptions: process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {},
   },

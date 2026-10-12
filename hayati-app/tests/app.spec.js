@@ -156,3 +156,54 @@ test('Jafari method: three prayer times (Fajr, Dhuhrain, Ishaain)', async ({ pag
   await expect(page.locator('.prayer-grid > div')).toHaveCount(3);
   await expect(page.locator('.prayer-grid')).toContainText('العشاءين');
 });
+
+test('prayer times go into the calendar export (one event per prayer per day)', async ({ page }) => {
+  await open(page);
+  await store(page, () => App.go('schedule'));
+  await page.evaluate(() => document.querySelector('[data-action="calendar"]').click());
+  await expect(page.locator('#sheetBody [name=prayers]')).toBeChecked();
+  const ics = await store(page, () => {
+    const d = new Date(); d.setDate(d.getDate() + 1);
+    return CalendarExport.build({ prayers: [{ key: 'dhuhr', name: 'صلاة الظهرين', date: d, start: 11 * 60 + 40, dur: 30 }] });
+  });
+  expect(ics.count).toBe(1);
+  expect(ics.text).toMatch(/UID:prayer-dhuhr-\d{8}@hayati/);
+  expect(ics.text).toContain('T114000');
+  expect(ics.text).toContain('الحين وقت صلاة الظهرين');
+});
+
+test('app badge counts today and overdue tasks only', async ({ page }) => {
+  await open(page);
+  const n = await store(page, () => {
+    const at = (h) => { const d = new Date(); d.setHours(d.getHours() + h); return d.toISOString(); };
+    App.S.upsert('tasks', { id: 't1', title: 'واجب', kind: 'homework', due_at: at(-30) });
+    App.S.upsert('tasks', { id: 't2', title: 'خلص', kind: 'homework', due_at: at(-1), done: true });
+    App.S.upsert('tasks', { id: 't3', title: 'موعد', kind: 'appointment', due_at: at(0) });
+    App.S.upsert('tasks', { id: 't4', title: 'الأسبوع الجاي', kind: 'exam', due_at: at(24 * 7) });
+    return HayatiPWA.pending();
+  });
+  expect(n).toBe(1);
+});
+
+test('service worker precaches every script the page loads', async () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
+  const local = [...html.matchAll(/<script src="([^"]+)"/g)].map((m) => m[1]).filter((s) => !s.startsWith('http'));
+  expect(local.length).toBeGreaterThan(10);
+  for (const s of local) expect(sw, s + ' missing from sw.js SHELL').toContain("'" + s + "'");
+});
+
+test.describe('offline', () => {
+  test.use({ serviceWorkers: 'allow' });
+  test('opens with no network after the first visit', async ({ page, context }) => {
+    await open(page);
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await page.reload();
+    await page.waitForFunction(() => navigator.serviceWorker.controller);
+    await context.setOffline(true);
+    await page.reload();
+    await page.waitForFunction(() => window.App && window.App.st);
+    await expect(page.locator('button.tab[data-tab="today"]')).toBeVisible();
+    await context.setOffline(false);
+  });
+});
