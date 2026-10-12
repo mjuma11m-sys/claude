@@ -85,6 +85,14 @@ PAGES['story-build-your-feature.jpg'] = [1080, 1920, BASE(1080, 1920) + `<div cl
 <div style="position:absolute;left:0;right:0;top:1520px;text-align:center;font-size:44px;direction:ltr;opacity:.8">@hayati.bh</div>
 <div class="grain"></div>`];
 
+// 7) بوست الصراحة: وعودنا للمستخدم (كلها شي التطبيق يسويه اليوم)
+const HONEST = [['تقدير', 'نقولها «تقدير» مو «يقرر»'], ['تجريبية', 'أي لقطة ببيانات تجريبية ينكتب عليها'], ['اليوم', 'ولا وعد بميزة ما تشتغل اليوم'], ['جهازك', 'بياناتك على جهازك، ورقم بطاقتك ينخفى'], ['احذف', 'تقدر تحذف كل بياناتك من الإعدادات']];
+PAGES['post-5-honesty.jpg'] = [1080, 1350, BASE(1080, 1350) + `<div style="position:absolute;inset:0;background:var(--bg)"></div>
+<div style="position:absolute;left:90px;right:90px;top:130px;color:var(--sea)"><div style="font-size:42px;color:#33494D">«حياتي»</div>
+<div style="font-size:118px;line-height:1.1;margin-top:10px">بنكون <span class="c">صريحين</span> معك</div></div>
+<div style="position:absolute;left:90px;right:90px;top:470px;display:grid;gap:20px">${HONEST.map(([k, t]) => `<div style="display:flex;align-items:center;gap:26px;padding:22px 30px;border-radius:30px;background:#fff;border:2px solid #E4DDD0;color:var(--sea)"><div style="width:60px;height:60px;flex:none;border-radius:50%;background:#2F9E7A;color:#fff;display:grid;place-items:center;font-size:36px">✓</div><div style="font-size:46px">${t}</div></div>`).join('')}</div>
+<div style="position:absolute;left:0;right:0;top:1215px;display:flex;justify-content:center;align-items:center;gap:18px;color:var(--sea);font-size:38px;direction:ltr"><svg style="width:70px;height:70px" viewBox="0 0 512 512">${MARK.slice(MARK.indexOf('>') + 1, -6)}</svg>@hayati.bh</div>`];
+
 (async () => {
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   for (const [name, [w, h, html]] of Object.entries(PAGES)) {

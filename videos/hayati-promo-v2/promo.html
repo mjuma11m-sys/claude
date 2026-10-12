@@ -94,6 +94,20 @@ html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:var(--d
 </div>
 <script>
 'use strict';
+// نسخة تيك توك (#tiktok): كل المحتوى يصغر لمنطقة تيك توك الآمنة (بعيد عن الأزرار يمين والكابشن تحت والتبويبات فوق)، والخلفية تظل كاملة
+if (location.hash === '#tiktok') {
+  const st = document.getElementById('stage'), safe = document.createElement('div');
+  safe.id = 'safe'; safe.style.cssText = 'position:absolute;inset:0;transform-origin:470px 860px;transform:scale(.8)';
+  [...st.children].filter((c) => !c.classList.contains('blob') && !c.classList.contains('grain')).forEach((c) => safe.appendChild(c));
+  st.insertBefore(safe, st.querySelector('.grain'));
+  // الملاحظة فوق (تحت تبويبات تيك توك)، والجوال يختفي بعد ما يطلع
+  addEventListener('load', () => {
+    const demo = document.getElementById('demo'); if (demo) demo.style.top = '60px';
+    const orig = window.setT;
+    window.setT = (t) => { orig(t); const pw = document.getElementById('phoneWrap'); const m = /translateY\(([-\d.]+)px/.exec(pw.style.transform); pw.style.visibility = m && Number(m[1]) > 900 ? 'hidden' : 'visible'; };
+  });
+}
+
 function bezier(x1, y1, x2, y2) {
   const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
   const sx = (t) => ((ax * t + bx) * t + cx) * t, sy = (t) => ((ay * t + by) * t + cy) * t, dx = (t) => (3 * ax * t + 2 * bx) * t + cx;
