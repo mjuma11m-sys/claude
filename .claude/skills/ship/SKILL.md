@@ -23,10 +23,11 @@ description: من فكرة بجملة إلى تطبيق منشور — ينسّ�
 - منطق الفلوس من `$S/bh-business/scripts/bh.py` (انسخ الدوال، لا تعيد كتابتها).
 - **بوابة:** `cd api && pytest -q` ← كله أخضر (لكل endpoint: نجاح، 401، input غلط).
 
-## 3. الواجهة — `impeccable` + `rtl-arabic-ui`
-- React + Vite + Tailwind، `dir="rtl"`، supabase-js للـ auth، `VITE_API_URL` للـ API.
+## 3. الواجهة — `web-starter` + `impeccable` + `rtl-arabic-ui`
+- `python $S/web-starter/scripts/scaffold.py web --title "<اسم التطبيق>"` ← صفحة لكل كيان عبر `get/post` من `src/lib/api.ts`.
+- الـ hook (`.claude/hooks/quality_gate.py`) ينبّه على أي كلاس RTL غلط وأي migration بدون RLS لحظة التعديل — صلّح فوراً.
 - ستايل خاص طلبه المستخدم ← حسب `skill-index`.
-- **بوابة:** `python $S/rtl-arabic-ui/scripts/rtl_lint.py web/src` ← 0 · `npm run build` ← ينجح.
+- **بوابة:** `python $S/rtl-arabic-ui/scripts/rtl_lint.py web/src` ← 0 · `npm run build` ← ينجح · `npm test` ← أخضر.
 
 ## 4. قبل النشر — `deploy-check`
 - **بوابة:** `python $S/deploy-check/scripts/check.py .` ← `0 blocking` · راجع التحذيرات بسطر لكل وحدة.

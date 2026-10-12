@@ -13,6 +13,7 @@ description: فهرس وموجّه الـ skills — يحدد أي skill (أو �
 | تطبيق/ميزة كاملة من الصفر للنشر | `ship` | ينسّق الباقي |
 | جداول، RLS، migration | `supabase-schema` | — |
 | endpoint / باك إند Flask | `flask-api` | `supabase-schema` لو فيه جداول |
+| فرونت React عربي من الصفر | `web-starter` | `impeccable` + `rtl-arabic-ui` |
 | تطبيق نادي/أكاديمية | `sports-admin` | `supabase-schema` ← `flask-api` |
 | تطبيق عقارات/إيجارات | `real-estate-tracker` | `bh-business` |
 | فواتير، VAT، تسعير BHD | `bh-business` | — |
@@ -76,5 +77,9 @@ description: فهرس وموجّه الـ skills — يحدد أي skill (أو �
 | توفير توكنز | `token-saver` |
 
 ## سلاسل جاهزة
-- **ميزة جديدة كاملة:** `ship` (يمر على `supabase-schema` ← `flask-api` ← `impeccable` + `rtl-arabic-ui` ← `deploy-check` ببوابات)
+- **ميزة جديدة كاملة:** `ship` (يمر على `supabase-schema` ← `flask-api` ← `web-starter` + `impeccable` ← `deploy-check` ببوابات)
 - **ريل:** `goalkeeper-content` ← `video-ad-editor` أو `capcut-guide` ← `thumbnail-video`
+
+## الصيانة
+- أي تعديل على skill أو سكربت: `pytest -q tests/skills` (CI يشغّلها تلقائياً مع Postgres وbuild كامل).
+- skill جديدة: frontmatter فيه `name` = اسم المجلد + `description` واضح، وأضفها لهالفهرس.
