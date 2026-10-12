@@ -503,3 +503,48 @@ test('iPhone (Capacitor): schedules «الحين وقت…» notifications, hapt
   expect(text).toContain('الصرف: 3.500');
   expect(text).toContain('Costa');
 });
+
+// نسخة الآيفون كما تنبني فعلاً: www/ (من cap-www.js) + مكتبة Capacitor الحقيقية + جسر iOS مزيّف
+// (الاختبار اللي قبله يعطي Plugins جاهزة، وهذا اللي خبّى إن الإضافات ما تتسجل بدون capacitor.js)
+test('iPhone build (www/ + real Capacitor core): plugins register through the native bridge and alerts get scheduled', async ({ page }) => {
+  require('child_process').execFileSync('node', [path.join(__dirname, '../scripts/cap-www.js')]);
+  await page.addInitScript(() => {
+    const calls = window.__bridge = [];
+    const m = (...names) => names.map((name) => ({ name, rtype: 'promise' }));
+    window.webkit = { messageHandlers: { bridge: { postMessage() {} } } };
+    let perm = 'prompt', pending = [];
+    window.Capacitor = {
+      PluginHeaders: [
+        { name: 'LocalNotifications', methods: m('checkPermissions', 'requestPermissions', 'getPending', 'cancel', 'schedule') },
+        { name: 'Haptics', methods: m('impact') },
+        { name: 'Share', methods: m('share') },
+        { name: 'Filesystem', methods: m('writeFile') },
+      ],
+      nativePromise: async (plugin, method, opts) => {
+        calls.push({ plugin, method, opts });
+        if (method === 'checkPermissions') return { display: perm };
+        if (method === 'requestPermissions') { perm = 'granted'; return { display: perm }; }
+        if (method === 'getPending') return { notifications: pending };
+        if (method === 'schedule') { pending = opts.notifications.map((n) => ({ id: n.id })); return {}; }
+        if (method === 'writeFile') return { uri: 'file:///cache/' + opts.path };
+        return {};
+      },
+    };
+  });
+  await open(page, '/www/index.html');
+  expect(await store(page, () => window.Capacitor.getPlatform())).toBe('ios');
+  await store(page, () => {
+    const d = (new Date().getDay() + 1) % 7;
+    App.S.upsert('courses', { id: 'w1', name: 'تسويق دولي', type: 'lecture', days: [d], start_time: '13:00', end_time: '14:15', room: 'S20-1043' });
+  });
+  await page.waitForFunction(() => window.__bridge.some((c) => c.method === 'schedule'), null, { timeout: 5000 });
+  const calls = await store(page, () => window.__bridge.map((c) => c.plugin + '.' + c.method));
+  expect(calls).toContain('LocalNotifications.requestPermissions');
+  expect(calls).toContain('Haptics.impact');
+  const lecture = await store(page, () => {
+    const s = window.__bridge.filter((c) => c.method === 'schedule').at(-1).opts.notifications.find((n) => n.title.includes('تسويق'));
+    return { title: s.title, isDate: s.schedule.at instanceof Date, min: s.schedule.at.getHours() * 60 + s.schedule.at.getMinutes() };
+  });
+  // iOS يقرا «at» كـ Date (NSDate)، مو نص
+  expect(lecture).toEqual({ title: 'بعد 10 دقايق: تسويق دولي', isDate: true, min: 12 * 60 + 50 });
+});

@@ -8107,8 +8107,9 @@ window.HAYATI_CONFIG = {
   if (!Cap || typeof Cap.isNativePlatform !== 'function' || !Cap.isNativePlatform()) return;
   const A = window.App, S = A && A.S;
   if (!S) return;
-  const P = Cap.Plugins || {};
-  const LN = P.LocalNotifications, Hap = P.Haptics, Share = P.Share, FS = P.Filesystem;
+  // Capacitor 8: الإضافة ما تبين بـ Capacitor.Plugins إلا بعد registerPlugin (من capacitor.js اللي يحطه cap-www.js)
+  const plug = (n) => (Cap.Plugins && Cap.Plugins[n]) || (typeof Cap.registerPlugin === 'function' ? Cap.registerPlugin(n) : null);
+  const LN = plug('LocalNotifications'), Hap = plug('Haptics'), Share = plug('Share'), FS = plug('Filesystem');
 
   const DAYS = 7;      // iOS يسمح بـ 64 تنبيه مجدول بالكثير، فنجدول أسبوع بس
   const MAX = 60;
