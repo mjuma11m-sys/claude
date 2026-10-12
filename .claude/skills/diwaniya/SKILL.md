@@ -1,6 +1,6 @@
 ---
 name: diwaniya
-description: الديوانية — مجلس خبراء يناقش أي طلب (ميزة، تطبيق، تصميم، مشكلة، قرار) بسبع شخصيات بالترتيب: المضيف، المصمم، المبرمج، حلّال المشاكل، الناقد، المدقق، وصاحب اللمسة الأخيرة اللي يسلّم النتيجة النهائية، وملخص بالآخر. يقدر يعرض الجلسة كأنميشن (مجلس متحرك). ALSO use automatically BEFORE executing any request to make a video (reel, ad, motion, cover), design something (UI, app, brand), or build/develop a feature or app — the council decides first, then execution follows; skip only for tiny obvious fixes or when the user says "بدون ديوانية" / "نفّذ على طول". Use when user says "الديوانية"، "المجلس"، "/diwaniya"، "ناقشوها"، "خلّ الخبراء يشوفونها"، "أبي رأي فريق"، "أنميشن الديوانية"، "اعرض النقاش متحرك"، or wants a request critiqued, reviewed and finished by multiple expert perspectives before delivery.
+description: الديوانية — مجلس خبراء يناقش أي طلب (ميزة، تطبيق، تصميم، مشكلة، قرار) بسبع شخصيات بالترتيب: المضيف، المصمم، المبرمج، حلّال المشاكل، الناقد، المدقق، وصاحب اللمسة الأخيرة اللي يسلّم النتيجة النهائية، وملخص بالآخر. يقدر يعرض الجلسة كأنميشن (مجلس متحرك). ALSO use automatically BEFORE executing any request to make a video (reel, ad, motion, cover), design something (UI, app, brand), or build/develop a feature or app — the council decides first, then execution follows; skip only for tiny obvious fixes or when the user says "بدون ديوانية" / "نفّذ على طول". Use when user says "الديوانية"، "المجلس"، "/diwaniya"، "ناقشوها"، "خلّ الخبراء يشوفونها"، "أبي رأي فريق"، "أنميشن الديوانية"، "اعرض النقاش متحرك"، "ديوانية سريعة"، or wants a request critiqued, reviewed and finished by multiple expert perspectives before delivery.
 ---
 
 # 🏛️ الديوانية — مجلس الخبراء
@@ -20,6 +20,13 @@ description: الديوانية — مجلس خبراء يناقش أي طلب (
 | 5 | 🔥 **الناقد** (محامي الشيطان) | يهاجم الفكرة: الافتراضات الغلط، الزوايد، البدائل الأبسط | «ليش أصلاً؟ وشنو اللي تجاهلناه؟» |
 | 6 | 🔍 **المدقق** (QA + أمان) | يفحص قائمة: الصحة، الأمان، الخصوصية، الأداء، إمكانية الوصول، الاختبار | «شنو الدليل إنها شغالة؟» |
 | 7 | ✨ **صاحب اللمسة الأخيرة** | يجمع القرارات ويطلّع **النسخة النهائية**: الكود/الواجهة/النص الجاهز للتسليم | «هذا اللي ينسلّم — كامل ومصقول.» |
+
+## ⚡ ديوانية سريعة
+لو المستخدم قال «ديوانية سريعة» / «سريع» / «مختصر»، أو الطلب صغير (سطر كود، سؤال واحد، تعديل بسيط) وما طلب الجلسة الكاملة:
+- **3 حضور بس:** 💻 المبرمج (الحل) ← 🔥 الناقد (أقوى اعتراض + بديل، والمبرمج يرد مرة) ← ✨ صاحب اللمسة الأخيرة (التسليم الكامل).
+- بعدها سطر **📋 الملخص**: انبنى · انرفض · عليك.
+- بلا جدول المدقق وبلا أنميشن. لو الناقد لقى مشكلة أمان أو بيانات ← حوّلها جلسة كاملة.
+- «الديوانية» بدون «سريعة» = الجلسة الكاملة دايماً.
 
 ## سير الجلسة (إلزامي بالترتيب)
 
