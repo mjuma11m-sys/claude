@@ -144,3 +144,15 @@ test('offline single-file build is up to date and works', async ({ page }) => {
   await open(page, '/dist/Hayati.html');
   await expect(page.locator('#title')).toHaveText('اليوم');
 });
+
+test('Jafari method: three prayer times (Fajr, Dhuhrain, Ishaain)', async ({ page }) => {
+  await open(page);
+  const names = await store(page, () => { App.S.setSettings({ prayer_method: 'jafari', prayer_on: true }); return App.agendaOn(new Date()).filter((x) => x.type === 'prayer').map((x) => x.name); });
+  expect(names).toEqual(['صلاة الفجر', 'صلاة الظهرين', 'صلاة العشاءين']);
+  const five = await store(page, () => { App.S.setSettings({ prayer_method: 'gulf' }); return App.agendaOn(new Date()).filter((x) => x.type === 'prayer').length; });
+  expect(five).toBe(5);
+  await store(page, () => App.S.setSettings({ prayer_method: 'jafari' }));
+  await page.click('#settingsBtn');
+  await expect(page.locator('.prayer-grid > div')).toHaveCount(3);
+  await expect(page.locator('.prayer-grid')).toContainText('العشاءين');
+});
