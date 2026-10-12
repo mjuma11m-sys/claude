@@ -17,6 +17,10 @@ module.exports = defineConfig({
     // بيئة Claude Code السحابية فيها Chromium جاهز هني
     launchOptions: process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {},
   },
-  projects: [{ name: 'iphone-size', use: { ...devices['Desktop Chrome'], viewport: { width: 390, height: 844 } } }],
+  projects: [
+    { name: 'iphone-size', use: { ...devices['Desktop Chrome'], viewport: { width: 390, height: 844 } } },
+    // محرك Safari (WebKit) بحجم آيفون، نفس محرك نسخة الآيفون. بـ GitHub (HAYATI_WEBKIT=1)، للاختبارات المعلّمة @webkit
+    ...(process.env.HAYATI_WEBKIT ? [{ name: 'webkit-iphone', grep: /@webkit/, use: { ...devices['iPhone 15'], launchOptions: {} } }] : []),
+  ],
   webServer: { command: 'node tests/serve.js', url: 'http://127.0.0.1:4173/index.html', reuseExistingServer: !process.env.CI },
 });

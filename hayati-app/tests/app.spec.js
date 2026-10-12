@@ -18,7 +18,7 @@ const open = async (page, url = '/index.html') => { await page.goto(url); await 
 const store = (page, fn, arg) => page.evaluate(fn, arg);
 const dayKey = (off = 0) => { const d = new Date(); d.setDate(d.getDate() + off); return d.toISOString().slice(0, 10); };
 
-test('every tab and section renders', async ({ page }) => {
+test('every tab and section renders @webkit', async ({ page }) => {
   await open(page);
   for (const tab of ['today', 'money', 'schedule', 'tasks']) {
     await page.click(`button.tab[data-tab="${tab}"]`);
@@ -32,7 +32,7 @@ test('every tab and section renders', async ({ page }) => {
   await expect(page.locator('.tab-pill')).toHaveCount(1);
 });
 
-test('add an expense by hand and it survives a reload', async ({ page }) => {
+test('add an expense by hand and it survives a reload @webkit', async ({ page }) => {
   await open(page);
   await page.click('#addBtn');
   await page.click('[data-pick="tx"]');
@@ -418,7 +418,7 @@ for (const owner of [false, true]) {
   });
 }
 
-test('a new user builds their own week: role-based buttons and «save and add another»', async ({ page }) => {
+test('a new user builds their own week: role-based buttons and «save and add another» @webkit', async ({ page }) => {
   await open(page);
   await store(page, () => { App.S.setSettings({ name: 'سارة', roles: ['student'], onboarded: true }); App.ui.studySeg = 'schedule'; App.go('schedule'); });
   const card = page.locator('.build-week');
@@ -506,7 +506,7 @@ test('iPhone (Capacitor): schedules «الحين وقت…» notifications, hapt
 
 // نسخة الآيفون كما تنبني فعلاً: www/ (من cap-www.js) + مكتبة Capacitor الحقيقية + جسر iOS مزيّف
 // (الاختبار اللي قبله يعطي Plugins جاهزة، وهذا اللي خبّى إن الإضافات ما تتسجل بدون capacitor.js)
-test('iPhone build (www/ + real Capacitor core): plugins register through the native bridge and alerts get scheduled', async ({ page }) => {
+test('iPhone build (www/ + real Capacitor core): plugins register through the native bridge and alerts get scheduled @webkit', async ({ page }) => {
   require('child_process').execFileSync('node', [path.join(__dirname, '../scripts/cap-www.js')]);
   await page.addInitScript(() => {
     const calls = window.__bridge = [];
@@ -550,7 +550,7 @@ test('iPhone build (www/ + real Capacitor core): plugins register through the na
 });
 
 // زر «حفظ» بورقة الجدول: لو فيه نقص، الرسالة تبين فوق الورقة (قبل كانت تطلع وراها فيبين إن الزر ما يشتغل)
-test('course sheet: a missing name shows the message on top of the sheet, then saving works', async ({ page }) => {
+test('course sheet: a missing name shows the message on top of the sheet, then saving works @webkit', async ({ page }) => {
   await open(page);
   await store(page, () => { App.ui.studySeg = 'schedule'; App.go('schedule'); });
   await page.click('#addBtn');
@@ -567,7 +567,7 @@ test('course sheet: a missing name shows the message on top of the sheet, then s
   await expect(page.locator('body > .toast')).toHaveText(/انضاف للجدول/);
 });
 
-test('iPhone build: sheets do not pop the keyboard by themselves', async ({ page }) => {
+test('iPhone build: sheets do not pop the keyboard by themselves @webkit', async ({ page }) => {
   await page.addInitScript(() => { window.HayatiNative = { saveFile: async () => true }; });
   await open(page);
   await store(page, () => { App.ui.studySeg = 'schedule'; App.go('schedule'); });
@@ -577,7 +577,7 @@ test('iPhone build: sheets do not pop the keyboard by themselves', async ({ page
 });
 
 // ⚙️ «جرّب التنبيه» بنسخة الآيفون: يطلب الإذن ويجدول تنبيه بعد 10 ثواني ويعرض النتيجة خطوة خطوة
-test('iPhone build: «جرّب التنبيه» asks permission, schedules a test alert in 10s and reports each step', async ({ page }) => {
+test('iPhone build: «جرّب التنبيه» asks permission, schedules a test alert in 10s and reports each step @webkit', async ({ page }) => {
   require('child_process').execFileSync('node', [path.join(__dirname, '../scripts/cap-www.js')]);
   await page.addInitScript(() => {
     const calls = window.__bridge = [];
