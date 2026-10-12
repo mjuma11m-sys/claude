@@ -208,7 +208,8 @@
     .cat .body { flex: 1; min-width: 0; }
     .cat .line { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; margin-bottom: 6px; }
     .cat .line span { font-weight: 600; }
-    .cat .line b { font-weight: 700; }
+    .cat .line b { font-weight: 700; white-space: nowrap; flex: none; }
+    .cat .line span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .meter { height: 6px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
     .meter > span { display: block; height: 100%; border-radius: 99px; }
 
