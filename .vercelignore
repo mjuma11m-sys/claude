@@ -12,3 +12,15 @@
 /hayati-app/package-lock.json
 /hayati-app/playwright.config.js
 /hayati-app/build.js
+# نسخة الآيفون والأدوات والوثائق الداخلية: ما تنشر بالموقع
+/hayati-app/ios
+/hayati-app/www
+/hayati-app/scripts
+/hayati-app/capacitor.config.json
+/hayati-app/IOS.md
+/hayati-app/STORE.md
+/hayati-app/MONEY.md
+/hayati-app/store/build.js
+/hayati-app/store/raw
+/hayati-app/test-results
+/hayati-app/playwright-report
