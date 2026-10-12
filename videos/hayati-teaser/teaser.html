@@ -67,7 +67,7 @@ function wordIn(ws, t, start, end, stagger) {
 const openW = words($('open'), 'صار لي شهر<br> أشتغل على <span class="c">شي…</span>'.replace('<br>', ''));
 // #follow: نسخة حساب التطبيق — بدون أي تاريخ إطلاق لين تخلص البرمجة
 const COUNTDOWN = location.hash === '#follow';
-const soonW = words($('soon'), COUNTDOWN ? 'تابعنا عشان <span class="c">تجربه أول</span>' : 'قريباً <span class="c">👀</span>');
+const soonW = words($('soon'), COUNTDOWN ? 'تابعنا عشان <span class="c">تجربه أول</span>' : 'قيد <span class="c">التطوير</span> 🛠️');
 if (COUNTDOWN) { $('logo').style.top = '420px'; $('bname').style.top = '850px'; $('soon').style.top = '1100px'; $('soon').style.fontSize = '76px'; $('handle').style.top = '1240px'; }
 // لمحات: كل وحدة جملة + شاشة مغبّشة، والغباش يخف شوي شوي
 const BEATS = [
