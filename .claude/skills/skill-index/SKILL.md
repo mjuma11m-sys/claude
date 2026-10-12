@@ -22,6 +22,7 @@ description: فهرس وموجّه الـ skills — يحدد أي skill (أو �
 | Swift / iOS native | `write-swift` | — |
 | اختيار مكتبة frontend | `pick-ui-library` | — |
 | Graph الكود / أسئلة البنية | `graphify` | — |
+| فحص/تحليل مستودع قراءة فقط قبل التعديل | `repo-audit` | `graphify` لو `graphify-out/` موجود |
 
 ## التصميم (موجّه — وحدة بس)
 | الحالة | استخدم | لا تخلط مع |
