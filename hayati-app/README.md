@@ -16,6 +16,8 @@ Personal life-OS PWA: expenses, budgets, bank/BenefitPay SMS parsing, study sche
 | `calendar.js` | `.ics` export with alarms |
 | `motion.js` | Motion layer: view entrance, sheet enter/exit, count-up, bar/ring tweens, toggle feedback |
 | `config.js` | Supabase URL/anon key (empty) |
+| `sw.js` | Service worker: opens offline, iOS notifications via `showNotification`, tap opens the app. Add any new script to `SHELL` (a test checks) |
+| `pwa.js` | App icon badge = today's + overdue undone tasks (toggle in settings) |
 
 Run locally: `npx serve hayati-app` (artifact db unavailable outside claude.ai → falls back to localStorage/Supabase).
 

@@ -1580,6 +1580,14 @@
   }
 
   // --- التقويم ---
+  function prayerDays(n) {
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const d = startOfDay(new Date()); d.setDate(d.getDate() + i);
+      for (const x of X('agenda', d) || []) if (x.type === 'prayer') out.push({ key: x.id.replace('prayer-', ''), name: x.name, date: d, start: x.start, dur: x.end - x.start });
+    }
+    return out;
+  }
   function calendarForm() {
     const saved = (() => { try { return JSON.parse(localStorage.getItem('hayati-cal') || '{}'); } catch (e) { return {}; } })();
     openSheet({
@@ -1587,12 +1595,13 @@
       saveLabel: 'تصدير',
       body:
         '<div class="card" style="display:flex;gap:12px;align-items:center"><div class="ico" style="' + tint('#1A8A8F') + '">' + I('bell') + '</div>' +
-        '<p class="small" style="margin:0;color:var(--text-2)">محاضراتك وتمرينك ومواعيدك تنضاف لتقويم آبل مع تنبيه قبلها وتنبيه «الحين وقت…». ينبّهك على الآيفون والماك حتى لو التطبيق مسكّر.</p></div>' +
+        '<p class="small" style="margin:0;color:var(--text-2)">محاضراتك وتمرينك ومواعيدك والصلاة تنضاف لتقويم آبل مع تنبيه قبلها وتنبيه «الحين وقت…». ينبّهك على الآيفون والماك حتى لو التطبيق مسكّر.</p></div>' +
         '<div class="field"><label>نبّهني قبل المحاضرة بـ</label><div class="seg" id="beforeSeg">' + [5, 10, 15, 30].map((m) =>
           '<button type="button" data-m="' + m + '" class="' + ((saved.before || 10) === m ? 'on' : '') + '">' + m + ' د</button>').join('') + '</div></div>' +
         '<div class="field"><label>نهاية الفصل الدراسي (تتوقف المواعيد بعدها)</label><input type="date" name="end" value="' + h(saved.end || '') + '"></div>' +
         '<label class="switch"><input type="checkbox" name="tasks"' + (saved.tasks === false ? '' : ' checked') + '> الواجبات والاختبارات والمواعيد الجاية</label>' +
         '<label class="switch" style="margin-top:8px"><input type="checkbox" name="subs"' + (saved.subs === false ? '' : ' checked') + '> تذكير تجديد الاشتراكات</label>' +
+        ((X('agenda', new Date()) || []).some((x) => x.type === 'prayer') ? '<label class="switch" style="margin-top:8px"><input type="checkbox" name="prayers"' + (saved.prayers === false ? '' : ' checked') + '> أوقات الصلاة لـ 30 يوم (صدّر من جديد كل شهر)</label>' : '') +
         '<div class="group-title">بعد الضغط على «تصدير»</div><ol class="steps">' +
         (inClaude() ? '<li><b>من رابط claude.ai:</b> ينحفظ ملف <code>hayati-calendar.txt</code>. على الماك غيّر اسمه إلى <code>hayati.ics</code> وافتحه، واختر تقويم <b>iCloud</b> عشان يوصل للآيفون.</li>' :
           '<li><b>على الماك (الأسهل):</b> ينزل ملف <code>hayati.ics</code>، افتحه واختر تقويم <b>iCloud</b> عشان يوصل للآيفون.</li>') +
@@ -1608,9 +1617,10 @@
         };
       },
       onSave(root) {
-        const opts = { before: Number(root.dataset.before), end: val(root, 'end'), tasks: root.querySelector('[name=tasks]').checked, subs: root.querySelector('[name=subs]').checked };
+        const pr = root.querySelector('[name=prayers]');
+        const opts = { before: Number(root.dataset.before), end: val(root, 'end'), tasks: root.querySelector('[name=tasks]').checked, subs: root.querySelector('[name=subs]').checked, prayers: pr ? pr.checked : false };
         try { localStorage.setItem('hayati-cal', JSON.stringify(opts)); } catch (e) { /* تجاهل */ }
-        const { text, count } = window.CalendarExport.build({ courses: st.courses, tasks: st.tasks, subscriptions: opts.subs ? st.subscriptions : [], remindBefore: opts.before, semesterEnd: opts.end, includeTasks: opts.tasks });
+        const { text, count } = window.CalendarExport.build({ courses: st.courses, tasks: st.tasks, subscriptions: opts.subs ? st.subscriptions : [], remindBefore: opts.before, semesterEnd: opts.end, includeTasks: opts.tasks, prayers: opts.prayers ? prayerDays(30) : [] });
         if (!count) throw new Error('ما فيه شي أصدّره، أضف موادك أول');
         if (inClaude()) saveFile('hayati-calendar.txt', text, 'text/plain').then((ok) => { if (ok) toast('غيّر امتداد الملف إلى ‎.ics‎ وافتحه بالتقويم'); });
         else window.CalendarExport.download(text, 'hayati.ics');

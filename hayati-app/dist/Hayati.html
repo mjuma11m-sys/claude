@@ -1469,6 +1469,23 @@ window.HAYATI_CONFIG = {
       count++;
     }
 
+    // الصلاة: الوقت يتغير كل يوم، فكل يوم حدث بروحه (UID ثابت لليوم عشان التصدير الجديد يحدّث مو يكرر)
+    for (const p of opts.prayers || []) {
+      const start = new Date(p.date); start.setHours(0, 0, 0, 0); start.setMinutes(p.start);
+      if (start < now) continue;
+      lines.push(
+        'BEGIN:VEVENT',
+        'UID:prayer-' + p.key + '-' + local(start).slice(0, 8) + '@hayati',
+        'DTSTAMP:' + stamp,
+        'DTSTART:' + local(start),
+        'DTEND:' + local(new Date(start.getTime() + (p.dur || 20) * 60000)),
+        'SUMMARY:' + esc('🕌 ' + p.name),
+        ...alarm('PT0M', 'الحين وقت ' + p.name),
+        'END:VEVENT'
+      );
+      count++;
+    }
+
     lines.push('END:VCALENDAR');
     return { text: lines.filter(Boolean).map(fold).join('\r\n') + '\r\n', count };
   }
@@ -3157,6 +3174,14 @@ window.HAYATI_CONFIG = {
   }
 
   // --- التقويم ---
+  function prayerDays(n) {
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const d = startOfDay(new Date()); d.setDate(d.getDate() + i);
+      for (const x of X('agenda', d) || []) if (x.type === 'prayer') out.push({ key: x.id.replace('prayer-', ''), name: x.name, date: d, start: x.start, dur: x.end - x.start });
+    }
+    return out;
+  }
   function calendarForm() {
     const saved = (() => { try { return JSON.parse(localStorage.getItem('hayati-cal') || '{}'); } catch (e) { return {}; } })();
     openSheet({
@@ -3164,12 +3189,13 @@ window.HAYATI_CONFIG = {
       saveLabel: 'تصدير',
       body:
         '<div class="card" style="display:flex;gap:12px;align-items:center"><div class="ico" style="' + tint('#1A8A8F') + '">' + I('bell') + '</div>' +
-        '<p class="small" style="margin:0;color:var(--text-2)">محاضراتك وتمرينك ومواعيدك تنضاف لتقويم آبل مع تنبيه قبلها وتنبيه «الحين وقت…». ينبّهك على الآيفون والماك حتى لو التطبيق مسكّر.</p></div>' +
+        '<p class="small" style="margin:0;color:var(--text-2)">محاضراتك وتمرينك ومواعيدك والصلاة تنضاف لتقويم آبل مع تنبيه قبلها وتنبيه «الحين وقت…». ينبّهك على الآيفون والماك حتى لو التطبيق مسكّر.</p></div>' +
         '<div class="field"><label>نبّهني قبل المحاضرة بـ</label><div class="seg" id="beforeSeg">' + [5, 10, 15, 30].map((m) =>
           '<button type="button" data-m="' + m + '" class="' + ((saved.before || 10) === m ? 'on' : '') + '">' + m + ' د</button>').join('') + '</div></div>' +
         '<div class="field"><label>نهاية الفصل الدراسي (تتوقف المواعيد بعدها)</label><input type="date" name="end" value="' + h(saved.end || '') + '"></div>' +
         '<label class="switch"><input type="checkbox" name="tasks"' + (saved.tasks === false ? '' : ' checked') + '> الواجبات والاختبارات والمواعيد الجاية</label>' +
         '<label class="switch" style="margin-top:8px"><input type="checkbox" name="subs"' + (saved.subs === false ? '' : ' checked') + '> تذكير تجديد الاشتراكات</label>' +
+        ((X('agenda', new Date()) || []).some((x) => x.type === 'prayer') ? '<label class="switch" style="margin-top:8px"><input type="checkbox" name="prayers"' + (saved.prayers === false ? '' : ' checked') + '> أوقات الصلاة لـ 30 يوم (صدّر من جديد كل شهر)</label>' : '') +
         '<div class="group-title">بعد الضغط على «تصدير»</div><ol class="steps">' +
         (inClaude() ? '<li><b>من رابط claude.ai:</b> ينحفظ ملف <code>hayati-calendar.txt</code>. على الماك غيّر اسمه إلى <code>hayati.ics</code> وافتحه، واختر تقويم <b>iCloud</b> عشان يوصل للآيفون.</li>' :
           '<li><b>على الماك (الأسهل):</b> ينزل ملف <code>hayati.ics</code>، افتحه واختر تقويم <b>iCloud</b> عشان يوصل للآيفون.</li>') +
@@ -3185,9 +3211,10 @@ window.HAYATI_CONFIG = {
         };
       },
       onSave(root) {
-        const opts = { before: Number(root.dataset.before), end: val(root, 'end'), tasks: root.querySelector('[name=tasks]').checked, subs: root.querySelector('[name=subs]').checked };
+        const pr = root.querySelector('[name=prayers]');
+        const opts = { before: Number(root.dataset.before), end: val(root, 'end'), tasks: root.querySelector('[name=tasks]').checked, subs: root.querySelector('[name=subs]').checked, prayers: pr ? pr.checked : false };
         try { localStorage.setItem('hayati-cal', JSON.stringify(opts)); } catch (e) { /* تجاهل */ }
-        const { text, count } = window.CalendarExport.build({ courses: st.courses, tasks: st.tasks, subscriptions: opts.subs ? st.subscriptions : [], remindBefore: opts.before, semesterEnd: opts.end, includeTasks: opts.tasks });
+        const { text, count } = window.CalendarExport.build({ courses: st.courses, tasks: st.tasks, subscriptions: opts.subs ? st.subscriptions : [], remindBefore: opts.before, semesterEnd: opts.end, includeTasks: opts.tasks, prayers: opts.prayers ? prayerDays(30) : [] });
         if (!count) throw new Error('ما فيه شي أصدّره، أضف موادك أول');
         if (inClaude()) saveFile('hayati-calendar.txt', text, 'text/plain').then((ok) => { if (ok) toast('غيّر امتداد الملف إلى ‎.ics‎ وافتحه بالتقويم'); });
         else window.CalendarExport.download(text, 'hayati.ics');
@@ -6060,6 +6087,56 @@ window.HAYATI_CONFIG = {
     placePill();
   }
 })(window);
+
+</script>
+  <script>/* pwa.js */
+// 🔴 رقم على أيقونة التطبيق = مهام اليوم + المتأخرة اللي ما خلصت (iOS 16.4+ بعد ما تثبّته وتسمح بالتنبيهات)
+(function () {
+  'use strict';
+
+  const A = window.App, E = window.Extras;
+  if (!A || !E) return;
+  const { S, st } = A;
+  const KEY = 'hayati-badge';
+  const on = () => { try { return localStorage.getItem(KEY) !== 'off'; } catch (e) { return true; } };
+  const supported = 'setAppBadge' in navigator;
+
+  // المواعيد تطلع بجدول اليوم، فالرقم للمهام والواجبات والاختبارات بس
+  function pending(now) {
+    const end = new Date(now || Date.now()); end.setHours(23, 59, 59, 999);
+    return st.tasks.filter((t) => !t.done && t.due_at && t.kind !== 'appointment' && new Date(t.due_at) <= end).length;
+  }
+  let last = -1;
+  function update() {
+    if (!supported) return;
+    const allowed = on() && (!('Notification' in window) || Notification.permission === 'granted');
+    const n = allowed ? pending() : 0;
+    if (n === last) return;
+    last = n;
+    (n ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(() => {});
+  }
+
+  const prevExtra = E.settingsExtra;
+  E.settingsExtra = function () {
+    if (!supported) return prevExtra ? prevExtra.apply(this, arguments) : '';
+    return (prevExtra ? prevExtra.apply(this, arguments) : '') +
+      '<div class="group-title">' + A.I('bell') + 'رقم على الأيقونة</div><div class="card">' +
+      '<label class="switch"><input type="checkbox" data-set="badge"' + (on() ? ' checked' : '') + '> عدد مهام اليوم والمتأخرة على أيقونة التطبيق</label>' +
+      '<p class="small muted" style="margin:8px 0 0">يطلع بس لما يكون التطبيق مثبّت والتنبيهات مسموحة. اليوم: <b class="num">' + pending() + '</b></p></div>';
+  };
+  document.addEventListener('change', (e) => {
+    const b = e.target.closest('[data-set="badge"]');
+    if (!b) return;
+    try { localStorage.setItem(KEY, b.checked ? 'on' : 'off'); } catch (err) { /* تجاهل */ }
+    last = -1; update();
+  });
+
+  S.subscribe(update);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') update(); });
+  setInterval(update, 60000);
+  update();
+  window.HayatiPWA = { pending, update };
+})();
 
 </script>
 
