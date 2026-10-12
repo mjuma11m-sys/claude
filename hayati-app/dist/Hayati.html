@@ -436,6 +436,11 @@
     .rd-chips { display: flex; flex-wrap: wrap; gap: 6px; }
     .rd-chips span { font-size: 12px; padding: 3px 10px; border-radius: 99px; background: var(--surface-2); color: var(--text-2); direction: rtl; unicode-bidi: isolate; }
     .rd-chips span.bad { background: var(--danger-soft); color: var(--expense); }
+    .ob .ob-title { display: block; font-size: 18px; }
+    .ob-roles { display: flex; flex-wrap: wrap; gap: 8px; }
+    .ob-chip { font: inherit; font-size: 14px; font-weight: 600; padding: 8px 14px; border-radius: 99px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
+    .ob-chip.on { border-color: var(--brand); background: var(--brand-soft); color: var(--brand); }
+    .ob-chip:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
     /* ---------- إضافات ---------- */
     .hero-btn { border: 0; background: rgba(255, 255, 255, .16); color: #fff; border-radius: 99px; padding: 4px 10px; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
     .hero-btn svg.i { width: 14px; height: 14px; }
@@ -926,7 +931,7 @@ window.HAYATI_CONFIG = {
   const KEY = 'hayati-v1';
   const CFG_KEY = 'hayati-supabase';
   const TABLES = ['transactions', 'courses', 'tasks', 'subscriptions', 'goals', 'grades', 'study_sessions', 'debts', 'habits', 'daily', 'lifts', 'body', 'cards', 'events', 'shopping', 'journal', 'matches'];
-  const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges'];
+  const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges', 'name', 'roles', 'onboarded'];
   const NUMERIC = ['amount', 'target', 'saved', 'credits', 'minutes', 'day', 'month', 'duration', 'remind_days', 'weight', 'waist', 'water', 'sleep', 'absence_limit'];
 
   const listeners = new Set();
@@ -2339,7 +2344,9 @@ window.HAYATI_CONFIG = {
 
   // ================= الجدول/المذاكرة/المعدل =================
   function viewStudy() {
-    return segBar(STUDY_SEGS, ui.studySeg, 'study-seg') + ({ schedule: viewSchedule, focus: viewFocus, gpa: viewGpa, health: () => X('viewHealth') })[ui.studySeg]();
+    const segs = has('student') ? STUDY_SEGS : STUDY_SEGS.filter((x) => x[0] !== 'gpa');
+    if (!segs.some((x) => x[0] === ui.studySeg)) ui.studySeg = 'schedule';
+    return segBar(segs, ui.studySeg, 'study-seg') + ({ schedule: viewSchedule, focus: viewFocus, gpa: viewGpa, health: () => X('viewHealth') })[ui.studySeg]();
   }
 
   function viewSchedule() {
@@ -2669,8 +2676,11 @@ window.HAYATI_CONFIG = {
   const tabbar = document.getElementById('tabbar');
   document.getElementById('settingsIcon').innerHTML = I('settings');
 
+  // مين يستخدم التطبيق: roles فاضية = الكل (المستخدمين القدامى يشوفون كل شي)
+  const has = (r) => !Array.isArray(st.settings.roles) || !st.settings.roles.length || st.settings.roles.includes(r);
+  const tabOf = (x) => (x[0] === 'schedule' && !has('student') ? ['schedule', 'جدولي', 'calendar'] : x);
   function renderTabbar() {
-    const t = (x) => '<button class="tab' + (ui.tab === x[0] ? ' on' : '') + '" data-tab="' + x[0] + '">' + I(x[2]) + x[1] + '</button>';
+    const t = (x) => { x = tabOf(x); return '<button class="tab' + (ui.tab === x[0] ? ' on' : '') + '" data-tab="' + x[0] + '">' + I(x[2]) + x[1] + '</button>'; };
     tabbar.innerHTML = t(TABS[0]) + t(TABS[1]) + '<button class="add" id="addBtn" aria-label="إضافة">' + I('plus') + '</button>' + t(TABS[2]) + t(TABS[3]);
   }
 
@@ -2678,16 +2688,17 @@ window.HAYATI_CONFIG = {
     const n = new Date();
     if (ui.tab === 'today') {
       const hr = n.getHours();
-      return (hr < 12 ? 'صباح الخير' : 'مساء الخير') + ' · ' + DAYS[n.getDay()] + ' ' + n.getDate() + ' ' + MONTHS[n.getMonth()];
+      const nm = (st.settings.name || '').trim();
+      return (hr < 12 ? 'صباح الخير' : 'مساء الخير') + (nm ? ' يا ' + nm : '') + ' · ' + DAYS[n.getDay()] + ' ' + n.getDate() + ' ' + MONTHS[n.getMonth()];
     }
     if (ui.tab === 'money') return { tx: 'تتبّع صرفك ودخلك', subs: 'اشتراكاتك ومصاريفك الثابتة', goals: 'وفّر لأحلامك', debts: 'الفلوس اللي لك واللي عليك' }[ui.moneySeg];
-    if (ui.tab === 'schedule') return { schedule: 'محاضراتك وتمرينك ومواعيدك', focus: 'ركّز وذاكر', gpa: 'معدلك الفصلي والتراكمي' }[ui.studySeg];
+    if (ui.tab === 'schedule') return { schedule: has('student') ? 'محاضراتك وتمرينك ومواعيدك' : 'شغلك وتمرينك ومواعيدك', focus: 'ركّز وذاكر', gpa: 'معدلك الفصلي والتراكمي' }[ui.studySeg];
     return 'واجبات واختبارات ومشاوير';
   }
 
   let lastTab = null;
   function render() {
-    const tabInfo = TABS.find((t) => t[0] === ui.tab);
+    const tabInfo = tabOf(TABS.find((t) => t[0] === ui.tab));
     document.getElementById('title').textContent = tabInfo[1];
     document.getElementById('subtitle').textContent = subtitle();
     renderTabbar();
@@ -3578,7 +3589,7 @@ window.HAYATI_CONFIG = {
     S, st, I, ui, h, fmt, money, tint, catMeta, catIcon, pad, monthKey, sameDay, startOfDay, daysBetween, time12, timeOf, minutesOf,
     nowMinutes, toLocalInput, dayLabel, nDays, toast, ask, courseById, lectures, lecturesOn, agendaOn, empty, secHead, ring, openSheet,
     closeSheet, val, parseAmount, segPick, render, go, txInMonth, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, courseForm, taskForm,
-    notify, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
+    notify, has, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
   };
   setInterval(timerTickUI, 1000);
   timerCheck();
@@ -3669,6 +3680,8 @@ window.HAYATI_CONFIG = {
   const prayerNames = (m) => (m === 'jafari' ? PRAYER_NAMES_JAFARI : PRAYER_NAMES);
   function prayersOn(date) {
     if (set().prayer_on === false) return [];
+    // مستخدم جديد ما اختار طريقته (سنّي/جعفري) → ما نفترض عنه
+    if (!set().prayer_method && window.HayatiProfile && window.HayatiProfile.isNew()) return [];
     const m = prayerMethod(), t = prayerTimes(date, m);
     return prayerNames(m).map(([k, name, dur]) => ({ src: 'prayer', id: 'prayer-' + k, type: 'prayer', name: 'صلاة ' + name, room: '', color: '#0d9488', start: t[k], end: t[k] + (dur || 20) }));
   }
@@ -4867,7 +4880,7 @@ window.HAYATI_CONFIG = {
       if (a.spend > perWeek) out.push('⚠️ تعدّيت حصة الأسبوع من ميزانيتك (' + fmt(perWeek) + ' د.ب).');
     }
     const sleepGoal = Number(set.sleep_goal) || 8;
-    if (a.sleep != null && a.sleep < sleepGoal - 1) out.push('😴 متوسط نومك ' + a.sleep + ' ساعات — أقل من هدفك بساعة وأكثر. النوم أهم شي لردة فعل الحارس.');
+    if (a.sleep != null && a.sleep < sleepGoal - 1) out.push('😴 متوسط نومك ' + a.sleep + ' ساعات — أقل من هدفك بساعة وأكثر.' + (!A.has || A.has('keeper') ? ' النوم أهم شي لردة فعل الحارس.' : ''));
     if (!a.study) out.push('📚 ما سجّلت ولا جلسة مذاكرة هالأسبوع — جرّب 25 دقيقة بس من «المذاكرة».');
     if (a.gymDays >= 3) out.push('💪 ' + a.gymDays + ' أيام تمرين — التزام ممتاز.');
     else if (a.gymDays === 0) out.push('🏋️ ولا تمرين هالأسبوع — رجّع الجدول على الأحد.');
@@ -4953,6 +4966,7 @@ window.HAYATI_CONFIG = {
   const resultOf = (m) => (Number(m.for) > Number(m.against) ? ['ف', '#2F9E7A'] : Number(m.for) < Number(m.against) ? ['خ', '#D63A3A'] : ['ت', '#8A9A9B']);
 
   function keeperSection() {
+    if (A.has && !A.has('keeper')) return '';
     const s = season();
     let out = A.secHead('🧤 الحارس', '<button class="link" data-action="gk-drills">تمارين الحراسة</button>');
     if (!s.n) {
@@ -5078,6 +5092,7 @@ window.HAYATI_CONFIG = {
   }
 
   function attendanceCard() {
+    if (A.has && !A.has('student')) return '';
     const c = pendingLecture();
     if (!c) return '';
     return '<div class="card" style="border-color:color-mix(in srgb,' + h(c.color || '#1A8A8F') + ' 40%,var(--border))">' +
@@ -6443,12 +6458,19 @@ window.HAYATI_CONFIG = {
     yellow: ['🟡', 'تمرين متوسط', 'مسك كرة وتمركز وتوزيع. خفّف القفز المتكرر.', '#B45309'],
     red: ['🔴', 'يوم استشفاء', 'إطالة ومرونة ومشي خفيف. لا ارتماءات اليوم.', '#D63A3A'],
   };
+  // للحارس نصايح حراسة، ولباقي الرياضيين نصايح عامة
+  const ZONES_ANY = {
+    green: ['🟢', 'جاهز لتمرين قوي', 'يومك تضغط فيه: سرعة، قوة، أو تمرين طويل.', '#2F9E7A'],
+    yellow: ['🟡', 'تمرين متوسط', 'خفّف الشدة: تكنيك، مشي سريع، أو أوزان خفيفة.', '#B45309'],
+    red: ['🔴', 'يوم استشفاء', 'إطالة ومشي خفيف ونوم بدري.', '#D63A3A'],
+  };
   function readinessCard() {
+    if (A.has && !A.has('athlete') && !A.has('keeper')) return '';
     const r = readiness();
     if (!r) return '';
-    const [emo, title, tip, col] = ZONES[r.zone];
+    const [emo, title, tip, col] = (!A.has || A.has('keeper') ? ZONES : ZONES_ANY)[r.zone];
     return '<div class="card readiness" style="--z:' + col + '"><div class="rd-head"><span class="rd-emo">' + emo + '</span><div style="flex:1;min-width:0">' +
-      '<small class="muted">🧤 جاهزيتك اليوم</small><b>' + title + '</b></div><b class="num rd-score">' + r.score + '</b></div>' +
+      '<small class="muted">' + (!A.has || A.has('keeper') ? '🧤' : '💪') + ' جاهزيتك اليوم</small><b>' + title + '</b></div><b class="num rd-score">' + r.score + '</b></div>' +
       '<p class="small" style="margin:6px 0 8px;color:var(--text-2)">' + tip + '</p>' +
       '<div class="rd-chips">' + r.parts.map((p) => '<span class="' + (p.bad ? 'bad' : '') + '">' + h(p.chip) + '</span>').join('') + '</div>' +
       (r.hasBaseline ? '' : '<p class="small muted" style="margin:8px 0 0">بعد 3 ليالي من الساعة تصير المقارنة بمعدلك أنت.</p>') +
@@ -6457,6 +6479,111 @@ window.HAYATI_CONFIG = {
   wrap('todayTop', (prev) => readinessCard() + prev());
 
   window.HayatiInsights = { forecast, readiness };
+  A.render();
+})();
+
+</script>
+  <script>/* community.js */
+// 👥 «حياتي» للكل: بطاقة تعارف أول مرة (الاسم، مين أنت، الصلاة، الميزانية) + «ملفك» بالإعدادات
+//   roles فاضية = كل الميزات (المستخدمين القدامى ما يتغير عليهم شي)
+(function () {
+  'use strict';
+
+  const A = window.App, E = window.Extras;
+  if (!A || !E) return;
+  const { S, st, I, h } = A;
+  const wrap = (name, fn) => { const prev = E[name]; E[name] = (...a) => fn(prev ? prev : () => '', ...a); };
+
+  const ROLES = [
+    ['student', '🎓', 'طالب'], ['employee', '💼', 'موظف'], ['athlete', '🏃', 'رياضي'],
+    ['keeper', '🧤', 'حارس مرمى'], ['home', '🏠', 'شؤون البيت'],
+  ];
+  const PRAYER = [['gulf', 'أهل السنة (5 أوقات)'], ['jafari', 'جعفري (3 أوقات)'], ['off', 'لا تظهرها']];
+
+  // تطلع بس لمستخدم جديد: ما عرّفنا عليه، وما عنده بيانات
+  function isNew() {
+    const s = st.settings || {};
+    if (s.onboarded || Array.isArray(s.roles)) return false;
+    return !st.transactions.length && !st.courses.length && !st.tasks.length;
+  }
+
+  function form(s, compact) {
+    const roles = Array.isArray(s.roles) ? s.roles : [];
+    const pm = s.prayer_on === false ? 'off' : (s.prayer_method || '');
+    return '<div class="field"><label for="obName">اسمك (اختياري)</label><input id="obName" maxlength="24" autocomplete="given-name" placeholder="مثلاً: فاطمة" value="' + h(s.name || '') + '"></div>' +
+      '<div class="field"><label>أنا… (اختار كل اللي ينطبق)</label><div class="ob-roles">' +
+      ROLES.map(([k, e, l]) => '<button type="button" class="ob-chip' + (roles.includes(k) ? ' on' : '') + '" data-role="' + k + '" aria-pressed="' + roles.includes(k) + '">' + e + ' ' + l + '</button>').join('') + '</div></div>' +
+      '<div class="field"><label>أوقات الصلاة</label><div class="seg" id="obPrayer">' +
+      PRAYER.map(([k, l]) => '<button type="button" data-p="' + k + '" class="' + (pm === k ? 'on' : '') + '">' + l + '</button>').join('') + '</div></div>' +
+      (compact ? '' : '<div class="field"><label for="obBudget">ميزانيتك الشهرية (اختياري)</label><input id="obBudget" inputmode="decimal" placeholder="مثلاً 300" value="' + h(s.budget || '') + '"></div>');
+  }
+  function read(root) {
+    const roles = [...root.querySelectorAll('.ob-chip.on')].map((b) => b.dataset.role);
+    // حارس المرمى رياضي أصلاً
+    if (roles.includes('keeper') && !roles.includes('athlete')) roles.push('athlete');
+    const p = root.querySelector('#obPrayer .on');
+    const patch = { name: root.querySelector('#obName').value.trim(), roles, onboarded: true };
+    if (p) { if (p.dataset.p === 'off') patch.prayer_on = false; else { patch.prayer_on = true; patch.prayer_method = p.dataset.p; } }
+    const b = root.querySelector('#obBudget');
+    if (b && b.value.trim()) { const v = A.parseAmount(b.value); if (v > 0) patch.budget = v; }
+    return patch;
+  }
+  function bind(root) {
+    root.addEventListener('click', (e) => {
+      const c = e.target.closest('.ob-chip');
+      if (c) { c.classList.toggle('on'); c.setAttribute('aria-pressed', c.classList.contains('on')); return; }
+      const p = e.target.closest('#obPrayer button');
+      if (p) root.querySelectorAll('#obPrayer button').forEach((x) => x.classList.toggle('on', x === p));
+    });
+  }
+
+  // ---------- بطاقة التعارف بأول صفحة ----------
+  function welcomeCard() {
+    if (!isNew()) return '';
+    return '<div class="card ob" id="obCard"><b class="ob-title">👋 هلا! خلّنا نعرفك</b>' +
+      '<p class="small muted" style="margin:2px 0 12px">عشان «حياتي» يوريك اللي يهمك بس. بياناتك تظل بجهازك.</p>' +
+      form(st.settings || {}) +
+      '<div class="btn-row"><button class="btn primary" data-action="ob-save">يلا نبدأ</button><button class="btn ghost" data-action="ob-skip">بعدين</button></div></div>';
+  }
+  wrap('todayTop', (prev) => welcomeCard() + prev());
+  wrap('action', (prev, name, el, e) => {
+    if (name === 'ob-save') {
+      const patch = read(document.getElementById('obCard'));
+      S.setSettings(patch);
+      A.toast(patch.name ? 'أهلاً ' + patch.name + ' 👋' : 'أهلاً فيك 👋');
+      A.render(); return;
+    }
+    if (name === 'ob-skip') { S.setSettings({ onboarded: true }); A.render(); return; }
+    return prev(name, el, e);
+  });
+  new MutationObserver(() => { const c = document.getElementById('obCard'); if (c && !c.dataset.b) { c.dataset.b = 1; bind(c); } })
+    .observe(document.getElementById('view'), { childList: true });
+
+  // ---------- «ملفك» بالإعدادات ----------
+  const prevExtra = E.settingsExtra;
+  E.settingsExtra = function () {
+    const s = st.settings || {};
+    const roles = Array.isArray(s.roles) && s.roles.length ? s.roles : null;
+    const who = roles ? ROLES.filter(([k]) => roles.includes(k)).map(([, e, l]) => e + ' ' + l).join(' · ') : 'كل الميزات ظاهرة';
+    return '<div class="group-title">' + I('user') + 'ملفك</div><div class="menu">' +
+      '<button data-set="profile"><div class="ico" style="' + A.tint('#13636B') + '">' + I('user') + '</div><div style="flex:1;min-width:0"><b>' + h(s.name || 'اسمك ومين أنت') + '</b><small>' + h(who) + '</small></div>' + I('chevL') + '</button></div>' +
+      (prevExtra ? prevExtra.apply(this, arguments) : '');
+  };
+  const prevSet = E.settingsAction;
+  E.settingsAction = async function (act) {
+    if (act === 'profile') { A.closeSheet(); setTimeout(profileSheet, 280); return true; }
+    return prevSet ? prevSet.apply(this, arguments) : false;
+  };
+  function profileSheet() {
+    A.openSheet({
+      title: 'ملفك',
+      body: '<p class="small muted" style="margin:0 0 12px">اللي تختاره يحدد وش يطلع لك: المعدل للطالب، الجاهزية للرياضي، ووضع الحارس للحارس. ما تختار شي = كل شي يطلع.</p>' + form(st.settings || {}, true),
+      mount: bind,
+      onSave(root) { S.setSettings(read(root)); A.toast('انحفظ ✓'); },
+    });
+  }
+
+  window.HayatiProfile = { ROLES, isNew };
   A.render();
 })();
 

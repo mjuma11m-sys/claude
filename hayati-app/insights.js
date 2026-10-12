@@ -77,12 +77,19 @@
     yellow: ['🟡', 'تمرين متوسط', 'مسك كرة وتمركز وتوزيع. خفّف القفز المتكرر.', '#B45309'],
     red: ['🔴', 'يوم استشفاء', 'إطالة ومرونة ومشي خفيف. لا ارتماءات اليوم.', '#D63A3A'],
   };
+  // للحارس نصايح حراسة، ولباقي الرياضيين نصايح عامة
+  const ZONES_ANY = {
+    green: ['🟢', 'جاهز لتمرين قوي', 'يومك تضغط فيه: سرعة، قوة، أو تمرين طويل.', '#2F9E7A'],
+    yellow: ['🟡', 'تمرين متوسط', 'خفّف الشدة: تكنيك، مشي سريع، أو أوزان خفيفة.', '#B45309'],
+    red: ['🔴', 'يوم استشفاء', 'إطالة ومشي خفيف ونوم بدري.', '#D63A3A'],
+  };
   function readinessCard() {
+    if (A.has && !A.has('athlete') && !A.has('keeper')) return '';
     const r = readiness();
     if (!r) return '';
-    const [emo, title, tip, col] = ZONES[r.zone];
+    const [emo, title, tip, col] = (!A.has || A.has('keeper') ? ZONES : ZONES_ANY)[r.zone];
     return '<div class="card readiness" style="--z:' + col + '"><div class="rd-head"><span class="rd-emo">' + emo + '</span><div style="flex:1;min-width:0">' +
-      '<small class="muted">🧤 جاهزيتك اليوم</small><b>' + title + '</b></div><b class="num rd-score">' + r.score + '</b></div>' +
+      '<small class="muted">' + (!A.has || A.has('keeper') ? '🧤' : '💪') + ' جاهزيتك اليوم</small><b>' + title + '</b></div><b class="num rd-score">' + r.score + '</b></div>' +
       '<p class="small" style="margin:6px 0 8px;color:var(--text-2)">' + tip + '</p>' +
       '<div class="rd-chips">' + r.parts.map((p) => '<span class="' + (p.bad ? 'bad' : '') + '">' + h(p.chip) + '</span>').join('') + '</div>' +
       (r.hasBaseline ? '' : '<p class="small muted" style="margin:8px 0 0">بعد 3 ليالي من الساعة تصير المقارنة بمعدلك أنت.</p>') +

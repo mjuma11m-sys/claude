@@ -436,6 +436,11 @@
     .rd-chips { display: flex; flex-wrap: wrap; gap: 6px; }
     .rd-chips span { font-size: 12px; padding: 3px 10px; border-radius: 99px; background: var(--surface-2); color: var(--text-2); direction: rtl; unicode-bidi: isolate; }
     .rd-chips span.bad { background: var(--danger-soft); color: var(--expense); }
+    .ob .ob-title { display: block; font-size: 18px; }
+    .ob-roles { display: flex; flex-wrap: wrap; gap: 8px; }
+    .ob-chip { font: inherit; font-size: 14px; font-weight: 600; padding: 8px 14px; border-radius: 99px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
+    .ob-chip.on { border-color: var(--brand); background: var(--brand-soft); color: var(--brand); }
+    .ob-chip:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
     /* ---------- إضافات ---------- */
     .hero-btn { border: 0; background: rgba(255, 255, 255, .16); color: #fff; border-radius: 99px; padding: 4px 10px; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
     .hero-btn svg.i { width: 14px; height: 14px; }
@@ -683,6 +688,7 @@
   <script src="pwa.js"></script>
   <script src="find.js"></script>
   <script src="insights.js"></script>
+  <script src="community.js"></script>
 
 
 

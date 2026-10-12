@@ -159,7 +159,7 @@ test('Jafari method: three prayer times (Fajr, Dhuhrain, Ishaain)', async ({ pag
 
 test('prayer times go into the calendar export (one event per prayer per day)', async ({ page }) => {
   await open(page);
-  await store(page, () => App.go('schedule'));
+  await store(page, () => { App.S.setSettings({ prayer_method: 'jafari' }); App.go('schedule'); });
   await page.evaluate(() => document.querySelector('[data-action="calendar"]').click());
   await expect(page.locator('#sheetBody [name=prayers]')).toBeChecked();
   const ics = await store(page, () => {
@@ -286,4 +286,45 @@ test('readiness: short sleep + low HRV after a match = recovery day', async ({ p
     return HayatiInsights.readiness().zone;
   });
   expect(g).toBe('green');
+});
+
+test('first run: welcome card sets name, roles and prayer; employee hides GPA, keeper and attendance', async ({ page }) => {
+  await open(page);
+  await expect(page.locator('#obCard')).toBeVisible();
+  await page.fill('#obName', 'فاطمة');
+  await page.click('.ob-chip[data-role="employee"]');
+  await page.click('#obPrayer [data-p="gulf"]');
+  await page.fill('#obBudget', '400');
+  await page.click('[data-action="ob-save"]');
+  await expect(page.locator('#obCard')).toHaveCount(0);
+  const s = await store(page, () => App.st.settings);
+  expect([s.name, s.roles, s.prayer_method, s.budget, s.onboarded]).toEqual(['فاطمة', ['employee'], 'gulf', 400, true]);
+  await expect(page.locator('#subtitle')).toContainText('يا فاطمة');
+  await expect(page.locator('button.tab[data-tab="schedule"]')).toContainText('جدولي');
+  await store(page, () => App.go('schedule'));
+  await expect(page.locator('[data-action="study-seg"][data-k="gpa"]')).toHaveCount(0);
+  await store(page, () => { App.ui.studySeg = 'health'; App.go('schedule'); });
+  await expect(page.locator('#view')).not.toContainText('🧤 الحارس');
+  // قبل ما يختار، ما نفترض طريقة صلاة
+  expect(await store(page, () => { const s = App.st.settings; return s.prayer_method; })).toBe('gulf');
+  // صلاة أهل السنة = 5 أوقات
+  expect(await store(page, () => Extras.agenda(new Date()).length)).toBe(5);
+});
+
+test('existing users (data, no roles) never see the welcome card and keep every feature', async ({ page }) => {
+  await open(page);
+  await store(page, () => App.S.upsert('tasks', { id: 'x', title: 'قديم', kind: 'homework' }));
+  await store(page, () => App.go('today'));
+  await expect(page.locator('#obCard')).toHaveCount(0);
+  await store(page, () => App.go('schedule'));
+  await expect(page.locator('[data-action="study-seg"][data-k="gpa"]')).toHaveCount(1);
+  await expect(page.locator('button.tab[data-tab="schedule"]')).toContainText('الدراسة');
+});
+
+test('a brand-new user sees no prayer times until they choose a method', async ({ page }) => {
+  await open(page);
+  expect(await store(page, () => Extras.agenda(new Date()).length)).toBe(0);
+  await page.click('#obPrayer [data-p="jafari"]');
+  await page.click('[data-action="ob-save"]');
+  expect(await store(page, () => Extras.agenda(new Date()).length)).toBe(3);
 });

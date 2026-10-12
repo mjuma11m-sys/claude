@@ -660,7 +660,9 @@
 
   // ================= الجدول/المذاكرة/المعدل =================
   function viewStudy() {
-    return segBar(STUDY_SEGS, ui.studySeg, 'study-seg') + ({ schedule: viewSchedule, focus: viewFocus, gpa: viewGpa, health: () => X('viewHealth') })[ui.studySeg]();
+    const segs = has('student') ? STUDY_SEGS : STUDY_SEGS.filter((x) => x[0] !== 'gpa');
+    if (!segs.some((x) => x[0] === ui.studySeg)) ui.studySeg = 'schedule';
+    return segBar(segs, ui.studySeg, 'study-seg') + ({ schedule: viewSchedule, focus: viewFocus, gpa: viewGpa, health: () => X('viewHealth') })[ui.studySeg]();
   }
 
   function viewSchedule() {
@@ -990,8 +992,11 @@
   const tabbar = document.getElementById('tabbar');
   document.getElementById('settingsIcon').innerHTML = I('settings');
 
+  // مين يستخدم التطبيق: roles فاضية = الكل (المستخدمين القدامى يشوفون كل شي)
+  const has = (r) => !Array.isArray(st.settings.roles) || !st.settings.roles.length || st.settings.roles.includes(r);
+  const tabOf = (x) => (x[0] === 'schedule' && !has('student') ? ['schedule', 'جدولي', 'calendar'] : x);
   function renderTabbar() {
-    const t = (x) => '<button class="tab' + (ui.tab === x[0] ? ' on' : '') + '" data-tab="' + x[0] + '">' + I(x[2]) + x[1] + '</button>';
+    const t = (x) => { x = tabOf(x); return '<button class="tab' + (ui.tab === x[0] ? ' on' : '') + '" data-tab="' + x[0] + '">' + I(x[2]) + x[1] + '</button>'; };
     tabbar.innerHTML = t(TABS[0]) + t(TABS[1]) + '<button class="add" id="addBtn" aria-label="إضافة">' + I('plus') + '</button>' + t(TABS[2]) + t(TABS[3]);
   }
 
@@ -999,16 +1004,17 @@
     const n = new Date();
     if (ui.tab === 'today') {
       const hr = n.getHours();
-      return (hr < 12 ? 'صباح الخير' : 'مساء الخير') + ' · ' + DAYS[n.getDay()] + ' ' + n.getDate() + ' ' + MONTHS[n.getMonth()];
+      const nm = (st.settings.name || '').trim();
+      return (hr < 12 ? 'صباح الخير' : 'مساء الخير') + (nm ? ' يا ' + nm : '') + ' · ' + DAYS[n.getDay()] + ' ' + n.getDate() + ' ' + MONTHS[n.getMonth()];
     }
     if (ui.tab === 'money') return { tx: 'تتبّع صرفك ودخلك', subs: 'اشتراكاتك ومصاريفك الثابتة', goals: 'وفّر لأحلامك', debts: 'الفلوس اللي لك واللي عليك' }[ui.moneySeg];
-    if (ui.tab === 'schedule') return { schedule: 'محاضراتك وتمرينك ومواعيدك', focus: 'ركّز وذاكر', gpa: 'معدلك الفصلي والتراكمي' }[ui.studySeg];
+    if (ui.tab === 'schedule') return { schedule: has('student') ? 'محاضراتك وتمرينك ومواعيدك' : 'شغلك وتمرينك ومواعيدك', focus: 'ركّز وذاكر', gpa: 'معدلك الفصلي والتراكمي' }[ui.studySeg];
     return 'واجبات واختبارات ومشاوير';
   }
 
   let lastTab = null;
   function render() {
-    const tabInfo = TABS.find((t) => t[0] === ui.tab);
+    const tabInfo = tabOf(TABS.find((t) => t[0] === ui.tab));
     document.getElementById('title').textContent = tabInfo[1];
     document.getElementById('subtitle').textContent = subtitle();
     renderTabbar();
@@ -1899,7 +1905,7 @@
     S, st, I, ui, h, fmt, money, tint, catMeta, catIcon, pad, monthKey, sameDay, startOfDay, daysBetween, time12, timeOf, minutesOf,
     nowMinutes, toLocalInput, dayLabel, nDays, toast, ask, courseById, lectures, lecturesOn, agendaOn, empty, secHead, ring, openSheet,
     closeSheet, val, parseAmount, segPick, render, go, txInMonth, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, courseForm, taskForm,
-    notify, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
+    notify, has, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
   };
   setInterval(timerTickUI, 1000);
   timerCheck();

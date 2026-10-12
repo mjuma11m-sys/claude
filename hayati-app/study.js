@@ -29,6 +29,7 @@
   }
 
   function attendanceCard() {
+    if (A.has && !A.has('student')) return '';
     const c = pendingLecture();
     if (!c) return '';
     return '<div class="card" style="border-color:color-mix(in srgb,' + h(c.color || '#1A8A8F') + ' 40%,var(--border))">' +
