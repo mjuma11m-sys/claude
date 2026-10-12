@@ -46,17 +46,6 @@ if ! grep -q "UIKitApplication:$BUNDLE" <<<"$PROCS"; then
 fi
 
 echo "▶ الشاشة مو سودا ومو فاضية؟"
-python3 -m pip install --quiet pillow >/dev/null 2>&1 || true
-python3 - "$OUT/launch.png" <<'PY'
-import sys
-from PIL import Image, ImageStat
-im = Image.open(sys.argv[1]).convert("L")
-w, h = im.size
-body = im.crop((0, int(h * .12), w, int(h * .88)))   # بدون شريط الساعة فوق
-st = ImageStat.Stat(body)
-mean, std = st.mean[0], st.stddev[0]
-print(f"   الإضاءة {mean:.0f}/255 · التباين {std:.0f}")
-if mean < 25: sys.exit("❌ الشاشة سودا (الواجهة ما انحملت)")
-if std < 12: sys.exit("❌ الشاشة لون واحد (فاضية)")
-print("✅ «حياتي» فتح وانرسمت الواجهة")
-PY
+# sips (موجود بكل ماك) يصغّر الصورة ويحولها BMP، والفحص بايثون بدون مكتبات
+sips -s format bmp -z 240 120 "$OUT/launch.png" --out "$OUT/launch.bmp" >/dev/null
+python3 scripts/screen-check.py "$OUT/launch.bmp"
