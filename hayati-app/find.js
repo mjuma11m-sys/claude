@@ -18,11 +18,19 @@
   const hit = (q, ...fields) => q.every((w) => fields.some((f) => norm(f).includes(w)));
   const day = (iso) => { const d = new Date(iso); return isNaN(d) ? '' : d.getDate() + ' ' + A.MONTHS[d.getMonth()] + ' ' + d.getFullYear(); };
 
+  // «كوستا» تلقى «Costa»: نضيف أسماء المحل المعروفة بالعربي والإنقليزي
+  function brandWords(name) {
+    const P = window.SmsParser;
+    if (!P || !P.brand || !name) return '';
+    const b = P.brand(name), hit = P.BRANDS.find((x) => x[0] === b.key);
+    return hit ? b.label + ' ' + hit[2].source.replace(/\\[bs]\*?|[()|\\.]/g, ' ') : '';
+  }
+
   function search(text) {
     const q = norm(text).split(/\s+/).filter(Boolean);
     if (!q.length) return null;
     const tx = st.transactions
-      .filter((t) => hit(q, t.merchant, t.note, t.category, Number(t.amount).toFixed(3), t.raw))
+      .filter((t) => hit(q, t.merchant, brandWords(t.merchant), t.note, t.category, Number(t.amount).toFixed(3), t.raw))
       .sort((a, b) => new Date(b.occurred_at) - new Date(a.occurred_at));
     const tasks = st.tasks.filter((t) => hit(q, t.title, t.notes, t.place));
     const courses = st.courses.filter((c) => hit(q, c.name, c.room, c.code));

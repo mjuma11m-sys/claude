@@ -169,7 +169,71 @@
     };
   }
 
-  const api = { parse, categorize, CATEGORY_RULES, INCOME_CATEGORY_RULES };
+
+  // ================= توحيد أسماء المحلات =================
+  // «COSTA SEEF» = «Costa Coffee» = «كوستا» → مفتاح واحد «costa» واسم واحد «Costa»
+  const BRANDS = [
+    ['costa', 'Costa', /costa|كوستا/], ['starbucks', 'Starbucks', /starbucks|ستاربكس|ستار بكس/],
+    ['tim hortons', 'Tim Hortons', /tim\s*hortons?|تيم\s*هورتنز/], ['dunkin', 'Dunkin', /dunkin|دانكن/],
+    ['mcdonalds', "McDonald's", /mc\s*donald|ماكدونالدز|ماكدونالد/], ['kfc', 'KFC', /\bkfc\b|كنتاكي/],
+    ['burger king', 'Burger King', /burger\s*king|برجر\s*كنج/], ['nandos', "Nando's", /nando|ناندوز/],
+    ['shake shack', 'Shake Shack', /shake\s*shack|شيك\s*شاك/], ['five guys', 'Five Guys', /five\s*guys|فايف\s*قايز/],
+    ['talabat', 'Talabat', /talabat|طلبات/], ['jahez', 'Jahez', /jahez|جاهز/], ['keeta', 'Keeta', /keeta|كيتا/],
+    ['careem', 'Careem', /careem|كريم/], ['uber', 'Uber', /\buber\b|اوبر|أوبر/],
+    ['lulu', 'LuLu', /\blulu\b|لولو/], ['carrefour', 'Carrefour', /carrefour|كارفور/],
+    ['alosra', 'Al Osra', /al\s*osra|alosra|الاسره|الأسرة|الاسرة/], ['jawad', 'Jawad', /jawad|جواد/],
+    ['al jazira', 'Al Jazira', /al\s*jazira|الجزيره|الجزيرة/], ['midway', 'Midway', /midway|ميدواي/],
+    ['bapco', 'Bapco', /bapco|بابكو/], ['batelco', 'Batelco', /batelco|بتلكو/], ['zain', 'Zain', /\bzain\b|زين/],
+    ['stc', 'stc', /\bstc\b|viva|فيفا/], ['ewa', 'EWA', /\bewa\b|الكهرباء والماء/],
+    ['apple', 'Apple', /apple\.com|itunes|\bapple\b|ابل/], ['netflix', 'Netflix', /netflix|نتفلكس|نتفليكس/],
+    ['spotify', 'Spotify', /spotify|سبوتيفاي/], ['amazon', 'Amazon', /amazon|امازون|أمازون/],
+    ['noon', 'noon', /noon\.com|^noon$|^نون$/], ['ikea', 'IKEA', /ikea|ايكيا|إيكيا/], ['shein', 'SHEIN', /shein|شي ان/],
+  ];
+  // الكلمات العربية لازم تكون كلمة كاملة: «آيس كريم» مو Careem، و«مطعم الزينة» مو Zain
+  for (const b of BRANDS) b[2] = new RegExp(b[2].source.replace(/[\u0600-\u06FF][\u0600-\u06FF ]*[\u0600-\u06FF]/g, (w) => '(?<![\\p{L}])' + w + '(?![\\p{L}])'), 'u');
+  BRANDS.find((b) => b[0] === 'careem')[2] = /careem|(?<!(?:آيس|ايس) )(?<![\p{L}])كريم(?![\p{L}])/u;
+  // كلمات الفرع والمكان والشركة — تنشال قبل المقارنة
+  const NOISE = /\b(seef|juffair|manama|muharraq|riffa|isa town|hamad town|amwaj|saar|budaiya|sitra|adliya|janabiya|city cent(?:er|re)|mall|bahrain|bh|bhr|wll|w\.l\.l|spc|co|llc|ltd|branch|store|online|pos|\d+)\b|سيف|جفير|المنامه|المنامة|المحرق|الرفاع|مدينة عيسى|مدينة حمد|مجمع|فرع|البحرين/gi;
+  function brand(name) {
+    const raw = String(name || '').trim();
+    if (!raw) return { key: '', label: '' };
+    const low = raw.toLowerCase();
+    for (const [key, label, re] of BRANDS) if (re.test(low)) return { key, label };
+    const key = low.replace(NOISE, ' ').replace(/[^\p{L}\p{N} ]+/gu, ' ').replace(/\s+/g, ' ').trim() || low;
+    return { key, label: raw };
+  }
+  // يجمع العمليات حسب المحل: «costa coffee» ينضم لـ «costa» لو واحد بداية الثاني
+  function groupByBrand(list) {
+    const groups = {};
+    for (const t of list) {
+      const b = brand(t.merchant);
+      const k = b.key || ('cat:' + (t.category || 'أخرى'));
+      const g = groups[k] || (groups[k] = { key: k, label: b.key ? b.label : (t.category || 'أخرى'), sum: 0, n: 0, names: {} });
+      g.sum += Number(t.amount) || 0; g.n++;
+      if (b.key) g.names[b.label] = (g.names[b.label] || 0) + 1;
+    }
+    const keys = Object.keys(groups).sort((a, b) => a.length - b.length);
+    for (let i = 0; i < keys.length; i++) {
+      const g = groups[keys[i]];
+      if (!g || keys[i].startsWith('cat:')) continue;
+      for (let j = i + 1; j < keys.length; j++) {
+        const o = groups[keys[j]];
+        if (o && keys[j].startsWith(keys[i] + ' ')) {
+          g.sum += o.sum; g.n += o.n;
+          for (const [nm, c] of Object.entries(o.names)) g.names[nm] = (g.names[nm] || 0) + c;
+          delete groups[keys[j]];
+        }
+      }
+    }
+    // الاسم اللي ينعرض = الأكثر تكرار (إلا لو المحل معروف بالقاموس)
+    return Object.values(groups).map((g) => {
+      const known = BRANDS.find((b) => b[0] === g.key);
+      const top = Object.entries(g.names).sort((a, b) => b[1] - a[1])[0];
+      return { key: g.key, label: known ? known[1] : top ? top[0] : g.label, sum: g.sum, n: g.n };
+    }).sort((a, b) => b.sum - a.sum);
+  }
+
+  const api = { parse, categorize, brand, groupByBrand, BRANDS, CATEGORY_RULES, INCOME_CATEGORY_RULES };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else global.SmsParser = api;
 })(typeof window !== 'undefined' ? window : globalThis);

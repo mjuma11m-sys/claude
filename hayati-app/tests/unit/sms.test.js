@@ -44,3 +44,15 @@ test('foreign currency is flagged for review', () => {
 test('non-financial text → null', () => {
   assert.equal(P.parse('مرحبا شلونك'), null);
 });
+
+test('brand: branches, Arabic and English names collapse to one shop', () => {
+  for (const n of ['COSTA SEEF', 'Costa Coffee', 'كوستا', 'كوستا السيف']) assert.equal(P.brand(n).key, 'costa', n);
+  assert.equal(P.brand('آيس كريم المحرق').key, 'آيس كريم'); // مو Careem
+  assert.equal(P.brand('مطعم الزينة').key, 'مطعم الزينة'); // مو Zain
+  assert.equal(P.brand('Careem Ride').key, 'careem');
+  const g = P.groupByBrand([
+    { merchant: 'COSTA SEEF', amount: 2 }, { merchant: 'Costa Coffee', amount: 3 }, { merchant: 'كوستا', amount: 1 },
+    { merchant: 'Haji Gahwa', amount: 1 }, { merchant: 'HAJI GAHWA MANAMA', amount: 2 }, { merchant: '', category: 'قهوة', amount: 1 },
+  ]);
+  assert.deepEqual(g.map((x) => [x.label, x.sum, x.n]), [['Costa', 6, 3], ['Haji Gahwa', 3, 2], ['قهوة', 1, 1]]);
+});

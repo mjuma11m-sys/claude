@@ -429,6 +429,13 @@
     .undo-bar button:focus-visible { outline: 2px solid var(--bg); outline-offset: 2px; }
     .find-sum { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; margin-bottom: 8px; }
     .find-sum b { font-size: 18px; }
+    .readiness .rd-head { display: flex; align-items: center; gap: 12px; }
+    .readiness .rd-emo { font-size: 26px; }
+    .readiness .rd-head b { display: block; font-size: 17px; }
+    .readiness .rd-score { font-size: 28px; color: var(--z); }
+    .rd-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .rd-chips span { font-size: 12px; padding: 3px 10px; border-radius: 99px; background: var(--surface-2); color: var(--text-2); direction: rtl; unicode-bidi: isolate; }
+    .rd-chips span.bad { background: var(--danger-soft); color: var(--expense); }
     /* ---------- إضافات ---------- */
     .hero-btn { border: 0; background: rgba(255, 255, 255, .16); color: #fff; border-radius: 99px; padding: 4px 10px; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
     .hero-btn svg.i { width: 14px; height: 14px; }
@@ -841,7 +848,71 @@ window.HAYATI_CONFIG = {
     };
   }
 
-  const api = { parse, categorize, CATEGORY_RULES, INCOME_CATEGORY_RULES };
+
+  // ================= توحيد أسماء المحلات =================
+  // «COSTA SEEF» = «Costa Coffee» = «كوستا» → مفتاح واحد «costa» واسم واحد «Costa»
+  const BRANDS = [
+    ['costa', 'Costa', /costa|كوستا/], ['starbucks', 'Starbucks', /starbucks|ستاربكس|ستار بكس/],
+    ['tim hortons', 'Tim Hortons', /tim\s*hortons?|تيم\s*هورتنز/], ['dunkin', 'Dunkin', /dunkin|دانكن/],
+    ['mcdonalds', "McDonald's", /mc\s*donald|ماكدونالدز|ماكدونالد/], ['kfc', 'KFC', /\bkfc\b|كنتاكي/],
+    ['burger king', 'Burger King', /burger\s*king|برجر\s*كنج/], ['nandos', "Nando's", /nando|ناندوز/],
+    ['shake shack', 'Shake Shack', /shake\s*shack|شيك\s*شاك/], ['five guys', 'Five Guys', /five\s*guys|فايف\s*قايز/],
+    ['talabat', 'Talabat', /talabat|طلبات/], ['jahez', 'Jahez', /jahez|جاهز/], ['keeta', 'Keeta', /keeta|كيتا/],
+    ['careem', 'Careem', /careem|كريم/], ['uber', 'Uber', /\buber\b|اوبر|أوبر/],
+    ['lulu', 'LuLu', /\blulu\b|لولو/], ['carrefour', 'Carrefour', /carrefour|كارفور/],
+    ['alosra', 'Al Osra', /al\s*osra|alosra|الاسره|الأسرة|الاسرة/], ['jawad', 'Jawad', /jawad|جواد/],
+    ['al jazira', 'Al Jazira', /al\s*jazira|الجزيره|الجزيرة/], ['midway', 'Midway', /midway|ميدواي/],
+    ['bapco', 'Bapco', /bapco|بابكو/], ['batelco', 'Batelco', /batelco|بتلكو/], ['zain', 'Zain', /\bzain\b|زين/],
+    ['stc', 'stc', /\bstc\b|viva|فيفا/], ['ewa', 'EWA', /\bewa\b|الكهرباء والماء/],
+    ['apple', 'Apple', /apple\.com|itunes|\bapple\b|ابل/], ['netflix', 'Netflix', /netflix|نتفلكس|نتفليكس/],
+    ['spotify', 'Spotify', /spotify|سبوتيفاي/], ['amazon', 'Amazon', /amazon|امازون|أمازون/],
+    ['noon', 'noon', /noon\.com|^noon$|^نون$/], ['ikea', 'IKEA', /ikea|ايكيا|إيكيا/], ['shein', 'SHEIN', /shein|شي ان/],
+  ];
+  // الكلمات العربية لازم تكون كلمة كاملة: «آيس كريم» مو Careem، و«مطعم الزينة» مو Zain
+  for (const b of BRANDS) b[2] = new RegExp(b[2].source.replace(/[\u0600-\u06FF][\u0600-\u06FF ]*[\u0600-\u06FF]/g, (w) => '(?<![\\p{L}])' + w + '(?![\\p{L}])'), 'u');
+  BRANDS.find((b) => b[0] === 'careem')[2] = /careem|(?<!(?:آيس|ايس) )(?<![\p{L}])كريم(?![\p{L}])/u;
+  // كلمات الفرع والمكان والشركة — تنشال قبل المقارنة
+  const NOISE = /\b(seef|juffair|manama|muharraq|riffa|isa town|hamad town|amwaj|saar|budaiya|sitra|adliya|janabiya|city cent(?:er|re)|mall|bahrain|bh|bhr|wll|w\.l\.l|spc|co|llc|ltd|branch|store|online|pos|\d+)\b|سيف|جفير|المنامه|المنامة|المحرق|الرفاع|مدينة عيسى|مدينة حمد|مجمع|فرع|البحرين/gi;
+  function brand(name) {
+    const raw = String(name || '').trim();
+    if (!raw) return { key: '', label: '' };
+    const low = raw.toLowerCase();
+    for (const [key, label, re] of BRANDS) if (re.test(low)) return { key, label };
+    const key = low.replace(NOISE, ' ').replace(/[^\p{L}\p{N} ]+/gu, ' ').replace(/\s+/g, ' ').trim() || low;
+    return { key, label: raw };
+  }
+  // يجمع العمليات حسب المحل: «costa coffee» ينضم لـ «costa» لو واحد بداية الثاني
+  function groupByBrand(list) {
+    const groups = {};
+    for (const t of list) {
+      const b = brand(t.merchant);
+      const k = b.key || ('cat:' + (t.category || 'أخرى'));
+      const g = groups[k] || (groups[k] = { key: k, label: b.key ? b.label : (t.category || 'أخرى'), sum: 0, n: 0, names: {} });
+      g.sum += Number(t.amount) || 0; g.n++;
+      if (b.key) g.names[b.label] = (g.names[b.label] || 0) + 1;
+    }
+    const keys = Object.keys(groups).sort((a, b) => a.length - b.length);
+    for (let i = 0; i < keys.length; i++) {
+      const g = groups[keys[i]];
+      if (!g || keys[i].startsWith('cat:')) continue;
+      for (let j = i + 1; j < keys.length; j++) {
+        const o = groups[keys[j]];
+        if (o && keys[j].startsWith(keys[i] + ' ')) {
+          g.sum += o.sum; g.n += o.n;
+          for (const [nm, c] of Object.entries(o.names)) g.names[nm] = (g.names[nm] || 0) + c;
+          delete groups[keys[j]];
+        }
+      }
+    }
+    // الاسم اللي ينعرض = الأكثر تكرار (إلا لو المحل معروف بالقاموس)
+    return Object.values(groups).map((g) => {
+      const known = BRANDS.find((b) => b[0] === g.key);
+      const top = Object.entries(g.names).sort((a, b) => b[1] - a[1])[0];
+      return { key: g.key, label: known ? known[1] : top ? top[0] : g.label, sum: g.sum, n: g.n };
+    }).sort((a, b) => b.sum - a.sum);
+  }
+
+  const api = { parse, categorize, brand, groupByBrand, BRANDS, CATEGORY_RULES, INCOME_CATEGORY_RULES };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else global.SmsParser = api;
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -2511,9 +2582,8 @@ window.HAYATI_CONFIG = {
     const isNow = ui.month === monthKey(new Date());
     const daysCount = isNow ? new Date().getDate() : new Date(y, m, 0).getDate();
     const exps = cur.filter((t) => t.kind === 'expense');
-    const byMerchant = {};
-    for (const t of exps) { const k = t.merchant || t.category || 'أخرى'; byMerchant[k] = byMerchant[k] || { sum: 0, n: 0 }; byMerchant[k].sum += Number(t.amount); byMerchant[k].n++; }
-    const topM = Object.entries(byMerchant).sort((p, q) => q[1].sum - p[1].sum).slice(0, 3);
+    // «COSTA SEEF» و «Costa Coffee» = محل واحد
+    const topM = window.SmsParser.groupByBrand(exps).slice(0, 3).map((g) => [g.label, g]);
     const biggest = exps.slice().sort((p, q) => q.amount - p.amount)[0];
     let noSpend = 0;
     for (let d = 1; d <= daysCount; d++) if (!exps.some((t) => new Date(t.occurred_at).getDate() === d)) noSpend++;
@@ -6174,11 +6244,19 @@ window.HAYATI_CONFIG = {
   const hit = (q, ...fields) => q.every((w) => fields.some((f) => norm(f).includes(w)));
   const day = (iso) => { const d = new Date(iso); return isNaN(d) ? '' : d.getDate() + ' ' + A.MONTHS[d.getMonth()] + ' ' + d.getFullYear(); };
 
+  // «كوستا» تلقى «Costa»: نضيف أسماء المحل المعروفة بالعربي والإنقليزي
+  function brandWords(name) {
+    const P = window.SmsParser;
+    if (!P || !P.brand || !name) return '';
+    const b = P.brand(name), hit = P.BRANDS.find((x) => x[0] === b.key);
+    return hit ? b.label + ' ' + hit[2].source.replace(/\\[bs]\*?|[()|\\.]/g, ' ') : '';
+  }
+
   function search(text) {
     const q = norm(text).split(/\s+/).filter(Boolean);
     if (!q.length) return null;
     const tx = st.transactions
-      .filter((t) => hit(q, t.merchant, t.note, t.category, Number(t.amount).toFixed(3), t.raw))
+      .filter((t) => hit(q, t.merchant, brandWords(t.merchant), t.note, t.category, Number(t.amount).toFixed(3), t.raw))
       .sort((a, b) => new Date(b.occurred_at) - new Date(a.occurred_at));
     const tasks = st.tasks.filter((t) => hit(q, t.title, t.notes, t.place));
     const courses = st.courses.filter((c) => hit(q, c.name, c.room, c.code));
@@ -6282,6 +6360,104 @@ window.HAYATI_CONFIG = {
   function hide() { bar.classList.remove('show'); clearTimeout(timer); }
 
   window.HayatiFind = { search, norm, open };
+})();
+
+</script>
+  <script>/* insights.js */
+// 📈 توقع آخر الشهر + 🧤 جاهزية اليوم (نوم + HRV + نبض + حِمل أمس)
+(function () {
+  'use strict';
+
+  const A = window.App, E = window.Extras;
+  if (!A || !E) return;
+  const { st, h, fmt } = A;
+  const wrap = (name, fn) => { const prev = E[name]; E[name] = (...a) => fn(prev ? prev : () => '', ...a); };
+  const pad = (n) => String(n).padStart(2, '0');
+  const dateKey = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+  const median = (xs) => { const s = xs.slice().sort((a, b) => a - b); const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+
+  // ================= توقع آخر الشهر =================
+  // المعدل اليومي من المصاريف «العادية» بس: الاشتراكات ثابتة (انحسبت)، وأي عملية فوق ربع الميزانية مرة وحدة (رسوم، قطعة غالية) ما تتكرر
+  function forecast(now) {
+    now = now || new Date();
+    const budget = Number(st.settings.budget) || 0;
+    const day = now.getDate();
+    const daysIn = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    if (day < 5) return null; // أول الشهر الأرقام تكذب
+    const list = A.txInMonth(A.monthKey(now)).filter((t) => t.kind !== 'income');
+    const spent = list.reduce((s, t) => s + (Number(t.amount) || 0), 0);
+    const oneOff = budget ? budget * 0.25 : Infinity;
+    const regular = list.filter((t) => t.source !== 'subscription' && Number(t.amount) < oneOff).reduce((s, t) => s + (Number(t.amount) || 0), 0);
+    const pace = regular / day;
+    const end = spent + pace * (daysIn - day);
+    return { spent, pace, end, budget, over: budget ? end - budget : null, daysLeft: daysIn - day };
+  }
+  function forecastLine() {
+    const f = forecast();
+    if (!f || !f.budget) return '';
+    const bad = f.over > 0;
+    return '<div class="meta forecast" style="margin-top:4px;display:block"><span style="display:block">📈 توقع آخر الشهر: <b class="num">' + fmt(f.end) + '</b></span>' +
+      '<span style="display:block;' + (bad ? 'color:#FFB4A6;font-weight:600' : '') + '">' + (bad ? 'فوق الميزانية بـ ' + fmt(f.over) : 'تحت الميزانية بـ ' + fmt(-f.over)) + '</span></div>';
+  }
+  wrap('allowance', (prev, exp, budget) => prev(exp, budget) + forecastLine());
+
+  // ================= جاهزية اليوم =================
+  function readiness(now) {
+    now = now || new Date();
+    const today = dateKey(now);
+    const doc = st.daily.find((d) => d.date === today && d.watch);
+    if (!doc || doc.sleep == null) return null;
+    const goal = Number(st.settings.sleep_goal) || 8;
+    // خط الأساس = آخر 14 ليلة قبل اليوم (يحتاج 3 على الأقل)
+    const past = st.daily.filter((d) => d.watch && d.date < today).sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 14);
+    const base = (k) => { const xs = past.map((d) => d[k]).filter((x) => x != null); return xs.length >= 3 ? median(xs) : null; };
+    const parts = [];
+    // النوم (40)
+    parts.push({ w: 40, s: clamp((doc.sleep - (goal - 2.5)) / 2.5, 0, 1), chip: 'نوم ' + doc.sleep + ' من ' + goal, bad: doc.sleep < goal - 1 });
+    // HRV مقارنة بنفسك (30): أقل من المعتاد بـ 25% = صفر
+    const bh = base('hrv');
+    if (doc.hrv != null && bh) {
+      const r = doc.hrv / bh;
+      parts.push({ w: 30, s: clamp((r - 0.75) / 0.25, 0, 1), chip: 'HRV ' + (r >= 1 ? '+' : '−') + Math.abs(Math.round((r - 1) * 100)) + '%', bad: r < 0.9 });
+    }
+    // نبض الراحة (15): أعلى من المعتاد بـ 7 = صفر
+    const br = base('rhr');
+    if (doc.rhr != null && br) {
+      const d = doc.rhr - br;
+      parts.push({ w: 15, s: clamp(1 - d / 7, 0, 1), chip: 'نبض ' + (d > 0 ? '+' : '') + Math.round(d), bad: d >= 4 });
+    }
+    // حِمل أمس (15): مباراة = ثقيل، تمرين = متوسط
+    const y = new Date(now); y.setDate(y.getDate() - 1);
+    const match = (st.matches || []).find((m) => m.date === dateKey(y));
+    const sessions = A.agendaOn(y).filter((x) => x.type === 'gym' || x.type === 'activity').length;
+    const load = match ? clamp((Number(match.minutes) || 90) / 90, 0.5, 1) : sessions ? 0.5 : 0;
+    parts.push({ w: 15, s: 1 - load, chip: match ? 'مباراة أمس' : sessions ? 'تمرين أمس' : 'راحة أمس', bad: load >= 1 });
+    const W = parts.reduce((s, p) => s + p.w, 0);
+    const score = Math.round(parts.reduce((s, p) => s + p.w * p.s, 0) / W * 100);
+    const zone = score >= 75 ? 'green' : score >= 55 ? 'yellow' : 'red';
+    return { score, zone, parts, hasBaseline: !!(bh || br) };
+  }
+  const ZONES = {
+    green: ['🟢', 'جاهز لتمرين قوي', 'قفز وارتماءات وسرعة ردة فعل — يومك تضغط فيه.', '#2F9E7A'],
+    yellow: ['🟡', 'تمرين متوسط', 'مسك كرة وتمركز وتوزيع. خفّف القفز المتكرر.', '#B45309'],
+    red: ['🔴', 'يوم استشفاء', 'إطالة ومرونة ومشي خفيف. لا ارتماءات اليوم.', '#D63A3A'],
+  };
+  function readinessCard() {
+    const r = readiness();
+    if (!r) return '';
+    const [emo, title, tip, col] = ZONES[r.zone];
+    return '<div class="card readiness" style="--z:' + col + '"><div class="rd-head"><span class="rd-emo">' + emo + '</span><div style="flex:1;min-width:0">' +
+      '<small class="muted">🧤 جاهزيتك اليوم</small><b>' + title + '</b></div><b class="num rd-score">' + r.score + '</b></div>' +
+      '<p class="small" style="margin:6px 0 8px;color:var(--text-2)">' + tip + '</p>' +
+      '<div class="rd-chips">' + r.parts.map((p) => '<span class="' + (p.bad ? 'bad' : '') + '">' + h(p.chip) + '</span>').join('') + '</div>' +
+      (r.hasBaseline ? '' : '<p class="small muted" style="margin:8px 0 0">بعد 3 ليالي من الساعة تصير المقارنة بمعدلك أنت.</p>') +
+      '<p class="small muted" style="margin:6px 0 0">تقدير من بياناتك، مو تشخيص طبي.</p></div>';
+  }
+  wrap('todayTop', (prev) => readinessCard() + prev());
+
+  window.HayatiInsights = { forecast, readiness };
+  A.render();
 })();
 
 </script>

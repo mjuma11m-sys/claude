@@ -247,3 +247,43 @@ test('undo brings back a deleted item, and a batch delete undoes in one tap', as
   await page.click('.undo-bar button');
   expect(await store(page, () => App.st.shopping.length)).toBe(3);
 });
+
+test('month-end forecast ignores subscriptions and one-off big buys', async ({ page }) => {
+  await open(page);
+  const f = await store(page, () => {
+    App.S.setSettings({ budget: 200 });
+    const at = (d) => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), d, 12).toISOString(); };
+    for (let d = 1; d <= 10; d++) App.S.upsert('transactions', { id: 'd' + d, kind: 'expense', amount: 5, merchant: 'Costa', occurred_at: at(d) });
+    App.S.upsert('transactions', { id: 'big', kind: 'expense', amount: 120, merchant: 'Uni fees', occurred_at: at(2) });
+    App.S.upsert('transactions', { id: 'sub', kind: 'expense', amount: 4, merchant: 'Netflix', source: 'subscription', occurred_at: at(3) });
+    const now = new Date(); now.setDate(10);
+    const r = HayatiInsights.forecast(now);
+    const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    return { spent: r.spent, end: r.end, expect: 174 + 5 * (days - 10), early: HayatiInsights.forecast(new Date(now.getFullYear(), now.getMonth(), 3)) };
+  });
+  expect(f.spent).toBe(174);
+  expect(f.end).toBeCloseTo(f.expect, 5);
+  expect(f.early).toBeNull();
+});
+
+test('readiness: short sleep + low HRV after a match = recovery day', async ({ page }) => {
+  await open(page);
+  const r = await store(page, () => {
+    const k = (off) => { const d = new Date(); d.setDate(d.getDate() - off); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+    for (let i = 1; i <= 5; i++) App.S.upsert('daily', { id: 'n' + i, date: k(i), watch: true, sleep: 8, hrv: 60, rhr: 52 });
+    App.S.upsert('matches', { id: 'm', date: k(1), opponent: 'المحرق', minutes: 90, for: 1, against: 0 });
+    App.S.upsert('daily', { id: 'n0', date: k(0), watch: true, sleep: 5.5, hrv: 42, rhr: 58 });
+    App.go('today');
+    return HayatiInsights.readiness();
+  });
+  expect(r.zone).toBe('red');
+  await expect(page.locator('.readiness')).toContainText('يوم استشفاء');
+  await expect(page.locator('.rd-chips')).toContainText('مباراة أمس');
+  const g = await store(page, () => {
+    const d = new Date(); const k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    App.S.remove('matches', 'm');
+    App.S.upsert('daily', { id: 'n0', date: k, watch: true, sleep: 8.2, hrv: 63, rhr: 51 });
+    return HayatiInsights.readiness().zone;
+  });
+  expect(g).toBe('green');
+});

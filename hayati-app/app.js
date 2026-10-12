@@ -903,9 +903,8 @@
     const isNow = ui.month === monthKey(new Date());
     const daysCount = isNow ? new Date().getDate() : new Date(y, m, 0).getDate();
     const exps = cur.filter((t) => t.kind === 'expense');
-    const byMerchant = {};
-    for (const t of exps) { const k = t.merchant || t.category || 'أخرى'; byMerchant[k] = byMerchant[k] || { sum: 0, n: 0 }; byMerchant[k].sum += Number(t.amount); byMerchant[k].n++; }
-    const topM = Object.entries(byMerchant).sort((p, q) => q[1].sum - p[1].sum).slice(0, 3);
+    // «COSTA SEEF» و «Costa Coffee» = محل واحد
+    const topM = window.SmsParser.groupByBrand(exps).slice(0, 3).map((g) => [g.label, g]);
     const biggest = exps.slice().sort((p, q) => q.amount - p.amount)[0];
     let noSpend = 0;
     for (let d = 1; d <= daysCount; d++) if (!exps.some((t) => new Date(t.occurred_at).getDate() === d)) noSpend++;
