@@ -1,0 +1,115 @@
+<!doctype html>
+<html dir="rtl" lang="ar"><head><meta charset="utf-8">
+<!-- فيديو تشويق «حياتي» 15 ث · 1080×1920 · للواتساب: غموض ← لمحات مغبّشة ← الكشف -->
+<style>
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Bold.ttf);font-weight:700}
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Regular.ttf);font-weight:400}
+:root{--sea:#0E3B43;--deep:#05100F;--pearl:#E8DCC4;--coral:#FF6B4A}
+*{box-sizing:border-box}
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:var(--deep);font-family:P;color:var(--pearl)}
+#stage{position:absolute;inset:0;overflow:hidden}
+#glow{position:absolute;inset:0;background:radial-gradient(90% 60% at 50% 45%,#145a62 0%,#0E3B43 40%,var(--deep) 100%)}
+.grain{position:absolute;inset:0;opacity:.07;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.kin{position:absolute;left:70px;right:70px;text-align:center;font-weight:700;line-height:1.2}
+.kin .w{display:inline-block;margin:0 .12em}
+.mask{display:inline-block;overflow:hidden;padding:.08em .02em .18em;vertical-align:bottom}
+.c{color:var(--coral)}
+#open{top:760px;font-size:120px}
+#line{top:240px;font-size:84px}
+#phoneWrap{position:absolute;left:50%;top:520px;width:600px;height:1298px;margin-left:-300px}
+#phone{position:absolute;inset:0;border-radius:92px;background:#0b1416;padding:18px;box-shadow:0 70px 120px -40px rgba(0,0,0,.85),inset 0 0 0 3px #2a4a50}
+#screen{position:relative;width:100%;height:100%;border-radius:76px;overflow:hidden;background:#F7F4EE}
+#screen img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top}
+#island{position:absolute;top:34px;left:50%;width:170px;height:50px;margin-left:-85px;border-radius:30px;background:#000;z-index:3}
+#flash{position:absolute;inset:0;background:#fff;opacity:0}
+#logo{position:absolute;left:50%;top:560px;width:380px;height:380px;margin-left:-190px}
+#bname{position:absolute;left:0;right:0;top:990px;text-align:center;font-size:190px;line-height:1;font-weight:700}
+#soon{position:absolute;left:0;right:0;top:1250px;text-align:center;font-size:84px}
+#handle{position:absolute;left:0;right:0;top:1400px;text-align:center;font-size:52px;font-weight:400;opacity:.75;direction:ltr}
+</style></head>
+<body><div id="stage">
+  <div id="glow"></div>
+  <div class="kin" id="open"></div>
+  <div class="kin" id="line"></div>
+  <div id="phoneWrap"><div id="phone"><div id="screen"><img id="img"><div id="island"></div></div></div></div>
+  <svg id="logo" viewBox="0 0 512 512">
+    <rect width="512" height="512" rx="116" fill="#0E3B43" stroke="rgba(232,220,196,.25)" stroke-width="6"/>
+    <path id="arc" d="M 383.3 172.7 A 160 160 0 1 1 300 102.2" fill="none" stroke="#E8DCC4" stroke-opacity=".28" stroke-width="22" stroke-linecap="round" pathLength="1" stroke-dasharray="1"/>
+    <path id="ha" d="M 304 166 L 196 166 L 264 222 C 204 222 168 254 168 292 C 168 336 206 360 256 360 C 292 360 318 348 338 332" fill="none" stroke="#E8DCC4" stroke-width="38" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1"/>
+    <circle id="dot" cx="352" cy="128" r="30" fill="#FF6B4A"/>
+  </svg>
+  <div id="bname">حياتي</div>
+  <div class="kin" id="soon"></div>
+  <div id="handle">@hayati.bh</div>
+  <div id="flash"></div>
+  <div class="grain"></div>
+</div>
+<script>
+'use strict';
+function bezier(x1, y1, x2, y2) {
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  const sx = (t) => ((ax * t + bx) * t + cx) * t, sy = (t) => ((ay * t + by) * t + cy) * t, dx = (t) => (3 * ax * t + 2 * bx) * t + cx;
+  return (x) => { if (x <= 0) return 0; if (x >= 1) return 1; let t = x; for (let i = 0; i < 8; i++) { const d = dx(t); if (Math.abs(d) < 1e-6) break; t -= (sx(t) - x) / d; } return sy(t); };
+}
+const OUT = bezier(0.23, 1, 0.32, 1), INOUT = bezier(0.77, 0, 0.175, 1), DRAWER = bezier(0.32, 0.72, 0, 1);
+const clamp = (x) => Math.max(0, Math.min(1, x));
+const seg = (t, a, d, e = OUT) => e(clamp((t - a) / d));
+const lerp = (a, b, k) => a + (b - a) * k;
+const $ = (id) => document.getElementById(id);
+function words(el, html) { el.innerHTML = html.match(/<span[^>]*>.*?<\/span>|\S+/g).map((w) => '<span class="mask"><span class="w">' + w + '</span></span>').join(' '); return [...el.querySelectorAll('.mask > .w')]; }
+function wordIn(ws, t, start, end, stagger) {
+  ws.forEach((w, i) => {
+    const kIn = seg(t, start + i * stagger, 0.42), kOut = end != null ? seg(t, end - 0.28, 0.26) : 0;
+    w.style.transform = 'translateY(' + ((1 - kIn) * 105 - kOut * 105) + '%)';
+    w.style.opacity = kIn * (1 - kOut);
+  });
+}
+const openW = words($('open'), 'صار لي شهر<br> أشتغل على <span class="c">شي…</span>'.replace('<br>', ''));
+// #follow: نسخة حساب التطبيق — بدون أي تاريخ إطلاق لين تخلص البرمجة
+const COUNTDOWN = location.hash === '#follow';
+const soonW = words($('soon'), COUNTDOWN ? 'تابعنا عشان <span class="c">تجربه أول</span>' : 'قريباً <span class="c">👀</span>');
+if (COUNTDOWN) { $('logo').style.top = '420px'; $('bname').style.top = '850px'; $('soon').style.top = '1100px'; $('soon').style.fontSize = '76px'; $('handle').style.top = '1240px'; }
+// لمحات: كل وحدة جملة + شاشة مغبّشة، والغباش يخف شوي شوي
+const BEATS = [
+  { s: 2.6, e: 4.6, html: 'يعرف وين تروح <span class="c">فلوسك</span>', img: '02_money', blur: 22 },
+  { s: 4.8, e: 6.8, html: 'ويقدّر <span class="c">جاهزيتك</span>', img: '01_today', blur: 14 },
+  { s: 7.0, e: 9.0, html: 'ويلقى أي شي <span class="c">بثانية</span>', img: '03_search', blur: 7 },
+];
+let beatIdx = -1, curImg = null;
+const SHOT = (n) => 'shots/' + n + '.png';
+
+window.setT = function (t) {
+  $('glow').style.opacity = 0.35 + 0.65 * seg(t, 2.2, 1.2) ;
+  // 1) الافتتاح 0–2.4
+  wordIn(openW, t, 0.25, 2.35, 0.2);
+  // 2) الجوال يطلع مغبّش 2.4–9.6
+  const pIn = seg(t, 2.4, 0.9, DRAWER), pOut = seg(t, 9.4, 0.5, INOUT);
+  const b = BEATS.findIndex((x) => t >= x.s - 0.2 && t < x.e + 0.2);
+  const cur = BEATS[Math.max(0, b)];
+  if (cur.img !== curImg) { $('img').src = SHOT(cur.img); curImg = cur.img; }
+  const blurNow = b < 0 ? (t < 5 ? 22 : 0) : lerp(cur.blur + 6, cur.blur, seg(t, cur.s, 1.4));
+  $('screen').style.filter = 'blur(' + blurNow + 'px) saturate(' + lerp(0.4, 1, seg(t, 7, 2)) + ')';
+  const zoom = lerp(1.18, 1, pIn) * lerp(1, 0.55, pOut);
+  $('phoneWrap').style.transform = 'translateY(' + ((1 - pIn) * 1700 + Math.sin(t * 0.7) * 10) + 'px) scale(' + zoom + ') rotate(' + (Math.sin(t * 0.5) * 2) + 'deg)';
+  $('phoneWrap').style.opacity = 1 - pOut;
+  if (b !== beatIdx) { beatIdx = b; if (b >= 0) words($('line'), BEATS[b].html); else $('line').innerHTML = ''; }
+  if (b >= 0) wordIn([...$('line').querySelectorAll('.mask > .w')], t, BEATS[b].s, BEATS[b].e, 0.1);
+  // ومضة الكشف 9.55
+  $('flash').style.opacity = t < 9.5 ? 0 : 0.85 * (1 - seg(t, 9.55, 0.55, OUT));
+  // 3) الشعار 9.7–15
+  const lIn = seg(t, 9.7, 0.6);
+  $('logo').style.opacity = lIn;
+  $('logo').style.transform = 'scale(' + lerp(1.25, 1, lIn) + ')';
+  $('arc').style.strokeDashoffset = 1 - seg(t, 9.8, 1.0);
+  $('ha').style.strokeDashoffset = 1 - seg(t, 9.95, 0.85);
+  const dk = seg(t, 10.7, 0.3);
+  $('dot').style.opacity = dk; $('dot').style.transformOrigin = '352px 128px'; $('dot').style.transform = 'scale(' + lerp(0.4, 1, dk) + ')';
+  const nIn = seg(t, 10.4, 0.5);
+  $('bname').style.opacity = nIn; $('bname').style.transform = 'translateY(' + ((1 - nIn) * 40) + 'px)';
+  wordIn(soonW, t, 11.3, null, 0.25);
+  const hIn = seg(t, 12.1, 0.6);
+  $('handle').style.opacity = hIn * 0.75; $('handle').style.transform = 'translateY(' + ((1 - hIn) * 20) + 'px)';
+};
+window.READY = Promise.all([document.fonts.ready, ...['02_money', '01_today', '03_search'].map((n) => new Promise((r) => { const i = new Image(); i.onload = i.onerror = r; i.src = SHOT(n); }))]);
+setT(0);
+</script></body></html>

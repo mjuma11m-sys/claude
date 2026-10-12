@@ -1,14 +1,26 @@
 {
   "name": "hayati-app",
   "private": true,
-  "description": "حياتي — اختبارات تلقائية (التطبيق نفسه ملفات ثابتة بدون بناء)",
+  "description": "حياتي — ملفات ثابتة بدون بناء للويب، وCapacitor لنسخة الآيفون، واختبارات تلقائية",
   "scripts": {
     "build": "node build.js",
     "test": "npm run test:unit && playwright test",
     "test:unit": "node --test tests/unit/*.test.js",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "cap:sync": "node scripts/cap-www.js && cap sync ios",
+    "cap:open": "cap open ios"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
     "@playwright/test": "1.56.1"
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/filesystem": "^8.1.4",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/ios": "^8.5.3",
+    "@capacitor/keyboard": "^8.0.6",
+    "@capacitor/local-notifications": "^8.3.1",
+    "@capacitor/share": "^8.0.3"
   }
 }

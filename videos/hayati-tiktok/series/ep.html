@@ -1,0 +1,100 @@
+<!doctype html>
+<html dir="rtl" lang="ar"><head><meta charset="utf-8">
+<!-- سلسلة تيك توك «أبني حياتي قدامكم» · 13 ث · 1080×1920 · كل المحتوى داخل منطقة تيك توك الآمنة (x 70–930، y 190–1540) -->
+<style>
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Bold.ttf);font-weight:700}
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Regular.ttf);font-weight:400}
+:root{--sea:#0E3B43;--deep:#0A1A1E;--pearl:#E8DCC4;--coral:#FF6B4A}
+*{box-sizing:border-box}
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;font-family:P;font-weight:700;color:var(--pearl)}
+#stage{position:absolute;inset:0;background:radial-gradient(120% 75% at 45% 42%,#145a62 0%,var(--sea) 42%,var(--deep) 100%);overflow:hidden}
+.grain{position:absolute;inset:0;opacity:.05;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.kin{position:absolute;left:80px;width:860px;text-align:center;line-height:1.18}
+.kin .w{display:inline-block;margin:0 .12em}
+.mask{display:inline-block;overflow:hidden;padding:.08em .02em .18em;vertical-align:bottom}
+.c{color:var(--coral)}
+#tag{position:absolute;left:470px;top:230px;transform:translateX(-50%);padding:12px 34px;border-radius:999px;border:3px solid rgba(232,220,196,.4);font-size:38px;white-space:nowrap}
+#demo{position:absolute;left:470px;top:196px;transform:translateX(-50%);font-size:24px;font-weight:400;opacity:.6;white-space:nowrap}
+#hook{top:760px;font-size:118px}
+#built{top:320px;font-size:64px}
+#phoneWrap{position:absolute;left:470px;top:470px;width:470px;height:1017px;margin-left:-235px}
+#phone{position:absolute;inset:0;border-radius:74px;background:#0b1416;padding:14px;box-shadow:0 60px 110px -40px rgba(0,0,0,.8),inset 0 0 0 3px #2a4a50}
+#screen{position:relative;width:100%;height:100%;border-radius:62px;overflow:hidden;background:#F7F4EE}
+#screen img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top}
+#island{position:absolute;top:26px;left:50%;width:130px;height:38px;margin-left:-65px;border-radius:24px;background:#000}
+#ask{top:700px;font-size:96px}
+#undo{position:absolute;left:470px;top:1290px;display:flex;align-items:center;gap:28px;padding:16px 16px 16px 40px;border-radius:999px;background:#0B2328;color:#F7F4EE;font-size:40px;white-space:nowrap;box-shadow:0 30px 60px -24px rgba(0,0,0,.7);opacity:0}
+#undo .b{padding:12px 32px;border-radius:999px;background:var(--coral);color:#2A0E07}
+#beta{position:absolute;left:470px;top:1020px;transform:translateX(-50%);padding:14px 36px;border-radius:999px;border:3px solid rgba(232,220,196,.4);font-size:40px;white-space:nowrap}
+#cta{position:absolute;left:470px;top:1150px;transform:translateX(-50%);padding:24px 56px;border-radius:999px;background:var(--coral);color:#2A0E07;font-size:50px;white-space:nowrap;box-shadow:0 30px 60px -24px rgba(255,107,74,.7)}
+</style></head>
+<body><div id="stage">
+  <div id="demo">* لقطات ببيانات تجريبية</div>
+  <div id="tag"></div>
+  <div class="kin" id="hook"></div>
+  <div class="kin" id="built"></div>
+  <div id="phoneWrap"><div id="phone"><div id="screen"><img id="img"><div id="island"></div></div></div></div>
+  <div id="undo"><span id="undoTxt">انحذفت</span><span class="b" id="undoBtn">تراجع</span></div>
+  <div class="kin" id="ask"></div>
+  <div id="beta">🛠️ قيد التطوير · نسخة تجريبية</div>
+  <div id="cta">وش أبني بعد؟ اكتب 👇</div>
+  <div class="grain"></div>
+</div>
+<script>
+'use strict';
+// الحلقات: كل وحدة ميزة انبنت فعلاً بالتطبيق
+const EPS = {
+  1: { hook: 'كم صرفت على <span class="c">محل واحد؟</span>', built: 'سويت: بحث يعطيك <span class="c">المجموع</span>', img: '01_search' },
+  2: { hook: 'حذفت شي <span class="c">بالغلط؟</span>', built: 'سويت: زر <span class="c">تراجع</span> بعد الحذف', img: '02_undo', undo: true },
+  3: { hook: 'بتتعدى <span class="c">الميزانية؟</span>', built: 'سويت: توقع <span class="c">آخر الشهر</span>', img: '03_money' },
+  4: { hook: 'تتمرن قوي اليوم <span class="c">أو ترتاح؟</span>', built: 'سويت: تقدير <span class="c">جاهزيتك</span> من الساعة', img: '04_today' },
+  5: { hook: 'رقم بطاقتك <span class="c">ينحفظ؟</span>', built: 'سويت: رقم البطاقة <span class="c">ينخفى</span> ••21', img: '05_masked' },
+  6: { hook: 'التطبيق لي <span class="c">بس؟</span>', built: 'صار لأي أحد: <span class="c">عرّفه بنفسك</span>', img: '06_welcome' },
+};
+const N = Number((location.hash.match(/ep=(\d+)/) || [])[1] || 1), E = EPS[N];
+function bezier(x1, y1, x2, y2) {
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  const sx = (t) => ((ax * t + bx) * t + cx) * t, sy = (t) => ((ay * t + by) * t + cy) * t, dx = (t) => (3 * ax * t + 2 * bx) * t + cx;
+  return (x) => { if (x <= 0) return 0; if (x >= 1) return 1; let t = x; for (let i = 0; i < 8; i++) { const d = dx(t); if (Math.abs(d) < 1e-6) break; t -= (sx(t) - x) / d; } return sy(t); };
+}
+const OUT = bezier(0.23, 1, 0.32, 1), INOUT = bezier(0.77, 0, 0.175, 1), DRAWER = bezier(0.32, 0.72, 0, 1);
+const clamp = (x) => Math.max(0, Math.min(1, x));
+const seg = (t, a, d, e = OUT) => e(clamp((t - a) / d));
+const $ = (id) => document.getElementById(id);
+function words(el, html) { el.innerHTML = html.match(/<span[^>]*>.*?<\/span>|\S+/g).map((w) => '<span class="mask"><span class="w">' + w + '</span></span>').join(' '); return [...el.querySelectorAll('.mask > .w')]; }
+function wordIn(ws, t, start, end, stagger) {
+  ws.forEach((w, i) => {
+    const kIn = seg(t, start + i * stagger, 0.4), kOut = end != null ? seg(t, end - 0.26, 0.24) : 0;
+    w.style.transform = 'translateY(' + ((1 - kIn) * 105 - kOut * 105) + '%)';
+    w.style.opacity = kIn * (1 - kOut);
+  });
+}
+$('tag').textContent = '🛠️ أبني «حياتي» قدامكم · الحلقة ' + N;
+$('img').src = 'shots/' + E.img + '.png';
+const hookW = words($('hook'), E.hook), builtW = words($('built'), E.built), askW = words($('ask'), 'وش الميزة <span class="c">الجاية؟</span>');
+function fade(el, t, s, e) { const k = seg(t, s, 0.45) * (1 - seg(t, e - 0.3, 0.3, INOUT)); el.style.opacity = k; el.style.transform = 'translateX(-50%) translateY(' + (1 - k) * 24 + 'px)'; }
+window.setT = function (t) {
+  fade($('tag'), t, 0.05, 13.5);
+  $('demo').style.opacity = 0.6 * seg(t, 1.6, 0.4) * (1 - seg(t, 9.6, 0.3));
+  // الهوك: سؤال الحلقة (0–1.9)
+  wordIn(hookW, t, 0.1, 1.9, 0.12);
+  // الجوال + وش انبنى (1.8–9.8)
+  const pIn = seg(t, 1.8, 0.75, DRAWER), pOut = seg(t, 9.4, 0.5, INOUT);
+  $('phoneWrap').style.transform = 'translateY(' + ((1 - pIn) * 1400 + pOut * 1400) + 'px) rotate(' + Math.sin(t * 0.7) * 1.6 + 'deg)';
+  $('phoneWrap').style.visibility = pIn > 0.001 && pOut < 0.999 ? 'visible' : 'hidden';
+  // الشاشة تنزل شوي كأنك تتصفح
+  $('img').style.transform = 'translateY(' + (-seg(t, 4.5, 3.5, INOUT) * 6) + '%)';
+  wordIn(builtW, t, 2.2, 9.6, 0.09);
+  // الحلقة 2: شريط التراجع مثل التطبيق، يضغط ← «رجعت ✓»
+  if (E.undo) {
+    const k = seg(t, 4.0, 0.4) * (1 - seg(t, 9.0, 0.3, INOUT));
+    $('undo').style.opacity = k; $('undo').style.transform = 'translateX(-50%) translateY(' + (1 - k) * 30 + 'px)';
+    const done = t >= 6.2; $('undoTxt').textContent = done ? 'رجعت ✓' : 'انحذفت'; $('undoBtn').style.display = done ? 'none' : '';
+  }
+  // الطلب (9.9–13)
+  wordIn(askW, t, 9.9, null, 0.12);
+  fade($('beta'), t, 10.5, 99); fade($('cta'), t, 10.9, 99);
+};
+window.READY = Promise.all([document.fonts.ready, new Promise((r) => { const i = $('img'); if (i.complete) r(); else i.onload = i.onerror = r; })]);
+setT(0);
+</script></body></html>

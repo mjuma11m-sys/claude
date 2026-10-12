@@ -220,6 +220,8 @@ create policy "own inbox read" on public.sms_inbox for select to authenticated u
 drop policy if exists "own inbox update" on public.sms_inbox;
 create policy "own inbox update" on public.sms_inbox for update to authenticated
   using (user_id = auth.uid()) with check (user_id = auth.uid());
+drop policy if exists "own inbox delete" on public.sms_inbox;
+create policy "own inbox delete" on public.sms_inbox for delete to authenticated using (user_id = auth.uid());
 -- ما فيه insert مباشر: الرسايل تدخل بس عن طريق ingest_sms تحت
 
 -- الاختصار يرسل {token, body}. الرمز يحدد المستخدم، وما يقدر أحد يقرا أي شي بهالدالة.
@@ -234,6 +236,11 @@ begin
   if (select count(*) from public.sms_inbox i where i.user_id = uid and i.received_at > now() - interval '1 hour') >= 60 then
     raise exception 'too many messages' using errcode = '54000';
   end if;
+  -- أرقام البطاقة/الحساب ما تنحفظ: «XX4821» ← «••21» (المبالغ مثل 412.300 تظل)
+  body := regexp_replace(body, '\m[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}\M', 'IBAN••', 'g');
+  body := regexp_replace(body, '[xX*•]{2,}', '••', 'g');
+  -- 4 أرقام أو أكثر ورا بعض، مو جزء من مبلغ (قبلها أو بعدها فاصلة عشرية)
+  body := regexp_replace(body, '(?<![.,0-9])[0-9]{4,}(?![0-9]|[.,][0-9])', '••', 'g');
   insert into public.sms_inbox (user_id, body) values (uid, body);
   return json_build_object('ok', true);
 end $$;
@@ -251,3 +258,13 @@ begin
     end;
   end loop;
 end $$;
+
+-- «احذف كل بياناتي» من التطبيق: يحذف الحساب نفسه (وكل الجداول تنحذف معاه بـ on delete cascade)
+create or replace function public.delete_my_account()
+returns void language plpgsql security definer set search_path = public, auth as $$
+begin
+  if auth.uid() is null then raise exception 'not signed in' using errcode = '28000'; end if;
+  delete from auth.users where id = auth.uid();
+end $$;
+revoke all on function public.delete_my_account() from public;
+grant execute on function public.delete_my_account() to authenticated;

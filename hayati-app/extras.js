@@ -73,6 +73,8 @@
   const prayerNames = (m) => (m === 'jafari' ? PRAYER_NAMES_JAFARI : PRAYER_NAMES);
   function prayersOn(date) {
     if (set().prayer_on === false) return [];
+    // مستخدم جديد ما اختار طريقته (سنّي/جعفري) → ما نفترض عنه
+    if (!set().prayer_method && window.HayatiProfile && window.HayatiProfile.isNew()) return [];
     const m = prayerMethod(), t = prayerTimes(date, m);
     return prayerNames(m).map(([k, name, dur]) => ({ src: 'prayer', id: 'prayer-' + k, type: 'prayer', name: 'صلاة ' + name, room: '', color: '#0d9488', start: t[k], end: t[k] + (dur || 20) }));
   }

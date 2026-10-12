@@ -1,0 +1,238 @@
+<!doctype html>
+<html dir="rtl" lang="ar"><head><meta charset="utf-8">
+<!-- إعلان «حياتي» الثاني 24 ث · 1080×1920 · كل فريم يتحسب من setT(t) (حتمي، ينرسم فريم فريم) -->
+<style>
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Bold.ttf);font-weight:700}
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Regular.ttf);font-weight:400}
+:root{--sea:#0E3B43;--sea2:#13535B;--deep:#0A1A1E;--pearl:#E8DCC4;--coral:#FF6B4A;--mint:#2F9E7A}
+*{box-sizing:border-box}
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:var(--deep);font-family:P;color:var(--pearl)}
+#stage{position:absolute;inset:0;overflow:hidden;background:radial-gradient(120% 75% at 50% 38%,#145a62 0%,var(--sea) 42%,var(--deep) 100%)}
+.blob{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(232,220,196,.10),rgba(232,220,196,0) 70%)}
+.grain{position:absolute;inset:0;opacity:.05;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.layer{position:absolute;inset:0;pointer-events:none}
+/* نص حركي: كلمة كلمة */
+.kin{position:absolute;left:60px;right:60px;text-align:center;font-weight:700;line-height:1.15}
+.kin .w{display:inline-block;margin:0 .12em;will-change:transform,opacity}
+.mask{display:inline-block;overflow:hidden;padding:.08em .02em .18em;vertical-align:bottom}
+#hook{top:640px;font-size:150px}
+#hook .q{color:var(--coral)}
+#title{top:150px;font-size:76px}
+#title .acc{color:var(--coral)}
+.chip{position:absolute;left:0;top:0;width:150px;height:150px;border-radius:40px;display:grid;place-items:center;font-size:76px;background:rgba(232,220,196,.10);border:2px solid rgba(232,220,196,.18);box-shadow:0 24px 50px -24px rgba(0,0,0,.55)}
+#logo{position:absolute;left:50%;top:640px;width:400px;height:400px;margin-left:-200px}
+#brand{position:absolute;left:0;right:0;top:1090px;text-align:center}
+#brand h1{margin:0;font-size:170px;line-height:1}
+#brand p{margin:26px 0 0;font-size:56px;font-weight:400;opacity:.8}
+/* الجوال */
+#phoneWrap{position:absolute;left:50%;top:470px;width:600px;height:1298px;margin-left:-300px;perspective:2400px}
+#phone{position:absolute;inset:0;border-radius:92px;background:#0b1416;padding:18px;box-shadow:0 70px 120px -40px rgba(0,0,0,.75),inset 0 0 0 3px #2a4a50,inset 0 0 0 7px #0b1416;transform-style:preserve-3d}
+#screen{position:relative;width:100%;height:100%;border-radius:76px;overflow:hidden;background:#F7F4EE}
+#screen img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top}
+#island{position:absolute;top:34px;left:50%;width:170px;height:50px;margin-left:-85px;border-radius:30px;background:#000;z-index:3}
+/* كروت تطلع من الشاشة */
+.crop,.bubble,.stat,.ring{left:0;top:0}
+.crop{position:absolute;border-radius:40px;background-repeat:no-repeat;box-shadow:0 40px 80px -30px rgba(0,0,0,.6),0 0 0 2px rgba(255,255,255,.08)}
+.bubble{position:absolute;max-width:640px;padding:30px 38px;border-radius:44px 44px 44px 12px;background:#E9E9EB;color:#111;font:400 38px/1.35 -apple-system,"Helvetica Neue",Arial,sans-serif;direction:ltr;text-align:left;box-shadow:0 40px 80px -30px rgba(0,0,0,.55)}
+.bubble small{display:block;font-size:26px;color:#6b6b70;margin-bottom:8px}
+.stat{position:absolute;padding:30px 40px;border-radius:44px;background:var(--pearl);color:var(--sea);text-align:center;box-shadow:0 40px 80px -30px rgba(0,0,0,.6)}
+.stat b{display:block;font-size:110px;line-height:1;font-variant-numeric:tabular-nums;direction:ltr}
+.stat span{display:block;font-size:38px;margin-top:10px}
+.ring{position:absolute;width:330px;height:330px;border-radius:50%;background:var(--pearl);box-shadow:0 40px 80px -30px rgba(0,0,0,.6);display:grid;place-items:center}
+.ring svg{position:absolute;inset:22px;width:286px;height:286px;transform:rotate(-90deg)}
+.ring .in{position:relative;text-align:center;color:var(--sea)}
+.ring .in b{display:block;font-size:92px;line-height:1;font-variant-numeric:tabular-nums;direction:ltr}
+.ring .in small{font-size:34px}
+#cta{position:absolute;left:50%;top:1420px;transform:translateX(-50%);padding:30px 80px;border-radius:999px;background:var(--coral);color:#fff;font-size:58px;font-weight:700;white-space:nowrap;box-shadow:0 30px 60px -24px rgba(255,107,74,.7)}
+
+#offline{position:absolute;left:0;right:0;top:640px;text-align:center}
+#plane{font-size:230px;line-height:1;display:inline-block}
+#offT{position:absolute;left:60px;right:60px;top:930px;font-size:120px}
+.stat small{display:block;font-size:30px;opacity:.7;margin-top:6px}
+#ovFc b{color:#C2372E}
+.undo{position:absolute;left:0;top:0;display:flex;align-items:center;gap:34px;padding:22px 22px 22px 54px;border-radius:999px;background:#0B2328;color:#F7F4EE;font-size:48px;font-weight:700;box-shadow:0 40px 80px -30px rgba(0,0,0,.6);white-space:nowrap}
+.undo .btn{padding:16px 40px;border-radius:999px;background:var(--coral);color:#2A0E07}
+.tap{position:absolute;left:0;top:0;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:6px solid #fff;opacity:0}
+#cta{font-size:52px;top:1330px}
+#logo{top:470px}
+#brand{top:900px}
+#sugg{position:absolute;left:0;right:0;top:1500px;text-align:center;font-size:46px;font-weight:700;color:var(--pearl)}
+#sugg span{color:var(--coral)}
+#beta{position:absolute;left:50%;top:1215px;transform:translateX(-50%);padding:14px 40px;border-radius:999px;border:3px solid rgba(232,220,196,.45);color:var(--pearl);font-size:44px;font-weight:700;white-space:nowrap}
+#demo{position:absolute;left:0;right:0;top:1792px;text-align:center;font-size:30px;font-weight:400;color:var(--pearl);opacity:0}
+</style></head>
+<body><div id="stage">
+  <div class="blob" id="b1" style="width:900px;height:900px"></div>
+  <div class="blob" id="b2" style="width:700px;height:700px"></div>
+  <div class="layer" id="chips"></div>
+  <div class="kin" id="hook"></div>
+  <div id="offline"><span id="plane">✈️</span></div>
+  <div class="kin" id="offT"></div>
+
+  <svg id="logo" viewBox="0 0 512 512">
+    <rect width="512" height="512" rx="116" fill="#0E3B43"/>
+    <path id="arc" d="M 383.3 172.7 A 160 160 0 1 1 300 102.2" fill="none" stroke="#E8DCC4" stroke-opacity=".28" stroke-width="22" stroke-linecap="round" pathLength="1" stroke-dasharray="1"/>
+    <path id="ha" d="M 304 166 L 196 166 L 264 222 C 204 222 168 254 168 292 C 168 336 206 360 256 360 C 292 360 318 348 338 332" fill="none" stroke="#E8DCC4" stroke-width="38" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1"/>
+    <circle id="dot" cx="352" cy="128" r="30" fill="#FF6B4A"/>
+  </svg>
+  <div id="brand"><h1 id="bname">حياتي</h1><p id="btag"></p></div>
+  <div class="kin" id="title"></div>
+
+  <div id="phoneWrap"><div id="phone"><div id="screen"><img id="imgA"><img id="imgB"><div id="island"></div></div></div></div>
+
+  <div class="stat" id="ovSum"><b id="sumNum">0.000</b><span>مجموعك على كوستا ☕</span><small>8 مرات · 3 فروع · اسم واحد</small></div>
+  <div class="stat" id="ovFc"><b id="fcNum">0.000</b><span>📈 توقع آخر الشهر</span><small style="white-space:nowrap">فوق الميزانية (250) بـ <bdi id="fcOver">0</bdi></small></div>
+  <div class="crop" id="ovReady"></div>
+  <div class="undo" id="ovUndo"><span id="undoTxt">انحذفت</span><span class="btn" id="undoBtn">تراجع</span></div>
+  <div class="tap" id="tap"></div>
+
+  <div id="beta">🛠️ قيد التطوير · نسخة تجريبية</div>
+  <div id="sugg">💬 عندك <span>اقتراح</span>؟ اكتبه لنا بالتعليقات</div>
+  <div id="cta">تبي تجربه أول؟ اكتب «حياتي» 👇</div>
+  <div id="demo">* لقطات ببيانات تجريبية</div>
+  <div class="grain"></div>
+</div>
+<script>
+'use strict';
+// نسخة تيك توك (#tiktok): كل المحتوى يصغر لمنطقة تيك توك الآمنة (بعيد عن الأزرار يمين والكابشن تحت والتبويبات فوق)، والخلفية تظل كاملة
+if (location.hash === '#tiktok') {
+  const st = document.getElementById('stage'), safe = document.createElement('div');
+  safe.id = 'safe'; safe.style.cssText = 'position:absolute;inset:0;transform-origin:470px 860px;transform:scale(.8)';
+  [...st.children].filter((c) => !c.classList.contains('blob') && !c.classList.contains('grain')).forEach((c) => safe.appendChild(c));
+  st.insertBefore(safe, st.querySelector('.grain'));
+  // الملاحظة فوق (تحت تبويبات تيك توك)، والجوال يختفي بعد ما يطلع
+  addEventListener('load', () => {
+    const demo = document.getElementById('demo'); if (demo) demo.style.top = '60px';
+    const orig = window.setT;
+    window.setT = (t) => { orig(t); const pw = document.getElementById('phoneWrap'); const m = /translateY\(([-\d.]+)px/.exec(pw.style.transform); pw.style.visibility = m && Number(m[1]) > 900 ? 'hidden' : 'visible'; };
+  });
+}
+
+function bezier(x1, y1, x2, y2) {
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  const sx = (t) => ((ax * t + bx) * t + cx) * t, sy = (t) => ((ay * t + by) * t + cy) * t, dx = (t) => (3 * ax * t + 2 * bx) * t + cx;
+  return (x) => { if (x <= 0) return 0; if (x >= 1) return 1; let t = x; for (let i = 0; i < 8; i++) { const d = dx(t); if (Math.abs(d) < 1e-6) break; t -= (sx(t) - x) / d; } return sy(t); };
+}
+const OUT = bezier(0.23, 1, 0.32, 1), INOUT = bezier(0.77, 0, 0.175, 1), DRAWER = bezier(0.32, 0.72, 0, 1);
+const clamp = (x) => Math.max(0, Math.min(1, x));
+const seg = (t, a, d, e = OUT) => e(clamp((t - a) / d));
+const lerp = (a, b, k) => a + (b - a) * k;
+const $ = (id) => document.getElementById(id);
+
+const SHOT = (n) => 'shots/' + n + '.png';
+const IW = 1170, IH = 2532;
+function crop(el, img, x, y, w, h, scale) {
+  el.style.backgroundImage = 'url(' + SHOT(img) + ')';
+  el.style.backgroundSize = (IW * scale) + 'px ' + (IH * scale) + 'px';
+  el.style.backgroundPosition = (-x * scale) + 'px ' + (-y * scale) + 'px';
+  el.style.width = (w * scale) + 'px'; el.style.height = (h * scale) + 'px';
+}
+// كرت الجاهزية من لقطة «اليوم»
+crop($('ovReady'), '01_today', 48, 826, 1074, 488, 0.86);
+
+function words(el, html) { el.innerHTML = html.match(/<span[^>]*>.*?<\/span>|\S+/g).map((w) => '<span class="mask"><span class="w">' + w + '</span></span>').join(' '); return [...el.querySelectorAll('.w')]; }
+const hookW = words($('hook'), 'كم صرفت على <span class="q">كوستا؟</span>');
+const offW = words($('offT'), 'بدون نت؟ <span class="q" style="color:var(--coral)">يشتغل.</span>');
+const TITLES = [
+  { s: 3.0, e: 6.3, html: 'بحث واحد ← <span class="acc">المجموع</span>' },
+  { s: 6.7, e: 10.3, html: 'يتوقع وين <span class="acc">بتخلص</span> الشهر' },
+  { s: 10.7, e: 14.6, html: 'تقدير <span class="acc">جاهزيتك</span> للتمرين' },
+  { s: 15.0, e: 18.2, html: 'حذفت بالغلط؟ <span class="acc">ترجع</span> بضغطة' },
+];
+let titleIdx = -1;
+function wordIn(ws, t, start, end, stagger) {
+  ws.forEach((w, i) => {
+    const kIn = seg(t, start + i * stagger, 0.42), kOut = end != null ? seg(t, end - 0.28, 0.26) : 0;
+    w.style.transform = 'translateY(' + ((1 - kIn) * 105 - kOut * 105) + '%)';
+    w.style.opacity = kIn * (1 - kOut);
+  });
+}
+// أكواب القهوة المبعثرة = 8 مرات صرفت بكوستا
+const CHIPS = [['☕', 140, 260, -14], ['☕', 790, 300, 10], ['☕', 110, 1060, 8], ['☕', 820, 1010, -9], ['☕', 460, 200, 6], ['☕', 300, 1290, -6], ['☕', 650, 1290, 12], ['☕', 470, 1480, -4]];
+const chipEls = CHIPS.map(([e]) => { const d = document.createElement('div'); d.className = 'chip'; d.textContent = e; $('chips').appendChild(d); return d; });
+const SCREENS = [['03_search', 0], ['02_money', 6.5], ['01_today', 10.5], ['04_undo', 14.8]];
+let curA = null, curB = null;
+const fmt3 = (n) => n.toFixed(3);
+
+window.setT = function (t) {
+  $('b1').style.transform = 'translate(' + (-200 + Math.sin(t * 0.35) * 80) + 'px,' + (-150 + Math.cos(t * 0.3) * 60) + 'px)';
+  $('b2').style.transform = 'translate(' + (520 + Math.cos(t * 0.28) * 90) + 'px,' + (1250 + Math.sin(t * 0.33) * 70) + 'px)';
+
+  // ===== 1) الهوك 0–2.6: السؤال + 8 أكواب =====
+  wordIn(hookW, t, 0.1, 2.5, 0.22);
+  CHIPS.forEach(([, x, y, r], i) => {
+    const kIn = seg(t, 0.2 + i * 0.09, 0.45), kGo = seg(t, 2.2 + i * 0.03, 0.6, INOUT);
+    const fx = x + Math.sin(t * 1.3 + i) * 14, fy = y + Math.cos(t * 1.1 + i * 2) * 16;
+    const X = lerp(fx, 465, kGo), Y = lerp(fy, 1400, kGo), s = lerp(0.92 + 0.08 * kIn, 0.3, kGo);
+    chipEls[i].style.transform = 'translate(' + X + 'px,' + Y + 'px) rotate(' + lerp(r, 0, kGo) + 'deg) scale(' + s + ')';
+    chipEls[i].style.opacity = kIn * (1 - seg(t, 2.6 + i * 0.02, 0.2));
+  });
+
+  // ===== 2) الجوال 2.4–18.4 =====
+  const pIn = seg(t, 2.4, 0.85, DRAWER), pOut = seg(t, 18.2, 0.65, INOUT);
+  $('phoneWrap').style.transform = 'translateY(' + ((1 - pIn) * 1500 + pOut * 1500) + 'px)';
+  $('phone').style.transform = 'rotateX(' + lerp(18, 4, pIn) + 'deg) rotateY(' + (Math.sin(t * 0.6) * 4) + 'deg)';
+  let a = SCREENS[0], b = SCREENS[0], k = 1;
+  for (let i = 0; i < SCREENS.length; i++) if (t >= SCREENS[i][1]) { a = SCREENS[i - 1] || SCREENS[i]; b = SCREENS[i]; k = seg(t, SCREENS[i][1], 0.45, INOUT); }
+  if (curA !== a[0]) { $('imgA').src = SHOT(a[0]); curA = a[0]; }
+  if (curB !== b[0]) { $('imgB').src = SHOT(b[0]); curB = b[0]; }
+  $('imgA').style.transform = 'translateX(' + (k * 100) + '%)';
+  $('imgB').style.transform = 'translateX(' + ((k - 1) * 100) + '%)';
+  $('imgA').style.opacity = a === b ? 0 : 1;
+
+  const ti = TITLES.findIndex((x) => t >= x.s - 0.05 && t <= x.e + 0.4);
+  if (ti !== titleIdx) { titleIdx = ti; if (ti >= 0) words($('title'), TITLES[ti].html); else $('title').innerHTML = ''; }
+  if (ti >= 0) wordIn([...$('title').querySelectorAll('.mask > .w')], t, TITLES[ti].s, TITLES[ti].e, 0.08);
+
+  // المجموع يعد 0 → 26.900
+  pop($('ovSum'), t, 3.6, 6.3, 150, 1240, 'center');
+  $('sumNum').textContent = fmt3(26.9 * seg(t, 3.8, 1.2));
+  // التوقع يعد → 411.783
+  pop($('ovFc'), t, 7.4, 10.3, 170, 1240, 'center');
+  const fk = seg(t, 7.6, 1.3);
+  $('fcNum').textContent = fmt3(411.783 * fk); $('fcOver').textContent = fmt3(161.783 * fk);
+  // كرت الجاهزية يطلع من الشاشة
+  pop($('ovReady'), t, 11.4, 14.6, 78, 1180, 'right');
+  // التراجع: الشريط ← ضغطة ← «رجعت ✓»
+  pop($('ovUndo'), t, 15.6, 18.1, 270, 1330, 'center');
+  const tapK = seg(t, 16.75, 0.5);
+  $('tap').style.opacity = t > 16.7 ? (1 - tapK) * 0.9 : 0;
+  $('tap').style.transform = 'translate(358px,1406px) scale(' + lerp(0.4, 1.6, tapK) + ')';
+  const done = t >= 16.85;
+  $('undoTxt').textContent = done ? 'رجعت ✓' : 'انحذفت';
+  $('undoBtn').style.display = done ? 'none' : '';
+
+  $('demo').style.opacity = 0.65 * seg(t, 3.0, 0.5) * (1 - seg(t, 18.0, 0.4));
+  // ===== 3) بدون نت 18.5–20.6 =====
+  const oIn = seg(t, 18.55, 0.5), oOut = seg(t, 20.25, 0.35, INOUT);
+  $('plane').style.opacity = oIn * (1 - oOut);
+  $('plane').style.transform = 'translate(' + (lerp(-260, 0, oIn) + oOut * 260) + 'px,' + (lerp(120, 0, oIn) - oOut * 120) + 'px) rotate(' + lerp(-25, 0, oIn) + 'deg)';
+  wordIn(offW, t, 18.75, 20.45, 0.12);
+
+  // ===== 4) الختام 20.6–24 =====
+  const eIn = seg(t, 20.65, 0.5);
+  $('logo').style.opacity = eIn; $('logo').style.transform = 'translateY(' + ((1 - eIn) * 40) + 'px) scale(' + lerp(0.94, 1, eIn) + ')';
+  $('arc').style.strokeDashoffset = 1 - seg(t, 20.7, 0.9);
+  $('ha').style.strokeDashoffset = 1 - seg(t, 20.85, 0.75);
+  const dk = seg(t, 21.5, 0.3);
+  $('dot').style.opacity = dk; $('dot').style.transformOrigin = '352px 128px'; $('dot').style.transform = 'scale(' + lerp(0.6, 1, dk) + ')';
+  const nIn = seg(t, 21.0, 0.45);
+  $('bname').style.opacity = nIn; $('bname').style.transform = 'translateY(' + ((1 - nIn) * 30) + 'px)';
+  if (!window._tagW) window._tagW = words($('btag'), 'كل يومك بمكان واحد');
+  wordIn(window._tagW, t, 21.3, null, 0.09);
+  const btIn = seg(t, 21.75, 0.45);
+  $('beta').style.opacity = btIn; $('beta').style.transform = 'translateX(-50%) translateY(' + ((1 - btIn) * 30) + 'px)';
+  const cIn = seg(t, 22.2, 0.45);
+  const sgIn = seg(t, 22.6, 0.45);
+  $('sugg').style.opacity = sgIn; $('sugg').style.transform = 'translateY(' + ((1 - sgIn) * 30) + 'px)';
+  $('cta').style.opacity = cIn; $('cta').style.transform = 'translateX(-50%) translateY(' + ((1 - cIn) * 40) + 'px) scale(' + lerp(0.94, 1, cIn) + ')';
+};
+function pop(el, t, s, e, x, y, from) {
+  const kIn = seg(t, s, 0.5), kOut = seg(t, e - 0.3, 0.3, INOUT);
+  const dx = from === 'right' ? 60 : from === 'left' ? -60 : 0;
+  el.style.opacity = kIn * (1 - kOut);
+  el.style.transform = 'translate(' + (x + (1 - kIn) * dx + kOut * dx) + 'px,' + (y + (1 - kIn) * 40) + 'px) scale(' + (lerp(0.94, 1, kIn) * lerp(1, 0.94, kOut)) + ')';
+}
+window.READY = Promise.all([document.fonts.ready, ...SCREENS.map(([n]) => new Promise((r) => { const i = new Image(); i.onload = i.onerror = r; i.src = SHOT(n); }))]);
+setT(0);
+</script></body></html>

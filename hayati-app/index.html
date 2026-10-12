@@ -340,6 +340,8 @@
     /* ---------- النوافذ ---------- */
     dialog.sheet {
       border: 0; padding: 0; width: 100%; max-width: 560px; max-height: 92vh;
+      /* راس الورقة (زر «حفظ») ما يروح تحت الساعة والجزيرة بالآيفون */
+      max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 16px);
       margin: auto auto 0; border-radius: 26px 26px 0 0; background: var(--bg); color: var(--text);
       box-shadow: 0 -10px 40px rgba(0, 0, 0, .2);
     }
@@ -394,6 +396,9 @@
       background: var(--surface); text-align: start; box-shadow: var(--shadow-sm);
     }
     .menu button b { display: block; font-size: 15px; }
+    .menu .menu-link { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 16px; border: 1px solid var(--border); background: var(--surface); box-shadow: var(--shadow-sm); color: inherit; text-decoration: none; }
+    .menu .menu-link b { display: block; font-size: 15px; }
+    .menu .menu-link small { display: block; color: var(--muted); }
     .menu button small { color: var(--muted); font-size: 12.5px; }
 
     .group-title { font-size: 13px; color: var(--muted); font-weight: 600; margin: 18px 6px 8px; display: flex; align-items: center; gap: 6px; }
@@ -416,6 +421,39 @@
       box-shadow: 0 10px 30px -10px rgba(0, 0, 0, .4);
     }
     .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .undo-bar {
+      position: fixed; left: 50%; transform: translate(-50%, 10px); z-index: 51;
+      bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 26px);
+      display: flex; align-items: center; gap: 14px; padding: 6px 6px 6px 18px; border-radius: 99px;
+      background: var(--text); color: var(--bg); font-size: 14px; font-weight: 600;
+      opacity: 0; pointer-events: none; transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, .4);
+    }
+    .undo-bar.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+    .undo-bar button { all: unset; cursor: pointer; padding: 6px 14px; border-radius: 99px; background: var(--coral); color: #2A0E07; font-weight: 700; }
+    .undo-bar button:focus-visible { outline: 2px solid var(--bg); outline-offset: 2px; }
+    .find-sum { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; margin-bottom: 8px; }
+    .find-sum b { font-size: 18px; }
+    .readiness .rd-head { display: flex; align-items: center; gap: 12px; }
+    .readiness .rd-emo { font-size: 26px; }
+    .readiness .rd-head b { display: block; font-size: 17px; }
+    .readiness .rd-score { font-size: 28px; color: var(--z); }
+    .rd-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .rd-chips span { font-size: 12px; padding: 3px 10px; border-radius: 99px; background: var(--surface-2); color: var(--text-2); direction: rtl; unicode-bidi: isolate; }
+    .rd-chips span.bad { background: var(--danger-soft); color: var(--expense); }
+    .ob .ob-title { display: block; font-size: 18px; }
+    .ob-roles { display: flex; flex-wrap: wrap; gap: 8px; }
+    .ob-chip { font: inherit; font-size: 14px; font-weight: 600; padding: 8px 14px; border-radius: 99px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
+    .ob-chip.on { border-color: var(--brand); background: var(--brand-soft); color: var(--brand); }
+    .build-week b { font-size: 17px; }
+    .build-week p { margin: 4px 0 12px; }
+    .build-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+    .build-btns .btn { flex: 1 1 auto; }
+    .fb-stars { display: flex; gap: 6px; justify-content: flex-end; }
+    .fb-stars button { all: unset; cursor: pointer; font-size: 34px; line-height: 1; color: var(--border); }
+    .fb-stars button.on { color: #F2B84B; }
+    .fb-stars button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 6px; }
+    .ob-chip:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
     /* ---------- إضافات ---------- */
     .hero-btn { border: 0; background: rgba(255, 255, 255, .16); color: #fff; border-radius: 99px; padding: 4px 10px; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
     .hero-btn svg.i { width: 14px; height: 14px; }
@@ -646,6 +684,8 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="i18n-en.js"></script>
+  <script src="i18n.js"></script>
   <script src="config.js"></script>
   <script src="sms.js"></script>
   <script src="store.js"></script>
@@ -661,6 +701,11 @@
   <script src="lock.js"></script>
   <script src="motion.js"></script>
   <script src="pwa.js"></script>
+  <script src="find.js"></script>
+  <script src="insights.js"></script>
+  <script src="community.js"></script>
+  <script src="privacy.js"></script>
+  <script src="native.js"></script>
 
 
 

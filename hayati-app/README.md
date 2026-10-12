@@ -17,6 +17,11 @@ Personal life-OS PWA: expenses, budgets, bank/BenefitPay SMS parsing, study sche
 | `motion.js` | Motion layer: view entrance, sheet enter/exit, count-up, bar/ring tweens, toggle feedback |
 | `config.js` | Supabase URL/anon key (empty) |
 | `sw.js` | Service worker: opens offline, iOS notifications via `showNotification`, tap opens the app. Add any new script to `SHELL` (a test checks) |
+| `find.js` | Search across expenses/tasks/schedule/matches (Arabic-normalised, total spent) + undo bar after any delete (wraps `S.remove`) |
+| `insights.js` | Month-end spending forecast (ignores subscriptions and one-offs > 25% of budget, from day 5) + goalkeeper readiness card (sleep, HRV and resting HR vs your own 14-night median, yesterday’s load) |
+| `community.js` | First-run welcome card (name, roles, prayer times, budget) + «ملفك» in settings. `App.has(role)` gates GPA/attendance (student), keeper mode, readiness (athlete). Empty roles = everything on (existing users unchanged) |
+| `privacy.js` + `privacy.html` | Masks card/account numbers in stored bank messages (also old ones, once), privacy policy page (AR/EN), «احذف كل بياناتي» (device + Claude db + Supabase + account) |
+| `i18n.js` + `i18n-en.js` | English (beta): display-only translation layer (text nodes + placeholders/aria), LTR switch; data is never translated. Language picker in the welcome card and settings |
 | `pwa.js` | App icon badge = today's + overdue undone tasks (toggle in settings) |
 
 Run locally: `npx serve hayati-app` (artifact db unavailable outside claude.ai → falls back to localStorage/Supabase).

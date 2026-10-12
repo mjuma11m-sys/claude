@@ -25,13 +25,15 @@ jobs:
           cache: npm
           cache-dependency-path: hayati-app/package-lock.json
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      # WebKit = محرك Safari، نفس محرك الآيفون
+      - run: npx playwright install --with-deps chromium webkit
       - name: Unit tests (bank message reader)
         run: npm run test:unit
       - name: Browser tests (iPhone-size Chromium)
         run: npx playwright test
         env:
           CI: 'true'
+          HAYATI_WEBKIT: '1'
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

@@ -147,11 +147,21 @@
   const toastEl = document.getElementById('toast');
   let toastTimer;
   function toast(msg) {
+    // الورقة (dialog) تطلع فوق الصفحة كلها، فالرسالة تنحط داخلها عشان تبين (مثلاً «اكتب الاسم»)
+    const host = document.querySelector('dialog[open]') || document.body;
+    if (toastEl.parentNode !== host) {
+      host.appendChild(toastEl);
+      // لما تتسكر الورقة، الرسالة ترجع للصفحة وتكمّل («انضاف للجدول ✓»)
+      if (host !== document.body) host.addEventListener('close', () => { if (toastEl.parentNode === host) document.body.appendChild(toastEl); }, { once: true });
+    }
     toastEl.textContent = msg;
     toastEl.classList.add('show');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2400);
   }
+
+  // تركيز تلقائي على أول حقل، إلا بنسخة الآيفون (الكيبورد يدف الورقة وزر «حفظ» يختفي تحت الساعة)
+  function autoFocus(el) { if (el && !window.HayatiNative) el.focus(); }
 
   // نافذة تأكيد داخل الصفحة (confirm() ما يشتغل داخل claude.ai)
   function ask(message, okLabel) {
@@ -170,6 +180,7 @@
 
   // حفظ ملف: داخل claude.ai عن طريق صلاحية التنزيل، وبرّا عن طريق رابط عادي
   async function saveFile(filename, text, mime) {
+    if (window.HayatiNative) return window.HayatiNative.saveFile(filename, text, mime);
     if (window.claude && typeof window.claude.use === 'function') {
       const dl = await window.claude.use('downloads');
       if (dl) {
@@ -660,7 +671,16 @@
 
   // ================= الجدول/المذاكرة/المعدل =================
   function viewStudy() {
-    return segBar(STUDY_SEGS, ui.studySeg, 'study-seg') + ({ schedule: viewSchedule, focus: viewFocus, gpa: viewGpa, health: () => X('viewHealth') })[ui.studySeg]();
+    const segs = has('student') ? STUDY_SEGS : STUDY_SEGS.filter((x) => x[0] !== 'gpa');
+    if (!segs.some((x) => x[0] === ui.studySeg)) ui.studySeg = 'schedule';
+    return segBar(segs, ui.studySeg, 'study-seg') + ({ schedule: viewSchedule, focus: viewFocus, gpa: viewGpa, health: () => X('viewHealth') })[ui.studySeg]();
+  }
+
+  // جدول فاضي = بداية: كل عميل يبني أسبوعه، والأزرار على حسب ملفه
+  function buildScheduleCard() {
+    const types = (has('student') ? [['lecture', 'محاضرة']] : []).concat([['gym', 'تمرين'], ['activity', has('employee') ? 'دوام أو نشاط' : 'نشاط']]);
+    return '<div class="card build-week"><b>ابنِ جدولك</b><p class="small muted">أضف أسبوعك مرة وحدة: الأيام والوقت والمكان. وبعدها يقولك «الحين وقت…».</p>' +
+      '<div class="build-btns">' + types.map(([k, l]) => '<button class="btn" data-action="add-course" data-type="' + k + '">' + I(ACT_TYPES[k].icon) + l + '</button>').join('') + '</div></div>';
   }
 
   function viewSchedule() {
@@ -687,7 +707,7 @@
     const groups = [['lecture', 'المحاضرات'], ['gym', 'التمرين'], ['activity', 'أنشطة ثانية']];
     out += secHead('جدولك الأسبوعي', '<button class="link" data-action="add-course">إضافة</button>');
     if (!st.courses.length) {
-      out += '<div class="card">' + empty('calendar', 'جدولك فاضي', '<button class="link" data-action="add-course">أضف محاضرة أو تمرين</button>: الأيام والوقت والمكان') + '</div>';
+      out += buildScheduleCard();
     }
     for (const [type, label] of groups) {
       const list = st.courses.filter((c) => (c.type || 'lecture') === type);
@@ -903,9 +923,8 @@
     const isNow = ui.month === monthKey(new Date());
     const daysCount = isNow ? new Date().getDate() : new Date(y, m, 0).getDate();
     const exps = cur.filter((t) => t.kind === 'expense');
-    const byMerchant = {};
-    for (const t of exps) { const k = t.merchant || t.category || 'أخرى'; byMerchant[k] = byMerchant[k] || { sum: 0, n: 0 }; byMerchant[k].sum += Number(t.amount); byMerchant[k].n++; }
-    const topM = Object.entries(byMerchant).sort((p, q) => q[1].sum - p[1].sum).slice(0, 3);
+    // «COSTA SEEF» و «Costa Coffee» = محل واحد
+    const topM = window.SmsParser.groupByBrand(exps).slice(0, 3).map((g) => [g.label, g]);
     const biggest = exps.slice().sort((p, q) => q.amount - p.amount)[0];
     let noSpend = 0;
     for (let d = 1; d <= daysCount; d++) if (!exps.some((t) => new Date(t.occurred_at).getDate() === d)) noSpend++;
@@ -937,7 +956,19 @@
       (subsTotal ? '<li class="row" style="cursor:default"><div class="main">الاشتراكات</div><b>' + money(subsTotal) + '</b></li>' : '') +
       (st.settings.budget ? '<li class="row" style="cursor:default"><div class="main">الميزانية</div><b class="' + (a.exp > st.settings.budget ? 'neg' : 'pos') + '">' + (a.exp > st.settings.budget ? 'تعدّيت بـ ' + fmt(a.exp - st.settings.budget) : 'باقي ' + fmt(st.settings.budget - a.exp)) + '</b></li>' : '') +
       '</ul></div>';
-    openSheet({ title: 'تقرير الشهر', cancelLabel: 'تم', body });
+    // بالآيفون: ملخص نصي يروح لقائمة المشاركة (واتساب، ملاحظات…)
+    const share = window.HayatiNative && window.HayatiNative.shareText;
+    if (share) body += '<button class="btn block" type="button" id="shareReport">' + I('upload') + 'شارك الملخص</button>';
+    openSheet({
+      title: 'تقرير الشهر', cancelLabel: 'تم', body,
+      mount(root) {
+        const b = root.querySelector('#shareReport');
+        if (b) b.onclick = () => share('تقرير ' + MONTHS[m - 1] + ' ' + y + ' · «حياتي»\n' +
+          'الصرف: ' + fmt(a.exp) + ' د.ب\nالدخل: ' + fmt(a.inc) + ' د.ب\n' +
+          (topM.length ? 'أكثر مكان: ' + topM.map(([k, v]) => k + ' (' + fmt(v.sum) + ')').join('، ') + '\n' : '') +
+          'أيام بدون صرف: ' + noSpend + ' / ' + daysCount);
+      },
+    });
   }
 
   function viewTasks() {
@@ -991,8 +1022,11 @@
   const tabbar = document.getElementById('tabbar');
   document.getElementById('settingsIcon').innerHTML = I('settings');
 
+  // مين يستخدم التطبيق: roles فاضية = الكل (المستخدمين القدامى يشوفون كل شي)
+  const has = (r) => !Array.isArray(st.settings.roles) || !st.settings.roles.length || st.settings.roles.includes(r);
+  const tabOf = (x) => (x[0] === 'schedule' && !has('student') ? ['schedule', 'جدولي', 'calendar'] : x);
   function renderTabbar() {
-    const t = (x) => '<button class="tab' + (ui.tab === x[0] ? ' on' : '') + '" data-tab="' + x[0] + '">' + I(x[2]) + x[1] + '</button>';
+    const t = (x) => { x = tabOf(x); return '<button class="tab' + (ui.tab === x[0] ? ' on' : '') + '" data-tab="' + x[0] + '">' + I(x[2]) + x[1] + '</button>'; };
     tabbar.innerHTML = t(TABS[0]) + t(TABS[1]) + '<button class="add" id="addBtn" aria-label="إضافة">' + I('plus') + '</button>' + t(TABS[2]) + t(TABS[3]);
   }
 
@@ -1000,16 +1034,17 @@
     const n = new Date();
     if (ui.tab === 'today') {
       const hr = n.getHours();
-      return (hr < 12 ? 'صباح الخير' : 'مساء الخير') + ' · ' + DAYS[n.getDay()] + ' ' + n.getDate() + ' ' + MONTHS[n.getMonth()];
+      const nm = (st.settings.name || '').trim();
+      return (hr < 12 ? 'صباح الخير' : 'مساء الخير') + (nm ? ' يا ' + nm : '') + ' · ' + DAYS[n.getDay()] + ' ' + n.getDate() + ' ' + MONTHS[n.getMonth()];
     }
     if (ui.tab === 'money') return { tx: 'تتبّع صرفك ودخلك', subs: 'اشتراكاتك ومصاريفك الثابتة', goals: 'وفّر لأحلامك', debts: 'الفلوس اللي لك واللي عليك' }[ui.moneySeg];
-    if (ui.tab === 'schedule') return { schedule: 'محاضراتك وتمرينك ومواعيدك', focus: 'ركّز وذاكر', gpa: 'معدلك الفصلي والتراكمي' }[ui.studySeg];
+    if (ui.tab === 'schedule') return { schedule: has('student') ? 'محاضراتك وتمرينك ومواعيدك' : 'شغلك وتمرينك ومواعيدك', focus: 'ركّز وذاكر', gpa: 'معدلك الفصلي والتراكمي' }[ui.studySeg];
     return 'واجبات واختبارات ومشاوير';
   }
 
   let lastTab = null;
   function render() {
-    const tabInfo = TABS.find((t) => t[0] === ui.tab);
+    const tabInfo = tabOf(TABS.find((t) => t[0] === ui.tab));
     document.getElementById('title').textContent = tabInfo[1];
     document.getElementById('subtitle').textContent = subtitle();
     renderTabbar();
@@ -1108,7 +1143,7 @@
         const del = root.querySelector('#delTx');
         X('txMount', root, tx);
         if (del) del.onclick = async () => { if (await ask('تحذف هالعملية؟')) { S.remove('transactions', tx.id); closeSheet(); toast('انحذفت'); } };
-        if (!tx) setTimeout(() => root.querySelector('[name=amount]').focus(), 300);
+        if (!tx) setTimeout(() => autoFocus(root.querySelector('[name=amount]')), 300);
       },
       onSave(root) {
         const amount = parseAmount(val(root, 'amount'));
@@ -1151,7 +1186,7 @@
             (p.needs_review ? '<p class="small" style="color:var(--warn);margin:4px 0 0">مو متأكد ١٠٠٪، بتنضاف وعليها علامة «راجعها»</p>' : '<p class="small" style="color:var(--income);margin:4px 0 0">' + I('check') + ' فهمتها</p>') + '</div>';
         };
         ta.addEventListener('input', update);
-        setTimeout(() => ta.focus(), 300);
+        setTimeout(() => autoFocus(ta), 300);
       },
       onSave(root) {
         const tx = S.smsToTransaction(val(root, 'sms'), new Date().toISOString());
@@ -1186,7 +1221,7 @@
 
   // --- مادة ---
   function courseForm(c, presetType) {
-    const x = c || { name: '', type: presetType || 'lecture', days: [ui.day], start_time: presetType === 'gym' ? '18:00' : '08:00', end_time: presetType === 'gym' ? '19:00' : '09:15', room: '', color: presetType === 'gym' ? '#10b981' : COLORS[st.courses.length % COLORS.length] };
+    const x = c || { name: '', type: presetType || (has('student') ? 'lecture' : 'activity'), days: [ui.day], start_time: presetType === 'gym' ? '18:00' : '08:00', end_time: presetType === 'gym' ? '19:00' : '09:15', room: '', color: presetType === 'gym' ? '#10b981' : COLORS[st.courses.length % COLORS.length] };
     const ph = { lecture: 'مثلاً: رياضيات ١٠١', gym: 'مثلاً: جيم — صدر وتراي', activity: 'مثلاً: دورة إنجليزي' };
     openSheet({
       title: c ? 'تعديل' : 'إضافة للجدول',
@@ -1200,7 +1235,8 @@
         '<div class="field"><label>المكان</label><input name="room" value="' + h(x.room || '') + '" placeholder="القاعة، المبنى، اسم الجيم… (اختياري)"></div>' +
         '<div class="field"><label>اللون</label><div class="colors" id="colorPick">' + COLORS.map((col) =>
           '<button type="button" style="background:' + col + '" data-c="' + col + '" class="' + (col === x.color ? 'on' : '') + '" aria-label="لون"></button>').join('') + '</div></div>' +
-        (c ? '<button class="btn danger block" type="button" id="delCourse">' + I('trash') + 'حذف</button>' : ''),
+        (c ? '<button class="btn danger block" type="button" id="delCourse">' + I('trash') + 'حذف</button>' :
+          '<button class="btn block" type="button" id="saveNext">' + I('plus') + 'احفظ وأضف ثاني</button>'),
       mount(root) {
         root.dataset.type = x.type || 'lecture';
         segPick(root, '#typeSeg', (k) => { root.dataset.type = k; root.querySelector('[name=name]').placeholder = ph[k]; });
@@ -1212,9 +1248,26 @@
         };
         const del = root.querySelector('#delCourse');
         if (del) del.onclick = async () => { if (await ask('تحذفها من الجدول؟')) { S.remove('courses', c.id); closeSheet(); toast('انحذفت'); } };
-        if (!c) setTimeout(() => root.querySelector('[name=name]').focus(), 300);
+        if (!c) setTimeout(() => autoFocus(root.querySelector('[name=name]')), 300);
+        // يحفظ ويخلي النوع والأيام والوقت مثل ما هي، ويفضي الاسم والمكان بس
+        const next = root.querySelector('#saveNext');
+        if (next) next.onclick = () => {
+          try { save(root); } catch (e) { toast(e.message); return; }
+          root.querySelector('[name=name]').value = '';
+          root.querySelector('[name=room]').value = '';
+          const cols = [...root.querySelectorAll('#colorPick button')];
+          const on = cols.findIndex((b) => b.classList.contains('on'));
+          cols.forEach((b, i) => b.classList.toggle('on', i === (on + 1) % cols.length));
+          toast('انضافت ✓ · اكتب اللي بعدها');
+          autoFocus(root.querySelector('[name=name]'));
+        };
       },
       onSave(root) {
+        save(root);
+        toast(c ? 'تم التعديل' : 'انضاف للجدول ✓ — لا تنسى تحدّث التقويم');
+      },
+    });
+    function save(root) {
         const name = val(root, 'name');
         if (!name) throw new Error('اكتب الاسم');
         const days = [...root.querySelectorAll('#daysPick .on')].map((b) => Number(b.dataset.d));
@@ -1223,9 +1276,7 @@
         if (end && minutesOf(end) <= minutesOf(start)) throw new Error('وقت النهاية لازم بعد البداية');
         const col = root.querySelector('#colorPick .on');
         S.upsert('courses', Object.assign({}, c || {}, { name, type: root.dataset.type, days, start_time: start, end_time: end, room: val(root, 'room') || null, color: col ? col.dataset.c : COLORS[0] }));
-        toast(c ? 'تم التعديل' : 'انضاف للجدول ✓ — لا تنسى تحدّث التقويم');
-      },
-    });
+    }
   }
 
   // --- مهمة ---
@@ -1253,7 +1304,7 @@
         const del = root.querySelector('#delTask');
         X('taskMount', root, t);
         if (del) del.onclick = async () => { if (await ask('تحذف المهمة؟')) { S.remove('tasks', t.id); closeSheet(); toast('انحذفت'); } };
-        if (!t) setTimeout(() => root.querySelector('[name=title]').focus(), 300);
+        if (!t) setTimeout(() => autoFocus(root.querySelector('[name=title]')), 300);
       },
       onSave(root) {
         const title = val(root, 'title');
@@ -1450,7 +1501,7 @@
         '<div class="chips" style="justify-content:center;margin:12px 0">' + [5, 10, 20, 50].map((n) => '<button type="button" class="chip" data-v="' + n + '">' + n + '</button>').join('') + '</div>',
       mount(root) {
         root.querySelector('.chips').onclick = (e) => { const b = e.target.closest('[data-v]'); if (b) root.querySelector('[name=amt]').value = Number(b.dataset.v).toFixed(3); };
-        setTimeout(() => root.querySelector('[name=amt]').focus(), 300);
+        setTimeout(() => autoFocus(root.querySelector('[name=amt]')), 300);
       },
       onSave(root) {
         const a = parseAmount(val(root, 'amt'));
@@ -1483,7 +1534,7 @@
         segPick(root, '#dirSeg', (k) => { root.dataset.dir = k; });
         const del = root.querySelector('#delDebt');
         if (del) del.onclick = async () => { if (await ask('تحذفها؟')) { S.remove('debts', d.id); closeSheet(); toast('انحذفت'); } };
-        if (!d) setTimeout(() => root.querySelector('[name=amount]').focus(), 300);
+        if (!d) setTimeout(() => autoFocus(root.querySelector('[name=amount]')), 300);
       },
       onSave(root) {
         const amount = parseAmount(val(root, 'amount'));
@@ -1623,6 +1674,7 @@
         const { text, count } = window.CalendarExport.build({ courses: st.courses, tasks: st.tasks, subscriptions: opts.subs ? st.subscriptions : [], remindBefore: opts.before, semesterEnd: opts.end, includeTasks: opts.tasks, prayers: opts.prayers ? prayerDays(30) : [] });
         if (!count) throw new Error('ما فيه شي أصدّره، أضف موادك أول');
         if (inClaude()) saveFile('hayati-calendar.txt', text, 'text/plain').then((ok) => { if (ok) toast('غيّر امتداد الملف إلى ‎.ics‎ وافتحه بالتقويم'); });
+        else if (window.HayatiNative) window.HayatiNative.saveFile('hayati.ics', text, 'text/calendar');
         else window.CalendarExport.download(text, 'hayati.ics');
         toast('تم تجهيز ' + count + ' موعد');
       },
@@ -1796,7 +1848,7 @@
       case 'go': go(el.dataset.tab); break;
       case 'edit-tx': txForm(st.transactions.find((t) => t.id === id)); break;
       case 'add-tx': txForm(); break;
-      case 'add-course': courseForm(); break;
+      case 'add-course': courseForm(null, el.dataset.type); break;
       case 'paste-sms': pasteSmsForm(); break;
       case 'budget': budgetForm(); break;
       case 'edit-course': courseForm(courseById(id)); break;
@@ -1900,7 +1952,7 @@
     S, st, I, ui, h, fmt, money, tint, catMeta, catIcon, pad, monthKey, sameDay, startOfDay, daysBetween, time12, timeOf, minutesOf,
     nowMinutes, toLocalInput, dayLabel, nDays, toast, ask, courseById, lectures, lecturesOn, agendaOn, empty, secHead, ring, openSheet,
     closeSheet, val, parseAmount, segPick, render, go, txInMonth, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, courseForm, taskForm,
-    notify, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
+    notify, has, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
   };
   setInterval(timerTickUI, 1000);
   timerCheck();

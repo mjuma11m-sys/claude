@@ -1,0 +1,220 @@
+<title>رأيك في حياتي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: استبيان قصير بعمود واحد بهوية «لؤلؤ وبحر»؛ وصاحب التطبيق يشوف لوحة النتايج بدل الاستبيان */
+:root {
+  --bg: #F7F4EE; --surface: #FFFFFF; --surface-2: #EFEAE0; --line: #E4DDD0;
+  --text: #0B2328; --text-2: #33494D; --muted: #6B7B7D;
+  --sea: #0E3B43; --pearl: #E8DCC4; --brand: #13636B; --brand-soft: #E1EEEC; --coral: #FF6B4A; --on-coral: #2A0E07;
+  --ok: #2F9E7A; --bad: #C2372E;
+  --body: "IBM Plex Sans Arabic", "Geeza Pro", "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0A1A1E; --surface: #10262B; --surface-2: #163238; --line: #1F3D43;
+  --text: #EFE8DA; --text-2: #C9C2B4; --muted: #8A9A9B;
+  --brand: #6EC5C0; --brand-soft: #133A3E; --coral: #FF7A5C; --ok: #4FC79E; --bad: #FF7A6B; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0A1A1E; --surface: #10262B; --surface-2: #163238; --line: #1F3D43;
+  --text: #EFE8DA; --text-2: #C9C2B4; --muted: #8A9A9B;
+  --brand: #6EC5C0; --brand-soft: #133A3E; --coral: #FF7A5C; --ok: #4FC79E; --bad: #FF7A6B; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font: 16px/1.7 var(--body); }
+.wrap { max-width: 640px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 60px; }
+header { background: var(--sea); color: var(--pearl); border-radius: 22px; padding: 20px 22px; display: flex; gap: 14px; align-items: center; }
+header svg { width: 52px; height: 52px; flex: none; }
+h1 { margin: 0; font-size: 24px; line-height: 1.3; text-wrap: balance; }
+header p { margin: 2px 0 0; opacity: .8; font-size: 14px; }
+.note { font-size: 14px; color: var(--muted); margin: 14px 4px 0; }
+form, .panel { display: grid; gap: 14px; margin-top: 18px; }
+fieldset { margin: 0; border: 1px solid var(--line); background: var(--surface); border-radius: 18px; padding: 14px 16px 16px; min-width: 0; }
+legend { font-weight: 600; padding: 0 6px; }
+.hint { font-size: 13px; color: var(--muted); margin: 0 0 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips label { position: relative; }
+.chips input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.chips span { display: inline-block; padding: 7px 14px; border-radius: 99px; border: 1.5px solid var(--line); background: var(--surface); font-size: 14px; font-weight: 600; }
+.chips input:checked + span { border-color: var(--brand); background: var(--brand-soft); color: var(--brand); }
+.chips input:focus-visible + span { outline: 2px solid var(--brand); outline-offset: 2px; }
+.stars { display: flex; gap: 6px; direction: ltr; justify-content: flex-end; }
+.stars label { position: relative; font-size: 32px; line-height: 1; color: var(--line); cursor: pointer; }
+.stars input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.stars label.on { color: #F2B84B; }
+.nps { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 4px; direction: ltr; }
+.nps label { position: relative; }
+.nps input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.nps span { display: grid; place-items: center; height: 38px; border-radius: 10px; border: 1.5px solid var(--line); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.nps input:checked + span { background: var(--brand); color: var(--surface); border-color: var(--brand); }
+.scale { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 4px; }
+textarea, input[type=text] { width: 100%; font: inherit; color: var(--text); background: var(--bg); border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+textarea { min-height: 84px; resize: vertical; }
+textarea:focus, input[type=text]:focus { outline: 2px solid var(--brand); outline-offset: 1px; }
+button { font: 600 16px var(--body); border: 0; border-radius: 14px; padding: 14px 18px; cursor: pointer; }
+.primary { background: var(--coral); color: var(--on-coral); }
+.primary:disabled { opacity: .5; cursor: default; }
+button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.msg { border-radius: 14px; padding: 12px 14px; font-size: 15px; }
+.msg.ok { background: color-mix(in srgb, var(--ok) 14%, var(--surface)); }
+.msg.warn { background: var(--surface-2); color: var(--text-2); }
+.kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px; }
+.kpi small { color: var(--muted); font-size: 12px; display: block; }
+.kpi b { font-size: 26px; font-variant-numeric: tabular-nums; }
+.bars { display: grid; gap: 8px; }
+.bar { display: grid; grid-template-columns: minmax(0, 8em) minmax(0, 1fr) 2.5em; gap: 8px; align-items: center; font-size: 14px; }
+.bar i { display: block; height: 10px; border-radius: 6px; background: var(--brand); }
+.bar em { font-style: normal; color: var(--muted); font-variant-numeric: tabular-nums; text-align: start; }
+.resp { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; }
+.resp .meta { font-size: 12px; color: var(--muted); }
+.resp p { margin: 6px 0 0; }
+.resp b { color: var(--brand); font-weight: 600; }
+.empty { color: var(--muted); text-align: center; padding: 24px; background: var(--surface); border: 1px dashed var(--line); border-radius: 16px; }
+@media (max-width: 420px) { .nps span { height: 32px; font-size: 12px; } .kpi b { font-size: 22px; } }
+</style>
+
+<div class="wrap" dir="rtl">
+  <header>
+    <svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="116" fill="#0E3B43" stroke="rgba(232,220,196,.25)" stroke-width="8"/><path d="M 383.3 172.7 A 160 160 0 1 1 300 102.2" fill="none" stroke="#E8DCC4" stroke-opacity=".28" stroke-width="22" stroke-linecap="round"/><path d="M 304 166 L 196 166 L 264 222 C 204 222 168 254 168 292 C 168 336 206 360 256 360 C 292 360 318 348 338 332" fill="none" stroke="#E8DCC4" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/><circle cx="352" cy="128" r="30" fill="#FF6B4A"/></svg>
+    <div><h1 id="h1">رأيك في «حياتي»</h1><p id="sub">دقيقتين، وكل جواب ينقرا. التطبيق قيد التطوير، ورأيك يقرر وش ينبني بعد.</p></div>
+  </header>
+
+  <div id="status" class="msg warn" hidden></div>
+
+  <form id="form" novalidate>
+    <fieldset>
+      <legend>كيف تقيّم «حياتي» بشكل عام؟</legend>
+      <div class="stars" id="stars" role="radiogroup" aria-label="التقييم من 5"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>وش أكثر شي استخدمته؟</legend>
+      <p class="hint">اختار كل اللي ينطبق</p>
+      <div class="chips" id="used"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend><label for="bad">وش ضايقك أو ما اشتغل زين؟</label></legend>
+      <textarea id="bad" maxlength="800" placeholder="بصراحة، حتى لو شي صغير"></textarea>
+    </fieldset>
+
+    <fieldset>
+      <legend><label for="want">وش الميزة اللي تبيها؟</label></legend>
+      <textarea id="want" maxlength="800" placeholder="مثلاً: تذكير قبل الاختبار بأسبوع"></textarea>
+    </fieldset>
+
+    <fieldset>
+      <legend>تنصح ربعك فيه؟</legend>
+      <div class="nps" id="nps" role="radiogroup" aria-label="من 0 إلى 10"></div>
+      <div class="scale"><span>أكيد</span><span>أبد</span></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>أنت…</legend>
+      <div class="chips" id="role"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>جهازك</legend>
+      <div class="chips" id="device"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>لو بنينا اقتراحك، نذكر اسمك؟</legend>
+      <div class="chips" id="credit"></div>
+      <label for="handle" class="hint" style="display:block;margin-top:10px">حسابك بإنستقرام أو تيك توك (اختياري)</label>
+      <input type="text" id="handle" maxlength="40" dir="ltr" placeholder="@" autocomplete="off">
+    </fieldset>
+
+    <button type="submit" class="primary" id="send">أرسل رأيك</button>
+    <p class="note">نحفظ جوابك بس، ما نشاركه مع أحد. تقدر تعدّله بعدين من نفس الرابط.</p>
+  </form>
+
+  <div class="panel" id="panel" hidden></div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const FEATURES = ['المصاريف', 'رسالة البنك', 'البحث', 'الجدول والدراسة', 'الصلاة', 'المهام', 'الصحة والساعة', 'وضع الحارس'];
+  const ROLES = ['طالب', 'موظف', 'رياضي', 'غيره'];
+  const DEVICES = ['آيفون', 'أندرويد', 'كمبيوتر'];
+  const CREDIT = [['yes', 'إي، اذكروا اسمي'], ['no', 'لا، بدون اسم']];
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const chips = (el, name, items, type) => { el.innerHTML = items.map((x) => { const [v, l] = Array.isArray(x) ? x : [x, x]; return '<label><input type="' + type + '" name="' + name + '" value="' + esc(v) + '"><span>' + esc(l) + '</span></label>'; }).join(''); };
+  chips($('used'), 'used', FEATURES, 'checkbox');
+  chips($('role'), 'role', ROLES, 'radio');
+  chips($('device'), 'device', DEVICES, 'radio');
+  chips($('credit'), 'credit', CREDIT, 'radio');
+  $('stars').innerHTML = [5, 4, 3, 2, 1].map((n) => '<label title="' + n + ' من 5"><input type="radio" name="stars" value="' + n + '" aria-label="' + n + ' من 5">★</label>').join('');
+  $('nps').innerHTML = Array.from({ length: 11 }, (_, i) => '<label><input type="radio" name="nps" value="' + i + '" aria-label="' + i + '"><span>' + i + '</span></label>').join('');
+  const paintStars = () => { const v = Number((document.querySelector('[name=stars]:checked') || {}).value || 0); document.querySelectorAll('#stars label').forEach((l) => l.classList.toggle('on', Number(l.querySelector('input').value) <= v)); };
+  $('stars').addEventListener('change', paintStars);
+
+  function read() {
+    const one = (n) => (document.querySelector('[name=' + n + ']:checked') || {}).value || null;
+    return {
+      stars: Number(one('stars')) || null, used: [...document.querySelectorAll('[name=used]:checked')].map((x) => x.value),
+      bad: $('bad').value.trim(), want: $('want').value.trim(), nps: one('nps') == null ? null : Number(one('nps')),
+      role: one('role'), device: one('device'), credit: one('credit'), handle: $('handle').value.trim(),
+    };
+  }
+  function fill(r) {
+    const set = (n, v) => { const el = document.querySelector('[name=' + n + '][value="' + v + '"]'); if (el) el.checked = true; };
+    if (r.stars) set('stars', r.stars); (r.used || []).forEach((u) => set('used', u));
+    $('bad').value = r.bad || ''; $('want').value = r.want || '';
+    if (r.nps != null) set('nps', r.nps); if (r.role) set('role', r.role); if (r.device) set('device', r.device); if (r.credit) set('credit', r.credit);
+    $('handle').value = r.handle || ''; paintStars();
+  }
+  const status = (text, kind) => { const s = $('status'); s.textContent = text; s.className = 'msg ' + (kind || 'warn'); s.hidden = !text; };
+
+  // لوحة النتايج لصاحب التطبيق
+  function renderPanel(rows) {
+    const n = rows.length;
+    const avg = n ? (rows.filter((r) => r.stars).reduce((s, r) => s + r.stars, 0) / Math.max(1, rows.filter((r) => r.stars).length)) : 0;
+    const npsRows = rows.filter((r) => r.nps != null);
+    const nps = npsRows.length ? Math.round(100 * (npsRows.filter((r) => r.nps >= 9).length - npsRows.filter((r) => r.nps <= 6).length) / npsRows.length) : null;
+    const counts = FEATURES.map((f) => [f, rows.filter((r) => (r.used || []).includes(f)).length]).sort((a, b) => b[1] - a[1]);
+    const max = Math.max(1, ...counts.map((c) => c[1]));
+    const texts = rows.filter((r) => r.bad || r.want).sort((a, b) => String(b.at).localeCompare(String(a.at)));
+    $('panel').innerHTML =
+      '<div class="kpis"><div class="kpi"><small>الردود</small><b>' + n + '</b></div>' +
+      '<div class="kpi"><small>متوسط التقييم</small><b>' + (n ? avg.toFixed(1) : '—') + '</b></div>' +
+      '<div class="kpi"><small>NPS</small><b>' + (nps == null ? '—' : nps) + '</b></div></div>' +
+      '<fieldset><legend>أكثر الميزات استخداماً</legend><div class="bars">' + counts.map(([f, c]) =>
+        '<div class="bar"><span>' + esc(f) + '</span><i style="width:' + (100 * c / max) + '%"></i><em>' + c + '</em></div>').join('') + '</div></fieldset>' +
+      '<fieldset><legend>الاقتراحات والمشاكل</legend>' + (texts.length ? '<div style="display:grid;gap:10px">' + texts.map((r) =>
+        '<div class="resp"><div class="meta">' + esc([r.role, r.device, r.stars ? r.stars + '★' : '', r.credit === 'yes' && r.handle ? r.handle : ''].filter(Boolean).join(' · ')) + '</div>' +
+        (r.want ? '<p><b>يبي:</b> ' + esc(r.want) + '</p>' : '') + (r.bad ? '<p><b>ضايقه:</b> ' + esc(r.bad) + '</p>' : '') + '</div>').join('') + '</div>' : '<div class="empty">ما فيه ردود للحين. شارك الرابط مع اللي يجربون التطبيق.</div>') + '</fieldset>';
+  }
+
+  let db = null, uid = null;
+  $('form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const r = read();
+    if (!r.stars && !r.bad && !r.want) { status('اختار تقييم أو اكتب شي قبل لا ترسل.', 'warn'); return; }
+    if (!db || !uid) { status('الإرسال يحتاج تكون مسجّل دخول بـ Claude وعندك صلاحية «مساهم» على هالصفحة. تقدر ترسل رأيك على إنستقرام @hayati.bh بداله.', 'warn'); return; }
+    $('send').disabled = true;
+    try {
+      await db.collection('feedback').doc(uid).set(Object.assign(r, { at: new Date().toISOString() }));
+      status('وصلنا رأيك ✓ شكراً. تقدر تعدّله من نفس الرابط.', 'ok');
+    } catch (err) {
+      status(err && err.code === 'invalid_argument' ? 'ما عندك صلاحية الإرسال على هالصفحة. اطلب من صاحب التطبيق يضيفك كـ «مساهم»، أو أرسل رأيك على إنستقرام @hayati.bh.' : 'ما وصل، جرّب مرة ثانية.', 'warn');
+    } finally { $('send').disabled = false; }
+  });
+
+  (async () => {
+    if (!window.claude || !window.claude.use) { status('افتح الرابط داخل Claude عشان ترسل رأيك.', 'warn'); return; }
+    const [d, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    if (!d || !user) { status('الإرسال يحتاج تسجيل دخول بـ Claude. تقدر ترسل رأيك على إنستقرام @hayati.bh بداله.', 'warn'); return; }
+    db = d; uid = await user.id();
+    if (user.isOwner()) {
+      $('h1').textContent = 'آراء مستخدمين «حياتي»'; $('sub').textContent = 'تشوف هالصفحة لأنك صاحب التطبيق. الباقين يشوفون الاستبيان.';
+      $('form').hidden = true; $('panel').hidden = false; renderPanel([]);
+      db.collection('feedback').onSnapshot((snap) => renderPanel(snap.docs.map((x) => x.data()).filter(Boolean)), () => status('ما قدرت أقرا الردود.', 'warn'));
+      return;
+    }
+    try { const mine = await db.collection('feedback').doc(uid).get(); if (mine.exists) { fill(mine.data()); status('هذا ردك السابق، تقدر تعدّله وترسله.', 'ok'); } } catch (e) { /* أول مرة */ }
+  })();
+})();
+</script>

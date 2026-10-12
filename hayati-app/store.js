@@ -5,7 +5,7 @@
   const KEY = 'hayati-v1';
   const CFG_KEY = 'hayati-supabase';
   const TABLES = ['transactions', 'courses', 'tasks', 'subscriptions', 'goals', 'grades', 'study_sessions', 'debts', 'habits', 'daily', 'lifts', 'body', 'cards', 'events', 'shopping', 'journal', 'matches'];
-  const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges'];
+  const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges', 'name', 'roles', 'onboarded'];
   const NUMERIC = ['amount', 'target', 'saved', 'credits', 'minutes', 'day', 'month', 'duration', 'remind_days', 'weight', 'waist', 'water', 'sleep', 'absence_limit'];
 
   const listeners = new Set();
@@ -133,6 +133,7 @@
   // ---------- قاعدة بيانات صفحة Claude (لما التطبيق ينفتح من رابط claude.ai) ----------
   let adb = null;
   let aCol = null;
+  let aUser = null;
   let aUnsub = null;
 
   function docKey(table, id) { return table + '~' + id; }
@@ -172,6 +173,7 @@
     const uid = await user.id();
     if (!uid) return false;
     adb = db;
+    aUser = user;
     aCol = adb.collection('data/users/' + uid);
     status.mode = 'artifact';
     status.configured = true;
@@ -201,9 +203,11 @@
   }
 
   // جدول جاهز يحطه Claude بقاعدة بيانات الصفحة عشان المستخدم يستورده بضغطة
+  // للمالك بس: كل عميل ثاني يبني جدوله بنفسه (والقاعدة بالمنشور تمنع القراءة بعد)
   async function getSeed() {
-    if (!adb) return null;
+    if (!adb || !aUser) return null;
     try {
+      if (!(await aUser.isOwner())) return null;
       const d = await adb.doc('seed/schedule').get();
       return d.exists ? d.data() : null;
     } catch (e) { return null; }
@@ -384,6 +388,33 @@
     return added;
   }
 
+  // 🗑️ حذف كل البيانات: الجهاز + قاعدة صفحة Claude + Supabase (والحساب نفسه لو فيه دالة delete_my_account)
+  async function wipeAll() {
+    const errors = [];
+    if (aCol) {
+      const jobs = [aCol.doc(docKey('settings', 'me')).delete()];
+      for (const t of TABLES) for (const r of state[t]) jobs.push(aCol.doc(docKey(t, r.id)).delete());
+      const res = await Promise.allSettled(jobs);
+      if (res.some((r) => r.status === 'rejected')) errors.push('claude');
+    }
+    if (sb && session) {
+      for (const t of TABLES.concat(['sms_inbox', 'settings'])) {
+        const { error } = await sb.from(t).delete().eq('user_id', session.user.id);
+        if (error) errors.push(t);
+      }
+      try { await sb.rpc('delete_my_account'); } catch (e) { /* الدالة اختيارية */ }
+      try { await sb.auth.signOut(); } catch (e) { /* تجاهل */ }
+    }
+    try {
+      for (const k of Object.keys(localStorage)) if (k.startsWith('hayati')) localStorage.removeItem(k);
+      sessionStorage.clear();
+    } catch (e) { /* تجاهل */ }
+    const fresh = blank();
+    for (const k of Object.keys(fresh)) state[k] = fresh[k];
+    emit();
+    return { ok: !errors.length, errors };
+  }
+
   function upsertSilently(table, row) {
     const list = state[table];
     const i = list.findIndex((r) => r.id === row.id);
@@ -410,7 +441,7 @@
       note: note || null,
       occurred_at: when || new Date().toISOString(),
       source: 'sms',
-      raw: body,
+      raw: global.SmsParser.mask ? global.SmsParser.mask(body) : body,
       needs_review: p.needs_review,
       updated_at: new Date().toISOString(),
     };
@@ -476,6 +507,6 @@
     upsert, remove, setSettings,
     init, getConfig, saveConfig, clearConfig,
     signIn, signUp, signOut, sync, getSeed, processInbox, smsToTransaction,
-    ensureIngestToken, rotateIngestToken, exportJSON, importJSON,
+    ensureIngestToken, rotateIngestToken, exportJSON, importJSON, wipeAll,
   };
 })(window);

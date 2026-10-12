@@ -1,0 +1,254 @@
+<title>خطة تيك توك حياتي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap">
+<style>
+/* Layout: عمود واحد للجوال؛ الجدول فوق، بعده بطاقة لكل فيديو (غلاف + كابشن). نفس ألوان «حياتي»: بحر، لؤلؤ، مرجان */
+:root{--bg:#F7F4EE;--surface:#FFFFFF;--fg:#0E3B43;--muted:#4E6669;--line:#E2DACB;--accent:#D9532F;--sea:#0E3B43;--pearl:#E8DCC4;
+  --f:"IBM Plex Sans Arabic",system-ui,"Segoe UI",Tahoma,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0A1A1E;--surface:#10292E;--fg:#E8DCC4;--muted:#9DB2B2;--line:#21414A;--accent:#FF7A5C;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0A1A1E;--surface:#10292E;--fg:#E8DCC4;--muted:#9DB2B2;--line:#21414A;--accent:#FF7A5C;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f);font-size:16px;line-height:1.7}
+.wrap{max-width:880px;margin:0 auto;padding:28px 16px 64px;display:grid;gap:36px}
+h1{font-size:clamp(28px,6vw,40px);line-height:1.2;margin:0;text-wrap:balance}
+h2{font-size:20px;margin:0 0 12px}
+h3{font-size:18px;margin:0;line-height:1.3}
+.lede{color:var(--muted);margin:8px 0 0;max-width:60ch}
+.hero{display:grid;grid-template-columns:1fr minmax(0,300px);gap:28px;align-items:center}
+.grid-img{width:100%;border-radius:18px;border:1px solid var(--line);display:block}
+.grid-cap{font-size:13px;color:var(--muted);margin-top:6px;text-align:center}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:15px}
+th,td{text-align:start;padding:10px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-weight:600;color:var(--muted);font-size:13px}
+tr:last-child td{border-bottom:0}
+td a{color:var(--fg);text-decoration-color:var(--accent);text-underline-offset:4px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-inline-end:6px;border:1px solid var(--line)}
+.sw.dark{background:var(--sea)}.sw.light{background:#F7F4EE}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:12px;margin:0;padding:0;list-style:none}
+.rules li{padding:14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line);font-size:15px}
+.rules b{display:block;color:var(--accent);font-size:13px;letter-spacing:.02em}
+.cards{display:grid;gap:18px}
+.card{display:grid;grid-template-columns:minmax(0,170px) 1fr;gap:18px;padding:16px;border-radius:18px;background:var(--surface);border:1px solid var(--line)}
+.cover{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:12px;display:block;max-width:100%}
+.body{min-width:0;display:grid;gap:10px;align-content:start}
+.meta{display:flex;gap:12px;align-items:center}
+.num{flex:none;width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-weight:700;font-variant-numeric:tabular-nums}
+.num.dark{background:var(--sea);color:#E8DCC4}.num.light{background:#F7F4EE;color:#0E3B43;border:1px solid var(--line)}
+.when{margin:2px 0 0;color:var(--muted);font-size:14px}.when b{color:var(--fg)}
+.cap{margin:0;white-space:pre-wrap;word-break:break-word;font-family:var(--f);font-size:15px;line-height:1.75;padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--line);user-select:text}
+.acts{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:600 14px var(--f);padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--fg);cursor:pointer}
+.btn.primary{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.btn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.btn.ok{background:var(--accent);border-color:var(--accent);color:#fff}
+.note{font-size:14px;color:var(--muted)}
+@media (max-width:620px){.hero{grid-template-columns:1fr}.card{grid-template-columns:96px 1fr;gap:12px;padding:12px}}
+@media (prefers-reduced-motion:no-preference){.btn{transition:background .15s,color .15s}}
+</style>
+<div class="wrap" dir="rtl">
+  <header class="hero">
+    <div>
+      <h1>خطة تيك توك «حياتي»</h1>
+      <p class="lede">9 فيديوهات على أسبوعين. كل فيديو معاه غلافه وكابشنه وساعته. الغلاف نفس جملة الهوك اللي بأول الفيديو بالحرف.</p>
+    </div>
+    <figure style="margin:0"><img class="grid-img" src="covers/grid-preview.jpg" alt="شكل البروفايل بعد الـ 9 فيديوهات: شبكة شطرنج غامق وفاتح" width="1080" height="1446"><figcaption class="grid-cap">شكل البروفايل بعد آخر فيديو</figcaption></figure>
+  </header>
+
+  <section>
+    <h2>الجدول</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>#</th><th>اليوم</th><th>الساعة</th><th>الفيديو</th><th>اللون</th></tr></thead>
+      <tbody><tr><td>1</td><td>الثلاثاء 13 أكتوبر</td><td>9:00 م</td><td><a href="#v1">البرومو</a></td><td><span class="sw dark"></span>غامق</td></tr><tr><td>2</td><td>الأربعاء 14 أكتوبر</td><td>9:00 م</td><td><a href="#v2">الحلقة 1 · البحث</a></td><td><span class="sw light"></span>فاتح</td></tr><tr><td>3</td><td>الجمعة 16 أكتوبر</td><td>1:30 م</td><td><a href="#v3">الحلقة 2 · التراجع</a></td><td><span class="sw dark"></span>غامق</td></tr><tr><td>4</td><td>السبت 17 أكتوبر</td><td>2:00 م</td><td><a href="#v4">الديوانية</a></td><td><span class="sw light"></span>فاتح</td></tr><tr><td>5</td><td>الاثنين 19 أكتوبر</td><td>9:00 م</td><td><a href="#v5">الحلقة 3 · التوقع</a></td><td><span class="sw dark"></span>غامق</td></tr><tr><td>6</td><td>الثلاثاء 20 أكتوبر</td><td>9:00 م</td><td><a href="#v6">رسالة البنك</a></td><td><span class="sw light"></span>فاتح</td></tr><tr><td>7</td><td>الخميس 22 أكتوبر</td><td>9:00 م</td><td><a href="#v7">الحلقة 4 · الجاهزية</a></td><td><span class="sw dark"></span>غامق</td></tr><tr><td>8</td><td>السبت 24 أكتوبر</td><td>2:00 م</td><td><a href="#v8">الحلقة 5 · الخصوصية</a></td><td><span class="sw light"></span>فاتح</td></tr><tr><td>9</td><td>الاثنين 26 أكتوبر</td><td>9:00 م</td><td><a href="#v9">الحلقة 6 · للكل</a></td><td><span class="sw dark"></span>غامق</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>قبل ما تنشر</h2>
+    <ul class="rules"><li><b>الغلاف</b>بعد ما ترفع الفيديو: «تعديل الغلاف» ← «إضافة من الألبوم» ← اختار الغلاف بنفس الرقم. لو الخيار مو طالع، اختار فريم الهوك من أول الفيديو.</li><li><b>الترتيب</b>انشر بنفس الترتيب. الغامق والفاتح يتبادلون، فالبروفايل يطلع شطرنج ويظل شطرنج مع أي فيديو جديد.</li><li><b>التثبيت</b>لا تثبّت (Pin) أي فيديو الحين، لأنه يطلع أول الشبكة ويخرب الترتيب. لما يصير عندك 12 فيديو، ثبّت 3 مرة وحدة.</li><li><b>لو حذفت فيديو</b>الشطرنج ينقلب من مكان الحذف. انشر بعده فيديو بنفس لون اللي انحذف، وترجع الشبكة.</li><li><b>التاريخ</b>التواريخ هني لك بس. ولا تاريخ إطلاق بأي كابشن.</li><li><b>بين الفيديوهات</b>رد بفيديو على أي تعليق فيه اقتراح. هذا أقوى شي بتيك توك.</li></ul>
+  </section>
+
+  <section>
+    <h2>الفيديوهات</h2>
+    <p class="note" id="dlnote">اضغط مطوّل على الغلاف عشان تحفظه بجوالك.</p>
+    <div class="cards">
+<article class="card" id="v1">
+  <img class="cover" src="covers/cover-01.jpg" alt="غلاف 1: البرومو" loading="lazy" width="1080" height="1920">
+  <div class="body">
+    <div class="meta"><span class="num dark">1</span><div><h3>البرومو</h3><p class="when">الثلاثاء 13 أكتوبر · <b>9:00 م</b> · 24 ث</p></div></div>
+    <pre class="cap" id="cap1">كم صرفت على كوستا هالشهر؟ ☕
+سويت تطبيق بحريني يرتّب مصاريفك ودراستك وصلاتك بمكان واحد.
+* لقطات ببيانات تجريبية · التطبيق قيد التطوير 🛠️
+تبي تجربه أول؟ اكتب «حياتي» 👇
+#تطبيق_ميزانية #مصاريف #تنظيم_الوقت #طلاب_البحرين #البحرين</pre>
+    <div class="acts">
+      <button type="button" class="btn primary" data-copy="cap1">انسخ الكابشن</button>
+      <button type="button" class="btn dl" hidden data-save="covers/cover-01.jpg" data-name="hayati-cover-01.jpg">احفظ الغلاف</button>
+      <button type="button" class="btn dl" hidden data-save="tiktok-promo.mp4" data-name="hayati-01.mp4">احفظ الفيديو</button>
+    </div>
+  </div>
+</article>
+<article class="card" id="v2">
+  <img class="cover" src="covers/cover-02.jpg" alt="غلاف 2: الحلقة 1 · البحث" loading="lazy" width="1080" height="1920">
+  <div class="body">
+    <div class="meta"><span class="num light">2</span><div><h3>الحلقة 1 · البحث</h3><p class="when">الأربعاء 14 أكتوبر · <b>9:00 م</b> · 13 ث</p></div></div>
+    <pre class="cap" id="cap2">أبني «حياتي» قدامكم · الحلقة 1 🛠️
+كم صرفت على محل واحد؟ سويت بحث يجمع لك كل اللي صرفته على أي محل، سواء كتبته «كوستا» أو «Costa» ☕
+* لقطات ببيانات تجريبية · قيد التطوير
+وش أبني بعد؟ 👇
+#تطبيق_ميزانية #مصاريف #برمجة #البحرين</pre>
+    <div class="acts">
+      <button type="button" class="btn primary" data-copy="cap2">انسخ الكابشن</button>
+      <button type="button" class="btn dl" hidden data-save="covers/cover-02.jpg" data-name="hayati-cover-02.jpg">احفظ الغلاف</button>
+      <button type="button" class="btn dl" hidden data-save="series/ep1.mp4" data-name="hayati-02.mp4">احفظ الفيديو</button>
+    </div>
+  </div>
+</article>
+<article class="card" id="v3">
+  <img class="cover" src="covers/cover-03.jpg" alt="غلاف 3: الحلقة 2 · التراجع" loading="lazy" width="1080" height="1920">
+  <div class="body">
+    <div class="meta"><span class="num dark">3</span><div><h3>الحلقة 2 · التراجع</h3><p class="when">الجمعة 16 أكتوبر · <b>1:30 م</b> · 13 ث</p></div></div>
+    <pre class="cap" id="cap3">أبني «حياتي» قدامكم · الحلقة 2 🛠️
+حذفت شي بالغلط؟ زر «تراجع» يطلع بعد أي حذف ↩️ ولو حذفت كذا شي مع بعض، يرجعون كلهم بضغطة.
+* لقطات ببيانات تجريبية · قيد التطوير
+وش أبني بعد؟ 👇
+#تطبيقات #برمجة #تنظيم #البحرين</pre>
+    <div class="acts">
+      <button type="button" class="btn primary" data-copy="cap3">انسخ الكابشن</button>
+      <button type="button" class="btn dl" hidden data-save="covers/cover-03.jpg" data-name="hayati-cover-03.jpg">احفظ الغلاف</button>
+      <button type="button" class="btn dl" hidden data-save="series/ep2.mp4" data-name="hayati-03.mp4">احفظ الفيديو</button>
+    </div>
+  </div>
+</article>
+<article class="card" id="v4">
+  <img class="cover" src="covers/cover-04.jpg" alt="غلاف 4: الديوانية" loading="lazy" width="1080" height="1920">
+  <div class="body">
+    <div class="meta"><span class="num light">4</span><div><h3>الديوانية</h3><p class="when">السبت 17 أكتوبر · <b>2:00 م</b> · 24 ث</p></div></div>
+    <pre class="cap" id="cap4">قبل كل ميزة بـ «حياتي»: جلسة نقاش بالذكاء الاصطناعي 🏛️
+7 شخصيات (مصمم، مبرمج، ناقد، مدقق…) يناقشون الفكرة، والناقد يرفض اللي ما يقنعه.
+هذي جلسة حقيقية، مسرّعة 4 مرات.
+وش تبيهم يناقشون بعد؟ 👇
+#ذكاء_اصطناعي #برمجة #تطبيقات #البحرين</pre>
+    <div class="acts">
+      <button type="button" class="btn primary" data-copy="cap4">انسخ الكابشن</button>
+      <button type="button" class="btn dl" hidden data-save="covers/cover-04.jpg" data-name="hayati-cover-04.jpg">احفظ الغلاف</button>
+      <button type="button" class="btn dl" hidden data-save="tiktok-diwaniya.mp4" data-name="hayati-04.mp4">احفظ الفيديو</button>
+    </div>
+  </div>
+</article>
+<article class="card" id="v5">
+  <img class="cover" src="covers/cover-05.jpg" alt="غلاف 5: الحلقة 3 · التوقع" loading="lazy" width="1080" height="1920">
+  <div class="body">
+    <div class="meta"><span class="num dark">5</span><div><h3>الحلقة 3 · التوقع</h3><p class="when">الاثنين 19 أكتوبر · <b>9:00 م</b> · 13 ث</p></div></div>
+    <pre class="cap" id="cap5">أبني «حياتي» قدامكم · الحلقة 3 🛠️
+بتتعدى الميزانية؟ 📈 التطبيق يعطيك تقدير لوين بتوصل آخر الشهر من صرفك لين الحين. تقدير، مو وعد، وما يطلع قبل يوم 5 من الشهر.
+* لقطات ببيانات تجريبية · قيد التطوير
+وش أبني بعد؟ 👇
+#ميزانية #توفير #مصاريف #البحرين</pre>
+    <div class="acts">
+      <button type="button" class="btn primary" data-copy="cap5">انسخ الكابشن</button>
+      <button type="button" class="btn dl" hidden data-save="covers/cover-05.jpg" data-name="hayati-cover-05.jpg">احفظ الغلاف</button>
+      <button type="button" class="btn dl" hidden data-save="series/ep3.mp4" data-name="hayati-05.mp4">احفظ الفيديو</button>
+    </div>
+  </div>
+</article>
+<article class="card" id="v6">
+  <img class="cover" src="covers/cover-06.jpg" alt="غلاف 6: رسالة البنك" loading="lazy" width="1080" height="1920">
+  <div class="body">
+    <div class="meta"><span class="num light">6</span><div><h3>رسالة البنك</h3><p class="when">الثلاثاء 20 أكتوبر · <b>9:00 م</b> · 21 ث</p></div></div>
+    <pre class="cap" id="cap6">الصق رسالة البنك… وتنسجل مصروف 📩
+المبلغ والمحل والوقت تنقرا من الرسالة، ورقم بطاقتك ينخفى قبل الحفظ 🔒
+* لقطات ببيانات تجريبية · قيد التطوير 🛠️
+أي بنك تبيني أجرب رسالته؟ 👇
+#ميزانية #بنك #توفير #طلاب_البحرين #البحرين</pre>
+    <div class="acts">
+      <button type="button" class="btn primary" data-copy="cap6">انسخ الكابشن</button>
+      <button type="button" class="btn dl" hidden data-save="covers/cover-06.jpg" data-name="hayati-cover-06.jpg">احفظ الغلاف</button>
+      <button type="button" class="btn dl" hidden data-save="tiktok-bank-sms.mp4" data-name="hayati-06.mp4">احفظ الفيديو</button>
+    </div>
+  </div>
+</article>
+<article class="card" id="v7">
+  <img class="cover" src="covers/cover-07.jpg" alt="غلاف 7: الحلقة 4 · الجاهزية" loading="lazy" width="1080" height="1920">
+  <div class="body">
+    <div class="meta"><span class="num dark">7</span><div><h3>الحلقة 4 · الجاهزية</h3><p class="when">الخميس 22 أكتوبر · <b>9:00 م</b> · 13 ث</p></div></div>
+    <pre class="cap" id="cap7">أبني «حياتي» قدامكم · الحلقة 4 🛠️
+تتمرن قوي اليوم أو ترتاح؟ 💪 من نومك ونبضك بالساعة، التطبيق يعطيك تقدير لجاهزيتك: أخضر، أصفر، أحمر. تقدير، مو تشخيص طبي.
+* لقطات ببيانات تجريبية · قيد التطوير
+وش أبني بعد؟ 👇
+#رياضة #ساعة_ذكية #حارس_مرمى #البحرين</pre>
+    <div class="acts">
+      <button type="button" class="btn primary" data-copy="cap7">انسخ الكابشن</button>
+      <button type="button" class="btn dl" hidden data-save="covers/cover-07.jpg" data-name="hayati-cover-07.jpg">احفظ الغلاف</button>
+      <button type="button" class="btn dl" hidden data-save="series/ep4.mp4" data-name="hayati-07.mp4">احفظ الفيديو</button>
+    </div>
+  </div>
+</article>
+<article class="card" id="v8">
+  <img class="cover" src="covers/cover-08.jpg" alt="غلاف 8: الحلقة 5 · الخصوصية" loading="lazy" width="1080" height="1920">
+  <div class="body">
+    <div class="meta"><span class="num light">8</span><div><h3>الحلقة 5 · الخصوصية</h3><p class="when">السبت 24 أكتوبر · <b>2:00 م</b> · 13 ث</p></div></div>
+    <pre class="cap" id="cap8">أبني «حياتي» قدامكم · الحلقة 5 🛠️
+رقم بطاقتك ينحفظ؟ 🔒 لا. أي رقم طويل بالرسالة ينخفى قبل الحفظ، ويبقى آخر رقمين بس (••21). المبلغ والتاريخ يظلون.
+* لقطات ببيانات تجريبية · قيد التطوير
+وش أبني بعد؟ 👇
+#خصوصية #أمن_المعلومات #تطبيقات #البحرين</pre>
+    <div class="acts">
+      <button type="button" class="btn primary" data-copy="cap8">انسخ الكابشن</button>
+      <button type="button" class="btn dl" hidden data-save="covers/cover-08.jpg" data-name="hayati-cover-08.jpg">احفظ الغلاف</button>
+      <button type="button" class="btn dl" hidden data-save="series/ep5.mp4" data-name="hayati-08.mp4">احفظ الفيديو</button>
+    </div>
+  </div>
+</article>
+<article class="card" id="v9">
+  <img class="cover" src="covers/cover-09.jpg" alt="غلاف 9: الحلقة 6 · للكل" loading="lazy" width="1080" height="1920">
+  <div class="body">
+    <div class="meta"><span class="num dark">9</span><div><h3>الحلقة 6 · للكل</h3><p class="when">الاثنين 26 أكتوبر · <b>9:00 م</b> · 13 ث</p></div></div>
+    <pre class="cap" id="cap9">أبني «حياتي» قدامكم · الحلقة 6 🛠️
+التطبيق لي بس؟ 👥 لا. أول ما تفتحه تعرّفه بنفسك (طالب، موظف، رياضي، حارس مرمى، شؤون البيت) ويطلع لك اللي يخصك.
+* لقطات ببيانات تجريبية · قيد التطوير
+وش أبني بعد؟ 👇
+#طلاب_البحرين #تنظيم_الوقت #تطبيقات #البحرين</pre>
+    <div class="acts">
+      <button type="button" class="btn primary" data-copy="cap9">انسخ الكابشن</button>
+      <button type="button" class="btn dl" hidden data-save="covers/cover-09.jpg" data-name="hayati-cover-09.jpg">احفظ الغلاف</button>
+      <button type="button" class="btn dl" hidden data-save="series/ep6.mp4" data-name="hayati-09.mp4">احفظ الفيديو</button>
+    </div>
+  </div>
+</article>
+    </div>
+  </section>
+</div>
+<script>
+document.addEventListener('click', async (e) => {
+  const c = e.target.closest('[data-copy]');
+  if (c) {
+    const el = document.getElementById(c.dataset.copy);
+    try { await navigator.clipboard.writeText(el.textContent); }
+    catch (err) { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+    const t = c.textContent; c.textContent = 'انسخ ✓'; c.classList.add('ok');
+    setTimeout(() => { c.textContent = t; c.classList.remove('ok'); }, 1600);
+    return;
+  }
+  const s = e.target.closest('[data-save]');
+  if (s && window._dl) {
+    const t = s.textContent; s.disabled = true; s.textContent = 'يجهّز…';
+    try {
+      const blob = await (await fetch(s.dataset.save)).blob();
+      await window._dl.save({ filename: s.dataset.name, data: blob });
+      s.textContent = 'انحفظ ✓';
+    } catch (err) { s.textContent = err && err.code === 'declined' ? t : 'ما انحفظ'; }
+    setTimeout(() => { s.textContent = t; s.disabled = false; }, 2000);
+  }
+});
+// زر الحفظ يطلع بس لو المتصفح يسمح
+(async () => {
+  try {
+    const dl = window.claude && await window.claude.use('downloads');
+    if (!dl) return;
+    window._dl = dl;
+    document.querySelectorAll('[data-save]').forEach((b) => { b.hidden = false; });
+    document.getElementById('dlnote').textContent = 'تقدر تحفظ الغلاف والفيديو من هني على جوالك مباشرة.';
+  } catch (e) { /* يظل الضغط المطوّل */ }
+})();
+</script>

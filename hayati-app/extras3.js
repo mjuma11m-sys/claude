@@ -67,7 +67,7 @@
       if (a.spend > perWeek) out.push('⚠️ تعدّيت حصة الأسبوع من ميزانيتك (' + fmt(perWeek) + ' د.ب).');
     }
     const sleepGoal = Number(set.sleep_goal) || 8;
-    if (a.sleep != null && a.sleep < sleepGoal - 1) out.push('😴 متوسط نومك ' + a.sleep + ' ساعات — أقل من هدفك بساعة وأكثر. النوم أهم شي لردة فعل الحارس.');
+    if (a.sleep != null && a.sleep < sleepGoal - 1) out.push('😴 متوسط نومك ' + a.sleep + ' ساعات — أقل من هدفك بساعة وأكثر.' + (!A.has || A.has('keeper') ? ' النوم أهم شي لردة فعل الحارس.' : ''));
     if (!a.study) out.push('📚 ما سجّلت ولا جلسة مذاكرة هالأسبوع — جرّب 25 دقيقة بس من «المذاكرة».');
     if (a.gymDays >= 3) out.push('💪 ' + a.gymDays + ' أيام تمرين — التزام ممتاز.');
     else if (a.gymDays === 0) out.push('🏋️ ولا تمرين هالأسبوع — رجّع الجدول على الأحد.');
@@ -153,6 +153,7 @@
   const resultOf = (m) => (Number(m.for) > Number(m.against) ? ['ف', '#2F9E7A'] : Number(m.for) < Number(m.against) ? ['خ', '#D63A3A'] : ['ت', '#8A9A9B']);
 
   function keeperSection() {
+    if (A.has && !A.has('keeper')) return '';
     const s = season();
     let out = A.secHead('🧤 الحارس', '<button class="link" data-action="gk-drills">تمارين الحراسة</button>');
     if (!s.n) {

@@ -44,3 +44,24 @@ test('foreign currency is flagged for review', () => {
 test('non-financial text → null', () => {
   assert.equal(P.parse('مرحبا شلونك'), null);
 });
+
+test('brand: branches, Arabic and English names collapse to one shop', () => {
+  for (const n of ['COSTA SEEF', 'Costa Coffee', 'كوستا', 'كوستا السيف']) assert.equal(P.brand(n).key, 'costa', n);
+  assert.equal(P.brand('آيس كريم المحرق').key, 'آيس كريم'); // مو Careem
+  assert.equal(P.brand('مطعم الزينة').key, 'مطعم الزينة'); // مو Zain
+  assert.equal(P.brand('Careem Ride').key, 'careem');
+  const g = P.groupByBrand([
+    { merchant: 'COSTA SEEF', amount: 2 }, { merchant: 'Costa Coffee', amount: 3 }, { merchant: 'كوستا', amount: 1 },
+    { merchant: 'Haji Gahwa', amount: 1 }, { merchant: 'HAJI GAHWA MANAMA', amount: 2 }, { merchant: '', category: 'قهوة', amount: 1 },
+  ]);
+  assert.deepEqual(g.map((x) => [x.label, x.sum, x.n]), [['Costa', 6, 3], ['Haji Gahwa', 3, 2], ['قهوة', 1, 1]]);
+});
+
+test('mask: card, account and IBAN numbers hidden; amounts and dates kept', () => {
+  assert.equal(P.mask('Your card XX4821 was used for BHD 3.750 on 11/10/26. Avl bal BHD 412.300'), 'Your card ••21 was used for BHD 3.750 on 11/10/26. Avl bal BHD 412.300');
+  assert.equal(P.mask('Card ****4821 purchase BHD 1,250.000'), 'Card ••21 purchase BHD 1,250.000');
+  assert.equal(P.mask('IBAN BH67BMAG00001299123456'), 'IBAN BH••56');
+  assert.equal(P.mask('بطاقة 5123 4567 8901 2345 مبلغ 1250.000'), 'بطاقة ••45 مبلغ 1250.000');
+  // القراءة تشتغل على النص الأصلي، والإخفاء ما يغيّر المبلغ
+  assert.equal(P.parse(P.mask('Your card XX4821 was used for BHD 3.750 at COSTA')).amount, 3.75);
+});

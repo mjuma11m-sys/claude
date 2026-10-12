@@ -1,0 +1,39 @@
+name: Hayati iPhone
+
+# «حياتي» يختبر نفسه على آيفون سميوليتر: يبني مشروع Xcode، يشغّل التطبيق، يصوّر الشاشة،
+# ويفشل لو البناء انكسر أو التطبيق طاح أو الشاشة سودا. الصورة تنحفظ مع كل تشغيل (Artifacts).
+on:
+  push:
+    paths: ['hayati-app/**', '.github/workflows/hayati-ios.yml']
+  pull_request:
+    paths: ['hayati-app/**', '.github/workflows/hayati-ios.yml']
+
+concurrency:
+  group: hayati-ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  simulator:
+    runs-on: macos-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: hayati-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: hayati-app/package-lock.json
+      - run: npm ci
+      - name: Build, launch on iPhone simulator, check the screen
+        run: bash scripts/ios-smoke.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: iphone-screenshot
+          path: |
+            hayati-app/ios-smoke/launch.png
+            hayati-app/ios-smoke/build.log
+          retention-days: 14

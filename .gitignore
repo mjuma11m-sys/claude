@@ -26,3 +26,7 @@ videos/hayati-promo/sfx.wav
 videos/hayati-promo/render.log
 videos/hayati-promo/cover/*.ttf
 videos/hayati-promo/cover/cover_phone.jpg
+
+# Python cache (تنكتب من جديد مع كل اختبار)
+__pycache__/
+*.pyc

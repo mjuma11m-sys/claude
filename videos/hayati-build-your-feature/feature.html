@@ -1,0 +1,99 @@
+<!doctype html>
+<html dir="rtl" lang="ar"><head><meta charset="utf-8">
+<!-- قالب ريل «سوّ ميزتك» 14 ث · 1080×1920 · القيم من config.json (render.js يحقنها بـ window.CFG) -->
+<style>
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Bold.ttf);font-weight:700}
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Regular.ttf);font-weight:400}
+:root{--sea:#0E3B43;--deep:#0A1A1E;--pearl:#E8DCC4;--coral:#FF6B4A}
+*{box-sizing:border-box}
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;font-family:P;font-weight:700;color:var(--pearl)}
+#stage{position:absolute;inset:0;background:radial-gradient(120% 75% at 50% 38%,#145a62 0%,var(--sea) 42%,var(--deep) 100%);overflow:hidden}
+.grain{position:absolute;inset:0;opacity:.05;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.kin{position:absolute;left:60px;right:60px;text-align:center;line-height:1.15}
+.kin .w{display:inline-block;margin:0 .12em}
+.mask{display:inline-block;overflow:hidden;padding:.08em .02em .18em;vertical-align:bottom}
+.c{color:var(--coral)}
+#tag{position:absolute;left:50%;top:170px;transform:translateX(-50%);padding:14px 40px;border-radius:999px;border:3px solid rgba(232,220,196,.4);font-size:44px;white-space:nowrap}
+#comment{position:absolute;left:90px;right:90px;top:560px;padding:40px 44px;border-radius:40px;background:#fff;color:#111;box-shadow:0 40px 80px -30px rgba(0,0,0,.6)}
+#comment .u{display:flex;align-items:center;gap:22px;font:600 40px -apple-system,Helvetica,Arial;direction:ltr;justify-content:flex-end}
+#comment .av{width:84px;height:84px;border-radius:50%;background:linear-gradient(135deg,#f9ce34,#ee2a7b,#6228d7)}
+#comment .t{font-size:58px;line-height:1.4;margin-top:22px;font-weight:700}
+#comment .meta{font:400 30px -apple-system,Helvetica,Arial;color:#8e8e8e;margin-top:16px}
+#t1{top:1180px;font-size:84px}
+#majlis{position:absolute;left:0;right:0;top:760px;text-align:center}
+#majlis .seats{font-size:96px;letter-spacing:12px}
+#majlis b{display:block;font-size:76px;margin-top:30px}
+#phoneWrap{position:absolute;left:50%;top:520px;width:600px;height:1298px;margin-left:-300px}
+#phone{position:absolute;inset:0;border-radius:92px;background:#0b1416;padding:18px;box-shadow:0 70px 120px -40px rgba(0,0,0,.75),inset 0 0 0 3px #2a4a50}
+#screen{position:relative;width:100%;height:100%;border-radius:76px;overflow:hidden;background:#F7F4EE}
+#screen img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top}
+#island{position:absolute;top:34px;left:50%;width:170px;height:50px;margin-left:-85px;border-radius:30px;background:#000}
+#built{top:290px;font-size:80px}
+#thanks{top:700px;font-size:110px}
+#thanksU{position:absolute;left:0;right:0;top:880px;text-align:center;font:600 72px -apple-system,Helvetica,Arial;direction:ltr;color:var(--coral)}
+#cta{position:absolute;left:50%;top:1180px;transform:translateX(-50%);padding:30px 70px;border-radius:999px;background:var(--coral);color:#2A0E07;font-size:54px;white-space:nowrap;box-shadow:0 30px 60px -24px rgba(255,107,74,.7)}
+#handle{position:absolute;left:0;right:0;top:1330px;text-align:center;font-size:44px;font-weight:400;opacity:.75;direction:ltr}
+</style></head>
+<body><div id="stage">
+  <div id="tag"></div>
+  <div id="comment"><div class="u"><span id="cu"></span><span class="av"></span></div><div class="t" id="ct"></div><div class="meta">رد · ❤️</div></div>
+  <div class="kin" id="t1"></div>
+  <div id="majlis"><div class="seats">🎙️🎨💻🔧🔥🔍✨</div><b>الديوانية ناقشتها…</b></div>
+  <div class="kin" id="built"></div>
+  <div id="phoneWrap"><div id="phone"><div id="screen"><img id="img"><div id="island"></div></div></div></div>
+  <div class="kin" id="thanks"></div>
+  <div id="thanksU"></div>
+  <div id="cta">عندك ميزة؟ اكتبها بالتعليقات 👇</div>
+  <div id="handle">@hayati.bh</div>
+  <div class="grain"></div>
+</div>
+<script>
+'use strict';
+const CFG = window.CFG || { user: '@user', suggestion: 'اقتراح', feature: 'الميزة', screen: '', week: 1 };
+function bezier(x1, y1, x2, y2) {
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  const sx = (t) => ((ax * t + bx) * t + cx) * t, sy = (t) => ((ay * t + by) * t + cy) * t, dx = (t) => (3 * ax * t + 2 * bx) * t + cx;
+  return (x) => { if (x <= 0) return 0; if (x >= 1) return 1; let t = x; for (let i = 0; i < 8; i++) { const d = dx(t); if (Math.abs(d) < 1e-6) break; t -= (sx(t) - x) / d; } return sy(t); };
+}
+const OUT = bezier(0.23, 1, 0.32, 1), INOUT = bezier(0.77, 0, 0.175, 1), DRAWER = bezier(0.32, 0.72, 0, 1);
+const clamp = (x) => Math.max(0, Math.min(1, x));
+const seg = (t, a, d, e = OUT) => e(clamp((t - a) / d));
+const lerp = (a, b, k) => a + (b - a) * k;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function words(el, html) { el.innerHTML = html.match(/<span[^>]*>.*?<\/span>|\S+/g).map((w) => '<span class="mask"><span class="w">' + w + '</span></span>').join(' '); return [...el.querySelectorAll('.mask > .w')]; }
+function wordIn(ws, t, start, end, stagger) {
+  ws.forEach((w, i) => {
+    const kIn = seg(t, start + i * stagger, 0.42), kOut = end != null ? seg(t, end - 0.28, 0.26) : 0;
+    w.style.transform = 'translateY(' + ((1 - kIn) * 105 - kOut * 105) + '%)';
+    w.style.opacity = kIn * (1 - kOut);
+  });
+}
+$('tag').textContent = '🛠️ سوّ ميزتك · الأسبوع ' + CFG.week;
+$('cu').textContent = CFG.user; $('ct').textContent = CFG.suggestion;
+$('img').src = CFG.screen; $('thanksU').textContent = CFG.user;
+const t1W = words($('t1'), CFG.user.replace(/^@/, '') ? 'اقترح… <span class="c">وسويناها</span>' : '');
+const builtW = words($('built'), esc(CFG.feature) + ' <span class="c">✓</span>');
+const thanksW = words($('thanks'), 'شكراً <span class="c">🙌</span>');
+function fade(el, t, s, e, dy) { const k = seg(t, s, 0.5) * (1 - seg(t, e - 0.3, 0.3, INOUT)); el.style.opacity = k; el.style.transform = (el.id === 'cta' || el.id === 'tag' ? 'translateX(-50%) ' : '') + 'translateY(' + (1 - k) * (dy || 40) + 'px)'; }
+window.setT = function (t) {
+  fade($('tag'), t, 0.1, 14.5, 20);
+  // 1) التعليق 0.3–4
+  const cIn = seg(t, 0.3, 0.6), cOut = seg(t, 3.7, 0.4, INOUT);
+  $('comment').style.opacity = cIn * (1 - cOut);
+  $('comment').style.transform = 'translateY(' + ((1 - cIn) * 80 - cOut * 120) + 'px) scale(' + lerp(0.96, 1, cIn) + ')';
+  wordIn(t1W, t, 1.3, 4.0, 0.15);
+  // 2) الديوانية 4–5.8
+  fade($('majlis'), t, 4.0, 5.9, 30);
+  // 3) الميزة بالجوال 5.8–10.4
+  const pIn = seg(t, 5.8, 0.85, DRAWER), pOut = seg(t, 10.1, 0.5, INOUT);
+  $('phoneWrap').style.transform = 'translateY(' + ((1 - pIn) * 1500 + pOut * 1500) + 'px) rotate(' + Math.sin(t * 0.6) * 2 + 'deg)';
+  wordIn(builtW, t, 6.3, 10.3, 0.1);
+  // 4) الشكر + الطلب 10.5–14
+  wordIn(thanksW, t, 10.6, null, 0.15);
+  const uIn = seg(t, 10.9, 0.5); $('thanksU').style.opacity = uIn; $('thanksU').style.transform = 'scale(' + lerp(0.9, 1, uIn) + ')';
+  fade($('cta'), t, 11.6, 99, 40); fade($('handle'), t, 12.0, 99, 20);
+};
+window.READY = Promise.all([document.fonts.ready, new Promise((r) => { const i = $('img'); if (i.complete) r(); else { i.onload = i.onerror = r; } })]);
+setT(0);
+</script></body></html>
