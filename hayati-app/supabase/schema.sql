@@ -180,6 +180,17 @@ alter table public.journal enable row level security;
 drop policy if exists "own rows" on public.journal;
 create policy "own rows" on public.journal for all to authenticated
   using (user_id = auth.uid()) with check (user_id = auth.uid());
+create table if not exists public.matches (
+  user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  id         uuid not null,
+  data       jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.matches enable row level security;
+drop policy if exists "own rows" on public.matches;
+create policy "own rows" on public.matches for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 -- الإعدادات: سطر واحد لكل مستخدم
 create table if not exists public.settings (
@@ -233,7 +244,7 @@ grant execute on function public.ingest_sms(text, text) to anon, authenticated;
 do $$
 declare t text;
 begin
-  foreach t in array array['transactions','courses','tasks','subscriptions','goals','grades','study_sessions','debts','habits','daily','lifts','body','cards','events','shopping','journal','settings','sms_inbox'] loop
+  foreach t in array array['transactions','courses','tasks','subscriptions','goals','grades','study_sessions','debts','habits','daily','lifts','body','cards','events','shopping','journal','matches','settings','sms_inbox'] loop
     begin
       execute format('alter publication supabase_realtime add table public.%I', t);
     exception when duplicate_object then null;
