@@ -1,17 +1,26 @@
 {
+  "id": "/",
   "name": "حياتي",
   "short_name": "حياتي",
-  "description": "مصاريفي وجدولي ومهامي في مكان واحد",
+  "description": "مصاريفك ودراستك وصلاتك ومهامك في مكان واحد",
   "lang": "ar",
   "dir": "rtl",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#F7F4EE",
   "theme_color": "#0E3B43",
+  "categories": ["finance", "productivity", "education"],
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [
+    { "src": "store/out/android-01_today.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow", "label": "يومك كله بشاشة وحدة" },
+    { "src": "store/out/android-02_money.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow", "label": "مصاريفك وميزانيتك" },
+    { "src": "store/out/android-03_search.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow", "label": "كم صرفت على كوستا؟" },
+    { "src": "store/out/android-04_schedule.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow", "label": "جدولك الأسبوعي" }
   ]
 }
