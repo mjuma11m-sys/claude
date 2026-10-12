@@ -305,4 +305,29 @@
     new MutationObserver(() => sheet.cancelClose()).observe(document.getElementById('sheetBody'), { childList: true });
   }
   if (ask) dialogMotion(ask, false);
+
+  // ---------- مؤشر التبويب: حبة تنزلق من التبويب القديم للجديد ----------
+  // شريط التبويبات ينرسم من جديد كل مرة، فنحفظ مكان الحبة ونحرّكها من المكان القديم (FLIP)
+  const tabbar = document.getElementById('tabbar');
+  let lastPillX = null;
+  function placePill() {
+    const on = tabbar.querySelector('.tab.on');
+    if (!on) return;
+    let pill = tabbar.querySelector('.tab-pill');
+    if (!pill) { pill = document.createElement('span'); pill.className = 'tab-pill'; pill.setAttribute('aria-hidden', 'true'); tabbar.prepend(pill); }
+    const bar = tabbar.getBoundingClientRect(), r = on.getBoundingClientRect();
+    const w = Math.min(r.width - 8, 72), x = r.left - bar.left + (r.width - w) / 2;
+    pill.style.width = w + 'px';
+    pill.style.transform = 'translateX(' + x + 'px)';
+    if (lastPillX != null && Math.abs(lastPillX - x) > 1 && !reduced()) {
+      pill.animate({ transform: ['translateX(' + lastPillX + 'px)', 'translateX(' + x + 'px)'] }, { duration: 260, easing: EASE_OUT });
+    }
+    lastPillX = x;
+  }
+  if (tabbar) {
+    new MutationObserver((m) => { if (m.some((r) => [...r.addedNodes].some((n) => n.classList && n.classList.contains('tab')))) placePill(); })
+      .observe(tabbar, { childList: true });
+    window.addEventListener('resize', () => { lastPillX = null; placePill(); });
+    placePill();
+  }
 })(window);

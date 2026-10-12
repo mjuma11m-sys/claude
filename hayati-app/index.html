@@ -599,6 +599,9 @@
     .msg.typing { color: var(--muted); }
     .chips.quick .chip { font-size: 13px; }
     .hidden { display: none !important; }
+    /* حبة التبويب المختار */
+    nav.tabbar .tab-pill { position: absolute; top: 9px; left: 0; height: 50px; border-radius: 16px; background: var(--brand-soft); pointer-events: none; z-index: 0; }
+    nav.tabbar button.tab, nav.tabbar .add { position: relative; z-index: 1; }
     /* ---------- الحركة ---------- */
     .toast { transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out); }
     @media (prefers-reduced-motion: no-preference) {
@@ -652,6 +655,7 @@
   <script src="extras2.js"></script>
   <script src="extras3.js"></script>
   <script src="study.js"></script>
+  <script src="watch.js"></script>
   <script src="lock.js"></script>
   <script src="motion.js"></script>
 
