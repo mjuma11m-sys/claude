@@ -10,3 +10,5 @@ Rules:
 
 ## Token budget
 Always apply `.claude/skills/token-saver/SKILL.md`: answer directly with no preamble or recap, read only the needed lines, trim command output, prefer Edit over Write, and spawn no subagents unless asked.
+
+When several skills could apply, pick via `.claude/skills/skill-index/SKILL.md` and load the fewest that cover the task.
