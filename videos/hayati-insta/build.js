@@ -46,10 +46,11 @@ for (const [k, ic] of HL) PAGES['highlight-' + k + '.png'] = [1080, 1920, BASE(1
 PAGES['post-1-intro.jpg'] = [1080, 1350, BASE(1080, 1350) + `<div class="sea"></div>
 <svg style="position:absolute;left:50%;top:170px;width:300px;height:300px;margin-left:-150px" viewBox="0 0 512 512">${MARK.slice(MARK.indexOf('>') + 1, -6)}</svg>
 <div style="position:absolute;left:0;right:0;top:520px;text-align:center"><div style="font-size:190px;line-height:1">حياتي</div><div style="font-size:58px;font-weight:400;opacity:.85;margin-top:28px">كل يومك بمكان واحد</div></div>
-<div style="position:absolute;left:0;right:0;top:880px;text-align:center;font-size:44px;font-weight:400;line-height:1.6;opacity:.9">مصاريفك · دراستك · صلاتك · تمرينك · نومك</div>
-<div style="position:absolute;left:50%;top:1090px;transform:translateX(-50%);padding:16px 44px;border-radius:999px;border:3px solid rgba(232,220,196,.45);font-size:44px;white-space:nowrap">🛠️ قيد التطوير · نسخة تجريبية</div>
+<div style="position:absolute;left:0;right:0;top:880px;text-align:center;font-size:44px;font-weight:400;line-height:1.6;opacity:.9">مصاريفك · دراستك · شغلك · صلاتك · تمرينك</div>
+<div style="position:absolute;left:50%;top:1060px;transform:translateX(-50%);padding:16px 44px;border-radius:999px;border:3px solid rgba(232,220,196,.45);font-size:44px;white-space:nowrap">🛠️ قيد التطوير · نسخة تجريبية</div>
+<div style="position:absolute;left:0;right:0;top:1210px;text-align:center;font-size:38px;font-weight:400;opacity:.7;direction:ltr">@hayati.bh</div>
 <div class="grain"></div>`];
-const FEAT = [['search', '🔎', 'تبحث عن أي محل', 'ويعطيك مجموع اللي صرفته'], ['chart', '📈', 'يتوقع آخر الشهر', 'قبل لا تتعدى الميزانية'], ['award', '🧤', 'جاهزيتك للتمرين', 'من نومك ونبضك بالساعة'], ['message', '💬', 'رسالة البنك', 'تتسجل مصروف بروحها'], ['moon', '🕌', 'الصلاة بالتقويم', 'ينبهك والتطبيق مسكّر']];
+const FEAT = [['search', '🔎', 'تبحث عن أي محل', 'ويعطيك مجموع اللي صرفته'], ['chart', '📈', 'يتوقع آخر الشهر', 'قبل لا تتعدى الميزانية'], ['award', '💪', 'جاهزيتك للتمرين', 'من نومك ونبضك بالساعة'], ['message', '💬', 'رسالة البنك', 'تتسجل مصروف بروحها'], ['moon', '🕌', 'الصلاة بالتقويم', 'ينبهك والتطبيق مسكّر']];
 PAGES['post-2-features.jpg'] = [1080, 1350, BASE(1080, 1350) + `<div class="sea"></div>
 <div style="position:absolute;left:80px;right:80px;top:110px;font-size:92px;line-height:1.1">وش يسوي <span class="c">حياتي</span>؟</div>
 <div style="position:absolute;left:80px;right:80px;top:290px;display:grid;gap:26px">${FEAT.map(([, e, a, b]) => `<div style="display:flex;align-items:center;gap:34px;padding:26px 34px;border-radius:36px;background:rgba(232,220,196,.08);border:2px solid rgba(232,220,196,.14)"><div style="font-size:72px;width:96px;text-align:center">${e}</div><div><div style="font-size:52px">${a}</div><div style="font-size:38px;font-weight:400;opacity:.75">${b}</div></div></div>`).join('')}</div>
@@ -59,7 +60,7 @@ PAGES['post-3-ideas.jpg'] = [1080, 1350, BASE(1080, 1350) + `<div style="positio
 <div style="font-size:120px;line-height:1.15;margin-top:50px">عندك <span class="c">اقتراح</span>؟</div>
 <div style="font-size:60px;font-weight:400;margin-top:30px;color:#33494D">التطبيق لسه ينبني، وأنت تقرر<br>وش الميزة الجاية</div></div>
 <div style="position:absolute;left:50%;top:1010px;transform:translateX(-50%);padding:26px 70px;border-radius:999px;background:var(--coral);color:#2A0E07;font-size:54px;white-space:nowrap">اكتبه بالتعليقات 👇</div>
-<svg style="position:absolute;left:50%;top:1190px;width:90px;height:90px;margin-left:-45px" viewBox="0 0 512 512">${MARK.slice(MARK.indexOf('>') + 1, -6)}</svg>`];
+<div style="position:absolute;left:0;right:0;top:1200px;display:flex;justify-content:center;align-items:center;gap:18px;color:var(--sea);font-size:38px;direction:ltr"><svg style="width:70px;height:70px" viewBox="0 0 512 512">${MARK.slice(MARK.indexOf('>') + 1, -6)}</svg>@hayati.bh</div>`];
 
 (async () => {
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
