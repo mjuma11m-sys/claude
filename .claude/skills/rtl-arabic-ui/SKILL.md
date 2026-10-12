@@ -52,6 +52,9 @@ const date = new Intl.DateTimeFormat('ar-BH-u-nu-latn', { dateStyle: 'medium', t
 - Carousels: `dir="rtl"` على الحاوية (Embla: `direction: 'rtl'`).
 - قص النص: `truncate` يشتغل، بس `line-clamp` تأكد إن `dir` على العنصر.
 
+## 🔧 أداة
+`python .claude/skills/rtl-arabic-ui/scripts/rtl_lint.py src/` يعرض `file:line old -> new` · `--fix` يصلّح تلقائياً (يتجاهل `rtl:`/`ltr:` والنص العادي). exit 1 لو باقي مشاكل.
+
 ## فحص سريع
 - [ ] ولا `ml-/mr-/pl-/pr-/left-/right-/text-left/text-right` في الكود (`grep -rnE "\b(ml|mr|pl|pr)-|\b(left|right)-[0-9]|text-(left|right)"`)
 - [ ] الأسهم مقلوبة والأيقونات الثانية لا · [ ] أرقام موحدة · [ ] حقول ltr صح · [ ] جرّب بنص عربي طويل ونص إنقليزي طويل.

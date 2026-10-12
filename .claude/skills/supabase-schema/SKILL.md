@@ -61,5 +61,8 @@ create trigger trg_items_updated before update on public.items
 - إحصائيات (نسبة حضور، متأخرات) في `view` بـ `with (security_invoker = true)` عشان تحترم RLS.
 - عمليات متعددة الخطوات (دفع + تحديث رصيد) في `function` وتنادى بـ `supabase.rpc()` — transaction وحدة.
 
+## 🔧 أداة
+`psql "$DATABASE_URL" -f .claude/skills/supabase-schema/scripts/rls_audit.sql` — يطلّع: جداول بدون RLS، RLS بدون policies، `auth.uid()` غير مغلّف، policies `true` للكتابة، FK بدون index، دوال `security definer` خطرة، وفلوس `float`. لازم يرجع **0 صفوف**.
+
 ## قبل التسليم
 - [ ] كل جدول عليه RLS و policies لكل عملية · [ ] index على كل FK · [ ] لا أسرار في الفرونت · [ ] migration تشتغل على قاعدة فاضية · [ ] types انولّدت.

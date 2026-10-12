@@ -5,6 +5,9 @@ description: يبني ويوسّع API بـ Python Flask بنمط ثابت جا�
 
 # 🐍 Flask API
 
+## 🔧 أداة
+`python .claude/skills/flask-api/scripts/scaffold.py <dir> <feature...>` — يولّد المشروع كامل (factory، auth بـ JWKS + HS256، errors، CRUD لكل feature بـ RLS عبر توكن المستخدم، tests، `render.yaml`، `.env.example`). ما يكتب فوق ملف موجود. بعدها: `pytest -q`.
+
 ## الهيكل
 ```
 app/

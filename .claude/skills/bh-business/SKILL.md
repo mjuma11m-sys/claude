@@ -7,6 +7,9 @@ description: مرجع الأعمال في البحرين للتطبيقات وا
 
 ⚠️ القوانين والرسوم تتغير — تأكد من المصدر الرسمي (NBR، MOIC/Sijilat، CBB) قبل أي قرار مالي أو قانوني.
 
+## 🔧 أداة
+`.claude/skills/bh-business/scripts/bh.py` — `money()`، `fmt_bhd()`، `vat_from_net/gross()`، `invoice_totals()` (VAT لكل سطر)، `normalise_phone()`، `valid_cpr()`، `valid_iban()` (mod-97)، `mask_cpr()`. CLI: `python bh.py vat 100` · `python bh.py iban BH67BMAG00001299123456`. انسخ الدوال للمشروع بدل إعادة كتابتها.
+
 ## البيانات والصيغ
 | البند | القاعدة |
 |---|---|

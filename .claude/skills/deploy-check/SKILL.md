@@ -7,6 +7,9 @@ description: فحص قبل النشر لمشاريع Flask/React/Supabase على
 
 شغّل الفحص على الريبو فعلياً (اقرأ الملفات، شغّل build/tests). المخرج جدول: البند · ✅/⚠️/❌ · الإصلاح — وصلّح ❌ مباشرة.
 
+## 🔧 أداة (شغّلها أول)
+`python .claude/skills/deploy-check/scripts/check.py <project>` — يفحص الأسرار، `.env`، gunicorn، debug، healthz، CORS، SPA rewrites، `service_role` بالفرونت، localhost، وRLS في migrations. exit 1 لو فيه ❌. بعدها كمّل البنود اليدوية تحت.
+
 ## 1. أسرار وenv
 - [ ] لا مفاتيح في الكود أو git history (`git grep -nE "(sk_|service_role|eyJhbGci|SUPABASE_SERVICE)"`).
 - [ ] `.env` في `.gitignore` و `.env.example` محدّث بكل المفاتيح (بدون قيم).

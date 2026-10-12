@@ -10,6 +10,7 @@ description: فهرس وموجّه الـ skills — يحدد أي skill (أو �
 ## بناء التطبيقات
 | الطلب | الرئيسية | معها |
 |---|---|---|
+| تطبيق/ميزة كاملة من الصفر للنشر | `ship` | ينسّق الباقي |
 | جداول، RLS، migration | `supabase-schema` | — |
 | endpoint / باك إند Flask | `flask-api` | `supabase-schema` لو فيه جداول |
 | تطبيق نادي/أكاديمية | `sports-admin` | `supabase-schema` ← `flask-api` |
@@ -75,5 +76,5 @@ description: فهرس وموجّه الـ skills — يحدد أي skill (أو �
 | توفير توكنز | `token-saver` |
 
 ## سلاسل جاهزة
-- **ميزة جديدة كاملة:** `supabase-schema` ← `flask-api` ← `impeccable` + `rtl-arabic-ui` ← `deploy-check`
+- **ميزة جديدة كاملة:** `ship` (يمر على `supabase-schema` ← `flask-api` ← `impeccable` + `rtl-arabic-ui` ← `deploy-check` ببوابات)
 - **ريل:** `goalkeeper-content` ← `video-ad-editor` أو `capcut-guide` ← `thumbnail-video`
