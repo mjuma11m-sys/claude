@@ -1214,5 +1214,8 @@ window.HAYATI_EN = {
 "انضافت ✓ · اكتب اللي بعدها": "Added ✓ · type the next one",
 "شارك الملخص": "Share summary",
 "المشاركة مو متوفرة بهالنسخة": "Sharing isn't available in this version",
-"ما قدرت أشارك الملف": "Couldn't share the file"
+"ما قدرت أشارك الملف": "Couldn't share the file",
+"جرّب التنبيه": "Test notification",
+"يوصلك تنبيه تجربة بعد 10 ثواني": "A test notification arrives in 10 seconds",
+"حالة التنبيهات": "Notification status"
 };

@@ -575,3 +575,43 @@ test('iPhone build: sheets do not pop the keyboard by themselves', async ({ page
   await page.waitForTimeout(500);
   expect(await store(page, () => document.activeElement && document.activeElement.name)).not.toBe('name');
 });
+
+// ⚙️ «جرّب التنبيه» بنسخة الآيفون: يطلب الإذن ويجدول تنبيه بعد 10 ثواني ويعرض النتيجة خطوة خطوة
+test('iPhone build: «جرّب التنبيه» asks permission, schedules a test alert in 10s and reports each step', async ({ page }) => {
+  require('child_process').execFileSync('node', [path.join(__dirname, '../scripts/cap-www.js')]);
+  await page.addInitScript(() => {
+    const calls = window.__bridge = [];
+    const m = (...names) => names.map((name) => ({ name, rtype: 'promise' }));
+    window.webkit = { messageHandlers: { bridge: { postMessage() {} } } };
+    let perm = 'prompt', pending = [];
+    window.Capacitor = {
+      PluginHeaders: [{ name: 'LocalNotifications', methods: m('checkPermissions', 'requestPermissions', 'getPending', 'cancel', 'schedule') }],
+      nativePromise: async (plugin, method, opts) => {
+        calls.push({ method, opts });
+        if (method === 'checkPermissions') return { display: perm };
+        if (method === 'requestPermissions') { perm = 'granted'; return { display: perm }; }
+        if (method === 'getPending') return { notifications: pending };
+        if (method === 'cancel') { const ids = opts.notifications.map((n) => n.id); pending = pending.filter((n) => !ids.includes(n.id)); return {}; }
+        if (method === 'schedule') { pending = pending.concat(opts.notifications.map((n) => ({ id: n.id }))); return {}; }
+        return {};
+      },
+    };
+  });
+  await open(page, '/www/index.html');
+  await page.click('#settingsBtn');
+  await page.click('[data-set="test-notif"]');
+  const sheet = page.locator('.notif-test');
+  await expect(sheet).toContainText('✅ الإذن: granted');
+  await expect(sheet).toContainText('بعد 10 ثواني');
+  const test = await store(page, () => {
+    const n = window.__bridge.filter((c) => c.method === 'schedule').flatMap((c) => c.opts.notifications).find((x) => x.id === 990001);
+    return { title: n.title, inSec: Math.round((n.schedule.at - Date.now()) / 1000) };
+  });
+  expect(test.title).toBe('🔔 تجربة من «حياتي»');
+  expect(test.inSec).toBeGreaterThan(3);
+  expect(test.inSec).toBeLessThanOrEqual(10);
+  // إعادة جدولة الجدول (إضافة محاضرة) ما تلغي تنبيه التجربة
+  await store(page, () => App.S.upsert('courses', { id: 'tn1', name: 'مادة', type: 'lecture', days: [(new Date().getDay() + 1) % 7], start_time: '09:00', end_time: '10:00' }));
+  await page.waitForFunction(() => window.__bridge.some((c) => c.method === 'schedule' && c.opts.notifications.some((n) => n.title.includes('مادة'))), null, { timeout: 5000 });
+  expect(await store(page, () => window.__bridge.filter((c) => c.method === 'cancel').flatMap((c) => c.opts.notifications.map((n) => n.id)))).not.toContain(990001);
+});
