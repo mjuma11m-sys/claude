@@ -24,7 +24,7 @@
   const LAT = 26.2235, LNG = 50.5876, TZ = 3;
   const METHODS = {
     gulf: { label: 'أم القرى / الخليج', fajr: 18.5, isha: { min: 90 }, maghrib: 0 },
-    jafari: { label: 'جعفري', fajr: 16, isha: { deg: 14 }, maghrib: 4 },
+    jafari: { label: 'جعفري (3 أوقات)', fajr: 16, isha: { deg: 14 }, maghrib: 4 },
   };
   const rad = (d) => d * Math.PI / 180, deg = (r) => r * 180 / Math.PI;
   const fixH = (x) => ((x % 24) + 24) % 24;
@@ -67,10 +67,14 @@
     return { fajr: toMin(fajr), sunrise: toMin(sunrise), dhuhr: toMin(dhuhr), asr: toMin(asr), maghrib: toMin(maghrib), isha: toMin(isha) };
   }
   const PRAYER_NAMES = [['fajr', 'الفجر'], ['dhuhr', 'الظهر'], ['asr', 'العصر'], ['maghrib', 'المغرب'], ['isha', 'العشاء']];
+  // المذهب الجعفري: الجمع بين الظهر والعصر، والمغرب والعشاء — ثلاث أوقات
+  const PRAYER_NAMES_JAFARI = [['fajr', 'الفجر', 20], ['dhuhr', 'الظهرين', 30], ['maghrib', 'العشاءين', 30]];
+  const prayerMethod = () => set().prayer_method || 'jafari';
+  const prayerNames = (m) => (m === 'jafari' ? PRAYER_NAMES_JAFARI : PRAYER_NAMES);
   function prayersOn(date) {
     if (set().prayer_on === false) return [];
-    const t = prayerTimes(date, set().prayer_method || 'gulf');
-    return PRAYER_NAMES.map(([k, name]) => ({ src: 'prayer', id: 'prayer-' + k, type: 'prayer', name: 'صلاة ' + name, room: '', color: '#0d9488', start: t[k], end: t[k] + 20 }));
+    const m = prayerMethod(), t = prayerTimes(date, m);
+    return prayerNames(m).map(([k, name, dur]) => ({ src: 'prayer', id: 'prayer-' + k, type: 'prayer', name: 'صلاة ' + name, room: '', color: '#0d9488', start: t[k], end: t[k] + (dur || 20) }));
   }
 
   // ================= العادات والماء والنوم =================
@@ -265,7 +269,7 @@
       const abs = Array.isArray(cc.absences) ? cc.absences.slice().sort().reverse() : [];
       const lim = Number(cc.absence_limit) || 0;
       const warn = lim && abs.length >= lim - 1;
-      return '<div class="hero" style="margin-top:4px;padding:16px 18px;background:linear-gradient(135deg,' + h(cc.color || '#4f46e5') + ',#1b1748)"><span class="eyebrow">' + I('book') + 'محاضرة · ' +
+      return '<div class="hero" style="margin-top:4px;padding:16px 18px;background:linear-gradient(135deg,' + h(cc.color || '#1A8A8F') + ',#0E3B43)"><span class="eyebrow">' + I('book') + 'محاضرة · ' +
         (cc.days || []).slice().sort().map((d) => A.DAYS_SHORT[d]).join('، ') + '</span><div class="big" style="font-size:24px;margin:8px 0 2px">' + h(cc.name) + '</div>' +
         '<div class="meta"><span>' + I('clock') + A.time12(cc.start_time) + ' — ' + A.time12(cc.end_time) + '</span>' + (cc.room ? '<span>' + I('pin') + h(cc.room) + '</span>' : '') + '</div></div>' +
         // الغياب
@@ -523,14 +527,14 @@
 
   // ================= الإعدادات =================
   function settingsExtra() {
-    const theme = lsGet('hayati-theme', 'auto'), pm = set().prayer_method || 'gulf', pOn = set().prayer_on !== false;
+    const theme = lsGet('hayati-theme', 'auto'), pm = prayerMethod(), pOn = set().prayer_on !== false;
     const t = prayerTimes(new Date(), pm);
     return '<div class="group-title">' + I('moon') + 'المظهر</div><div class="card"><div class="seg" style="margin:0">' +
       [['auto', 'تلقائي'], ['light', 'فاتح'], ['dark', 'غامق']].map(([k, l]) => '<button type="button" data-set="theme" data-k="' + k + '" class="' + (theme === k ? 'on' : '') + '">' + l + '</button>').join('') + '</div></div>' +
       '<div class="group-title">' + I('moon') + 'أوقات الصلاة</div><div class="card">' +
       '<label class="switch" style="margin-bottom:12px"><input type="checkbox" data-set="prayer-on"' + (pOn ? ' checked' : '') + '> أظهر الصلاة بجدول اليوم مع «الحين وقت صلاة…»</label>' +
       '<div class="seg" style="margin-bottom:10px">' + Object.entries(METHODS).map(([k, m]) => '<button type="button" data-set="prayer-method" data-k="' + k + '" class="' + (pm === k ? 'on' : '') + '">' + m.label + '</button>').join('') + '</div>' +
-      '<div class="prayer-grid">' + PRAYER_NAMES.map(([k, n]) => '<div><small>' + n + '</small><b class="num">' + A.time12(A.hhmm(t[k])) + '</b></div>').join('') + '</div>' +
+      '<div class="prayer-grid" style="grid-template-columns:repeat(' + prayerNames(pm).length + ',1fr)">' + prayerNames(pm).map(([k, n]) => '<div><small>' + n + '</small><b class="num">' + A.time12(A.hhmm(t[k])) + '</b></div>').join('') + '</div>' +
       '<p class="small muted" style="margin:8px 0 0">محسوبة لتوقيت المنامة. ممكن تفرق دقيقة أو دقيقتين عن تقويم الأوقاف.</p></div>' +
       '<div class="group-title">' + I('heart') + 'أهداف يومية</div><div class="card"><div class="two">' +
       '<div class="field" style="margin:0"><label>أكواب الماء</label><input type="number" min="1" max="20" data-goal="water_goal" value="' + (set().water_goal || 8) + '"></div>' +

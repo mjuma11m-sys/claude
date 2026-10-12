@@ -1,0 +1,2 @@
+{ "bg":"#0E3B43", "ink":"#E8DCC4", "acc":"#FF6B4A", "clay":"#13636B", "mut":"#8A9A9B",
+  "font":"IBM Plex Sans Arabic", "logo":"logo.png", "grade": false, "badgeUntil": 0, "motion": { "bounce": false } }

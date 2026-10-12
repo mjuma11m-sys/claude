@@ -180,7 +180,7 @@
       if (!all.length) return '';
       const due = dueCards(c.id || null).filter((x) => (x.course_id || '') === c.id).length;
       const mastered = all.filter((x) => (x.box || 1) >= 5).length;
-      return '<li class="row" data-action="card-review" data-id="' + c.id + '"><div class="ico" style="' + tint(c.color || '#4f46e5') + '">' + I('book') + '</div><div class="main"><div class="title"><span class="t">' + h(c.name) + '</span></div>' +
+      return '<li class="row" data-action="card-review" data-id="' + c.id + '"><div class="ico" style="' + tint(c.color || '#1A8A8F') + '">' + I('book') + '</div><div class="main"><div class="title"><span class="t">' + h(c.name) + '</span></div>' +
         '<div class="sub">' + all.length + ' بطاقة · حفظت ' + mastered + '</div></div>' + (due ? '<span class="tag brand">راجع ' + due + '</span>' : '<span class="tag">✓</span>') + '</li>';
     }).join('') + '</ul></div>';
     return out;

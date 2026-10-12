@@ -1,0 +1,14 @@
+{
+  "name": "hayati-app",
+  "private": true,
+  "description": "حياتي — اختبارات تلقائية (التطبيق نفسه ملفات ثابتة بدون بناء)",
+  "scripts": {
+    "build": "node build.js",
+    "test": "npm run test:unit && playwright test",
+    "test:unit": "node --test tests/unit/*.test.js",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
+  }
+}

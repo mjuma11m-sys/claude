@@ -16,7 +16,7 @@
     'بقالة وتسوق': ['cart', '#16a34a'],
     'مواصلات وبنزين': ['fuel', '#0ea5e9'],
     'فواتير واتصالات': ['receipt', '#8b5cf6'],
-    'جامعة ودراسة': ['graduation', '#4f46e5'],
+    'جامعة ودراسة': ['graduation', '#1A8A8F'],
     'صحة': ['heart', '#e11d48'],
     'ترفيه': ['gamepad', '#db2777'],
     'تحويلات': ['repeat', '#0d9488'],
@@ -46,7 +46,7 @@
     appointment: { label: 'موعد', icon: 'clock', now: 'الحين موعدك', next: 'موعدك الجاي' },
     prayer: { label: 'صلاة', icon: 'moon', now: 'الحين وقت', next: 'الصلاة الجاية' },
   };
-  const COLORS = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6', '#64748b'];
+  const COLORS = ['#1A8A8F', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6', '#64748b'];
   const TABS = [
     ['today', 'اليوم', 'sun'],
     ['money', 'المصاريف', 'wallet'],
@@ -325,7 +325,7 @@
     const dueToday = st.tasks.filter((t) => !t.done && t.due_at && daysBetween(now, new Date(t.due_at)) <= 0).length;
     out += '<div class="tiles">' +
       '<button class="tile" data-action="go" data-tab="money"><div class="ti" style="' + tint('#e11d48') + '">' + I('down') + '</div><div class="lbl">صرفت اليوم</div><div class="val">' + money(todaySpend) + '</div></button>' +
-      '<button class="tile" data-action="' + (budget ? 'go' : 'budget') + '" data-tab="money"><div class="ti" style="' + tint('#4f46e5') + '">' + I('target') + '</div><div class="lbl">' + (budget ? 'باقي بالميزانية' : 'الميزانية') + '</div><div class="val">' + (budget ? money(budget - month.exp) : '<span style="font-size:13px;color:var(--brand)">حدّدها</span>') + '</div></button>' +
+      '<button class="tile" data-action="' + (budget ? 'go' : 'budget') + '" data-tab="money"><div class="ti" style="' + tint('#1A8A8F') + '">' + I('target') + '</div><div class="lbl">' + (budget ? 'باقي بالميزانية' : 'الميزانية') + '</div><div class="val">' + (budget ? money(budget - month.exp) : '<span style="font-size:13px;color:var(--brand)">حدّدها</span>') + '</div></button>' +
       '<button class="tile" data-action="go" data-tab="tasks"><div class="ti" style="' + tint('#0d9488') + '">' + I('tasks') + '</div><div class="lbl">مهام اليوم</div><div class="val num">' + dueToday + '</div></button></div>';
 
     // جدول اليوم
@@ -375,7 +375,7 @@
       '<div class="split"><div><small>الدخل</small><b>' + money(inc) + '</b></div><div><small>الصافي</small><b>' + money(inc - exp) + '</b></div></div></div>';
 
     out += '<div class="actions"><button class="action" data-action="paste-sms"><div class="ico" style="' + tint('#0d9488') + '">' + I('message') + '</div>لصق رسالة بنك</button>' +
-      '<button class="action" data-action="add-tx"><div class="ico" style="' + tint('#4f46e5') + '">' + I('plus') + '</div>عملية جديدة</button></div>' + X('moneyActions');
+      '<button class="action" data-action="add-tx"><div class="ico" style="' + tint('#1A8A8F') + '">' + I('plus') + '</div>عملية جديدة</button></div>' + X('moneyActions');
 
     // آخر ٧ أيام
     if (isThisMonth || list.length) {
@@ -752,7 +752,7 @@
     const p = 1 - left / total;
     return '<svg viewBox="0 0 220 220"><circle cx="110" cy="110" r="' + r + '" fill="none" stroke="var(--surface-2)" stroke-width="14"/>' +
       '<circle id="tArc" cx="110" cy="110" r="' + r + '" fill="none" stroke="' + (t && t.phase === 'break' ? 'var(--income)' : 'url(#tg)') + '" stroke-width="14" stroke-linecap="round" stroke-dasharray="' + (c * p) + ' ' + c + '" data-c="' + c + '" data-total="' + total + '"/>' +
-      '<defs><linearGradient id="tg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#4f46e5"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs></svg>' +
+      '<defs><linearGradient id="tg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#0E3B43"/><stop offset="1" stop-color="#1A8A8F"/></linearGradient></defs></svg>' +
       '<div class="timer-center"><b class="num" id="tTime">' + mmss(left) + '</b><small>' + (!t ? 'جاهز' : t.phase === 'break' ? 'استراحة' : t.ends_at ? 'تركيز' : 'متوقف') + '</small></div>';
   }
   function weekStartDate() { const d = startOfDay(new Date()); d.setDate(d.getDate() - d.getDay()); return d; }
@@ -788,7 +788,7 @@
       if (st.study_sessions.some((x) => sameDay(new Date(x.started_at), d))) streak++;
       else if (i > 0) break;
     }
-    out += '<div class="tiles"><div class="tile"><div class="ti" style="' + tint('#4f46e5') + '">' + I('timer') + '</div><div class="lbl">اليوم</div><div class="val">' + hrs(todayMin) + '</div></div>' +
+    out += '<div class="tiles"><div class="tile"><div class="ti" style="' + tint('#1A8A8F') + '">' + I('timer') + '</div><div class="lbl">اليوم</div><div class="val">' + hrs(todayMin) + '</div></div>' +
       '<div class="tile"><div class="ti" style="' + tint('#0d9488') + '">' + I('calendar') + '</div><div class="lbl">هالأسبوع</div><div class="val">' + hrs(total) + '</div></div>' +
       '<div class="tile"><div class="ti" style="' + tint('#f97316') + '">' + I('flame') + '</div><div class="lbl">أيام متتالية</div><div class="val num">' + streak + '</div></div></div>';
 
@@ -876,7 +876,7 @@
       '<div class="split"><div><small>معدل ' + h(sems[0] || 'الفصل') + '</small><b class="num">' + (cur && cur.gpa != null ? cur.gpa.toFixed(2) : '—') + '</b></div>' +
       '<div><small>الساعات المحتسبة</small><b class="num">' + (cum.credits || 0) + '</b></div></div></div>';
 
-    out += '<div class="actions"><button class="action" data-action="add-grade"><div class="ico" style="' + tint('#4f46e5') + '">' + I('plus') + '</div>أضف درجة</button>' +
+    out += '<div class="actions"><button class="action" data-action="add-grade"><div class="ico" style="' + tint('#1A8A8F') + '">' + I('plus') + '</div>أضف درجة</button>' +
       '<button class="action" data-action="prior-gpa"><div class="ico" style="' + tint('#0d9488') + '">' + I('chart') + '</div>' + (st.settings.prior_gpa ? 'المعدل السابق ' + Number(st.settings.prior_gpa).toFixed(2) : 'معدلك السابق') + '</button></div>';
 
     out += X('gpaNeed');
@@ -1275,11 +1275,11 @@
     openSheet({
       title: 'إضافة',
       body: '<div class="menu">' +
-        item('tx', 'wallet', '#4f46e5', 'مصروف أو دخل', 'سجّل عملية بيدك') +
+        item('tx', 'wallet', '#1A8A8F', 'مصروف أو دخل', 'سجّل عملية بيدك') +
         item('sms', 'message', '#0d9488', 'لصق رسالة بنك', 'يقرأ المبلغ والمحل تلقائياً') +
         item('task', 'tasks', '#e11d48', 'مهمة / واجب / اختبار', 'مع موعد وتذكير') +
         item('appt', 'clock', '#f59e0b', 'موعد', 'طبيب، مشوار، اجتماع…') +
-        item('course', 'graduation', '#4f46e5', 'محاضرة للجدول', 'تتكرر كل أسبوع') +
+        item('course', 'graduation', '#1A8A8F', 'محاضرة للجدول', 'تتكرر كل أسبوع') +
         item('gym', 'dumbbell', '#10b981', 'تمرين / جيم', 'يقولك «الحين وقت التمرين»') +
         item('sub', 'repeat', '#8b5cf6', 'اشتراك ثابت', 'نتفليكس، باقة الجوال…') +
         item('debt', 'users', '#0891b2', 'لي وعلي', 'سلّفت أحد أو استلفت') + X('chooserItems', item) + '</div>',
@@ -1362,7 +1362,7 @@
   const GOAL_PRESETS = [
     { name: 'الزواج', emoji: '💍', color: '#ec4899', items: ['المهر', 'الشبكة والذهب', 'القاعة والعشاء', 'الأثاث', 'شهر العسل', 'الملابس والتجهيزات'] },
     { name: 'سيارة', emoji: '🚗', color: '#0ea5e9', items: ['الدفعة الأولى', 'التأمين والتسجيل'] },
-    { name: 'لابتوب', emoji: '💻', color: '#4f46e5', items: [] },
+    { name: 'لابتوب', emoji: '💻', color: '#1A8A8F', items: [] },
     { name: 'سفر', emoji: '✈️', color: '#f59e0b', items: ['التذاكر', 'الفندق', 'المصروف'] },
     { name: 'عمرة', emoji: '🕋', color: '#10b981', items: [] },
     { name: 'صندوق طوارئ', emoji: '🛟', color: '#64748b', items: [] },
@@ -1586,7 +1586,7 @@
       title: 'التنبيهات',
       saveLabel: 'تصدير',
       body:
-        '<div class="card" style="display:flex;gap:12px;align-items:center"><div class="ico" style="' + tint('#4f46e5') + '">' + I('bell') + '</div>' +
+        '<div class="card" style="display:flex;gap:12px;align-items:center"><div class="ico" style="' + tint('#1A8A8F') + '">' + I('bell') + '</div>' +
         '<p class="small" style="margin:0;color:var(--text-2)">محاضراتك وتمرينك ومواعيدك تنضاف لتقويم آبل مع تنبيه قبلها وتنبيه «الحين وقت…». ينبّهك على الآيفون والماك حتى لو التطبيق مسكّر.</p></div>' +
         '<div class="field"><label>نبّهني قبل المحاضرة بـ</label><div class="seg" id="beforeSeg">' + [5, 10, 15, 30].map((m) =>
           '<button type="button" data-m="' + m + '" class="' + ((saved.before || 10) === m ? 'on' : '') + '">' + m + ' د</button>').join('') + '</div></div>' +
@@ -1682,7 +1682,7 @@
 
     body += X('settingsExtra');
     body += '<div class="group-title">' + I('settings') + 'عام</div><div class="menu">' +
-      '<button data-set="budget"><div class="ico" style="' + tint('#4f46e5') + '">' + I('target') + '</div><div style="flex:1"><b>الميزانية الشهرية</b><small>' + (st.settings.budget ? fmt(st.settings.budget) + ' د.ب' : 'غير محددة') + '</small></div>' + I('chevL') + '</button>' +
+      '<button data-set="budget"><div class="ico" style="' + tint('#1A8A8F') + '">' + I('target') + '</div><div style="flex:1"><b>الميزانية الشهرية</b><small>' + (st.settings.budget ? fmt(st.settings.budget) + ' د.ب' : 'غير محددة') + '</small></div>' + I('chevL') + '</button>' +
       '<button data-set="export"><div class="ico" style="' + tint('#0d9488') + '">' + I('download') + '</div><div style="flex:1"><b>نسخة احتياطية</b><small>تصدير كل بياناتك كملف</small></div>' + I('chevL') + '</button>' +
       '<label style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:16px;border:1px solid var(--border);background:var(--surface);cursor:pointer"><div class="ico" style="' + tint('#f59e0b') + '">' + I('upload') + '</div><div style="flex:1"><b style="display:block">استيراد نسخة</b><small class="muted">من ملف نسخة احتياطية</small></div><input type="file" accept="application/json,.json" data-set="import" hidden></label>' +
       '</div>';

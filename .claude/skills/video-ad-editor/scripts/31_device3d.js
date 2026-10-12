@@ -53,12 +53,13 @@ const srv = http.createServer((req, res) => {
   const CFG = { size: [OW, OH], device: D.device || 'phone', bg: D.bg || [theme.bg || '#0B0A12', theme.acc ? theme.acc + '66' : '#3B2A6B'],
     acc: D.acc || theme.acc || '#D97757', ink: D.ink || theme.ink || '#F0EBE0', font: D.font || theme.font || 'Cairo', metal: D.metal, fit: D.fit || 'contain', reflect: D.reflect ?? 0.25 };
   const b = await puppeteer.launch({ executablePath: CHROME, headless: 'new',
-    args: ['--no-sandbox', '--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist', '--enable-webgl', '--force-device-scale-factor=1'] });
+    args: ['--no-sandbox', ...(process.platform === 'darwin' ? ['--use-angle=metal'] : ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']), '--enable-gpu', '--ignore-gpu-blocklist', '--enable-webgl', '--force-device-scale-factor=1'] });
   const p = await b.newPage(); await p.setViewport({ width: OW, height: OH });
   p.on('pageerror', e => console.log('ERR', String(e).slice(0, 200)));
   await p.evaluateOnNewDocument(c => { window.CFG = c; }, CFG);
   await p.goto(`http://127.0.0.1:${port}/skill/motion/device3d.html`, { waitUntil: 'networkidle0' });
-  await p.addStyleTag({ content: `@font-face{font-family:Cairo;src:url(/skill/motion/fonts/Cairo-VF.ttf);font-weight:200 1000}@font-face{font-family:Tajawal;src:url(/skill/motion/fonts/Tajawal-Black.ttf);font-weight:900}` });
+  await p.addStyleTag({ content: `@font-face{font-family:Cairo;src:url(/skill/motion/fonts/Cairo-VF.ttf);font-weight:200 1000}@font-face{font-family:Tajawal;src:url(/skill/motion/fonts/Tajawal-Black.ttf);font-weight:900}@font-face{font-family:'IBM Plex Sans Arabic';src:url(/skill/motion/fonts/IBMPlexSansArabic-Bold.ttf);font-weight:700 900}` });
+  if (D.titleBg) await p.addStyleTag({ content: '#title span{background:' + D.titleBg + '}' });
   await p.waitForFunction('window.READY===true', { timeout: 30000 }); await p.evaluate(() => document.fonts.ready);
   const step = async t => { await p.evaluate(s => window.setFrame(s), `http://127.0.0.1:${port}/work${frameAt(t)}`); await p.evaluate((c, tp, ti) => window.pose(c, tp, ti), cam(t), tapAt(t), titleAt(t)); };
   if (mode === 'preview') {
