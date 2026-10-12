@@ -62,6 +62,14 @@ PAGES['post-3-ideas.jpg'] = [1080, 1350, BASE(1080, 1350) + `<div style="positio
 <div style="position:absolute;left:50%;top:1010px;transform:translateX(-50%);padding:26px 70px;border-radius:999px;background:var(--coral);color:#2A0E07;font-size:54px;white-space:nowrap">اكتبه بالتعليقات 👇</div>
 <div style="position:absolute;left:0;right:0;top:1200px;display:flex;justify-content:center;align-items:center;gap:18px;color:var(--sea);font-size:38px;direction:ltr"><svg style="width:70px;height:70px" viewBox="0 0 512 512">${MARK.slice(MARK.indexOf('>') + 1, -6)}</svg>@hayati.bh</div>`];
 
+// 5) ستوري التشويق من الحساب الشخصي 1080×1920 — الكلام بعيد عن أعلى 250 وأسفل 340 (واجهة الستوري)
+PAGES['story-teaser.jpg'] = [1080, 1920, BASE(1080, 1920) + `<div class="sea"></div>
+<div style="position:absolute;left:80px;right:80px;top:300px;text-align:center;line-height:1.2"><div style="font-size:84px">أشتغل على شي</div><div style="font-size:84px">من شهر…</div></div>
+<div style="position:absolute;left:50%;top:560px;width:700px;height:875px;margin-left:-350px;border-radius:36px;overflow:hidden;transform:rotate(-3deg);box-shadow:0 50px 100px -30px rgba(0,0,0,.75),0 0 0 3px rgba(232,220,196,.18)"><img src="file://${D}/out/post-1-intro.jpg" style="width:100%;height:100%;display:block"></div>
+<div style="position:absolute;left:0;right:0;top:1470px;text-align:center;font-size:96px" class="c">الأربعاء أوريكم 👀</div>
+<div style="position:absolute;left:50%;top:1610px;transform:translateX(-50%);padding:14px 38px;border-radius:18px;background:#fff;color:#0E3B43;font-size:46px;direction:ltr;white-space:nowrap;box-shadow:0 20px 40px -20px rgba(0,0,0,.6)">@hayati.bh</div>
+<div class="grain"></div>`];
+
 (async () => {
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   for (const [name, [w, h, html]] of Object.entries(PAGES)) {
