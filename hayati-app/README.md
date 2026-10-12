@@ -20,6 +20,7 @@ Personal life-OS PWA: expenses, budgets, bank/BenefitPay SMS parsing, study sche
 | `find.js` | Search across expenses/tasks/schedule/matches (Arabic-normalised, total spent) + undo bar after any delete (wraps `S.remove`) |
 | `insights.js` | Month-end spending forecast (ignores subscriptions and one-offs > 25% of budget, from day 5) + goalkeeper readiness card (sleep, HRV and resting HR vs your own 14-night median, yesterday’s load) |
 | `community.js` | First-run welcome card (name, roles, prayer times, budget) + «ملفك» in settings. `App.has(role)` gates GPA/attendance (student), keeper mode, readiness (athlete). Empty roles = everything on (existing users unchanged) |
+| `privacy.js` + `privacy.html` | Masks card/account numbers in stored bank messages (also old ones, once), privacy policy page (AR/EN), «احذف كل بياناتي» (device + Claude db + Supabase + account) |
 | `pwa.js` | App icon badge = today's + overdue undone tasks (toggle in settings) |
 
 Run locally: `npx serve hayati-app` (artifact db unavailable outside claude.ai → falls back to localStorage/Supabase).

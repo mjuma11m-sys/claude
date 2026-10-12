@@ -328,3 +328,31 @@ test('a brand-new user sees no prayer times until they choose a method', async (
   await page.click('[data-action="ob-save"]');
   expect(await store(page, () => Extras.agenda(new Date()).length)).toBe(3);
 });
+
+test('privacy: pasted bank message is stored masked, old messages get masked, wipe deletes everything', async ({ page }) => {
+  await open(page);
+  await store(page, () => {
+    App.S.upsert('transactions', { id: 'old', kind: 'expense', amount: 2, merchant: 'X', raw: 'card XX9911 BHD 2.000', occurred_at: new Date().toISOString() });
+    App.S.upsert('transactions', App.S.smsToTransaction('Your card XX4821 was used for BHD 3.750 at COSTA COFFEE SEEF', new Date().toISOString(), 'new'));
+  });
+  await expect.poll(() => store(page, () => App.st.transactions.map((t) => t.raw).join(' | '))).toBe('card ••11 BHD 2.000 | Your card ••21 was used for BHD 3.750 at COSTA COFFEE SEEF');
+  await page.click('#settingsBtn');
+  await expect(page.locator('#sheetBody a[href="privacy.html"]')).toBeVisible();
+  await page.click('#sheetBody [data-set="wipe"]');
+  await page.waitForTimeout(400);
+  await page.fill('#wipeWord', 'غلط');
+  await page.click('#sheetSave');
+  expect(await store(page, () => App.st.transactions.length)).toBe(2);
+  await page.fill('#wipeWord', 'احذف');
+  await page.click('#sheetSave');
+  await page.waitForFunction(() => window.App && App.st.transactions.length === 0 && !localStorage.getItem('hayati-v1'), null, { timeout: 5000 }).catch(() => {});
+  await page.waitForLoadState();
+  await page.waitForFunction(() => window.App && App.st);
+  expect(await store(page, () => [App.st.transactions.length, App.st.tasks.length])).toEqual([0, 0]);
+});
+
+test('privacy policy page loads', async ({ page }) => {
+  await page.goto('/privacy.html');
+  await expect(page.locator('h1')).toHaveText('سياسة الخصوصية');
+  await expect(page.locator('body')).toContainText('30 لسنة 2018');
+});

@@ -233,7 +233,20 @@
     }).sort((a, b) => b.sum - a.sum);
   }
 
-  const api = { parse, categorize, brand, groupByBrand, BRANDS, CATEGORY_RULES, INCOME_CATEGORY_RULES };
+  // ================= إخفاء أرقام البطاقة والحساب =================
+  // «XX4821» ← «••21» · «BH67BMAG00001299123456» ← «BH••56» · المبالغ (412.300) والتواريخ تظل مثل ما هي
+  function mask(text) {
+    if (!text) return text;
+    return String(text)
+      .replace(/\b[A-Z]{2}\d{2}[A-Z0-9]{10,30}\b/g, (m) => m.slice(0, 2) + '••' + m.slice(-2))
+      .replace(/(?:[xX*•]{2,}[\s-]?)?\d(?:[\d\s-]{2,}\d)(?![.,]\d)/g, (m) => {
+        const d = m.replace(/\D/g, '');
+        return d.length >= 4 ? '••' + d.slice(-2) : m;
+      })
+      .replace(/[xX*]{2,}(?=\s|$)/g, '••');
+  }
+
+  const api = { parse, categorize, mask, brand, groupByBrand, BRANDS, CATEGORY_RULES, INCOME_CATEGORY_RULES };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else global.SmsParser = api;
 })(typeof window !== 'undefined' ? window : globalThis);

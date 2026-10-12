@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>سياسة الخصوصية — حياتي</title>
+<meta name="theme-color" content="#0E3B43">
+<style>
+  :root { --sea: #0E3B43; --pearl: #E8DCC4; --coral: #FF6B4A; --bg: #F7F4EE; --surface: #fff; --text: #0B2328; --text-2: #33494D; --border: #E4DDD0; --brand: #13636B; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0A1A1E; --surface: #10262B; --text: #EFE8DA; --text-2: #C9C2B4; --border: #1F3D43; --brand: #6EC5C0; color-scheme: dark; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.8 "IBM Plex Sans Arabic", -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 24px 18px calc(48px + env(safe-area-inset-bottom)); }
+  header { background: var(--sea); color: var(--pearl); border-radius: 22px; padding: 22px; display: flex; gap: 16px; align-items: center; }
+  header svg { width: 56px; height: 56px; flex: none; }
+  h1 { margin: 0; font-size: 24px; line-height: 1.3; }
+  header p { margin: 4px 0 0; opacity: .8; font-size: 14px; }
+  h2 { font-size: 19px; margin: 28px 0 8px; color: var(--brand); }
+  section { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 4px 18px 14px; margin-top: 14px; }
+  ul { padding-inline-start: 20px; margin: 6px 0; }
+  li + li { margin-top: 4px; }
+  .muted { color: var(--text-2); font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: start; padding: 8px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--text-2); font-weight: 600; }
+  .en { direction: ltr; text-align: left; }
+  a { color: var(--brand); }
+  hr { border: 0; border-top: 1px solid var(--border); margin: 36px 0 8px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="116" fill="#0E3B43" stroke="rgba(232,220,196,.25)" stroke-width="8"/><path d="M 383.3 172.7 A 160 160 0 1 1 300 102.2" fill="none" stroke="#E8DCC4" stroke-opacity=".28" stroke-width="22" stroke-linecap="round"/><path d="M 304 166 L 196 166 L 264 222 C 204 222 168 254 168 292 C 168 336 206 360 256 360 C 292 360 318 348 338 332" fill="none" stroke="#E8DCC4" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/><circle cx="352" cy="128" r="30" fill="#FF6B4A"/></svg>
+    <div><h1>سياسة الخصوصية</h1><p>«حياتي» · آخر تحديث: 12 أكتوبر 2026</p></div>
+  </header>
+
+  <section>
+    <h2>باختصار</h2>
+    <ul>
+      <li><b>بياناتك على جهازك.</b> ما فيه سيرفر لنا يجمعها.</li>
+      <li><b>ولا إعلانات ولا تتبّع.</b> ما نبيع ولا نشارك أي شي.</li>
+      <li><b>أرقام بطاقتك وحسابك ما تنحفظ.</b> «XX4821» تصير «••21».</li>
+      <li><b>تقدر تحذف كل شي</b> بضغطة من الإعدادات، وتنزّل نسخة قبلها.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>وش نحفظ، ووين</h2>
+    <table>
+      <thead><tr><th>البيانات</th><th>وين تنحفظ</th></tr></thead>
+      <tbody>
+        <tr><td>المصاريف والدخل والميزانية</td><td>جهازك</td></tr>
+        <tr><td>رسايل البنك اللي تلصقها</td><td>جهازك، بعد إخفاء أرقام البطاقة والحساب</td></tr>
+        <tr><td>الجدول والمهام والدرجات والمذاكرة</td><td>جهازك</td></tr>
+        <tr><td>النوم والنبض والخطوات (Apple Watch)</td><td>جهازك. ما تطلع منه أبداً</td></tr>
+        <tr><td>اسمك وأدوارك وطريقة الصلاة</td><td>جهازك</td></tr>
+        <tr><td>الرمز السري</td><td>جهازك، مشفّر (PBKDF2)، وما ينحفظ الرقم نفسه</td></tr>
+      </tbody>
+    </table>
+    <p class="muted">لو فتحت «حياتي» من رابط claude.ai، بياناتك تنحفظ بحسابك في Claude وما يشوفها غيرك.</p>
+  </section>
+
+  <section>
+    <h2>المزامنة (اختيارية)</h2>
+    <p>لو فعّلت المزامنة بين جوالك والماك، بياناتك تنحفظ بقاعدة بيانات Supabase بحسابك:</p>
+    <ul>
+      <li>كل مستخدم يشوف بياناته بس (Row Level Security).</li>
+      <li>رسايل البنك اللي توصل من اختصار الآيفون تنخفى أرقامها <b>قبل</b> ما تنحفظ.</li>
+      <li>تقدر توقف المزامنة أو تحذف حسابك كامل من داخل التطبيق.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>حقوقك</h2>
+    <p>حسب قانون حماية البيانات الشخصية في البحرين (رقم 30 لسنة 2018):</p>
+    <ul>
+      <li><b>تشوف بياناتك:</b> الإعدادات ← نسخة احتياطية (ملف كامل).</li>
+      <li><b>تحذفها:</b> الإعدادات ← «احذف كل بياناتي».</li>
+      <li><b>توقف أي شي:</b> التنبيهات، الصلاة، المزامنة، كلها اختيارية.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>التواصل</h2>
+    <p>أي سؤال أو طلب عن بياناتك: راسلنا على إنستقرام <a href="https://instagram.com/hayati.bh" rel="noopener">@hayati.bh</a>.</p>
+    <p class="muted">«حياتي» نسخة تجريبية قيد التطوير. لو تغيّرت هالسياسة، نكتب التاريخ الجديد فوق.</p>
+  </section>
+
+  <hr>
+  <div class="en">
+    <section>
+      <h2>Privacy policy (English)</h2>
+      <ul>
+        <li><b>Your data stays on your device.</b> We run no server that collects it. No ads, no trackers, nothing is sold or shared.</li>
+        <li><b>Bank messages</b> you paste are stored with card and account numbers masked (e.g. “XX4821” → “••21”).</li>
+        <li><b>Health data</b> (sleep, heart rate, steps from Apple Watch) never leaves your device.</li>
+        <li><b>Optional sync</b> uses Supabase with row-level security, so each user sees only their own data. Messages from the iPhone shortcut are masked on the server before they are stored.</li>
+        <li><b>Your rights</b> (Bahrain PDPL, Law No. 30 of 2018): export everything from Settings → Backup, and delete everything, including your sync account, from Settings → “Delete all my data”.</li>
+        <li><b>Contact:</b> Instagram <a href="https://instagram.com/hayati.bh" rel="noopener">@hayati.bh</a>. Last updated 12 October 2026. Hayati is a beta in active development.</li>
+      </ul>
+    </section>
+  </div>
+</main>
+</body>
+</html>
