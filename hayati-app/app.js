@@ -665,6 +665,13 @@
     return segBar(segs, ui.studySeg, 'study-seg') + ({ schedule: viewSchedule, focus: viewFocus, gpa: viewGpa, health: () => X('viewHealth') })[ui.studySeg]();
   }
 
+  // جدول فاضي = بداية: كل عميل يبني أسبوعه، والأزرار على حسب ملفه
+  function buildScheduleCard() {
+    const types = (has('student') ? [['lecture', 'محاضرة']] : []).concat([['gym', 'تمرين'], ['activity', has('employee') ? 'دوام أو نشاط' : 'نشاط']]);
+    return '<div class="card build-week"><b>ابنِ جدولك</b><p class="small muted">أضف أسبوعك مرة وحدة: الأيام والوقت والمكان. وبعدها يقولك «الحين وقت…».</p>' +
+      '<div class="build-btns">' + types.map(([k, l]) => '<button class="btn" data-action="add-course" data-type="' + k + '">' + I(ACT_TYPES[k].icon) + l + '</button>').join('') + '</div></div>';
+  }
+
   function viewSchedule() {
     const now = new Date();
     const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay());
@@ -689,7 +696,7 @@
     const groups = [['lecture', 'المحاضرات'], ['gym', 'التمرين'], ['activity', 'أنشطة ثانية']];
     out += secHead('جدولك الأسبوعي', '<button class="link" data-action="add-course">إضافة</button>');
     if (!st.courses.length) {
-      out += '<div class="card">' + empty('calendar', 'جدولك فاضي', '<button class="link" data-action="add-course">أضف محاضرة أو تمرين</button>: الأيام والوقت والمكان') + '</div>';
+      out += buildScheduleCard();
     }
     for (const [type, label] of groups) {
       const list = st.courses.filter((c) => (c.type || 'lecture') === type);
@@ -1191,7 +1198,7 @@
 
   // --- مادة ---
   function courseForm(c, presetType) {
-    const x = c || { name: '', type: presetType || 'lecture', days: [ui.day], start_time: presetType === 'gym' ? '18:00' : '08:00', end_time: presetType === 'gym' ? '19:00' : '09:15', room: '', color: presetType === 'gym' ? '#10b981' : COLORS[st.courses.length % COLORS.length] };
+    const x = c || { name: '', type: presetType || (has('student') ? 'lecture' : 'activity'), days: [ui.day], start_time: presetType === 'gym' ? '18:00' : '08:00', end_time: presetType === 'gym' ? '19:00' : '09:15', room: '', color: presetType === 'gym' ? '#10b981' : COLORS[st.courses.length % COLORS.length] };
     const ph = { lecture: 'مثلاً: رياضيات ١٠١', gym: 'مثلاً: جيم — صدر وتراي', activity: 'مثلاً: دورة إنجليزي' };
     openSheet({
       title: c ? 'تعديل' : 'إضافة للجدول',
@@ -1205,7 +1212,8 @@
         '<div class="field"><label>المكان</label><input name="room" value="' + h(x.room || '') + '" placeholder="القاعة، المبنى، اسم الجيم… (اختياري)"></div>' +
         '<div class="field"><label>اللون</label><div class="colors" id="colorPick">' + COLORS.map((col) =>
           '<button type="button" style="background:' + col + '" data-c="' + col + '" class="' + (col === x.color ? 'on' : '') + '" aria-label="لون"></button>').join('') + '</div></div>' +
-        (c ? '<button class="btn danger block" type="button" id="delCourse">' + I('trash') + 'حذف</button>' : ''),
+        (c ? '<button class="btn danger block" type="button" id="delCourse">' + I('trash') + 'حذف</button>' :
+          '<button class="btn block" type="button" id="saveNext">' + I('plus') + 'احفظ وأضف ثاني</button>'),
       mount(root) {
         root.dataset.type = x.type || 'lecture';
         segPick(root, '#typeSeg', (k) => { root.dataset.type = k; root.querySelector('[name=name]').placeholder = ph[k]; });
@@ -1218,8 +1226,25 @@
         const del = root.querySelector('#delCourse');
         if (del) del.onclick = async () => { if (await ask('تحذفها من الجدول؟')) { S.remove('courses', c.id); closeSheet(); toast('انحذفت'); } };
         if (!c) setTimeout(() => root.querySelector('[name=name]').focus(), 300);
+        // يحفظ ويخلي النوع والأيام والوقت مثل ما هي، ويفضي الاسم والمكان بس
+        const next = root.querySelector('#saveNext');
+        if (next) next.onclick = () => {
+          try { save(root); } catch (e) { toast(e.message); return; }
+          root.querySelector('[name=name]').value = '';
+          root.querySelector('[name=room]').value = '';
+          const cols = [...root.querySelectorAll('#colorPick button')];
+          const on = cols.findIndex((b) => b.classList.contains('on'));
+          cols.forEach((b, i) => b.classList.toggle('on', i === (on + 1) % cols.length));
+          toast('انضافت ✓ · اكتب اللي بعدها');
+          root.querySelector('[name=name]').focus();
+        };
       },
       onSave(root) {
+        save(root);
+        toast(c ? 'تم التعديل' : 'انضاف للجدول ✓ — لا تنسى تحدّث التقويم');
+      },
+    });
+    function save(root) {
         const name = val(root, 'name');
         if (!name) throw new Error('اكتب الاسم');
         const days = [...root.querySelectorAll('#daysPick .on')].map((b) => Number(b.dataset.d));
@@ -1228,9 +1253,7 @@
         if (end && minutesOf(end) <= minutesOf(start)) throw new Error('وقت النهاية لازم بعد البداية');
         const col = root.querySelector('#colorPick .on');
         S.upsert('courses', Object.assign({}, c || {}, { name, type: root.dataset.type, days, start_time: start, end_time: end, room: val(root, 'room') || null, color: col ? col.dataset.c : COLORS[0] }));
-        toast(c ? 'تم التعديل' : 'انضاف للجدول ✓ — لا تنسى تحدّث التقويم');
-      },
-    });
+    }
   }
 
   // --- مهمة ---
@@ -1801,7 +1824,7 @@
       case 'go': go(el.dataset.tab); break;
       case 'edit-tx': txForm(st.transactions.find((t) => t.id === id)); break;
       case 'add-tx': txForm(); break;
-      case 'add-course': courseForm(); break;
+      case 'add-course': courseForm(null, el.dataset.type); break;
       case 'paste-sms': pasteSmsForm(); break;
       case 'budget': budgetForm(); break;
       case 'edit-course': courseForm(courseById(id)); break;

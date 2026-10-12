@@ -1206,5 +1206,10 @@ window.HAYATI_EN = {
 "و REM": "and REM",
 "والقيمة": "and the value",
 "ولا «في السرير": "and not «In bed",
-"⚠️ الربط التلقائي يشتغل على رابط Vercel أو الملف المحمّل. داخل رابط Claude استخدم «لصق» تحت": "⚠️ Automatic linking works on the Vercel link or the downloaded file. Inside the Claude link use «Paste» below"
+"⚠️ الربط التلقائي يشتغل على رابط Vercel أو الملف المحمّل. داخل رابط Claude استخدم «لصق» تحت": "⚠️ Automatic linking works on the Vercel link or the downloaded file. Inside the Claude link use «Paste» below",
+"ابنِ جدولك": "Build your week",
+"أضف أسبوعك مرة وحدة: الأيام والوقت والمكان. وبعدها يقولك «الحين وقت…».": "Add your week once: days, times and place. Then it tells you «It's time for…».",
+"دوام أو نشاط": "Work or activity",
+"احفظ وأضف ثاني": "Save and add another",
+"انضافت ✓ · اكتب اللي بعدها": "Added ✓ · type the next one"
 };

@@ -395,3 +395,47 @@ test('«رأيك بالتطبيق» builds an honest feedback message', async ({
   expect(text).toContain('★★★★☆');
   expect(text).toContain('أبي: تذكير قبل الاختبار');
 });
+
+// جدول محمد الجاهز (seed) يطلع للمالك بس؛ أي عميل ثاني يبني جدوله بنفسه
+const fakeClaude = (owner) => {
+  const seed = { title: 'جدول المالك', courses: [{ id: 'seed-1', name: 'مادة المالك', type: 'lecture', days: [0], start_time: '08:00', end_time: '09:00' }] };
+  const doc = () => ({ set: async () => {}, delete: async () => {}, get: async () => ({ exists: false }) });
+  const db = {
+    collection: () => ({ onSnapshot(ok) { setTimeout(() => ok({ docs: [], metadata: { fromCache: false } })); return () => {}; }, doc }),
+    doc: (p) => ({ get: async () => (p === 'seed/schedule' ? { exists: true, data: () => seed } : { exists: false }) }),
+  };
+  const user = { id: async () => 'u-' + (owner ? 'owner' : 'guest'), isOwner: async () => owner };
+  window.claude = { use: async (n) => ({ db, user })[n] || null };
+};
+for (const owner of [false, true]) {
+  test(`ready-made timetable shows ${owner ? 'to the owner' : 'to nobody else'}`, async ({ page }) => {
+    await page.addInitScript(fakeClaude, owner);
+    await open(page);
+    await page.waitForFunction(() => window.App && App.ui && 'seed' in App.ui);
+    await store(page, () => { App.ui.studySeg = 'schedule'; App.go('schedule'); });
+    await expect(page.locator('[data-action="import-seed"]')).toHaveCount(owner ? 1 : 0);
+    await expect(page.locator('#view')).not.toContainText('مادة المالك');
+  });
+}
+
+test('a new user builds their own week: role-based buttons and «save and add another»', async ({ page }) => {
+  await open(page);
+  await store(page, () => { App.S.setSettings({ name: 'سارة', roles: ['student'], onboarded: true }); App.ui.studySeg = 'schedule'; App.go('schedule'); });
+  const card = page.locator('.build-week');
+  await expect(card).toContainText('ابنِ جدولك');
+  await expect(card.locator('[data-type="lecture"]')).toBeVisible();
+  await card.locator('[data-type="lecture"]').click();
+  await page.fill('#sheetBody [name=name]', 'رياضيات 101');
+  await page.click('#saveNext');
+  await expect(page.locator('#sheetBody [name=name]')).toHaveValue('');
+  await page.fill('#sheetBody [name=name]', 'محاسبة 201');
+  await page.click('#sheetSave');
+  const names = await store(page, () => App.st.courses.map((c) => c.name + ':' + c.type).sort());
+  expect(names).toEqual(['رياضيات 101:lecture', 'محاسبة 201:lecture']);
+  await expect(page.locator('.build-week')).toHaveCount(0);
+
+  // موظف: ما تطلع له «محاضرة»
+  await store(page, () => { for (const c of App.st.courses.slice()) App.S.remove('courses', c.id); App.S.setSettings({ roles: ['employee'] }); App.go('schedule'); });
+  await expect(page.locator('.build-week [data-type="lecture"]')).toHaveCount(0);
+  await expect(page.locator('.build-week')).toContainText('دوام أو نشاط');
+});

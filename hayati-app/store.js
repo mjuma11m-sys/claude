@@ -133,6 +133,7 @@
   // ---------- قاعدة بيانات صفحة Claude (لما التطبيق ينفتح من رابط claude.ai) ----------
   let adb = null;
   let aCol = null;
+  let aUser = null;
   let aUnsub = null;
 
   function docKey(table, id) { return table + '~' + id; }
@@ -172,6 +173,7 @@
     const uid = await user.id();
     if (!uid) return false;
     adb = db;
+    aUser = user;
     aCol = adb.collection('data/users/' + uid);
     status.mode = 'artifact';
     status.configured = true;
@@ -201,9 +203,11 @@
   }
 
   // جدول جاهز يحطه Claude بقاعدة بيانات الصفحة عشان المستخدم يستورده بضغطة
+  // للمالك بس: كل عميل ثاني يبني جدوله بنفسه (والقاعدة بالمنشور تمنع القراءة بعد)
   async function getSeed() {
-    if (!adb) return null;
+    if (!adb || !aUser) return null;
     try {
+      if (!(await aUser.isOwner())) return null;
       const d = await adb.doc('seed/schedule').get();
       return d.exists ? d.data() : null;
     } catch (e) { return null; }

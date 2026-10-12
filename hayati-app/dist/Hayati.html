@@ -443,6 +443,10 @@
     .ob-roles { display: flex; flex-wrap: wrap; gap: 8px; }
     .ob-chip { font: inherit; font-size: 14px; font-weight: 600; padding: 8px 14px; border-radius: 99px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
     .ob-chip.on { border-color: var(--brand); background: var(--brand-soft); color: var(--brand); }
+    .build-week b { font-size: 17px; }
+    .build-week p { margin: 4px 0 12px; }
+    .build-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+    .build-btns .btn { flex: 1 1 auto; }
     .fb-stars { display: flex; gap: 6px; justify-content: flex-end; }
     .fb-stars button { all: unset; cursor: pointer; font-size: 34px; line-height: 1; color: var(--border); }
     .fb-stars button.on { color: #F2B84B; }
@@ -1887,7 +1891,12 @@ window.HAYATI_EN = {
 "و REM": "and REM",
 "والقيمة": "and the value",
 "ولا «في السرير": "and not «In bed",
-"⚠️ الربط التلقائي يشتغل على رابط Vercel أو الملف المحمّل. داخل رابط Claude استخدم «لصق» تحت": "⚠️ Automatic linking works on the Vercel link or the downloaded file. Inside the Claude link use «Paste» below"
+"⚠️ الربط التلقائي يشتغل على رابط Vercel أو الملف المحمّل. داخل رابط Claude استخدم «لصق» تحت": "⚠️ Automatic linking works on the Vercel link or the downloaded file. Inside the Claude link use «Paste» below",
+"ابنِ جدولك": "Build your week",
+"أضف أسبوعك مرة وحدة: الأيام والوقت والمكان. وبعدها يقولك «الحين وقت…».": "Add your week once: days, times and place. Then it tells you «It's time for…».",
+"دوام أو نشاط": "Work or activity",
+"احفظ وأضف ثاني": "Save and add another",
+"انضافت ✓ · اكتب اللي بعدها": "Added ✓ · type the next one"
 };
 
 </script>
@@ -2367,6 +2376,7 @@ window.HAYATI_CONFIG = {
   // ---------- قاعدة بيانات صفحة Claude (لما التطبيق ينفتح من رابط claude.ai) ----------
   let adb = null;
   let aCol = null;
+  let aUser = null;
   let aUnsub = null;
 
   function docKey(table, id) { return table + '~' + id; }
@@ -2406,6 +2416,7 @@ window.HAYATI_CONFIG = {
     const uid = await user.id();
     if (!uid) return false;
     adb = db;
+    aUser = user;
     aCol = adb.collection('data/users/' + uid);
     status.mode = 'artifact';
     status.configured = true;
@@ -2435,9 +2446,11 @@ window.HAYATI_CONFIG = {
   }
 
   // جدول جاهز يحطه Claude بقاعدة بيانات الصفحة عشان المستخدم يستورده بضغطة
+  // للمالك بس: كل عميل ثاني يبني جدوله بنفسه (والقاعدة بالمنشور تمنع القراءة بعد)
   async function getSeed() {
-    if (!adb) return null;
+    if (!adb || !aUser) return null;
     try {
+      if (!(await aUser.isOwner())) return null;
       const d = await adb.doc('seed/schedule').get();
       return d.exists ? d.data() : null;
     } catch (e) { return null; }
@@ -3684,6 +3697,13 @@ window.HAYATI_CONFIG = {
     return segBar(segs, ui.studySeg, 'study-seg') + ({ schedule: viewSchedule, focus: viewFocus, gpa: viewGpa, health: () => X('viewHealth') })[ui.studySeg]();
   }
 
+  // جدول فاضي = بداية: كل عميل يبني أسبوعه، والأزرار على حسب ملفه
+  function buildScheduleCard() {
+    const types = (has('student') ? [['lecture', 'محاضرة']] : []).concat([['gym', 'تمرين'], ['activity', has('employee') ? 'دوام أو نشاط' : 'نشاط']]);
+    return '<div class="card build-week"><b>ابنِ جدولك</b><p class="small muted">أضف أسبوعك مرة وحدة: الأيام والوقت والمكان. وبعدها يقولك «الحين وقت…».</p>' +
+      '<div class="build-btns">' + types.map(([k, l]) => '<button class="btn" data-action="add-course" data-type="' + k + '">' + I(ACT_TYPES[k].icon) + l + '</button>').join('') + '</div></div>';
+  }
+
   function viewSchedule() {
     const now = new Date();
     const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay());
@@ -3708,7 +3728,7 @@ window.HAYATI_CONFIG = {
     const groups = [['lecture', 'المحاضرات'], ['gym', 'التمرين'], ['activity', 'أنشطة ثانية']];
     out += secHead('جدولك الأسبوعي', '<button class="link" data-action="add-course">إضافة</button>');
     if (!st.courses.length) {
-      out += '<div class="card">' + empty('calendar', 'جدولك فاضي', '<button class="link" data-action="add-course">أضف محاضرة أو تمرين</button>: الأيام والوقت والمكان') + '</div>';
+      out += buildScheduleCard();
     }
     for (const [type, label] of groups) {
       const list = st.courses.filter((c) => (c.type || 'lecture') === type);
@@ -4210,7 +4230,7 @@ window.HAYATI_CONFIG = {
 
   // --- مادة ---
   function courseForm(c, presetType) {
-    const x = c || { name: '', type: presetType || 'lecture', days: [ui.day], start_time: presetType === 'gym' ? '18:00' : '08:00', end_time: presetType === 'gym' ? '19:00' : '09:15', room: '', color: presetType === 'gym' ? '#10b981' : COLORS[st.courses.length % COLORS.length] };
+    const x = c || { name: '', type: presetType || (has('student') ? 'lecture' : 'activity'), days: [ui.day], start_time: presetType === 'gym' ? '18:00' : '08:00', end_time: presetType === 'gym' ? '19:00' : '09:15', room: '', color: presetType === 'gym' ? '#10b981' : COLORS[st.courses.length % COLORS.length] };
     const ph = { lecture: 'مثلاً: رياضيات ١٠١', gym: 'مثلاً: جيم — صدر وتراي', activity: 'مثلاً: دورة إنجليزي' };
     openSheet({
       title: c ? 'تعديل' : 'إضافة للجدول',
@@ -4224,7 +4244,8 @@ window.HAYATI_CONFIG = {
         '<div class="field"><label>المكان</label><input name="room" value="' + h(x.room || '') + '" placeholder="القاعة، المبنى، اسم الجيم… (اختياري)"></div>' +
         '<div class="field"><label>اللون</label><div class="colors" id="colorPick">' + COLORS.map((col) =>
           '<button type="button" style="background:' + col + '" data-c="' + col + '" class="' + (col === x.color ? 'on' : '') + '" aria-label="لون"></button>').join('') + '</div></div>' +
-        (c ? '<button class="btn danger block" type="button" id="delCourse">' + I('trash') + 'حذف</button>' : ''),
+        (c ? '<button class="btn danger block" type="button" id="delCourse">' + I('trash') + 'حذف</button>' :
+          '<button class="btn block" type="button" id="saveNext">' + I('plus') + 'احفظ وأضف ثاني</button>'),
       mount(root) {
         root.dataset.type = x.type || 'lecture';
         segPick(root, '#typeSeg', (k) => { root.dataset.type = k; root.querySelector('[name=name]').placeholder = ph[k]; });
@@ -4237,8 +4258,25 @@ window.HAYATI_CONFIG = {
         const del = root.querySelector('#delCourse');
         if (del) del.onclick = async () => { if (await ask('تحذفها من الجدول؟')) { S.remove('courses', c.id); closeSheet(); toast('انحذفت'); } };
         if (!c) setTimeout(() => root.querySelector('[name=name]').focus(), 300);
+        // يحفظ ويخلي النوع والأيام والوقت مثل ما هي، ويفضي الاسم والمكان بس
+        const next = root.querySelector('#saveNext');
+        if (next) next.onclick = () => {
+          try { save(root); } catch (e) { toast(e.message); return; }
+          root.querySelector('[name=name]').value = '';
+          root.querySelector('[name=room]').value = '';
+          const cols = [...root.querySelectorAll('#colorPick button')];
+          const on = cols.findIndex((b) => b.classList.contains('on'));
+          cols.forEach((b, i) => b.classList.toggle('on', i === (on + 1) % cols.length));
+          toast('انضافت ✓ · اكتب اللي بعدها');
+          root.querySelector('[name=name]').focus();
+        };
       },
       onSave(root) {
+        save(root);
+        toast(c ? 'تم التعديل' : 'انضاف للجدول ✓ — لا تنسى تحدّث التقويم');
+      },
+    });
+    function save(root) {
         const name = val(root, 'name');
         if (!name) throw new Error('اكتب الاسم');
         const days = [...root.querySelectorAll('#daysPick .on')].map((b) => Number(b.dataset.d));
@@ -4247,9 +4285,7 @@ window.HAYATI_CONFIG = {
         if (end && minutesOf(end) <= minutesOf(start)) throw new Error('وقت النهاية لازم بعد البداية');
         const col = root.querySelector('#colorPick .on');
         S.upsert('courses', Object.assign({}, c || {}, { name, type: root.dataset.type, days, start_time: start, end_time: end, room: val(root, 'room') || null, color: col ? col.dataset.c : COLORS[0] }));
-        toast(c ? 'تم التعديل' : 'انضاف للجدول ✓ — لا تنسى تحدّث التقويم');
-      },
-    });
+    }
   }
 
   // --- مهمة ---
@@ -4820,7 +4856,7 @@ window.HAYATI_CONFIG = {
       case 'go': go(el.dataset.tab); break;
       case 'edit-tx': txForm(st.transactions.find((t) => t.id === id)); break;
       case 'add-tx': txForm(); break;
-      case 'add-course': courseForm(); break;
+      case 'add-course': courseForm(null, el.dataset.type); break;
       case 'paste-sms': pasteSmsForm(); break;
       case 'budget': budgetForm(); break;
       case 'edit-course': courseForm(courseById(id)); break;
