@@ -362,3 +362,36 @@ test('settings has «اقترح ميزة» linking to the Instagram DM', async (
   await page.click('#settingsBtn');
   await expect(page.locator('#sheetBody a[href="https://ig.me/m/hayati.bh"]')).toContainText('اقترح ميزة');
 });
+
+test('English: interface switches to LTR English, data stays exactly as saved', async ({ page }) => {
+  await open(page);
+  await store(page, () => {
+    App.S.upsert('transactions', { id: 'x', kind: 'expense', amount: 5, merchant: 'علي', category: 'قهوة', occurred_at: new Date().toISOString() });
+    localStorage.setItem('hayati-lang', 'en');
+  });
+  await page.reload();
+  await page.waitForFunction(() => window.App && App.st);
+  expect(await page.evaluate(() => document.documentElement.dir)).toBe('ltr');
+  await expect(page.locator('button.tab[data-tab="today"]')).toContainText('Today');
+  await store(page, () => App.go('money'));
+  await expect(page.locator('#title')).toHaveText('Expenses');
+  // البيانات نفسها ما تترجمت
+  expect(await store(page, () => [App.st.transactions[0].merchant, App.st.transactions[0].category])).toEqual(['علي', 'قهوة']);
+  // نرجع للعربي من الإعدادات
+  await page.click('#settingsBtn');
+  await page.click('#sheetBody [data-lang="ar"]');
+  await page.waitForFunction(() => window.App && document.documentElement.dir === 'rtl');
+  await expect(page.locator('button.tab[data-tab="today"]')).toContainText('اليوم');
+});
+
+test('«رأيك بالتطبيق» builds an honest feedback message', async ({ page }) => {
+  await open(page);
+  await page.click('#settingsBtn');
+  await page.click('#sheetBody [data-set="feedback"]');
+  await page.waitForTimeout(400);
+  await page.click('#fbStars [data-n="4"]');
+  await page.fill('#fbWant', 'تذكير قبل الاختبار');
+  const text = await page.evaluate(() => HayatiFeedback.feedbackText(document.getElementById('sheetBody')));
+  expect(text).toContain('★★★★☆');
+  expect(text).toContain('أبي: تذكير قبل الاختبار');
+});
