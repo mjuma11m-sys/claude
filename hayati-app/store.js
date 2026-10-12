@@ -290,12 +290,8 @@
         }
         let res;
         if (op.op === 'delete') res = await sb.from(op.table).delete().eq('id', op.id);
-        else if (op.table === 'settings') res = await sb.from('settings').upsert(Object.assign({ user_id: session.user.id }, op.row));
-        else {
-          const row = Object.assign({}, op.row);
-          delete row.user_id;
-          res = await sb.from(op.table).upsert(row);
-        }
+        else if (op.table === 'settings') res = await sb.from('settings').upsert({ user_id: session.user.id, data: op.row, updated_at: new Date().toISOString() });
+        else res = await sb.from(op.table).upsert(wrap(op.row));
         if (res.error) throw res.error;
         state.pending.shift();
         save();
@@ -316,13 +312,14 @@
     emit();
     try {
       const results = await Promise.all(TABLES.map((t) => sb.from(t).select('*')));
-      results.forEach((r, i) => { if (r.error) throw r.error; state[TABLES[i]] = r.data.map(clean); });
+      results.forEach((r, i) => { if (r.error) throw r.error; state[TABLES[i]] = r.data.map((x) => clean(unwrap(x))); });
       const st = await sb.from('settings').select('*').maybeSingle();
       if (st.error) throw st.error;
-      if (st.data) {
+      const sd = st.data && st.data.data;
+      if (sd) {
         for (const f of SETTINGS_FIELDS) {
-          if (f === 'ingest_token') state.settings[f] = st.data[f];
-          else if (st.data[f] != null) state.settings[f] = typeof st.data[f] === 'string' && /^-?\d+(\.\d+)?$/.test(st.data[f]) ? Number(st.data[f]) : st.data[f];
+          if (f === 'ingest_token') state.settings[f] = sd[f];
+          else if (sd[f] != null) state.settings[f] = typeof sd[f] === 'string' && /^-?\d+(\.\d+)?$/.test(sd[f]) ? Number(sd[f]) : sd[f];
           else if (f !== 'focus_minutes') state.settings[f] = null;
         }
       }
@@ -349,6 +346,14 @@
     }
   }
 
+  // كل جدول بـSupabase شكله واحد: id + user_id + data (jsonb) + updated_at
+  function wrap(row) {
+    const data = Object.assign({}, row);
+    delete data.user_id;
+    return { id: row.id, data, updated_at: row.updated_at || new Date().toISOString() };
+  }
+  function unwrap(r) { return Object.assign({}, r.data || {}, { id: r.id }); }
+
   function clean(row) {
     const r = Object.assign({}, row);
     delete r.user_id;
@@ -368,7 +373,7 @@
       if (tx) {
         // رقم العملية = رقم الرسالة، فلو جهازين عالجوها بنفس الوقت ما تتكرر
         upsertSilently('transactions', tx);
-        const r = await sb.from('transactions').upsert(tx);
+        const r = await sb.from('transactions').upsert(wrap(tx));
         if (r.error) continue;
         added++;
       }

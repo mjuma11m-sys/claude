@@ -1,0 +1,242 @@
+-- «حياتي» — قاعدة بيانات Supabase
+-- شغّل هالملف كامل مرة وحدة: Supabase → SQL Editor → New query → الصق → Run
+-- كل جدول: سجلاتك أنت بس (Row Level Security)، والبيانات نفسها بحقل data (jsonb)
+
+create extension if not exists pgcrypto;
+
+create table if not exists public.transactions (
+  user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  id         uuid not null,
+  data       jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.transactions enable row level security;
+drop policy if exists "own rows" on public.transactions;
+create policy "own rows" on public.transactions for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+create table if not exists public.courses (
+  user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  id         uuid not null,
+  data       jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.courses enable row level security;
+drop policy if exists "own rows" on public.courses;
+create policy "own rows" on public.courses for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+create table if not exists public.tasks (
+  user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  id         uuid not null,
+  data       jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.tasks enable row level security;
+drop policy if exists "own rows" on public.tasks;
+create policy "own rows" on public.tasks for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+create table if not exists public.subscriptions (
+  user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  id         uuid not null,
+  data       jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.subscriptions enable row level security;
+drop policy if exists "own rows" on public.subscriptions;
+create policy "own rows" on public.subscriptions for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+create table if not exists public.goals (
+  user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  id         uuid not null,
+  data       jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.goals enable row level security;
+drop policy if exists "own rows" on public.goals;
+create policy "own rows" on public.goals for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+create table if not exists public.grades (
+  user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  id         uuid not null,
+  data       jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.grades enable row level security;
+drop policy if exists "own rows" on public.grades;
+create policy "own rows" on public.grades for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+create table if not exists public.study_sessions (
+  user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  id         uuid not null,
+  data       jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.study_sessions enable row level security;
+drop policy if exists "own rows" on public.study_sessions;
+create policy "own rows" on public.study_sessions for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+create table if not exists public.debts (
+  user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  id         uuid not null,
+  data       jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.debts enable row level security;
+drop policy if exists "own rows" on public.debts;
+create policy "own rows" on public.debts for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+create table if not exists public.habits (
+  user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  id         uuid not null,
+  data       jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.habits enable row level security;
+drop policy if exists "own rows" on public.habits;
+create policy "own rows" on public.habits for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+create table if not exists public.daily (
+  user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  id         uuid not null,
+  data       jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.daily enable row level security;
+drop policy if exists "own rows" on public.daily;
+create policy "own rows" on public.daily for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+create table if not exists public.lifts (
+  user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  id         uuid not null,
+  data       jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.lifts enable row level security;
+drop policy if exists "own rows" on public.lifts;
+create policy "own rows" on public.lifts for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+create table if not exists public.body (
+  user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  id         uuid not null,
+  data       jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.body enable row level security;
+drop policy if exists "own rows" on public.body;
+create policy "own rows" on public.body for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+create table if not exists public.cards (
+  user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  id         uuid not null,
+  data       jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.cards enable row level security;
+drop policy if exists "own rows" on public.cards;
+create policy "own rows" on public.cards for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+create table if not exists public.events (
+  user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  id         uuid not null,
+  data       jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.events enable row level security;
+drop policy if exists "own rows" on public.events;
+create policy "own rows" on public.events for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+create table if not exists public.shopping (
+  user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  id         uuid not null,
+  data       jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.shopping enable row level security;
+drop policy if exists "own rows" on public.shopping;
+create policy "own rows" on public.shopping for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+create table if not exists public.journal (
+  user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  id         uuid not null,
+  data       jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.journal enable row level security;
+drop policy if exists "own rows" on public.journal;
+create policy "own rows" on public.journal for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- الإعدادات: سطر واحد لكل مستخدم
+create table if not exists public.settings (
+  user_id    uuid primary key default auth.uid() references auth.users(id) on delete cascade,
+  data       jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+alter table public.settings enable row level security;
+drop policy if exists "own row" on public.settings;
+create policy "own row" on public.settings for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+create unique index if not exists settings_ingest_token on public.settings ((data->>'ingest_token'))
+  where data ? 'ingest_token';
+
+-- صندوق رسايل البنك (تجي من اختصار الآيفون)
+create table if not exists public.sms_inbox (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  body        text not null check (length(body) between 1 and 2000),
+  received_at timestamptz not null default now(),
+  processed   boolean not null default false
+);
+create index if not exists sms_inbox_pending on public.sms_inbox (user_id, processed, received_at);
+alter table public.sms_inbox enable row level security;
+drop policy if exists "own inbox read" on public.sms_inbox;
+create policy "own inbox read" on public.sms_inbox for select to authenticated using (user_id = auth.uid());
+drop policy if exists "own inbox update" on public.sms_inbox;
+create policy "own inbox update" on public.sms_inbox for update to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+-- ما فيه insert مباشر: الرسايل تدخل بس عن طريق ingest_sms تحت
+
+-- الاختصار يرسل {token, body}. الرمز يحدد المستخدم، وما يقدر أحد يقرا أي شي بهالدالة.
+create or replace function public.ingest_sms(token text, body text)
+returns json language plpgsql security definer set search_path = public as $$
+declare uid uuid;
+begin
+  if token is null or length(token) < 32 then raise exception 'invalid token' using errcode = '28000'; end if;
+  if body is null or length(btrim(body)) = 0 or length(body) > 2000 then raise exception 'invalid body' using errcode = '22023'; end if;
+  select s.user_id into uid from public.settings s where s.data->>'ingest_token' = token;
+  if uid is null then raise exception 'invalid token' using errcode = '28000'; end if;
+  if (select count(*) from public.sms_inbox i where i.user_id = uid and i.received_at > now() - interval '1 hour') >= 60 then
+    raise exception 'too many messages' using errcode = '54000';
+  end if;
+  insert into public.sms_inbox (user_id, body) values (uid, body);
+  return json_build_object('ok', true);
+end $$;
+revoke all on function public.ingest_sms(text, text) from public;
+grant execute on function public.ingest_sms(text, text) to anon, authenticated;
+
+-- المزامنة اللحظية بين الجوال والماك
+do $$
+declare t text;
+begin
+  foreach t in array array['transactions','courses','tasks','subscriptions','goals','grades','study_sessions','debts','habits','daily','lifts','body','cards','events','shopping','journal','settings','sms_inbox'] loop
+    begin
+      execute format('alter publication supabase_realtime add table public.%I', t);
+    exception when duplicate_object then null;
+    end;
+  end loop;
+end $$;
