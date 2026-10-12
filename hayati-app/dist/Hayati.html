@@ -6609,7 +6609,9 @@ window.HAYATI_CONFIG = {
     const roles = Array.isArray(s.roles) && s.roles.length ? s.roles : null;
     const who = roles ? ROLES.filter(([k]) => roles.includes(k)).map(([, e, l]) => e + ' ' + l).join(' · ') : 'كل الميزات ظاهرة';
     return '<div class="group-title">' + I('user') + 'ملفك</div><div class="menu">' +
-      '<button data-set="profile"><div class="ico" style="' + A.tint('#13636B') + '">' + I('user') + '</div><div style="flex:1;min-width:0"><b>' + h(s.name || 'اسمك ومين أنت') + '</b><small>' + h(who) + '</small></div>' + I('chevL') + '</button></div>' +
+      '<button data-set="profile"><div class="ico" style="' + A.tint('#13636B') + '">' + I('user') + '</div><div style="flex:1;min-width:0"><b>' + h(s.name || 'اسمك ومين أنت') + '</b><small>' + h(who) + '</small></div>' + I('chevL') + '</button>' +
+      // «سوّ ميزتك»: الاقتراح يروح رسالة على إنستقرام، وكل أسبوع وحدة تنبني
+      '<a class="menu-link" href="https://ig.me/m/hayati.bh" target="_blank" rel="noopener"><div class="ico" style="' + A.tint('#FF6B4A') + '">' + I('sparkle') + '</div><div style="flex:1;min-width:0"><b>💡 اقترح ميزة</b><small>كل أسبوع نبني اقتراح، ونذكر اسمك</small></div>' + I('chevL') + '</a></div>' +
       (prevExtra ? prevExtra.apply(this, arguments) : '');
   };
   const prevSet = E.settingsAction;

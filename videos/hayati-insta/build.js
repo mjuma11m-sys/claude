@@ -70,6 +70,21 @@ PAGES['story-teaser.jpg'] = [1080, 1920, BASE(1080, 1920) + `<div class="sea"></
 <div style="position:absolute;left:50%;top:1610px;transform:translateX(-50%);padding:14px 38px;border-radius:18px;background:#fff;color:#0E3B43;font-size:46px;direction:ltr;white-space:nowrap;box-shadow:0 20px 40px -20px rgba(0,0,0,.6)">@hayati.bh</div>
 <div class="grain"></div>`];
 
+// 6) حملة «سوّ ميزتك»: بوست الإعلان + ستوري فيه مكان لملصق «اسألني»
+PAGES['post-4-build-your-feature.jpg'] = [1080, 1350, BASE(1080, 1350) + `<div class="sea"></div>
+<div style="position:absolute;left:0;right:0;top:150px;text-align:center"><div style="font-size:64px;opacity:.85">🛠️ كل أسبوع</div>
+<div style="font-size:150px;line-height:1.05;margin-top:20px">سوّ <span class="c">ميزتك</span></div></div>
+<div style="position:absolute;left:90px;right:90px;top:560px;display:grid;gap:22px">${[['💬', 'اكتب الميزة اللي تبيها بالتعليقات'], ['🏛️', 'الديوانية تناقشها'], ['💻', 'تنبني بالتطبيق'], ['📣', 'ريل باسمك وحسابك']].map(([e, t], i) => `<div style="display:flex;align-items:center;gap:30px;padding:24px 34px;border-radius:32px;background:rgba(232,220,196,.08);border:2px solid rgba(232,220,196,.14)"><div style="font-size:30px;width:56px;height:56px;border-radius:50%;background:var(--coral);color:#2A0E07;display:grid;place-items:center">${i + 1}</div><div style="font-size:66px">${e}</div><div style="font-size:48px">${t}</div></div>`).join('')}</div>
+<div style="position:absolute;left:0;right:0;top:1230px;text-align:center;font-size:38px;font-weight:400;opacity:.7;direction:ltr">@hayati.bh</div>
+<div class="grain"></div>`];
+PAGES['story-build-your-feature.jpg'] = [1080, 1920, BASE(1080, 1920) + `<div class="sea"></div>
+<div style="position:absolute;left:0;right:0;top:300px;text-align:center"><div style="font-size:60px;opacity:.85">🛠️ كل أسبوع</div>
+<div style="font-size:150px;line-height:1.05;margin-top:16px">سوّ <span class="c">ميزتك</span></div>
+<div style="font-size:52px;font-weight:400;margin-top:36px;line-height:1.5">قول لنا وش تبي بـ «حياتي»<br>ونبنيها… <b>ونذكر اسمك</b> 👀</div></div>
+<div style="position:absolute;left:140px;right:140px;top:1000px;height:420px;border-radius:44px;border:4px dashed rgba(232,220,196,.35);opacity:.6"></div>
+<div style="position:absolute;left:0;right:0;top:1520px;text-align:center;font-size:44px;direction:ltr;opacity:.8">@hayati.bh</div>
+<div class="grain"></div>`];
+
 (async () => {
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   for (const [name, [w, h, html]] of Object.entries(PAGES)) {

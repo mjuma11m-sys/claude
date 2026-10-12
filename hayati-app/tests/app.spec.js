@@ -356,3 +356,9 @@ test('privacy policy page loads', async ({ page }) => {
   await expect(page.locator('h1')).toHaveText('سياسة الخصوصية');
   await expect(page.locator('body')).toContainText('30 لسنة 2018');
 });
+
+test('settings has «اقترح ميزة» linking to the Instagram DM', async ({ page }) => {
+  await open(page);
+  await page.click('#settingsBtn');
+  await expect(page.locator('#sheetBody a[href="https://ig.me/m/hayati.bh"]')).toContainText('اقترح ميزة');
+});
