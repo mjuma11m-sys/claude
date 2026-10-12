@@ -59,6 +59,7 @@ html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:var(--d
 #sugg{position:absolute;left:0;right:0;top:1500px;text-align:center;font-size:46px;font-weight:700;color:var(--pearl)}
 #sugg span{color:var(--coral)}
 #beta{position:absolute;left:50%;top:1215px;transform:translateX(-50%);padding:14px 40px;border-radius:999px;border:3px solid rgba(232,220,196,.45);color:var(--pearl);font-size:44px;font-weight:700;white-space:nowrap}
+#demo{position:absolute;left:0;right:0;top:1792px;text-align:center;font-size:30px;font-weight:400;color:var(--pearl);opacity:0}
 </style></head>
 <body><div id="stage">
   <div class="blob" id="b1" style="width:900px;height:900px"></div>
@@ -88,6 +89,7 @@ html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:var(--d
   <div id="beta">🛠️ قيد التطوير · نسخة تجريبية</div>
   <div id="sugg">💬 عندك <span>اقتراح</span>؟ اكتبه لنا بالتعليقات</div>
   <div id="cta">تبي تجربه أول؟ اكتب «حياتي» 👇</div>
+  <div id="demo">* لقطات ببيانات تجريبية</div>
   <div class="grain"></div>
 </div>
 <script>
@@ -119,8 +121,8 @@ const hookW = words($('hook'), 'كم صرفت على <span class="q">كوستا�
 const offW = words($('offT'), 'بدون نت؟ <span class="q" style="color:var(--coral)">يشتغل.</span>');
 const TITLES = [
   { s: 3.0, e: 6.3, html: 'بحث واحد ← <span class="acc">المجموع</span>' },
-  { s: 6.7, e: 10.3, html: 'يعرف <span class="acc">قبل</span> لا تتعدى الميزانية' },
-  { s: 10.7, e: 14.6, html: 'جسمك يقرر <span class="acc">تمرين اليوم</span> 🧤' },
+  { s: 6.7, e: 10.3, html: 'يتوقع وين <span class="acc">بتخلص</span> الشهر' },
+  { s: 10.7, e: 14.6, html: 'تقدير <span class="acc">جاهزيتك</span> للتمرين' },
   { s: 15.0, e: 18.2, html: 'حذفت بالغلط؟ <span class="acc">ترجع</span> بضغطة' },
 ];
 let titleIdx = -1;
@@ -186,6 +188,7 @@ window.setT = function (t) {
   $('undoTxt').textContent = done ? 'رجعت ✓' : 'انحذفت';
   $('undoBtn').style.display = done ? 'none' : '';
 
+  $('demo').style.opacity = 0.65 * seg(t, 3.0, 0.5) * (1 - seg(t, 18.0, 0.4));
   // ===== 3) بدون نت 18.5–20.6 =====
   const oIn = seg(t, 18.55, 0.5), oOut = seg(t, 20.25, 0.35, INOUT);
   $('plane').style.opacity = oIn * (1 - oOut);

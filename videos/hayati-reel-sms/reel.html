@@ -65,6 +65,7 @@ html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:var(--d
 #ovMask .to{color:#C2452B}
 #ovMask small{display:block;font-size:36px;margin-top:8px}
 .bubble{border-radius:44px 44px 12px 44px}
+#demo{position:absolute;left:0;right:0;top:1792px;text-align:center;font-size:30px;font-weight:400;color:var(--pearl);opacity:0}
 </style></head>
 <body><div id="stage">
   <div class="blob" id="b1" style="width:900px;height:900px"></div>
@@ -86,6 +87,7 @@ html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:var(--d
   <div id="beta">🛠️ قيد التطوير · نسخة تجريبية</div>
   <div id="cta">تبي تجربه أول؟ اكتب «حياتي» 👇</div>
   <div id="sugg">💬 عندك <span>اقتراح</span>؟ اكتبه لنا بالتعليقات</div>
+  <div id="demo">* لقطات ببيانات تجريبية</div>
   <div class="grain"></div>
 </div>
 <script>
@@ -119,7 +121,7 @@ function wordIn(ws, t, start, end, stagger) {
     w.style.opacity = kIn * (1 - kOut);
   });
 }
-const hookW = words($('hook'), 'هالرسالة سجّلت مصروفي <span class="q">بروحها</span>');
+const hookW = words($('hook'), 'الصق رسالة البنك… <span class="q">وتنسجل</span>');
 const TITLES = [
   { s: 3.1, e: 6.6, html: 'انسخها ← الصقها ← <span class="acc">خلاص</span>' },
   { s: 7.0, e: 10.6, html: 'وتعرف وين <span class="acc">راحت فلوسك</span>' },
@@ -161,6 +163,7 @@ window.setT = function (t) {
   pop($('ovMask'), t, 11.6, 14.8, 150, 1250, 'center');
   $('maskTo').textContent = t < 12.5 ? 'XX4821' : '••21';
   $('maskTo').style.opacity = t < 12.5 ? 0.3 : seg(t, 12.5, 0.3);
+  $('demo').style.opacity = 0.65 * seg(t, 3.0, 0.5) * (1 - seg(t, 14.6, 0.4));
   // 3) الختام 15–21
   const eIn = seg(t, 15.1, 0.5);
   $('logo').style.opacity = eIn; $('logo').style.transform = 'translateY(' + ((1 - eIn) * 40) + 'px) scale(' + lerp(0.94, 1, eIn) + ')';
