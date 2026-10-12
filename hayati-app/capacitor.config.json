@@ -9,6 +9,10 @@
   "plugins": {
     "LocalNotifications": {
       "iconColor": "#0E3B43"
+    },
+    "Keyboard": {
+      "resize": "native",
+      "resizeOnFullScreen": true
     }
   }
 }

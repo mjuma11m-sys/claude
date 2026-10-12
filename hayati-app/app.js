@@ -147,11 +147,21 @@
   const toastEl = document.getElementById('toast');
   let toastTimer;
   function toast(msg) {
+    // الورقة (dialog) تطلع فوق الصفحة كلها، فالرسالة تنحط داخلها عشان تبين (مثلاً «اكتب الاسم»)
+    const host = document.querySelector('dialog[open]') || document.body;
+    if (toastEl.parentNode !== host) {
+      host.appendChild(toastEl);
+      // لما تتسكر الورقة، الرسالة ترجع للصفحة وتكمّل («انضاف للجدول ✓»)
+      if (host !== document.body) host.addEventListener('close', () => { if (toastEl.parentNode === host) document.body.appendChild(toastEl); }, { once: true });
+    }
     toastEl.textContent = msg;
     toastEl.classList.add('show');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2400);
   }
+
+  // تركيز تلقائي على أول حقل، إلا بنسخة الآيفون (الكيبورد يدف الورقة وزر «حفظ» يختفي تحت الساعة)
+  function autoFocus(el) { if (el && !window.HayatiNative) el.focus(); }
 
   // نافذة تأكيد داخل الصفحة (confirm() ما يشتغل داخل claude.ai)
   function ask(message, okLabel) {
@@ -1133,7 +1143,7 @@
         const del = root.querySelector('#delTx');
         X('txMount', root, tx);
         if (del) del.onclick = async () => { if (await ask('تحذف هالعملية؟')) { S.remove('transactions', tx.id); closeSheet(); toast('انحذفت'); } };
-        if (!tx) setTimeout(() => root.querySelector('[name=amount]').focus(), 300);
+        if (!tx) setTimeout(() => autoFocus(root.querySelector('[name=amount]')), 300);
       },
       onSave(root) {
         const amount = parseAmount(val(root, 'amount'));
@@ -1176,7 +1186,7 @@
             (p.needs_review ? '<p class="small" style="color:var(--warn);margin:4px 0 0">مو متأكد ١٠٠٪، بتنضاف وعليها علامة «راجعها»</p>' : '<p class="small" style="color:var(--income);margin:4px 0 0">' + I('check') + ' فهمتها</p>') + '</div>';
         };
         ta.addEventListener('input', update);
-        setTimeout(() => ta.focus(), 300);
+        setTimeout(() => autoFocus(ta), 300);
       },
       onSave(root) {
         const tx = S.smsToTransaction(val(root, 'sms'), new Date().toISOString());
@@ -1238,7 +1248,7 @@
         };
         const del = root.querySelector('#delCourse');
         if (del) del.onclick = async () => { if (await ask('تحذفها من الجدول؟')) { S.remove('courses', c.id); closeSheet(); toast('انحذفت'); } };
-        if (!c) setTimeout(() => root.querySelector('[name=name]').focus(), 300);
+        if (!c) setTimeout(() => autoFocus(root.querySelector('[name=name]')), 300);
         // يحفظ ويخلي النوع والأيام والوقت مثل ما هي، ويفضي الاسم والمكان بس
         const next = root.querySelector('#saveNext');
         if (next) next.onclick = () => {
@@ -1249,7 +1259,7 @@
           const on = cols.findIndex((b) => b.classList.contains('on'));
           cols.forEach((b, i) => b.classList.toggle('on', i === (on + 1) % cols.length));
           toast('انضافت ✓ · اكتب اللي بعدها');
-          root.querySelector('[name=name]').focus();
+          autoFocus(root.querySelector('[name=name]'));
         };
       },
       onSave(root) {
@@ -1294,7 +1304,7 @@
         const del = root.querySelector('#delTask');
         X('taskMount', root, t);
         if (del) del.onclick = async () => { if (await ask('تحذف المهمة؟')) { S.remove('tasks', t.id); closeSheet(); toast('انحذفت'); } };
-        if (!t) setTimeout(() => root.querySelector('[name=title]').focus(), 300);
+        if (!t) setTimeout(() => autoFocus(root.querySelector('[name=title]')), 300);
       },
       onSave(root) {
         const title = val(root, 'title');
@@ -1491,7 +1501,7 @@
         '<div class="chips" style="justify-content:center;margin:12px 0">' + [5, 10, 20, 50].map((n) => '<button type="button" class="chip" data-v="' + n + '">' + n + '</button>').join('') + '</div>',
       mount(root) {
         root.querySelector('.chips').onclick = (e) => { const b = e.target.closest('[data-v]'); if (b) root.querySelector('[name=amt]').value = Number(b.dataset.v).toFixed(3); };
-        setTimeout(() => root.querySelector('[name=amt]').focus(), 300);
+        setTimeout(() => autoFocus(root.querySelector('[name=amt]')), 300);
       },
       onSave(root) {
         const a = parseAmount(val(root, 'amt'));
@@ -1524,7 +1534,7 @@
         segPick(root, '#dirSeg', (k) => { root.dataset.dir = k; });
         const del = root.querySelector('#delDebt');
         if (del) del.onclick = async () => { if (await ask('تحذفها؟')) { S.remove('debts', d.id); closeSheet(); toast('انحذفت'); } };
-        if (!d) setTimeout(() => root.querySelector('[name=amount]').focus(), 300);
+        if (!d) setTimeout(() => autoFocus(root.querySelector('[name=amount]')), 300);
       },
       onSave(root) {
         const amount = parseAmount(val(root, 'amount'));

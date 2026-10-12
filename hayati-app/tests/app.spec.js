@@ -548,3 +548,30 @@ test('iPhone build (www/ + real Capacitor core): plugins register through the na
   // iOS يقرا «at» كـ Date (NSDate)، مو نص
   expect(lecture).toEqual({ title: 'بعد 10 دقايق: تسويق دولي', isDate: true, min: 12 * 60 + 50 });
 });
+
+// زر «حفظ» بورقة الجدول: لو فيه نقص، الرسالة تبين فوق الورقة (قبل كانت تطلع وراها فيبين إن الزر ما يشتغل)
+test('course sheet: a missing name shows the message on top of the sheet, then saving works', async ({ page }) => {
+  await open(page);
+  await store(page, () => { App.ui.studySeg = 'schedule'; App.go('schedule'); });
+  await page.click('#addBtn');
+  await page.fill('#sheetBody [name=name]', '');
+  await page.click('#sheetSave');
+  const t = page.locator('dialog#sheet[open] .toast');
+  await expect(t).toBeVisible();
+  await expect(t).toHaveText('اكتب الاسم');
+  await page.fill('#sheetBody [name=name]', 'رياضيات');
+  await page.click('#sheetSave');
+  await expect(page.locator('dialog#sheet')).not.toHaveAttribute('open', '');
+  expect(await store(page, () => App.st.courses.map((c) => c.name))).toEqual(['رياضيات']);
+  // بعد ما تتسكر الورقة، الرسالة ترجع للصفحة وتبين
+  await expect(page.locator('body > .toast')).toHaveText(/انضاف للجدول/);
+});
+
+test('iPhone build: sheets do not pop the keyboard by themselves', async ({ page }) => {
+  await page.addInitScript(() => { window.HayatiNative = { saveFile: async () => true }; });
+  await open(page);
+  await store(page, () => { App.ui.studySeg = 'schedule'; App.go('schedule'); });
+  await page.click('#addBtn');
+  await page.waitForTimeout(500);
+  expect(await store(page, () => document.activeElement && document.activeElement.name)).not.toBe('name');
+});
