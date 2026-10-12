@@ -39,7 +39,9 @@ sleep 20
 xcrun simctl io "$UDID" screenshot "$OUT/launch.png" >/dev/null
 
 echo "▶ التطبيق شغّال؟"
-if ! xcrun simctl spawn "$UDID" launchctl list | grep -q "UIKitApplication:$BUNDLE"; then
+# نقرا القائمة كاملة أول: grep -q يقفل الأنبوب بدري فـ launchctl يطيح بـ SIGPIPE ومع pipefail يبين كأن التطبيق طاح
+PROCS="$(xcrun simctl spawn "$UDID" launchctl list)"
+if ! grep -q "UIKitApplication:$BUNDLE" <<<"$PROCS"; then
   echo "❌ التطبيق طاح بعد الفتح"; exit 1
 fi
 
