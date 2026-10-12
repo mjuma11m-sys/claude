@@ -1,0 +1,14 @@
+# Vercel ينشر التطبيق بس — كل شي ثاني بالريبو (الفيديوهات، صوتك، السكلات) ما ينرفع
+/*
+!/hayati-app
+!/vercel.json
+/hayati-app/tests
+/hayati-app/node_modules
+/hayati-app/brand
+/hayati-app/dist
+/hayati-app/supabase
+/hayati-app/README.md
+/hayati-app/package.json
+/hayati-app/package-lock.json
+/hayati-app/playwright.config.js
+/hayati-app/build.js
