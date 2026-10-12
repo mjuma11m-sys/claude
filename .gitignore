@@ -19,3 +19,8 @@ videos/hayati-brand/own/voice.m4a
 hayati-app/node_modules/
 hayati-app/test-results/
 hayati-app/playwright-report/
+videos/hayati-promo/*.ttf
+videos/hayati-promo/prev_*.jpg
+videos/hayati-promo/promo_video.mp4
+videos/hayati-promo/sfx.wav
+videos/hayati-promo/render.log
