@@ -17,6 +17,7 @@ Personal life-OS PWA: expenses, budgets, bank/BenefitPay SMS parsing, study sche
 | `motion.js` | Motion layer: view entrance, sheet enter/exit, count-up, bar/ring tweens, toggle feedback |
 | `config.js` | Supabase URL/anon key (empty) |
 | `sw.js` | Service worker: opens offline, iOS notifications via `showNotification`, tap opens the app. Add any new script to `SHELL` (a test checks) |
+| `find.js` | Search across expenses/tasks/schedule/matches (Arabic-normalised, total spent) + undo bar after any delete (wraps `S.remove`) |
 | `pwa.js` | App icon badge = today's + overdue undone tasks (toggle in settings) |
 
 Run locally: `npx serve hayati-app` (artifact db unavailable outside claude.ai → falls back to localStorage/Supabase).

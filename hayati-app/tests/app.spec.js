@@ -207,3 +207,43 @@ test.describe('offline', () => {
     await context.setOffline(false);
   });
 });
+
+test('search: Arabic spelling variants, amounts, total spent, opens the match', async ({ page }) => {
+  await open(page);
+  await store(page, () => {
+    const d = (n) => { const x = new Date(); x.setDate(x.getDate() - n); return x.toISOString(); };
+    App.S.upsert('transactions', { id: 'a', kind: 'expense', amount: 3.75, merchant: 'Costa Coffee', category: 'قهوة', occurred_at: d(1) });
+    App.S.upsert('transactions', { id: 'b', kind: 'expense', amount: 2.5, merchant: 'COSTA', category: 'قهوة', occurred_at: d(70) });
+    App.S.upsert('transactions', { id: 'c', kind: 'expense', amount: 12, merchant: 'بنزين بابكو', category: 'مواصلات وبنزين', occurred_at: d(2) });
+    App.S.upsert('tasks', { id: 't', title: 'واجب المحاسبة', kind: 'homework' });
+  });
+  const r = await store(page, () => {
+    const n = (q) => { const x = HayatiFind.search(q); return [x.tx.length, x.tasks.length]; };
+    return { costa: n('costa'), coffee: n('قهوه'), amount: n('3.75'), task: n('المحاسبه'), none: n('zzz') };
+  });
+  expect(r).toEqual({ costa: [2, 0], coffee: [2, 0], amount: [1, 0], task: [0, 1], none: [0, 0] });
+  await page.click('#findBtn');
+  await page.fill('#findQ', 'costa');
+  await expect(page.locator('.find-sum b')).toContainText('6.250');
+  await page.click('[data-find="tx"][data-id="a"]');
+  await expect(page.locator('#sheetBody [name=merchant]')).toHaveValue('Costa Coffee');
+});
+
+test('undo brings back a deleted item, and a batch delete undoes in one tap', async ({ page }) => {
+  await open(page);
+  await store(page, () => {
+    App.S.upsert('tasks', { id: 'u1', title: 'مهمة', kind: 'homework' });
+    App.S.remove('tasks', 'u1');
+  });
+  await expect(page.locator('.undo-bar')).toHaveClass(/show/);
+  await expect(page.locator('.undo-bar span')).toHaveText('انحذفت');
+  await page.click('.undo-bar button');
+  expect(await store(page, () => App.st.tasks.map((t) => t.title))).toEqual(['مهمة']);
+  await store(page, () => {
+    for (const id of ['s1', 's2', 's3']) App.S.upsert('shopping', { id, name: id });
+    for (const id of ['s1', 's2', 's3']) App.S.remove('shopping', id);
+  });
+  await expect(page.locator('.undo-bar span')).toHaveText('انحذف 3');
+  await page.click('.undo-bar button');
+  expect(await store(page, () => App.st.shopping.length)).toBe(3);
+});
