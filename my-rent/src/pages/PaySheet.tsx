@@ -17,8 +17,9 @@ function reminderUrl(unit: Unit, months: string[], amount: number) {
 }
 
 /** تفاصيل الوحدة + المتأخرات + تسجيل دفعة + الإيصالات */
-export function PaySheet({ unit, onClose, onReceipt }: { unit: Unit | null; onClose: () => void; onReceipt: (p: Payment, u: Unit) => void }) {
-  const { data, pay, unpay } = useStore();
+export function PaySheet({ unit, onClose, onReceipt, onEdit }: { unit: Unit | null; onClose: () => void; onReceipt: (p: Payment, u: Unit) => void; onEdit: (u: Unit) => void }) {
+  const { data, pay, unpay, vacate, deleteUnit, saveUnit } = useStore();
+  const [confirmVacate, setConfirmVacate] = useState(false);
   const toast = useToast();
   const [shown, setShown] = useState<Unit | null>(unit);
   const [month, setMonth] = useState("");
@@ -37,6 +38,7 @@ export function PaySheet({ unit, onClose, onReceipt }: { unit: Unit | null; onCl
     setAmount(first ? fmt(first.left) : "");
     setMethod("BenefitPay");
     setError("");
+    setConfirmVacate(false);
   }, [unit]);
 
   const u = shown;
@@ -116,6 +118,25 @@ export function PaySheet({ unit, onClose, onReceipt }: { unit: Unit | null; onCl
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+
+          <div className="unit-actions">
+            <button type="button" className="btn btn-ghost press" onClick={() => onEdit(u)}>{u.tenant ? "تعديل" : "أضف مستأجر"}</button>
+            {u.tenant && !confirmVacate && <button type="button" className="btn btn-ghost press danger-text" onClick={() => setConfirmVacate(true)}>إخلاء الوحدة</button>}
+            {!u.tenant && !data.payments.some((p) => p.unitId === u.id) && (
+              <button type="button" className="btn btn-ghost press danger-text" onClick={() => { if (deleteUnit(u.id)) { onClose(); toast({ text: `انحذفت ${u.name}`, undo: () => saveUnit(u) }); } }}>حذف الوحدة</button>
+            )}
+          </div>
+          {confirmVacate && u.tenant && (
+            <div className="confirm-box" role="alert">
+              <div className="strong">إخلاء {u.name} من {u.tenant.name}؟</div>
+              {arr.amount > 0 && <div className="small">عليه متأخرات <Money fils={arr.amount} /> — بعد الإخلاء ما تبين بالمتأخرات. سجّلها أو اطبع كشف قبل.</div>}
+              <div className="small muted">الدفعات السابقة تبقى بالسجل والتقارير.</div>
+              <div className="grid-2">
+                <button type="button" className="btn btn-danger press" onClick={() => { const before = u; vacate(u.id); onClose(); toast({ text: `${u.name} صارت شاغرة`, undo: () => saveUnit(before) }); }}>أكيد، أخلِها</button>
+                <button type="button" className="btn btn-ghost press" onClick={() => setConfirmVacate(false)}>إلغاء</button>
+              </div>
             </div>
           )}
         </div>

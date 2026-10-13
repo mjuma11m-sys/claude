@@ -170,3 +170,31 @@ a.icon-btn { color: var(--brand); }
   #receipt, #receipt * { visibility: visible !important; }
   #receipt { position: fixed; inset: 0 auto auto 0; width: 100%; border: 0; }
 }
+
+/* DW-014: نموذج الوحدة، الإخلاء، التقارير */
+.field { display: grid; gap: 4px; font-size: 13px; color: var(--muted); min-width: 0; }
+.field .input { color: var(--text); }
+.form-sep { margin-top: 6px; padding-top: 10px; border-top: 1px solid var(--line); font-weight: 600; font-size: 14px; }
+.unit-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.unit-actions .btn { flex: 1; min-width: 120px; }
+.danger-text { color: var(--late) !important; }
+.confirm-box { display: grid; gap: 8px; padding: 14px; border-radius: var(--radius); border: 1px solid var(--late); background: var(--late-soft); animation: fade-in 200ms var(--ease-out); }
+.grid-3 { display: grid; gap: 10px; grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 600px) { .grid-3 { grid-template-columns: 1fr 1fr; } .grid-3 > :last-child { grid-column: 1 / -1; } }
+.kpi .money { white-space: nowrap; }
+.dates input { min-width: 0; width: 100%; }
+@media (max-width: 480px) { .grid-2.dates { grid-template-columns: 1fr; } }
+.kpi { display: grid; gap: 4px; padding: 12px; }
+.kpi .money { font-family: var(--font-display); font-size: 17px; }
+.legend { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); }
+.legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.lg-in, .bar-in { background: var(--paid); fill: var(--paid); }
+.lg-out, .bar-out { background: var(--late); fill: var(--late); opacity: .85; }
+.chart { width: 100%; height: auto; display: block; margin-block: 4px 8px; }
+.chart .axis { stroke: var(--line); stroke-width: 1; }
+.chart .tick { fill: var(--muted); font-size: 10px; font-family: var(--font); }
+.chart rect { transform-box: fill-box; transform-origin: bottom; animation: grow-y 600ms var(--ease-out) backwards; }
+@keyframes grow-y { from { transform: scaleY(0); } }
+.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tbl th, .tbl td { text-align: start; padding: 8px 4px; border-top: 1px solid var(--line); }
+.tbl th { color: var(--muted); font-weight: 500; font-size: 12px; }

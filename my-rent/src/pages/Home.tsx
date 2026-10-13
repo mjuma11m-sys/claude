@@ -1,5 +1,5 @@
 import { useStore } from "../data/store";
-import { arrears, balances, budget, collection, monthName, unitStatus } from "../data/logic";
+import { arrears, balances, budget, collection, contractAlerts, monthName, unitStatus } from "../data/logic";
 import type { Unit } from "../data/types";
 import { Money, StatusPill } from "../theme/AppShell";
 import { useStagger } from "../theme/motion";
@@ -13,6 +13,7 @@ export function Home({ onOpenUnit, go }: { onOpenUnit: (u: Unit) => void; go: (i
   const b = budget(data);
   const bank = balances(data);
   const attention = [...c.late, ...c.due];
+  const contracts = contractAlerts(data);
   const pct = c.expected ? Math.round((c.collected / c.expected) * 100) : 0;
 
   return (
@@ -55,6 +56,22 @@ export function Home({ onOpenUnit, go }: { onOpenUnit: (u: Unit) => void; go: (i
           </ul>
         )}
       </section>
+
+      {contracts.length > 0 && (
+        <section>
+          <SectionHead title="عقود تنتهي قريب" />
+          <ul className="rows rows-tap card-list">
+            {contracts.map(({ unit: u, left }) => (
+              <li key={u.id}>
+                <button className="row-btn press" onClick={() => onOpenUnit(u)}>
+                  <span><span className="strong">{u.name}</span> <span className="muted small">· {u.tenant?.name}</span></span>
+                  <span className={`pill ${left < 0 ? "pill-late" : "pill-due"}`}>{left < 0 ? "انتهى" : left === 0 ? "اليوم" : <>بعد <span className="num">{left}</span> يوم</>}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <div className="grid-2">
         <button className="card tappable press tile" onClick={() => go("budget")}>

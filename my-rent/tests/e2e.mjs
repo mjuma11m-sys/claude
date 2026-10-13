@@ -17,7 +17,7 @@ async function waitServer() {
 try {
   await waitServer();
   const browser = await chromium.launch({ executablePath: exe });
-  const pages = ["home", "tenants", "budget", "bank", "house", "vendors", "settings"];
+  const pages = ["home", "tenants", "budget", "bank", "reports", "house", "vendors", "settings"];
 
   // 1) كل الشاشات بكل الأحجام: بدون scroll أفقي وبدون أخطاء
   for (const [w, h] of [[390, 844], [820, 1180], [1280, 800]]) {
@@ -29,7 +29,7 @@ try {
       const over = await p.evaluate(() => document.documentElement.scrollWidth > innerWidth);
       if (over) ok(false, `no h-scroll ${w}px #${id}`);
     }
-    ok(errors.length === 0, `${w}px: 7 شاشات بدون أخطاء وبدون scroll أفقي`, errors.join(" | "));
+    ok(errors.length === 0, `${w}px: 8 شاشات بدون أخطاء وبدون scroll أفقي`, errors.join(" | "));
     await p.close();
   }
 
@@ -99,7 +99,49 @@ try {
   await p.goto(URL + "#tenants"); await p.waitForTimeout(700);
   ok(await p.locator(".unit-card").count() === 7, "التجريبي يرجع");
 
-  // 8) تقليل الحركة: الرقم يطلع على طول
+  // 8) DW-014: وحدة جديدة + تعديل + إخلاء + حذف
+  await p.goto(URL + "#tenants"); await p.evaluate(() => localStorage.clear()); await p.reload(); await p.waitForTimeout(700);
+  const n0 = await p.locator(".unit-card").count();
+  await p.locator(".fab").click(); await p.waitForTimeout(350);
+  await p.getByRole("button", { name: "أضف الوحدة" }).click();
+  ok(await p.locator(".unit-form .field-error").isVisible(), "نموذج الوحدة يرفض بدون اسم");
+  await p.fill("#u-name", "شقة 9"); await p.fill("#u-rent", "210"); await p.fill("#u-day", "28"); await p.fill("#u-tenant", "مستأجر تجريبي");
+  await p.getByRole("button", { name: "أضف الوحدة" }).click(); await p.waitForTimeout(400);
+  ok(await p.locator(".unit-card").count() === n0 + 1, "الوحدة الجديدة انضافت");
+  await p.locator(".unit-card", { hasText: "شقة 9 " }).click(); await p.waitForTimeout(350);
+  ok(await p.locator(".dlg .pill-due").count() >= 1 && await p.locator(".arrears").count() === 0, "مستأجر جديد = مستحق بدون متأخرات قديمة");
+  await p.getByRole("button", { name: "تعديل" }).click(); await p.waitForTimeout(400);
+  await p.fill("#u-rent", "225.500"); await p.getByRole("button", { name: "احفظ التعديل" }).click(); await p.waitForTimeout(400);
+  ok((await p.locator(".unit-card", { hasText: "شقة 9 " }).innerText()).includes("225.500"), "تعديل الإيجار انحفظ");
+  await p.locator(".unit-card", { hasText: "شقة 9 " }).click(); await p.waitForTimeout(350);
+  await p.getByRole("button", { name: "إخلاء الوحدة" }).click();
+  await p.getByRole("button", { name: "أكيد، أخلِها" }).click(); await p.waitForTimeout(400);
+  ok((await p.locator(".unit-card", { hasText: "شقة 9 " }).innerText()).includes("شاغر"), "الإخلاء خلّى الوحدة شاغرة");
+  await p.locator(".unit-card", { hasText: "شقة 9 " }).click(); await p.waitForTimeout(350);
+  await p.getByRole("button", { name: "حذف الوحدة" }).click(); await p.waitForTimeout(400);
+  ok(await p.locator(".unit-card").count() === n0, "حذف وحدة شاغرة بدون دفعات");
+  await p.locator(".unit-card", { hasText: "شقة 1 " }).click(); await p.waitForTimeout(350);
+  ok(await p.getByRole("button", { name: "حذف الوحدة" }).count() === 0, "وحدة عليها دفعات ما ينعرض لها حذف");
+  await p.keyboard.press("Escape"); await p.waitForTimeout(300);
+
+  // 9) عقود تنتهي + التقارير + CSV
+  await p.goto(URL + "#home"); await p.waitForTimeout(700);
+  ok(await p.getByRole("heading", { name: "عقود تنتهي قريب" }).isVisible(), "تنبيه العقد اللي ينتهي خلال 30 يوم");
+  await p.goto(URL + "#reports"); await p.waitForTimeout(1200);
+  ok(await p.locator(".chart rect").count() === 12 && await p.locator(".tbl tbody tr").count() === 6, "التقارير: 6 أشهر × دخل/مصروف");
+  const [dl] = await Promise.all([p.waitForEvent("download"), p.getByRole("button", { name: "تصدير CSV للمحاسب" }).click()]);
+  const csv = (await (await import("node:fs")).promises.readFile(await dl.path(), "utf8"));
+  ok(csv.charCodeAt(0) === 0xFEFF && csv.includes("إيجار") && csv.includes("مصروف"), "CSV فيه BOM وعربي", dl.suggestedFilename());
+
+  // 10) PWA: يفتح بدون إنترنت
+  const oc = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const op = await oc.newPage();
+  await op.goto(URL); await op.evaluate(() => navigator.serviceWorker.ready); await op.reload(); await op.waitForTimeout(800);
+  await oc.setOffline(true); await op.reload(); await op.waitForTimeout(1000);
+  ok(await op.locator(".hero-card").isVisible(), "يفتح بدون إنترنت (service worker)");
+  await oc.close();
+
+  // 11) تقليل الحركة: الرقم يطلع على طول
   const r = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
   await r.goto(URL + "#home"); await r.waitForTimeout(600);
   const v0 = await r.locator(".hero-amount").innerText();

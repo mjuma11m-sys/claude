@@ -15,9 +15,9 @@ export function demoData(now = new Date()): Data {
     trackFrom: m2,
     units: [
       { id: "u1", name: "شقة 1", building: "عمارة المالكية", rent: 180000, dueDay: 1, tenant: { name: "أحمد عبدالله", phone: "3xxx 1101", since: "2024-03" } },
-      { id: "u2", name: "شقة 2", building: "عمارة المالكية", rent: 220000, dueDay: 5, tenant: { name: "يوسف محمد", phone: "3xxx 1102", since: "2025-01" } },
+      { id: "u2", name: "شقة 2", building: "عمارة المالكية", rent: 220000, dueDay: 5, tenant: { name: "يوسف محمد", phone: "3xxx 1102", since: "2025-01", until: isoDay(new Date(y, mo, now.getDate() + 20)) } },
       { id: "u3", name: "شقة 3", building: "عمارة المالكية", rent: 200000, dueDay: 1, tenant: { name: "عائلة سلمان", phone: "3xxx 1103", since: "2023-09" } },
-      { id: "u4", name: "شقة 4", building: "عمارة المالكية", rent: 190000, dueDay: 10, tenant: { name: "خالد ناصر", phone: "3xxx 1104", since: "2025-06" } },
+      { id: "u4", name: "شقة 4", building: "عمارة المالكية", rent: 190000, dueDay: 10, tenant: { name: "خالد ناصر", phone: "3xxx 1104", since: "2025-06", until: isoDay(new Date(y + 1, 5, 30)) } },
       { id: "u5", name: "شقة 5", building: "عمارة المالكية", rent: 200000, dueDay: 28, tenant: { name: "مريم حسن", phone: "3xxx 1105", since: m1 } },
       { id: "u6", name: "محل 1", building: "شارع المالكية", rent: 450000, dueDay: 1, tenant: { name: "مطعم الريف", phone: "17xx 2201", since: "2022-11" } },
       { id: "u7", name: "محل 2", building: "شارع المالكية", rent: 380000, dueDay: 15 },

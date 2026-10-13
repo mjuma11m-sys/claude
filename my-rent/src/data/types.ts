@@ -8,7 +8,7 @@ export type Unit = {
   building: string;
   rent: Fils;
   dueDay: number; // يوم الاستحقاق بالشهر
-  tenant?: { name: string; phone: string; since: string };
+  tenant?: { name: string; phone: string; since: string; until?: string }; // since = YYYY-MM · until = YYYY-MM-DD نهاية العقد
 };
 
 export type Payment = { id: string; unitId: string; month: string; amount: Fils; method: Method; date: string };

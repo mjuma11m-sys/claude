@@ -13,15 +13,17 @@ import { Maintenance } from "./pages/Maintenance";
 import { Vendors } from "./pages/Vendors";
 import { Settings } from "./pages/Settings";
 import { ReceiptSheet, type ReceiptRef } from "./pages/Receipt";
+import { UnitForm } from "./pages/UnitForm";
+import { Reports } from "./pages/Reports";
 import { PaySheet, PickUnitSheet } from "./pages/PaySheet";
 import "./app.css";
 import symbolUrl from "../brand/symbol.svg";
 
-const PAGES = ["home", "tenants", "budget", "bank", "house", "vendors", "settings"] as const;
+const PAGES = ["home", "tenants", "budget", "bank", "reports", "house", "vendors", "settings"] as const;
 type Page = (typeof PAGES)[number];
 const TITLES: Record<Page, string> = {
   home: "الرئيسية", tenants: "المستأجرين", budget: "الميزانية", bank: "بنك العائلة",
-  house: "الصيانة", vendors: "الموردين", settings: "الإعدادات",
+  reports: "التقارير", house: "الصيانة", vendors: "الموردين", settings: "الإعدادات",
 };
 
 const fromHash = (): Page => {
@@ -36,6 +38,7 @@ function Idarati() {
   const [picking, setPicking] = useState(false);
   const [expense, setExpense] = useState(false);
   const [receipt, setReceipt] = useState<ReceiptRef>(null);
+  const [editing, setEditing] = useState<{ unit: Unit | null } | null>(null);
 
   useEffect(() => {
     const onHash = () => setPage(fromHash());
@@ -56,7 +59,8 @@ function Idarati() {
   }));
 
   const onAdd =
-    page === "home" || page === "tenants" ? () => setPicking(true)
+    page === "home" ? () => setPicking(true)
+    : page === "tenants" ? () => setEditing({ unit: null })
     : page === "budget" ? () => setExpense(true)
     : undefined;
 
@@ -64,6 +68,7 @@ function Idarati() {
   const closePick = useCallback(() => setPicking(false), []);
   const closeExpense = useCallback(() => setExpense(false), []);
   const closeReceipt = useCallback(() => setReceipt(null), []);
+  const closeEditing = useCallback(() => setEditing(null), []);
 
   return (
     <AppShell
@@ -77,11 +82,13 @@ function Idarati() {
       {page === "tenants" && <Tenants onOpenUnit={setUnit} />}
       {page === "budget" && <Budget />}
       {page === "bank" && <Bank />}
+      {page === "reports" && <Reports />}
       {page === "house" && <Maintenance />}
       {page === "vendors" && <Vendors />}
       {page === "settings" && <Settings />}
 
-      <PaySheet unit={unit} onClose={closeUnit} onReceipt={(payment, u) => { setUnit(null); setReceipt({ payment, unit: u }); }} />
+      <PaySheet unit={unit} onClose={closeUnit} onReceipt={(payment, u) => { setUnit(null); setReceipt({ payment, unit: u }); }} onEdit={(u) => { setUnit(null); setEditing({ unit: u }); }} />
+      <UnitForm open={!!editing} unit={editing?.unit ?? null} onClose={closeEditing} />
       <ReceiptSheet value={receipt} onClose={closeReceipt} />
       <PickUnitSheet open={picking} onClose={closePick} onPick={(u) => { setPicking(false); setUnit(u); }} />
       <ExpenseSheet open={expense} onClose={closeExpense} />

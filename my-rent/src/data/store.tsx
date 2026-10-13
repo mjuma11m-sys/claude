@@ -1,6 +1,6 @@
 // مخزن البيانات: useReducer + localStorage. لما ينربط Supabase، يتبدل load/save بس والشاشات ما تتغيّر.
 import { createContext, useContext, useEffect, useReducer, useState, type ReactNode } from "react";
-import type { Data, Expense, Method, Payment } from "./types";
+import type { Data, Expense, Method, Payment, Unit } from "./types";
 import { demoData, emptyData } from "./demo";
 import { isoDay } from "./logic";
 
@@ -12,6 +12,9 @@ type Action =
   | { type: "expense"; expense: Expense }
   | { type: "unexpense"; id: string }
   | { type: "task"; id: string }
+  | { type: "unit"; unit: Unit }
+  | { type: "vacate"; id: string }
+  | { type: "delunit"; id: string }
   | { type: "replace"; data: Data };
 
 function reducer(state: Data, a: Action): Data {
@@ -21,6 +24,13 @@ function reducer(state: Data, a: Action): Data {
     case "expense": return { ...state, expenses: [a.expense, ...state.expenses] };
     case "unexpense": return { ...state, expenses: state.expenses.filter((e) => e.id !== a.id) };
     case "task": return { ...state, tasks: state.tasks.map((t) => (t.id === a.id ? { ...t, done: !t.done } : t)) };
+    case "unit": {
+      const exists = state.units.some((u) => u.id === a.unit.id);
+      return { ...state, units: exists ? state.units.map((u) => (u.id === a.unit.id ? a.unit : u)) : [...state.units, a.unit] };
+    }
+    case "vacate": return { ...state, units: state.units.map((u) => (u.id === a.id ? { ...u, tenant: undefined } : u)) };
+    case "delunit": // بس الوحدة اللي ما عليها دفعات — السجل المالي ما ينحذف
+      return state.payments.some((p) => p.unitId === a.id) ? state : { ...state, units: state.units.filter((u) => u.id !== a.id) };
     case "replace": return a.data;
   }
 }
@@ -53,6 +63,9 @@ type Store = {
   addExpense: (catId: string, label: string, amount: number) => Expense;
   unexpense: (id: string) => void;
   toggleTask: (id: string) => void;
+  saveUnit: (unit: Omit<Unit, "id"> & { id?: string }) => Unit;
+  vacate: (id: string) => void;
+  deleteUnit: (id: string) => boolean;
   replace: (data: Data) => void;
   resetDemo: () => void;
   eraseAll: () => void;
@@ -90,6 +103,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     unexpense: (id) => dispatch({ type: "unexpense", id }),
     toggleTask: (id) => dispatch({ type: "task", id }),
+    saveUnit: (u) => {
+      const unit = { ...u, id: u.id ?? "u" + uid() } as Unit;
+      dispatch({ type: "unit", unit });
+      return unit;
+    },
+    vacate: (id) => dispatch({ type: "vacate", id }),
+    deleteUnit: (id) => {
+      if (data.payments.some((p) => p.unitId === id)) return false;
+      dispatch({ type: "delunit", id });
+      return true;
+    },
     replace: (d) => dispatch({ type: "replace", data: d }),
     resetDemo: () => dispatch({ type: "replace", data: demoData() }),
     eraseAll: () => {

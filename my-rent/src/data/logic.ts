@@ -85,3 +85,37 @@ export function parseBHD(input: string): Fils | null {
   const fils = Number(whole) * 1000 + Number(frac.padEnd(3, "0"));
   return fils > 0 ? fils : null;
 }
+
+/** عقود تنتهي خلال days يوم (أو انتهت) — مرتبة من الأقرب */
+export function contractAlerts(data: Data, now = new Date(), days = 30) {
+  const today = isoDay(now);
+  const limit = isoDay(new Date(now.getFullYear(), now.getMonth(), now.getDate() + days));
+  return data.units
+    .filter((u) => u.tenant?.until && u.tenant.until <= limit)
+    .map((u) => {
+      const left = Math.round((Date.parse(u.tenant!.until!) - Date.parse(today)) / 86400000);
+      return { unit: u, until: u.tenant!.until!, left };
+    })
+    .sort((a, b) => a.left - b.left);
+}
+
+/** آخر n أشهر: الدخل (دفعات الإيجار حسب شهر الاستحقاق) والمصروف والصافي */
+export function monthlyReport(data: Data, now = new Date(), n = 6) {
+  const months = monthsBetween(monthKey(new Date(now.getFullYear(), now.getMonth() - (n - 1), 1)), monthKey(now));
+  const rows = months.map((m) => {
+    const income = data.payments.filter((p) => p.month === m).reduce((s, p) => s + p.amount, 0);
+    const expense = data.expenses.filter((e) => e.date.startsWith(m)).reduce((s, e) => s + e.amount, 0);
+    return { month: m, income, expense, net: income - expense };
+  });
+  const sum = (k: "income" | "expense" | "net") => rows.reduce((s, r) => s + r[k], 0);
+  return { rows, income: sum("income"), expense: sum("expense"), net: sum("net") };
+}
+
+/** CSV بعلامة BOM عشان Excel يقرا العربي صح */
+export function toCSV(rows: (string | number)[][]) {
+  const cell = (v: string | number) => {
+    const s = String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  return "\uFEFF" + rows.map((r) => r.map(cell).join(",")).join("\r\n");
+}
