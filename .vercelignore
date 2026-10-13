@@ -17,9 +17,7 @@
 /hayati-app/www
 /hayati-app/scripts
 /hayati-app/capacitor.config.json
-/hayati-app/IOS.md
-/hayati-app/STORE.md
-/hayati-app/MONEY.md
+/hayati-app/docs
 /hayati-app/store/build.js
 /hayati-app/store/raw
 /hayati-app/test-results

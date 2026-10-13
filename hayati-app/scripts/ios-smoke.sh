@@ -35,8 +35,21 @@ xcrun simctl bootstatus "$UDID" -b >/dev/null
 echo "▶ نثبّت ونفتح «حياتي»"
 xcrun simctl install "$UDID" "$APP"
 xcrun simctl launch "$UDID" "$BUNDLE"
-sleep 20
-xcrun simctl io "$UDID" screenshot "$OUT/launch.png" >/dev/null
+
+echo "▶ الشاشة مو سودا ومو فاضية؟"
+# لقطة كل 10 ثواني لين 90 ثانية: السميوليتر البطيء يظل على شاشة البداية (بحري سادة) فترة،
+#   واللقطة الوحدة بعد وقت ثابت فشلت مرة بالغلط (رقم 17: إضاءة 46 = لون شاشة البداية).
+#   شاشة سودا أو فاضية فعلاً تفشل بكل المحاولات، فالاختبار ما يخبّي خطأ حقيقي.
+# sips (موجود بكل ماك) يصغّر الصورة ويحولها BMP، والفحص بايثون بدون مكتبات
+ok=0
+for try in 1 2 3 4 5 6 7 8 9; do
+  sleep 10
+  xcrun simctl io "$UDID" screenshot "$OUT/launch.png" >/dev/null
+  sips -s format bmp -z 240 120 "$OUT/launch.png" --out "$OUT/launch.bmp" >/dev/null
+  echo "   محاولة $try ($((try * 10)) ث)"
+  if python3 scripts/screen-check.py "$OUT/launch.bmp"; then ok=1; break; fi
+done
+[ "$ok" = 1 ] || { echo "❌ بعد 90 ثانية الواجهة ما انرسمت"; exit 1; }
 
 echo "▶ التطبيق شغّال؟"
 # نقرا القائمة كاملة أول: grep -q يقفل الأنبوب بدري فـ launchctl يطيح بـ SIGPIPE ومع pipefail يبين كأن التطبيق طاح
@@ -44,8 +57,3 @@ PROCS="$(xcrun simctl spawn "$UDID" launchctl list)"
 if ! grep -q "UIKitApplication:$BUNDLE" <<<"$PROCS"; then
   echo "❌ التطبيق طاح بعد الفتح"; exit 1
 fi
-
-echo "▶ الشاشة مو سودا ومو فاضية؟"
-# sips (موجود بكل ماك) يصغّر الصورة ويحولها BMP، والفحص بايثون بدون مكتبات
-sips -s format bmp -z 240 120 "$OUT/launch.png" --out "$OUT/launch.bmp" >/dev/null
-python3 scripts/screen-check.py "$OUT/launch.bmp"

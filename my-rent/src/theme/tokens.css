@@ -1,4 +1,4 @@
-/* إداراتي — design tokens (DW-007)
+/* إداراتي — design tokens (DW-008)
    مصدر واحد للألوان: لا تكتب hex داخل أي component، استخدم var(--…) أو كلاسات Tailwind من tailwind.preset.js */
 
 @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Readex+Pro:wght@500;600;700&display=swap");

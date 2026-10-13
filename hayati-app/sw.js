@@ -1,10 +1,10 @@
 // Service worker: يخلّي «حياتي» يفتح بدون نت، ويوصل التنبيهات للآيفون (iOS يطلب showNotification من SW)
 // كود التطبيق بس ينحفظ هني — بياناتك ما تمر من الكاش أبداً.
-const VERSION = 'hayati-v10';
+const VERSION = 'hayati-v15';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest',
-  'i18n-en.js', 'i18n.js', 'config.js', 'sms.js', 'store.js', 'calendar.js', 'icons.js', 'app.js', 'extras.js', 'extras2.js', 'extras3.js',
-  'study.js', 'watch.js', 'import.js', 'lock.js', 'motion.js', 'pwa.js', 'find.js', 'insights.js', 'community.js', 'privacy.js', 'native.js', 'privacy.html',
+  'js/i18n/i18n-en.js', 'js/i18n/i18n.js', 'js/core/config.js', 'js/core/sms.js', 'js/core/store.js', 'js/features/calendar.js', 'js/core/icons.js', 'js/core/app.js', 'js/features/extras.js', 'js/features/extras2.js', 'js/features/extras3.js',
+  'js/features/study.js', 'js/features/watch.js', 'js/features/import.js', 'js/features/lock.js', 'js/features/motion.js', 'js/features/pwa.js', 'js/features/find.js', 'js/features/insights.js', 'js/features/community.js', 'js/features/privacy.js', 'js/native/native.js', 'privacy.html', 'terms.html',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
 ];
 // مكتبات بإصدار مثبّت بالرابط = ما تتغير، فنقراها من الكاش أول

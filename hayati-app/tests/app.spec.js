@@ -537,11 +537,12 @@ test('iPhone build (www/ + real Capacitor core): plugins register through the na
     let perm = 'prompt', pending = [];
     window.Capacitor = {
       PluginHeaders: [
-        { name: 'LocalNotifications', methods: m('checkPermissions', 'requestPermissions', 'getPending', 'cancel', 'schedule') },
+        { name: 'LocalNotifications', methods: m('checkPermissions', 'requestPermissions', 'getPending', 'cancel', 'schedule', 'registerActionTypes').concat([{ name: 'addListener', rtype: 'callback' }, { name: 'removeListener', rtype: 'promise' }]) },
         { name: 'Haptics', methods: m('impact') },
         { name: 'Share', methods: m('share') },
         { name: 'Filesystem', methods: m('writeFile') },
       ],
+      nativeCallback: (plugin, method, opts) => { (window.__listeners = window.__listeners || []).push(opts.eventName); return 'cb' + window.__listeners.length; },
       nativePromise: async (plugin, method, opts) => {
         calls.push({ plugin, method, opts });
         if (method === 'checkPermissions') return { display: perm };
@@ -607,7 +608,8 @@ test('iPhone build: «جرّب التنبيه» asks permission, schedules a tes
     window.webkit = { messageHandlers: { bridge: { postMessage() {} } } };
     let perm = 'prompt', pending = [];
     window.Capacitor = {
-      PluginHeaders: [{ name: 'LocalNotifications', methods: m('checkPermissions', 'requestPermissions', 'getPending', 'cancel', 'schedule') }],
+      PluginHeaders: [{ name: 'LocalNotifications', methods: m('checkPermissions', 'requestPermissions', 'getPending', 'cancel', 'schedule', 'registerActionTypes').concat([{ name: 'addListener', rtype: 'callback' }, { name: 'removeListener', rtype: 'promise' }]) }],
+      nativeCallback: (plugin, method, opts) => { (window.__listeners = window.__listeners || []).push(opts.eventName); return 'cb' + window.__listeners.length; },
       nativePromise: async (plugin, method, opts) => {
         calls.push({ method, opts });
         if (method === 'checkPermissions') return { display: perm };
@@ -636,4 +638,478 @@ test('iPhone build: «جرّب التنبيه» asks permission, schedules a tes
   await store(page, () => App.S.upsert('courses', { id: 'tn1', name: 'مادة', type: 'lecture', days: [(new Date().getDay() + 1) % 7], start_time: '09:00', end_time: '10:00' }));
   await page.waitForFunction(() => window.__bridge.some((c) => c.method === 'schedule' && c.opts.notifications.some((n) => n.title.includes('مادة'))), null, { timeout: 5000 });
   expect(await store(page, () => window.__bridge.filter((c) => c.method === 'cancel').flatMap((c) => c.opts.notifications.map((n) => n.id)))).not.toContain(990001);
+  // أزرار التنبيه تتسجل عبر الجسر الحقيقي، والمستمع مرة وحدة
+  expect(await store(page, () => window.__bridge.some((c) => c.method === 'registerActionTypes' && c.opts.types[0].actions.length === 2))).toBe(true);
+  expect(await store(page, () => window.__listeners.filter((e) => e === 'localNotificationActionPerformed').length)).toBe(1);
+});
+
+// تذكيرات ذكية (جلسة الديوانية 25): بكرة اختبار/تسليم/تجديد 8 الليل، قبل الاختبار بساعتين، ملخص صباح اختياري، ومفتاح لكل نوع
+test('iPhone: smart reminders for exams, homework and renewals, morning brief opt-in, a switch per type @webkit', async ({ page }) => {
+  await page.addInitScript(() => {
+    const log = window.__cap = { scheduled: [] };
+    window.Capacitor = {
+      isNativePlatform: () => true,
+      Plugins: {
+        LocalNotifications: {
+          checkPermissions: async () => ({ display: 'granted' }),
+          requestPermissions: async () => ({ display: 'granted' }),
+          getPending: async () => ({ notifications: log.scheduled.map((n) => ({ id: n.id })) }),
+          cancel: async () => { log.scheduled = []; },
+          schedule: async ({ notifications }) => { log.scheduled = notifications; },
+        },
+      },
+    };
+  });
+  await open(page);
+  const r = await store(page, () => {
+    const now = new Date(); now.setHours(12, 0, 0, 0);
+    const day = (n, h, m) => new Date(now.getFullYear(), now.getMonth(), now.getDate() + n, h || 0, m || 0);
+    App.st.tasks = [
+      { id: 'e1', kind: 'exam', title: 'محاسبة', due_at: day(3, 12).toISOString() },
+      { id: 'e2', kind: 'exam', title: 'إحصاء', due_at: day(4, 8).toISOString() },
+      { id: 'h1', kind: 'homework', title: 'تقرير', due_at: day(2, 23, 59).toISOString() },
+      { id: 'h2', kind: 'homework', title: 'خلصته', due_at: day(2, 23).toISOString(), done: true },
+    ];
+    const ren = day(5, 9);
+    App.st.subscriptions = [
+      { id: 's1', name: 'Netflix', amount: 3.5, cycle: 'monthly', day: ren.getDate(), remind_days: 1, active: true },
+      { id: 's2', name: 'موقوف', amount: 1, cycle: 'monthly', day: ren.getDate(), remind_days: 1, active: false },
+    ];
+    const hm = (d) => d.toDateString() + ' ' + d.getHours() + ':' + d.getMinutes();
+    const pick = (list) => list.filter((x) => !/دقايق|الحين/.test(x.title)).map((x) => ({ t: x.title, b: x.body, at: hm(x.schedule.at) }));
+    const all = pick(HayatiNative.upcoming(now, { lectures: true, exams: true, homework: true, subs: true, brief: false }));
+    const off = pick(HayatiNative.upcoming(now, { lectures: true, exams: false, homework: true, subs: false, brief: false }));
+    App.S.upsert('courses', { id: 'c1', name: 'تسويق', type: 'lecture', days: [day(3).getDay()], start_time: '10:00', end_time: '11:00' });
+    const brief = pick(HayatiNative.upcoming(now, { lectures: false, exams: true, homework: true, subs: true, brief: true, briefAt: '07:00' })).filter((x) => x.t.startsWith('صباح'));
+    return { all, off, brief, exp: { eve: hm(day(2, 20)), two: hm(day(3, 10)), early: hm(day(4, 7, 30)), hw: hm(day(1, 20)), sub: hm(day(4, 20)), b3: hm(day(3, 7)) } };
+  });
+  const find = (list, t) => list.find((x) => x.t === t);
+  expect(find(r.all, 'بكرة اختبار: محاسبة').at).toBe(r.exp.eve);
+  expect(find(r.all, 'بعد ساعتين: اختبار محاسبة').at).toBe(r.exp.two);
+  expect(find(r.all, 'اليوم: اختبار إحصاء').at).toBe(r.exp.early);           // اختبار 8 الصبح ← تذكير 7:30
+  expect(find(r.all, 'بكرة تسليم: تقرير').at).toBe(r.exp.hw);
+  expect(r.all.some((x) => x.t.includes('خلصته'))).toBe(false);              // المنجز ما ينبّه
+  const sub = find(r.all, 'بكرة يتجدد: Netflix');
+  expect(sub.at).toBe(r.exp.sub);
+  expect(sub.b).toBe('3.500 د.ب');
+  expect(r.all.some((x) => x.t.includes('موقوف'))).toBe(false);
+  // المفاتيح: الاختبارات والاشتراكات مسكّرة
+  expect(r.off.some((x) => x.t.includes('اختبار') || x.t.includes('يتجدد'))).toBe(false);
+  expect(r.off.some((x) => x.t === 'بكرة تسليم: تقرير')).toBe(true);
+  // ملخص الصباح: بس الأيام اللي فيها شي
+  const b3 = r.brief.find((x) => x.at === r.exp.b3);
+  expect(b3.b).toContain('أولها 10:00');
+  expect(b3.b).toContain('اختبار محاسبة');
+  expect(r.brief.every((x) => x.b.length > 0)).toBe(true);
+
+  // شاشة الإعدادات: نسكّر الاختبارات ونحفظ ← تنحفظ وتنعاد الجدولة
+  await page.click('#settingsBtn');
+  await page.click('[data-set="notif-prefs"]');
+  await expect(page.locator('[data-np="brief"]')).not.toBeChecked();
+  await expect(page.locator('#briefAtF')).toBeHidden();
+  await page.locator('[data-np="brief"]').check();
+  await expect(page.locator('#briefAtF')).toBeVisible();
+  await page.locator('[data-np="exams"]').uncheck();
+  await page.click('#sheetSave');
+  await expect(page.locator('.toast')).toContainText('انحفظ');
+  const saved = await store(page, () => JSON.parse(localStorage.getItem('hayati-notif-prefs')));
+  expect(saved.exams).toBe(false);
+  expect(saved.brief).toBe(true);
+  expect(saved.briefAt).toBe('07:00');
+});
+
+// أزرار التنبيه (جلسة الديوانية «أزرار التنبيه»): الضغطة تفتح الشي، «✓ خلصته» و«⏰ بعد ساعة» على الواجب والاختبار
+test('iPhone: tapping a reminder opens it, «خلصته» marks it done and clears its alerts, «بعد ساعة» survives rescheduling @webkit', async ({ page }) => {
+  await page.addInitScript(() => {
+    const log = window.__cap = { scheduled: [], types: null, handler: null };
+    window.Capacitor = {
+      isNativePlatform: () => true,
+      Plugins: {
+        LocalNotifications: {
+          checkPermissions: async () => ({ display: 'granted' }),
+          requestPermissions: async () => ({ display: 'granted' }),
+          getPending: async () => ({ notifications: log.scheduled.map((n) => ({ id: n.id })) }),
+          cancel: async () => { log.scheduled = []; },
+          schedule: async ({ notifications }) => { log.scheduled = notifications; },
+          registerActionTypes: async (o) => { log.types = o.types; },
+          addListener: (ev, fn) => { if (ev === 'localNotificationActionPerformed') { if (log.handler) log.dup = true; log.handler = fn; } return Promise.resolve({ remove() {} }); },
+        },
+      },
+    };
+  });
+  await open(page);
+  const types = await store(page, () => window.__cap.types);
+  expect(types[0].actions.map((a) => a.id)).toEqual(['done', 'snooze']);
+  expect(types[0].actions.every((a) => a.foreground)).toBe(true);
+  expect(await store(page, () => !!window.__cap.dup)).toBe(false);
+
+  await store(page, () => {
+    const d = new Date(); d.setDate(d.getDate() + 2); d.setHours(23, 59, 0, 0);
+    App.S.upsert('tasks', { id: 'hw1', kind: 'homework', title: 'تقرير التسويق', due_at: d.toISOString(), done: false });
+  });
+  await page.waitForFunction(() => window.__cap.scheduled.some((n) => n.title === 'بكرة تسليم: تقرير التسويق'), null, { timeout: 5000 });
+  const n = await store(page, () => window.__cap.scheduled.find((x) => x.title === 'بكرة تسليم: تقرير التسويق'));
+  expect(n.actionTypeId).toBe(types[0].id);
+  expect(n.extra).toEqual({ kind: 'task', id: 'hw1', act: true });
+
+  // ⏰ بعد ساعة: تنبيه جديد بعد ساعة، ويظل بعد إعادة الجدولة
+  await store(page, (n) => window.__cap.handler({ actionId: 'snooze', notification: n }), n);
+  await expect(page.locator('.toast')).toContainText('بعد ساعة');
+  await page.waitForFunction(() => window.__cap.scheduled.filter((x) => x.title === 'بكرة تسليم: تقرير التسويق').length === 2, null, { timeout: 5000 });
+  const inMin = await store(page, () => { const z = window.__cap.scheduled.filter((x) => x.title === 'بكرة تسليم: تقرير التسويق').map((x) => x.schedule.at - Date.now()).sort((a, b) => a - b)[0]; return Math.round(z / 60000); });
+  expect(inMin).toBeGreaterThanOrEqual(58);
+  expect(inMin).toBeLessThanOrEqual(60);
+  await store(page, () => App.S.upsert('courses', { id: 'cx', name: 'مادة', type: 'lecture', days: [(new Date().getDay() + 1) % 7], start_time: '09:00', end_time: '10:00' }));
+  await page.waitForFunction(() => window.__cap.scheduled.some((x) => x.title.includes('مادة')), null, { timeout: 5000 });
+  expect(await store(page, () => window.__cap.scheduled.filter((x) => x.title === 'بكرة تسليم: تقرير التسويق').length)).toBe(2);
+
+  // ✓ خلصته: المهمة منجزة، وكل تنبيهاتها (والتأجيل) تختفي
+  await store(page, (n) => window.__cap.handler({ actionId: 'done', notification: n }), n);
+  await expect(page.locator('.toast')).toContainText('خلصت «تقرير التسويق»');
+  expect(await store(page, () => App.st.tasks.find((t) => t.id === 'hw1').done)).toBe(true);
+  await page.waitForFunction(() => !window.__cap.scheduled.some((x) => x.title.includes('تقرير التسويق')), null, { timeout: 5000 });
+
+  // الضغطة: الاشتراك يفتح «اشتراكات»، والمهمة المحذوفة ما تكسر
+  await store(page, () => window.__cap.handler({ actionId: 'tap', notification: { title: 'بكرة يتجدد: الجيم', extra: { kind: 'sub', id: 's1' } } }));
+  expect(await store(page, () => [App.ui.tab, App.ui.moneySeg])).toEqual(['money', 'subs']);
+  await store(page, () => window.__cap.handler({ actionId: 'tap', notification: { title: 'x', extra: { kind: 'task', id: 'gone' } } }));
+  await expect(page.locator('.toast')).toContainText('ما لقيت المهمة');
+  expect(await store(page, () => App.ui.tab)).toBe('tasks');
+  // الضغطة على مهمة موجودة تفتح ورقتها
+  await store(page, () => window.__cap.handler({ actionId: 'tap', notification: { title: 'x', extra: { kind: 'task', id: 'hw1' } } }));
+  await expect(page.locator('#sheet')).toBeVisible();
+});
+
+// سؤال الحضور من التنبيه (جلسة الديوانية «الحضور من التنبيه»)
+test('iPhone: «حضرت X؟» after each lecture, answered from the alert on the right day, gone once answered in the app @webkit', async ({ page }) => {
+  await page.addInitScript(() => {
+    const log = window.__cap = { scheduled: [], types: null, handler: null };
+    window.Capacitor = {
+      isNativePlatform: () => true,
+      Plugins: {
+        LocalNotifications: {
+          checkPermissions: async () => ({ display: 'granted' }),
+          requestPermissions: async () => ({ display: 'granted' }),
+          getPending: async () => ({ notifications: log.scheduled.map((n) => ({ id: n.id })) }),
+          cancel: async () => { log.scheduled = []; },
+          schedule: async ({ notifications }) => { log.scheduled = notifications; },
+          registerActionTypes: async (o) => { log.types = o.types; },
+          addListener: (ev, fn) => { log.handler = fn; return Promise.resolve({ remove() {} }); },
+        },
+      },
+    };
+  });
+  await open(page);
+  const t = await store(page, () => window.__cap.types.find((x) => x.actions.some((a) => a.id === 'present')));
+  expect(t.actions.map((a) => a.title)).toEqual(['✓ حضرت', '✗ غبت']);
+
+  // محاضرة بكرة 10:00–11:15، وتمرين بكرة (التمرين ما له سؤال حضور)
+  const k = await store(page, () => {
+    const d = new Date(); d.setDate(d.getDate() + 1);
+    App.S.upsert('courses', { id: 'at1', name: 'محاسبة إدارية', type: 'lecture', days: [d.getDay()], start_time: '10:00', end_time: '11:15', room: 'S40-2050', absence_limit: 3, absences: ['2026-01-01'] });
+    App.S.upsert('courses', { id: 'gy1', name: 'جيم', type: 'gym', days: [d.getDay()], start_time: '18:00', end_time: '19:00' });
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  });
+  await page.waitForFunction(() => window.__cap.scheduled.some((n) => n.title === 'حضرت محاسبة إدارية؟'), null, { timeout: 5000 });
+  const n = await store(page, () => { const x = window.__cap.scheduled.find((n) => n.title === 'حضرت محاسبة إدارية؟'); return { ...x, mins: x.schedule.at.getHours() * 60 + x.schedule.at.getMinutes() }; });
+  expect(n.mins).toBe(11 * 60 + 20);                 // بعد ما تخلص بـ 5 دقايق
+  expect(n.body).toContain('S40-2050');
+  expect(n.actionTypeId).toBe(t.id);
+  expect(n.extra).toEqual({ kind: 'attend', id: 'at1', day: k, act: 'attend' });
+  expect(await store(page, () => window.__cap.scheduled.some((x) => x.title === 'حضرت جيم؟'))).toBe(false);
+
+  // «✗ غبت»: ينسجل على يوم المحاضرة نفسه (مو اليوم)، ويطلع تحذير حد الغياب، والتنبيه ينشال
+  await store(page, (n) => window.__cap.handler({ actionId: 'absent', notification: n }), n);
+  await expect(page.locator('.toast')).toContainText('باقي لك 1 غيابات بس');
+  expect(await store(page, () => App.st.courses.find((c) => c.id === 'at1').absences)).toEqual(['2026-01-01', k]);
+  await page.waitForFunction(() => !window.__cap.scheduled.some((x) => x.title === 'حضرت محاسبة إدارية؟'), null, { timeout: 5000 });
+
+  // جاوب داخل التطبيق (حضرت) قبل التنبيه ← ما يرن
+  await store(page, () => {
+    const d = new Date(); d.setDate(d.getDate() + 1);
+    App.S.upsert('courses', { id: 'at2', name: 'تسويق', type: 'lecture', days: [d.getDay()], start_time: '12:00', end_time: '13:00' });
+  });
+  await page.waitForFunction(() => window.__cap.scheduled.some((x) => x.title === 'حضرت تسويق؟'), null, { timeout: 5000 });
+  await store(page, (k) => { const c = App.st.courses.find((x) => x.id === 'at2'); App.S.upsert('courses', Object.assign({}, c, { attended: [k] })); }, k);
+  await page.waitForFunction(() => !window.__cap.scheduled.some((x) => x.title === 'حضرت تسويق؟'), null, { timeout: 5000 });
+
+  // «✓ حضرت» على مادة انحذفت ← رسالة بدال الكسر
+  await store(page, () => window.__cap.handler({ actionId: 'present', notification: { extra: { kind: 'attend', id: 'gone', day: '2026-10-13' } } }));
+  await expect(page.locator('.toast')).toContainText('ما لقيت المادة');
+
+  // المفتاح يطفيه
+  const off = await store(page, () => HayatiNative.upcoming(new Date(), Object.assign(HayatiNative.prefs(), { attend: false })).some((x) => x.title.startsWith('حضرت')));
+  expect(off).toBe(false);
+});
+
+// جلسة الديوانية مع المحامي: شروط الاستخدام + تصدير المصاريف CSV
+test('terms of use page loads and is linked from settings, welcome card and the privacy policy', async ({ page }) => {
+  await page.goto('/terms.html');
+  await expect(page.locator('h1')).toHaveText('شروط الاستخدام');
+  await expect(page.locator('body')).toContainText('مو نصيحة مالية ولا طبية');
+  await expect(page.locator('body')).toContainText('Governed by the laws of the Kingdom of Bahrain');
+  await page.goto('/privacy.html');
+  await expect(page.locator('a[href="terms.html"]').first()).toBeVisible();
+  await expect(page.locator('body')).toContainText('تنجدول على جوالك نفسه');
+  await expect(page.locator('body')).toContainText('تحت 13 سنة');
+  await open(page);
+  await page.click('#settingsBtn');
+  await expect(page.locator('#sheetBody a[href="terms.html"]')).toBeVisible();
+});
+
+test('first-run welcome card mentions the terms with a link', async ({ page }) => {
+  await page.addInitScript(() => localStorage.clear());
+  await page.goto('/');
+  await expect(page.locator('#obCard .ob-terms a[href="terms.html"]')).toBeVisible();
+});
+
+test('«صدّر مصاريفك»: Excel-ready CSV with BOM, numbers as numbers, no bank text, formulas neutralised', async ({ page }) => {
+  await open(page);
+  expect(await store(page, () => App.expensesCSV())).toBe('');
+  await store(page, () => {
+    App.S.upsert('transactions', { id: 'c1', kind: 'expense', amount: 3.5, merchant: 'Costa Coffee', category: 'قهوة', note: 'مع "الربع"، سطر\nثاني', raw: 'سري XX4821', occurred_at: new Date(2026, 9, 11, 8, 5).toISOString() });
+    App.S.upsert('transactions', { id: 'c2', kind: 'income', amount: 250, merchant: '=HYPERLINK("http://x")', category: 'راتب', occurred_at: new Date(2026, 9, 1, 9, 0).toISOString() });
+  });
+  const csv = await store(page, () => App.expensesCSV());
+  expect(csv.charCodeAt(0)).toBe(0xFEFF);
+  const lines = csv.slice(1).split('\r\n');
+  expect(lines[0]).toBe('"التاريخ","الوقت","النوع","المبلغ (د.ب)","المحل","الفئة","ملاحظة"');
+  expect(lines[1]).toBe('"2026-10-01","09:00","دخل",250.000,"\'=HYPERLINK(""http://x"")","راتب",""');   // الأقدم أول، والصيغة ما تشتغل
+  expect(lines[2].startsWith('"2026-10-11","08:05","صرف",3.500,"Costa Coffee","قهوة","مع ""الربع""، سطر')).toBe(true);
+  expect(csv).not.toContain('XX4821');
+  expect(csv).not.toContain('سري');
+  // الزر بالإعدادات يرسل الملف
+  await store(page, () => { window.__saved = null; });
+  await page.evaluate(() => { window.HayatiNative = { saveFile: async (name, text, mime) => { window.__saved = { name, mime, len: text.length }; return true; } }; });
+  await page.click('#settingsBtn');
+  await page.click('[data-set="export-csv"]');
+  await page.waitForFunction(() => window.__saved, null, { timeout: 3000 });
+  const saved = await store(page, () => window.__saved);
+  expect(saved.name).toMatch(/^hayati-expenses-\d{4}-\d{2}-\d{2}\.csv$/);
+  expect(saved.mime).toBe('text/csv');
+});
+
+// اجتماع الفحص الشامل: الإنجليزي ما يخرّب بيانات المستخدم ويترجم الوحدات، تذكير النسخة الاحتياطية، رقم الإصدار
+test('English: user data stays untouched (no «Exam المحاسبة»), units read «in 3 days» and «49 min»', async ({ page }) => {
+  await page.addInitScript(() => { if (!sessionStorage.getItem('i')) { localStorage.setItem('hayati-lang', 'en'); sessionStorage.setItem('i', '1'); } });
+  await open(page);
+  await store(page, () => {
+    const d = (o, h) => { const x = new Date(); x.setDate(x.getDate() + o); x.setHours(h, 0, 0, 0); return x.toISOString(); };
+    App.S.upsert('tasks', { id: 'e1', kind: 'exam', title: 'اختبار المحاسبة', due_at: d(3, 9), done: false });
+    App.S.upsert('tasks', { id: 'a1', kind: 'appointment', title: 'موعد الطبيب', due_at: d(0, 23), done: false });
+    App.go('tasks');
+  });
+  const text = await page.locator('#view').innerText();
+  expect(text).toContain('اختبار المحاسبة');
+  expect(text).not.toContain('Exam المحاسبة');
+  expect(text).not.toContain('Appointment الطبيب');
+  expect(text).not.toMatch(/\d\s*(أيام|دقيقة)/);
+  expect(await store(page, () => window.HayatiLang.tr('بعد 3 أيام · 49 دقيقة · 1.5 س · 30 د · 3 مرات · قبل 34 أيام'))).toBe('in 3 days · 49 min · 1.5 h · 30 min · 3 times · 34 days ago');
+  expect(await store(page, () => window.HayatiLang.tr('صباح الخير يا محمد'))).toBe('Good morning, محمد');
+  expect(await store(page, () => window.HayatiLang.tr('بعد ساعتين و51 دقيقة'))).not.toMatch(/[\u0600-\u06FF]/);
+});
+
+test('backup reminder: shows after 30 days with 10+ records, «بعدين» hides it for a week, backing up clears it; version matches sw.js', async ({ page }) => {
+  await open(page);
+  const seed = (n, daysAgo) => store(page, ([n, daysAgo]) => {
+    const t = new Date(Date.now() - daysAgo * 864e5).toISOString();
+    for (let i = 0; i < n; i++) App.S.upsert('transactions', { id: 'b' + i, kind: 'expense', amount: 1, merchant: 'x', category: 'قهوة', occurred_at: t });
+    // updated_at يصير الحين مع upsert، فنرجّعه للماضي مثل بيانات قديمة
+    App.st.transactions.forEach((r) => { r.updated_at = t; });
+  }, [n, daysAgo]);
+  await seed(5, 40);
+  expect(await store(page, () => App.backupDue())).toBe(null);                       // أقل من 10 سجلات
+  await seed(12, 40);
+  expect(await store(page, () => App.backupDue())).toEqual({ days: 40, never: true });
+  await store(page, () => App.render());
+  await expect(page.locator('.backup-nudge')).toContainText('ما عندك نسخة احتياطية');
+  await page.click('[data-action="backup-later"]');
+  await expect(page.locator('.backup-nudge')).toHaveCount(0);
+  await store(page, () => localStorage.removeItem('hayati-backup-snooze'));
+  await store(page, () => App.render());
+  await page.evaluate(() => { window.HayatiNative = { saveFile: async () => true }; });
+  await page.click('[data-action="backup-now"]');
+  await expect(page.locator('.backup-nudge')).toHaveCount(0);
+  expect(await store(page, () => App.backupDue())).toBe(null);
+  // الإعدادات: «آخر نسخة: اليوم» ورقم الإصدار نفس sw.js
+  await page.click('#settingsBtn');
+  await expect(page.locator('[data-set="export"]')).toContainText('آخر نسخة: اليوم');
+  const sw = fs.readFileSync(path.join(__dirname, '../sw.js'), 'utf8').match(/hayati-(v\d+)/)[1];
+  expect(await store(page, () => App.APP_VERSION)).toBe(sw);
+  await expect(page.locator('.app-version')).toContainText('حياتي ' + sw);
+});
+
+test('iPhone: a snoozed reminder for a task that was deleted does not ring', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('hayati-snoozes', JSON.stringify([{ key: 'snooze:gone:1', at: Date.now() + 3600e3, title: 'بكرة تسليم: محذوفة', body: '', extra: { kind: 'task', id: 'gone', act: true } }]));
+    window.Capacitor = { isNativePlatform: () => true, Plugins: {} };
+  });
+  await open(page);
+  expect(await store(page, () => HayatiNative.upcoming(new Date()).some((n) => n.title.includes('محذوفة')))).toBe(false);
+});
+
+// هوية «حياتي»: ألوان التطبيق = brand/tokens.css بالضبط، والنص يعدّي WCAG AA (4.5:1)
+test('brand: app colours match brand/tokens.css, and text colours pass 4.5:1 contrast', async () => {
+  const tokens = fs.readFileSync(path.join(__dirname, '../brand/tokens.css'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+  const vars = (css) => Object.fromEntries([...css.matchAll(/(--[a-z0-9-]+):\s*(#[0-9A-Fa-f]{6})/g)].map((m) => [m[1], m[2].toUpperCase()]));
+  const block = (css, start, end) => css.slice(css.indexOf(start), css.indexOf(end, css.indexOf(start)));
+  const tLight = vars(block(tokens, 'ألوان الواجهة — فاتح', 'ألوان الواجهة — غامق') + block(tokens, 'ألوان الهوية', 'ألوان الواجهة — فاتح'));
+  const tDark = vars(block(tokens, 'ألوان الواجهة — غامق', '===== الخط'));
+  const aLight = vars(html.slice(html.indexOf(':root {'), html.indexOf('@media (prefers-color-scheme: dark)')));
+  const aDark = vars(html.slice(html.indexOf(':root[data-theme="dark"]'), html.indexOf('}', html.indexOf(':root[data-theme="dark"]'))));
+  for (const [k, v] of Object.entries(tLight)) expect(aLight[k], 'light ' + k).toBe(v);
+  for (const [k, v] of Object.entries(tDark)) expect(aDark[k], 'dark ' + k).toBe(v);
+  const lum = (h) => { const c = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+  const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+  for (const [t, set] of [['light', tLight], ['dark', tDark]]) {
+    for (const fg of ['--text', '--text-2', '--muted', '--brand', '--expense', '--income']) {
+      for (const bg of ['--bg', '--surface', '--surface-2']) expect(ratio(set[fg], set[bg]), t + ' ' + fg + ' on ' + bg).toBeGreaterThanOrEqual(4.5);
+    }
+  }
+});
+
+// 🔐 الحسابات (جلسة الديوانية «الحسابات»): كل مستخدم بياناته بروحه، والدخول بـ Apple وGoogle
+//   Supabase وهمي: «سيرفر» فيه بيانات كل مستخدم لحاله، مثل RLS
+const fakeSupabase = () => {
+  const srv = window.__srv = { data: {}, calls: [], session: null, cb: null };
+  const rows = (uid, t) => ((srv.data[uid] = srv.data[uid] || {})[t] = srv.data[uid][t] || []);
+  const q = (table) => {
+    const uid = () => srv.session && srv.session.user.id;
+    const res = (v) => Object.assign(Promise.resolve(v), b);
+    const b = {
+      select: () => res({ data: table === 'settings' ? null : rows(uid(), table).slice(), error: null }),
+      eq: () => res({ data: [], error: null }), order: () => res({ data: [], error: null }),
+      maybeSingle: () => Promise.resolve({ data: null, error: null }),
+      upsert: (r) => { srv.calls.push(['upsert', uid(), table, r]); if (table !== 'settings') { const l = rows(uid(), table); const i = l.findIndex((x) => x.id === r.id); if (i >= 0) l[i] = r; else l.push(r); } return Promise.resolve({ error: null }); },
+      delete: () => ({ eq: (k, id) => { const l = rows(uid(), table); const i = l.findIndex((x) => x.id === id); if (i >= 0) l.splice(i, 1); return Promise.resolve({ error: null }); } }),
+      update: () => ({ eq: () => Promise.resolve({ error: null }) }),
+    };
+    return b;
+  };
+  const user = (id, email, provider) => ({ access_token: 't', user: { id, email, app_metadata: { provider } } });
+  window.__signInAs = (id, email, provider) => { srv.session = id ? user(id, email, provider || 'email') : null; srv.cb && srv.cb(id ? 'SIGNED_IN' : 'SIGNED_OUT', srv.session); };
+  window.supabase = {
+    createClient: () => ({
+      auth: {
+        getSession: async () => ({ data: { session: srv.session } }),
+        onAuthStateChange: (cb) => { srv.cb = cb; return { data: { subscription: { unsubscribe() {} } } }; },
+        signInWithPassword: async ({ email }) => { window.__signInAs('u-' + email.split('@')[0], email); return { error: null }; },
+        signUp: async ({ email }) => { window.__signInAs('u-' + email.split('@')[0], email); return { data: { session: srv.session }, error: null }; },
+        signOut: async () => { srv.calls.push(['signOut']); window.__signInAs(null); return { error: null }; },
+        signInWithOAuth: async (o) => { srv.calls.push(['oauth', o.provider, o.options]); return { data: { url: 'https://auth.example/' + o.provider }, error: null }; },
+        exchangeCodeForSession: async (code) => { srv.calls.push(['exchange', code]); window.__signInAs('u-apple', 'a@privaterelay.appleid.com', 'apple'); return { error: null }; },
+        resetPasswordForEmail: async (email, o) => { srv.calls.push(['reset', email, o.redirectTo]); return { error: null }; },
+        updateUser: async () => ({ error: null }),
+      },
+      from: q, rpc: async () => ({ error: null }),
+      channel: () => ({ on() { return this; }, subscribe() { return this; } }), removeChannel() {},
+    }),
+  };
+  localStorage.setItem('hayati-supabase', JSON.stringify({ url: 'https://x.supabase.co', key: 'k'.repeat(40) }));
+};
+const txs = (page) => store(page, () => App.st.transactions.map((t) => t.merchant).sort());
+
+test('accounts: guest data is offered to the first account, sign-out wipes the device, a second user never sees the first one\'s data', async ({ page }) => {
+  await page.addInitScript(fakeSupabase);
+  await open(page);
+  // بدون حساب: التطبيق يشتغل عادي
+  await store(page, () => App.S.upsert('transactions', { id: 'g1', kind: 'expense', amount: 1, merchant: 'Guest Cafe', category: 'قهوة', occurred_at: new Date().toISOString() }));
+  // أول دخول وعلى الجهاز بيانات: يسأل، وما يرفع شي قبل الجواب
+  await store(page, () => window.__signInAs('u-mo', 'mo@x.bh'));
+  await expect(page.locator('#mgKeep')).toBeVisible();
+  expect(await store(page, () => window.__srv.calls.filter((c) => c[0] === 'upsert').length)).toBe(0);
+  await page.click('#mgKeep');
+  await page.waitForFunction(() => (window.__srv.data['u-mo'] || {}).transactions?.some((r) => r.data.merchant === 'Guest Cafe'));
+  expect(await store(page, () => App.st.owner)).toBe('u-mo');
+  await store(page, () => App.S.upsert('transactions', { id: 'm1', kind: 'expense', amount: 2, merchant: 'Mo Only', category: 'قهوة', occurred_at: new Date().toISOString() }));
+  await page.waitForFunction(() => window.__srv.data['u-mo'].transactions.some((r) => r.data.merchant === 'Mo Only'));
+
+  // الخروج: الجهاز يفضى
+  await store(page, () => App.S.signOut());
+  expect(await txs(page)).toEqual([]);
+  expect(await store(page, () => App.st.owner)).toBe(null);
+
+  // مستخدم ثاني على نفس الجهاز: ما يشوف شي من الأول، وتعديلاته تروح لحسابه هو
+  await store(page, () => { window.__srv.data['u-sara'] = { transactions: [{ id: 's1', data: { id: 's1', kind: 'expense', amount: 5, merchant: 'Sara Shop', category: 'بقالة', occurred_at: new Date().toISOString() } }] }; window.__signInAs('u-sara', 'sara@x.bh'); });
+  await page.waitForFunction(() => App.st.transactions.length === 1);
+  expect(await store(page, () => App.S.status.needsMerge)).toBe(0);           // الجهاز فاضي = ما فيه سؤال
+  await expect(page.locator('#mgKeep')).toBeHidden();
+  expect(await txs(page)).toEqual(['Sara Shop']);
+  await store(page, () => App.S.upsert('transactions', { id: 's2', kind: 'expense', amount: 1, merchant: 'Sara Two', category: 'قهوة', occurred_at: new Date().toISOString() }));
+  await page.waitForFunction(() => window.__srv.data['u-sara'].transactions.length === 2);
+  expect(await store(page, () => window.__srv.data['u-mo'].transactions.map((r) => r.data.merchant).sort())).toEqual(['Guest Cafe', 'Mo Only']);
+
+  // تبديل حساب مباشر (بدون خروج): بيانات سارة تنمسح، وتجي بيانات محمد
+  await store(page, () => window.__signInAs('u-mo', 'mo@x.bh'));
+  await page.waitForFunction(() => App.st.transactions.length === 2);
+  expect(await txs(page)).toEqual(['Guest Cafe', 'Mo Only']);
+});
+
+test('accounts: «لا، ابدأ من حسابي» drops guest data; sign-out with unsynced edits warns first', async ({ page, context }) => {
+  await page.addInitScript(fakeSupabase);
+  await open(page);
+  await store(page, () => App.S.upsert('transactions', { id: 'g1', kind: 'expense', amount: 1, merchant: 'Not Mine', category: 'قهوة', occurred_at: new Date().toISOString() }));
+  await store(page, () => window.__signInAs('u-mo', 'mo@x.bh'));
+  await page.click('#mgDrop');
+  await page.click('#askDlg [data-ok]');
+  await page.waitForFunction(() => App.st.owner === 'u-mo');
+  expect(await txs(page)).toEqual([]);
+  expect(await store(page, () => (window.__srv.data['u-mo'] || {}).transactions || [])).toEqual([]);
+  // بدون نت: الخروج يرفض لين يتأكد
+  await context.setOffline(true);
+  await store(page, () => App.S.upsert('transactions', { id: 'o1', kind: 'expense', amount: 1, merchant: 'Offline', category: 'قهوة', occurred_at: new Date().toISOString() }));
+  const err = await store(page, () => App.S.signOut().then(() => null, (e) => ({ code: e.code, count: e.count })));
+  expect(err).toEqual({ code: 'PENDING', count: 1 });
+  expect(await txs(page)).toEqual(['Offline']);
+  await store(page, () => App.S.signOut({ force: true }));
+  expect(await txs(page)).toEqual([]);
+  await context.setOffline(false);
+});
+
+test('accounts: Apple/Google buttons only when enabled, web OAuth returns to the app, password reset, account screen', async ({ page }) => {
+  await page.addInitScript(fakeSupabase);
+  await open(page);
+  await page.click('#settingsBtn');
+  await expect(page.locator('.account-card')).toContainText('بدون حساب؟ التطبيق يشتغل عادي');
+  await expect(page.locator('[data-set="sso"]')).toHaveCount(0);       // PROVIDERS فاضي = ولا زر ميت
+  await store(page, () => App.closeSheet());
+  await store(page, () => { window.HAYATI_CONFIG.PROVIDERS = ['apple', 'google']; });
+  await page.waitForFunction(() => !document.getElementById('sheet').open);
+  await page.click('#settingsBtn');
+  const sso = page.locator('[data-set="sso"]');
+  await expect(sso).toHaveCount(2);
+  await expect(sso.first()).toContainText('تابع مع Apple');            // Apple أول (إرشاد 4.8)
+  await sso.nth(1).click();
+  await page.waitForFunction(() => window.__srv.calls.some((c) => c[0] === 'oauth'));
+  const call = await store(page, () => window.__srv.calls.find((c) => c[0] === 'oauth'));
+  expect(call[1]).toBe('google');
+  expect(call[2].redirectTo).toBe(new URL(page.url()).origin + '/index.html');
+  expect(call[2].skipBrowserRedirect).toBe(false);
+  // نسيت كلمة المرور
+  await page.fill('.account-card [name=email]', 'mo@x.bh');
+  await page.click('[data-set="forgot"]');
+  await expect(page.locator('.toast')).toContainText('أرسلنا رابط');
+  expect(await store(page, () => window.__srv.calls.find((c) => c[0] === 'reset')[1])).toBe('mo@x.bh');
+});
+
+test('accounts on iPhone: Apple opens the system browser, the bh.hayati.app://auth link signs in @webkit', async ({ page }) => {
+  await page.addInitScript(fakeSupabase);
+  await page.addInitScript(() => {
+    const log = window.__nat = { opened: [], closed: 0, urlCb: null };
+    window.Capacitor = { isNativePlatform: () => true, Plugins: {
+      Browser: { open: async (o) => { log.opened.push(o.url); }, close: async () => { log.closed++; } },
+      App: { addListener: (ev, cb) => { if (ev === 'appUrlOpen') log.urlCb = cb; return Promise.resolve({ remove() {} }); } },
+    } };
+  });
+  await open(page);
+  await store(page, () => HayatiNative.oauth('apple'));
+  const st = await store(page, () => ({ opened: window.__nat.opened, call: window.__srv.calls.find((c) => c[0] === 'oauth') }));
+  expect(st.opened).toEqual(['https://auth.example/apple']);
+  expect(st.call[2]).toEqual({ redirectTo: 'bh.hayati.app://auth', skipBrowserRedirect: true });
+  await store(page, () => window.__nat.urlCb({ url: 'bh.hayati.app://auth?code=abc123' }));
+  await page.waitForFunction(() => App.S.status.signedIn);
+  expect(await store(page, () => [window.__srv.calls.find((c) => c[0] === 'exchange')[1], window.__nat.closed, App.S.status.provider])).toEqual(['abc123', 1, 'apple']);
+  // روابط ثانية ما تنلمس
+  expect(await store(page, () => HayatiNative.onAuthUrl('https://example.com/x'))).toBe(false);
 });

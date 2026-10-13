@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+/* Sports Hub identity — one palette for the app, the promo overlays and the store art.
+   Source of truth: sports-hub-promo/overlays/theme.json (acc, clay, hi). */
+@theme {
+  --font-sans: "Tajawal", ui-sans-serif, system-ui, sans-serif;
+  --font-num: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-night: #05080f;      /* page background */
+  --color-deep: #0a1220;       /* solid surface (no blur fallback) */
+  --color-ink: #eaf6ff;        /* primary text */
+  --color-mute: #93a7bb;       /* secondary text: 7.9:1 on night */
+  --color-line: #5b7083;       /* hairlines only, not text */
+  --color-pulse: #00e5ff;      /* accent: live, active, focus */
+  --color-pulse-ink: #001a1f;  /* text on pulse */
+  --color-crimson: #ce1126;    /* Bahrain red: fills only */
+  --color-crimson-ink: #ff5a69;/* red as text on night */
+  --color-gold: #d4af37;       /* VIP + "my club" highlight */
+  --color-safe: #3ddc97;
+  --color-warn: #ffb020;
+}
+
+@layer base {
+  html { -webkit-tap-highlight-color: transparent; text-size-adjust: 100%; color-scheme: dark; }
+  body {
+    @apply bg-night font-sans text-[15px] leading-relaxed text-ink antialiased;
+    background-image:
+      radial-gradient(60rem 40rem at 85% -10%, rgb(0 229 255 / 0.10), transparent 60%),
+      radial-gradient(50rem 35rem at -10% 110%, rgb(206 17 38 / 0.10), transparent 60%);
+    background-attachment: fixed;
+  }
+  input, select, textarea { font-size: 16px; } /* no iOS zoom on focus */
+  :focus-visible { @apply outline-2 outline-offset-2 outline-pulse; }
+  button { cursor: pointer; }
+}
+
+@layer components {
+  /* Glass panel: blur only where supported, solid deep surface otherwise. */
+  .glass {
+    @apply rounded-2xl border border-white/10 bg-deep;
+  }
+  @supports (backdrop-filter: blur(1px)) {
+    .glass { @apply bg-white/[0.04] backdrop-blur-xl; }
+  }
+  .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

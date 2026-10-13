@@ -131,7 +131,7 @@ button.hero-stat { cursor: pointer; }
 @keyframes toast-out { to { opacity: 0; transform: translateY(8px); } }
 @media (min-width: 768px) { .toast-zone { bottom: 24px; } }
 
-/* DW-011: المتأخرات، الإيصال، الصيانة، الإعدادات */
+/* DW-012: المتأخرات، الإيصال، الصيانة، الإعدادات */
 .hero-owed { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 8px; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid rgb(255 138 120 / .35); background: rgb(184 58 43 / .18); color: inherit; font-size: 13px; cursor: pointer; text-align: start; }
 .hero-owed .money { font-family: var(--font-display); font-size: 17px; color: #FFB4A8; }
 .hero-owed .bhd::after { color: rgb(255 180 168 / .7); }

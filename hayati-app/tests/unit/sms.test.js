@@ -1,7 +1,7 @@
 // قارئ رسائل البنك: أرقام ومحلات وتصنيفات (node --test)
 const test = require('node:test');
 const assert = require('node:assert');
-const P = require('../../sms.js');
+const P = require('../../js/core/sms.js');
 
 test('BenefitPay / card purchase → expense with merchant and category', () => {
   const r = P.parse('Your card XX4821 was used for BHD 3.750 at COSTA COFFEE SEEF on 11/10/26. Avl bal BHD 412.300');

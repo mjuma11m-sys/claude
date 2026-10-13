@@ -1,4 +1,4 @@
-// إداراتي — motion hooks (DW-007 · ديوانية الموشن)
+// إداراتي — motion hooks (DW-008 · ديوانية الموشن)
 // القاعدة: الحركة تخدم التغيير، مو كل فتح. كلها تحترم prefers-reduced-motion.
 import { useEffect, useRef, useState } from "react";
 
