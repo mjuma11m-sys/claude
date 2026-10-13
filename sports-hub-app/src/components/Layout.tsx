@@ -81,7 +81,7 @@ export function Layout() {
             {demo && <span className="rounded-full bg-warn/15 px-2.5 py-0.5 text-xs text-warn"><span className="sm:hidden">تجريبي</span><span className="hidden sm:inline">وضع تجريبي</span></span>}
             {club && <span className="hidden items-center gap-2 rounded-full bg-white/5 py-0.5 pe-3 ps-1 sm:flex"><ClubBadge name={club} size="sm" mine /> <span>{club}</span></span>}
             {user && <span className="max-w-28 truncate rounded-full bg-white/5 px-2.5 py-0.5 text-xs text-mute sm:text-sm">{ROLE_LABEL[user.role]}</span>}
-            <NavLink to="/settings" className="rounded-full p-1.5 text-mute hover:text-ink md:hidden" aria-label="الإعدادات">
+            <NavLink to="/settings" className="-me-1.5 grid size-11 place-items-center rounded-full text-mute hover:text-ink md:hidden" aria-label="الإعدادات">
               <Icon name="gear" />
             </NavLink>
           </div>

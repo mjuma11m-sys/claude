@@ -36,9 +36,9 @@ export function InstallPrompt() {
         ) : (
           <p className="text-mute">من Safari: اضغط زر المشاركة <span aria-hidden>⎙</span> ثم «إضافة إلى الشاشة الرئيسية».</p>
         )}
-        {ev && <button onClick={() => ev.prompt().then(dismiss)} className="mt-2 rounded-xl bg-pulse px-4 py-1.5 text-sm font-bold text-pulse-ink">ثبّت</button>}
+        {ev && <button onClick={() => ev.prompt().then(dismiss)} className="mt-2 min-h-11 rounded-xl bg-pulse px-5 text-sm font-bold text-pulse-ink">ثبّت</button>}
       </div>
-      <button onClick={dismiss} aria-label="إخفاء" className="rounded-full p-1 text-mute hover:text-ink">✕</button>
+      <button onClick={dismiss} aria-label="إخفاء" className="-m-2 grid size-11 place-items-center rounded-full text-mute hover:text-ink">✕</button>
     </aside>
   )
 }

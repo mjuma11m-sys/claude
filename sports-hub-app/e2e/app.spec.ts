@@ -30,6 +30,7 @@ test.describe('every screen', () => {
     await page.goto('/') // a fresh load: after in-app navigation focus deliberately moves to the page content
     await page.evaluate(() => localStorage.setItem('sh.demoRole', 'fan'))
     await page.goto('/')
+    await expect(page.getByRole('link', { name: 'تخطي للمحتوى' })).toBeAttached() // wait for React to paint before pressing Tab
     await page.keyboard.press('Tab')
     await expect(page.locator(':focus')).toHaveText('تخطي للمحتوى')
     await page.goto('/no-such-page')

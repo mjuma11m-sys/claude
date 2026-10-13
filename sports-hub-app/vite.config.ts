@@ -1,8 +1,10 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
+  // Unit tests only: browser specs in e2e/ belong to Playwright.
+  test: { include: ['src/**/*.test.ts', 'scripts/**/*.test.mjs'] },
   plugins: [react(), tailwindcss()],
   build: {
     rolldownOptions: {

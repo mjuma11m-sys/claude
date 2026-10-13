@@ -42,7 +42,7 @@ export function Settings() {
               const c = clubs.data?.find((x) => x.id === e.target.value)
               if (c) choose(c).catch(() => setError('ما انحفظ النادي، حاول مرة ثانية'))
             }}
-            className="min-w-0 rounded-xl border border-white/15 bg-deep px-3 py-2"
+            className="min-h-11 min-w-0 rounded-xl border border-white/15 bg-deep px-3"
           >
             <option value="" disabled>اختر</option>
             {clubs.data?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -61,11 +61,11 @@ export function Settings() {
         </p>
         {confirming ? (
           <div className="flex flex-wrap gap-2">
-            <button onClick={eraseAll} className="rounded-xl bg-crimson px-4 py-2 text-sm font-bold text-white">أكّد الحذف</button>
-            <button onClick={() => setConfirming(false)} className="rounded-xl border border-white/15 px-4 py-2 text-sm">إلغاء</button>
+            <button onClick={eraseAll} className="min-h-11 rounded-xl bg-crimson px-4 text-sm font-bold text-white">أكّد الحذف</button>
+            <button onClick={() => setConfirming(false)} className="min-h-11 rounded-xl border border-white/15 px-4 text-sm">إلغاء</button>
           </div>
         ) : (
-          <button onClick={() => setConfirming(true)} className="rounded-xl border border-crimson/50 px-4 py-2 text-sm text-crimson-ink">احذف كل بياناتي</button>
+          <button onClick={() => setConfirming(true)} className="min-h-11 rounded-xl border border-crimson/50 px-4 text-sm text-crimson-ink">احذف كل بياناتي</button>
         )}
         {error && <p role="alert" className="text-sm text-crimson-ink">{error}</p>}
       </div>

@@ -13,7 +13,8 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "e2e": "playwright test",
-    "verify": "tsc -b && vitest run && vite build && playwright test"
+    "verify": "tsc -b && vitest run && vite build && node scripts/budget.mjs && playwright test",
+    "import:standings": "node scripts/import-standings.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",
@@ -24,6 +25,7 @@
     "react-router": "7.18.4"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.56.1",
     "@tailwindcss/vite": "4.3.3",
     "@types/react": "19.3.0",

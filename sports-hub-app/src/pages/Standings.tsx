@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { DemoNote } from '../components/DemoNote'
+import { DataStamp } from '../components/DataStamp'
 import { StandingsTable } from '../components/StandingsTable'
 import { Failed, Loading } from '../components/States'
 import { getLeagues } from '../data/source'
@@ -28,7 +29,7 @@ export function Standings() {
                 role="tab"
                 aria-selected={l.id === league.id}
                 onClick={() => setId(l.id)}
-                className={`rounded-xl px-4 py-2 text-sm transition-colors ${l.id === league.id ? 'bg-pulse/15 text-pulse' : 'text-mute hover:text-ink'}`}
+                className={`min-h-11 rounded-xl px-4 text-sm transition-colors ${l.id === league.id ? 'bg-pulse/15 text-pulse' : 'text-mute hover:text-ink'}`}
               >
                 {l.name}
               </button>
@@ -39,7 +40,7 @@ export function Standings() {
           </div>
         </>
       )}
-      {load.data.demo && <DemoNote />}
+      {league && (league.updatedAt ? <DataStamp updatedAt={league.updatedAt} source={league.source} /> : <DemoNote />)}
     </section>
   )
 }

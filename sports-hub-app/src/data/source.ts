@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import type { Row } from '../lib/standings'
 import { LEAGUES, MOTM_CANDIDATES, MOTM_SEED, MY_CLUB, NEXT_MATCH } from './demo'
 
-type League = { id: string; name: string; rows: Row[] }
+type League = { id: string; name: string; rows: Row[]; updatedAt: string | null; source: string | null }
 type Candidate = { id: string; name: string; num: number | null; pos: string }
 type Match = { id: string; home: string; away: string; venue: string; kickoff: string; candidates: Candidate[] }
 type Result<T> = { data: T; demo: boolean }
@@ -20,23 +20,30 @@ const local = {
 
 type LeagueRow = {
   id: string; name: string
-  league_entries: { played: number; won: number; drawn: number; lost: number; gf: number; ga: number; is_demo: boolean; clubs: { name: string } | null }[]
+  league_entries: { played: number; won: number; drawn: number; lost: number; gf: number; ga: number; is_demo: boolean; source: string | null; updated_at: string; clubs: { name: string } | null }[]
 }
 
 export async function getLeagues(): Promise<Result<League[]>> {
-  if (!supabase) return { data: LEAGUES.map((l) => ({ id: l.id, name: l.name, rows: [...l.rows] })), demo: true }
+  if (!supabase) return { data: LEAGUES.map((l) => ({ id: l.id, name: l.name, rows: [...l.rows], updatedAt: null, source: null })), demo: true }
   const { data, error } = await supabase
     .from('leagues')
-    .select('id, name, league_entries(played, won, drawn, lost, gf, ga, is_demo, clubs(name))')
+    .select('id, name, league_entries(played, won, drawn, lost, gf, ga, is_demo, source, updated_at, clubs(name))')
     .order('tier')
     .returns<LeagueRow[]>()
   if (error) throw error
   return {
-    data: data.map((l) => ({
-      id: l.id,
-      name: l.name,
-      rows: l.league_entries.map(({ clubs, is_demo: _d, ...r }) => ({ team: clubs?.name ?? '—', ...r })),
-    })),
+    data: data.map((l) => {
+      // Freshness only counts when every row is real; one demo row makes the whole table "demo".
+      const real = l.league_entries.length > 0 && l.league_entries.every((e) => !e.is_demo)
+      const latest = real ? [...l.league_entries].sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0] : null
+      return {
+        id: l.id,
+        name: l.name,
+        rows: l.league_entries.map(({ clubs, is_demo: _d, source: _s, updated_at: _u, ...r }) => ({ team: clubs?.name ?? '—', ...r })),
+        updatedAt: latest?.updated_at ?? null,
+        source: latest?.source ?? null,
+      }
+    }),
     demo: data.some((l) => l.league_entries.some((e) => e.is_demo)),
   }
 }

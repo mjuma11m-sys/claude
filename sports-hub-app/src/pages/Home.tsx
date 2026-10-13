@@ -64,14 +64,14 @@ export function Home() {
               </p>
               <div className="mt-5"><Countdown to={match.kickoff} /></div>
               <div className="mt-6 flex flex-wrap justify-center gap-2">
-                <Link to="/vote" className="rounded-xl bg-pulse px-5 py-2.5 text-sm font-bold text-pulse-ink transition active:scale-[0.98]">صوّت لرجل المباراة</Link>
-                <Link to="/pass" className="rounded-xl border border-gold/40 px-5 py-2.5 text-sm text-gold transition active:scale-[0.98]">تذكرتي الموسمية</Link>
+                <Link to="/vote" className="grid min-h-11 place-items-center rounded-xl bg-pulse px-5 text-sm font-bold text-pulse-ink transition active:scale-[0.98]">صوّت لرجل المباراة</Link>
+                <Link to="/pass" className="grid min-h-11 place-items-center rounded-xl border border-gold/40 px-5 text-sm text-gold transition active:scale-[0.98]">تذكرتي الموسمية</Link>
               </div>
               <div className="mt-3 flex flex-wrap justify-center gap-2">
-                <button onClick={() => downloadIcs(match)} className="inline-flex items-center gap-2 rounded-xl border border-white/15 px-4 py-2 text-sm transition hover:border-white/30 active:scale-[0.98]">
+                <button onClick={() => downloadIcs(match)} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/15 px-4 text-sm transition hover:border-white/30 active:scale-[0.98]">
                   <Icon name="cal" className="size-4" />أضف للتقويم
                 </button>
-                <ShareButton text={`${match.home} ضد ${match.away}: صوّت لرجل المباراة`} path="/vote" className="!py-2" />
+                <ShareButton text={`${match.home} ضد ${match.away}: صوّت لرجل المباراة`} path="/vote" />
               </div>
             </>
           ) : (
@@ -104,7 +104,7 @@ export function Home() {
             <article className="glass rise p-3 md:p-4" style={{ '--i': 4 } as React.CSSProperties}>
               <div className="mb-1 flex items-center justify-between px-2">
                 <h2 className="font-bold">{top.name}</h2>
-                <Link to="/standings" className="text-sm text-pulse">الكل</Link>
+                <Link to="/standings" className="-mx-3 -my-3 px-3 py-3 text-sm text-pulse">الكل</Link>
               </div>
               <StandingsTable rows={window} compact />
             </article>

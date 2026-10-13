@@ -16,6 +16,8 @@ grant select on t to anon, authenticated;
 
 select pg_temp.check((select count(*) = 20 from public.league_entries), 'seed: 12 + 8 table rows');
 select pg_temp.check((select count(*) = 5 from public.motm_candidates), 'seed: 5 candidates for the next match');
+select pg_temp.check((select bool_and(w = l and gf = ga and d % 2 = 0) from (select league_id, sum(won) w, sum(lost) l, sum(gf) gf, sum(ga) ga, sum(drawn) d from public.league_entries group by league_id) t), 'seed: every league table closes (wins = losses, goals for = against, draws even)');
+select pg_temp.check((select bool_and(played = won + drawn + lost) from public.league_entries), 'seed: played = won + drawn + lost on every row');
 
 set role anon;
 select pg_temp.check((select count(*) = 2 from public.leagues), 'anon reads leagues');

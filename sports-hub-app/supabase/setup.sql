@@ -172,6 +172,19 @@ create function public.motm_tally(p_match uuid) returns table (player_id uuid, v
      group by c.player_id $$;
 grant execute on function public.motm_tally(uuid) to anon, authenticated;
 
+-- ===== migrations/0004_data_provenance.sql =====
+-- Where did this number come from, and when was it last touched? The app shows both next to real data.
+alter table public.league_entries add column source text, add column updated_at timestamptz not null default now();
+alter table public.matches        add column source text, add column updated_at timestamptz not null default now();
+
+create function public.touch_updated_at() returns trigger language plpgsql set search_path = '' as
+  $$ begin new.updated_at = now(); return new; end $$;
+
+create trigger league_entries_touch before update on public.league_entries
+  for each row execute function public.touch_updated_at();
+create trigger matches_touch before update on public.matches
+  for each row execute function public.touch_updated_at();
+
 -- ===== seed_demo.sql =====
 -- Demo data mirroring src/data/demo.ts. Every row is is_demo = true; replace with real data via the service role.
 
@@ -221,9 +234,9 @@ from (values
   ('المالكية', 10, 5, 3, 2, 14, 10),
   ('الأهلي', 10, 4, 4, 2, 12, 10),
   ('الحد', 10, 4, 3, 3, 11, 11),
-  ('المنامة', 10, 4, 2, 4, 13, 13),
-  ('الرفاع الشرقي', 10, 3, 3, 4, 10, 12),
-  ('سترة', 10, 3, 2, 5, 9, 14),
+  ('المنامة', 10, 3, 2, 5, 13, 13),
+  ('الرفاع الشرقي', 10, 2, 3, 5, 10, 12),
+  ('سترة', 10, 2, 2, 6, 9, 14),
   ('البحرين', 10, 2, 3, 5, 8, 14),
   ('النجمة', 10, 2, 2, 6, 7, 15),
   ('الشباب', 10, 1, 3, 6, 6, 17)
@@ -237,7 +250,7 @@ from (values
   ('مدينة عيسى', 9, 5, 3, 1, 13, 7),
   ('البديع', 9, 5, 1, 3, 12, 9),
   ('الاتحاد', 9, 4, 2, 3, 11, 10),
-  ('التضامن', 9, 3, 3, 3, 9, 9),
+  ('التضامن', 9, 2, 3, 4, 9, 9),
   ('أم الحصم', 9, 2, 3, 4, 8, 12),
   ('البسيتين', 9, 2, 2, 5, 7, 13),
   ('العكر', 9, 1, 2, 6, 5, 14)
