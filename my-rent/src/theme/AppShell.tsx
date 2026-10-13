@@ -5,6 +5,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import "./tokens.css";
 import "./AppShell.css";
 import "./motion.css";
+import symbolUrl from "../../brand/symbol.svg";
 import { useCountUp, usePresence, usePulseOn, useReplayClass } from "./motion";
 
 export type NavItem = { id: string; label: string; icon: ReactNode; badge?: number };
@@ -13,7 +14,7 @@ type Props = {
   items: NavItem[];          // بالترتيب: أول 4 تطلع بالشريط السفلي بالجوال، الباقي تحت «المزيد»
   active: string;
   onNavigate: (id: string) => void;
-  title: string;
+  title: ReactNode;
   actions?: ReactNode;       // أزرار الهيدر (بحث، إشعارات…)
   onAdd?: () => void;        // زر الإضافة الذهبي — واحد بس بالشاشة
   children: ReactNode;
@@ -45,7 +46,7 @@ export function AppShell({ items, active, onNavigate, title, actions, onAdd, chi
     <div className="shell" dir="rtl">
       <aside className="shell-side" aria-label="الأقسام">
         <div className="shell-logo">
-          <img src="/icons/symbol.svg" alt="" width={32} height={32} />
+          <img src={symbolUrl} alt="" width={32} height={32} />
           <span>إداراتي</span>
         </div>
         <nav>

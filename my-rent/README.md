@@ -1,4 +1,20 @@
-# إداراتي (My-rent) — الهوية والهيكل الموحد · DW-007
+# إداراتي (My-rent)
+
+## التشغيل (DW-010)
+```bash
+cd my-rent
+npm install
+npm run dev        # http://localhost:5173
+npm run build      # tsc + vite → dist/ (ارفع dist على Netlify)
+npm test           # 12 اختبار Playwright: 8 شاشات × 3 أحجام، دفعة + تراجع، مصروف، Escape، تقليل الحركة
+```
+- الشاشات: `src/pages/` · البيانات: `src/data/` (تجريبية، تنحفظ بـ localStorage).
+- **ربط Supabase:** بدّل `load()` و`dispatch` في `src/data/store.tsx` بس؛ الشاشات تقرا من `useStore()` وما تتغيّر.
+- المبالغ كلها بالفلس (integer)، والتنسيق في `src/data/logic.ts`.
+
+---
+
+# الهوية والهيكل الموحد · DW-007
 
 حزمة تنحط داخل مشروع React + TypeScript الحالي (اللي على Netlify). ما تغيّر أي منطق ولا بيانات، تغيّر الشكل بس.
 
@@ -10,7 +26,6 @@
 | `src/theme/tailwind.preset.js` | `src/theme/` | لو المشروع يستخدم Tailwind: كلاسات `bg-brand`، `text-late`… |
 | `brand/icon.svg` | `public/icons/` | الشعار ومصدر الأيقونات |
 | `brand/manifest.webmanifest` | `public/` | PWA: الاسم، RTL، ألوان شاشة البداية |
-| `preview.html` | — | معاينة: افتحه بالمتصفح وغيّر عرض النافذة |
 
 ## الربط (4 خطوات)
 1. `main.tsx`: `import "./theme/tokens.css";` أول import.

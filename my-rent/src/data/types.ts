@@ -1,0 +1,36 @@
+// كل المبالغ بالفلس (integer). 1 د.ب = 1000 فلس.
+export type Fils = number;
+export type Status = "paid" | "due" | "late";
+
+export type Unit = {
+  id: string;
+  name: string;
+  building: string;
+  rent: Fils;
+  dueDay: number; // يوم الاستحقاق بالشهر
+  tenant?: { name: string; phone: string; since: string };
+};
+
+export type Payment = { id: string; unitId: string; month: string; amount: Fils; method: Method; date: string };
+export type Method = "BenefitPay" | "تحويل" | "نقد" | "شيك";
+
+export type BudgetCat = { id: string; name: string; limit: Fils };
+export type Expense = { id: string; catId: string; label: string; amount: Fils; date: string };
+
+export type Member = { id: string; name: string };
+export type BankTxn = { id: string; memberId: string; amount: Fils; label: string; date: string };
+
+export type ListItem = { id: string; title: string; sub: string; value?: Fils; tag?: { label: string; tone: Status } };
+
+export type Data = {
+  units: Unit[];
+  payments: Payment[];
+  cats: BudgetCat[];
+  expenses: Expense[];
+  members: Member[];
+  bank: BankTxn[];
+  wallet: ListItem[];
+  travel: ListItem[];
+  house: ListItem[];
+  vendors: ListItem[];
+};
