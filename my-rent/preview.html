@@ -1,0 +1,23 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14213A"><title>إداراتي</title>
+<link rel="stylesheet" href="src/theme/tokens.css"><link rel="stylesheet" href="src/theme/AppShell.css"></head><body>
+<div class="shell">
+<aside class="shell-side"><div class="shell-logo"><img src="brand/icon.svg" width="32" height="32" alt=""><span>إداراتي</span></div>
+<nav id="side"></nav></aside>
+<div class="shell-main"><header class="shell-header"><h1>المستأجرين</h1><div class="shell-actions"></div></header>
+<main class="shell-content">
+<div class="card" style="background:var(--night);color:#F5F2EB;border:0;margin-bottom:12px"><div style="opacity:.7;font-size:13px">تحصيل أكتوبر</div>
+<div style="font-size:30px;font-weight:700"><span class="num bhd">2,450.000</span></div><div style="font-size:13px;opacity:.7">من <span class="num">3,100.000</span> · 9 من 12 شقة</div></div>
+<div class="grid-cards" id="cards"></div>
+<p style="color:var(--muted);font-size:12px">* لقطات ببيانات تجريبية</p>
+</main></div>
+<button class="fab" aria-label="إضافة"><svg viewBox="0 0 24 24" width="26" height="26"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+<nav class="shell-bottom" id="bottom"></nav></div>
+<script>
+const I=d=>`<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const items=[["home","الرئيسية",'<path d="M3 11l9-7 9 7v9H3z"/>'],["tenants","المستأجرين",'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6 6 0 0 0-4-5.6"/>',3],["budget","الميزانية",'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'],["bank","بنك العائلة",'<path d="M3 9l9-5 9 5M5 9v9M10 9v9M14 9v9M19 9v9M3 20h18"/>'],["wallet","المحفظة",'<rect x="3" y="6" width="18" height="14" rx="2"/><path d="M16 13h2"/>'],["travel","السفر",'<path d="M2 16l20-6-3-2-6 2-6-5-2 1 3 5-4 1-2-1z"/>'],["house","المنزل",'<path d="M5 10v10h14V10M9 20v-6h6v6"/>'],["vendors","الموردين",'<path d="M3 7h13v10H3zM16 10h4l1 3v4h-5"/><circle cx="7" cy="18" r="1.5"/><circle cx="18" cy="18" r="1.5"/>']];
+side.innerHTML=items.map(([id,l,p,b])=>`<button class="side-item hoverable" ${id=="tenants"?'aria-current="page"':''}>${I(p)}<span class="side-label">${l}</span>${b?`<span class="badge num">${b}</span>`:''}</button>`).join("");
+bottom.innerHTML=items.slice(0,4).map(([id,l,p,b])=>`<button class="bottom-item" ${id=="tenants"?'aria-current="page"':''}>${I(p)}<span>${l}</span>${b?`<span class="badge num">${b}</span>`:''}</button>`).join("")+`<button class="bottom-item">${I('<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>')}<span>المزيد</span></button>`;
+const T=[["شقة 1 · المالكية","أحمد عبدالله","180.000","paid","مدفوع"],["شقة 2 · المالكية","يوسف محمد","220.000","due","مستحق"],["شقة 3 · المالكية","عائلة سلمان","200.000","late","متأخر"],["شقة 4 · المالكية","خالد ناصر","190.000","paid","مدفوع"],["محل 1","مطعم الريف","450.000","paid","مدفوع"],["شقة 5 · المالكية","—","200.000","due","مستحق"]];
+cards.innerHTML=T.map(t=>`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><strong>${t[0]}</strong><span class="pill pill-${t[3]}">${t[4]}</span></div><div style="color:var(--muted);font-size:14px">${t[1]}</div><div style="margin-top:8px"><span class="num bhd money">${t[2]}</span></div></div>`).join("");
+</script></body></html>
