@@ -70,5 +70,5 @@ No account is required. All data is stored on the device. No ads, no tracking.
 ```
 
 ## ⚠️ لا تسوي
-- لا تعدّل ملفات داخل `ios/App/App/public/`: تنمسح مع كل `cap:sync`. التعديل يصير بملفات التطبيق نفسها (`app.js`…).
+- لا تعدّل ملفات داخل `ios/App/App/public/`: تنمسح مع كل `cap:sync`. التعديل يصير بملفات التطبيق نفسها (`js/`…).
 - لا ترفع شهادات التوقيع أو كلمات السر للريبو.

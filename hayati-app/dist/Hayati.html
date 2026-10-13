@@ -684,7 +684,7 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-  <script>/* i18n-en.js */
+  <script>/* js/i18n/i18n-en.js */
 // قاموس الإنقليزي: النص العربي كما يظهر ← الإنقليزي. الكلمات القصيرة اللي ممكن تكون أسماء (علي، لي…) مو فيه عشان ما تتغير بياناتك
 window.HAYATI_EN = {
 "رأيك بالتطبيق":"Your feedback","دقيقة وحدة، وكل رأي ينقرا":"One minute, and every opinion is read","انسخ وأرسل":"Copy & send",
@@ -1938,7 +1938,7 @@ window.HAYATI_EN = {
 };
 
 </script>
-  <script>/* i18n.js */
+  <script>/* js/i18n/i18n.js */
 // 🌐 اللغة: العربي الأصل، والإنقليزي طبقة عرض بس — تترجم النص اللي يطلع على الشاشة بدون ما تلمس بياناتك
 //   localStorage «hayati-lang» = 'en' | 'ar'
 (function () {
@@ -2031,7 +2031,7 @@ window.HAYATI_EN = {
 })();
 
 </script>
-  <script>/* config.js */
+  <script>/* js/core/config.js */
 // بيانات الربط مع Supabase (Project Settings → API)
 // إذا عبّيتها هنا، كل الأجهزة تتربط تلقائياً وتحتاج بس تسجيل دخول.
 // إذا تركتها فاضية، تقدر تدخلها من الإعدادات داخل التطبيق.
@@ -2041,7 +2041,7 @@ window.HAYATI_CONFIG = {
 };
 
 </script>
-  <script>/* sms.js */
+  <script>/* js/core/sms.js */
 // قارئ رسائل البنوك و BenefitPay — يطلّع المبلغ ونوع العملية واسم المحل والتصنيف
 (function (global) {
   'use strict';
@@ -2296,7 +2296,7 @@ window.HAYATI_CONFIG = {
 })(typeof window !== 'undefined' ? window : globalThis);
 
 </script>
-  <script>/* store.js */
+  <script>/* js/core/store.js */
 // حفظ البيانات محلياً + مزامنتها مع Supabase بين الجوال والماك
 (function (global) {
   'use strict';
@@ -2811,7 +2811,7 @@ window.HAYATI_CONFIG = {
 })(window);
 
 </script>
-  <script>/* calendar.js */
+  <script>/* js/features/calendar.js */
 // تصدير الجدول والمهام إلى تقويم الآيفون/الماك مع تنبيهات
 (function (global) {
   'use strict';
@@ -3005,7 +3005,7 @@ window.HAYATI_CONFIG = {
 })(window);
 
 </script>
-  <script>/* icons.js */
+  <script>/* js/core/icons.js */
 // أيقونات خطية موحّدة (بأسلوب Lucide)
 (function (global) {
   'use strict';
@@ -3085,7 +3085,7 @@ window.HAYATI_CONFIG = {
 })(window);
 
 </script>
-  <script>/* app.js */
+  <script>/* js/core/app.js */
 // حياتي — الواجهة
 (function () {
   'use strict';
@@ -3093,7 +3093,7 @@ window.HAYATI_CONFIG = {
   const S = window.Store;
   const st = S.state;
   const I = window.icon;
-  const APP_VERSION = 'v14';   // نفس رقم sw.js (فيه اختبار يتأكد)
+  const APP_VERSION = 'v15';   // نفس رقم sw.js (فيه اختبار يتأكد)
 
   // ---------- ثوابت ----------
   const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
@@ -5090,7 +5090,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* extras.js */
+  <script>/* js/features/extras.js */
 // حياتي — الإضافات: الصلاة، العادات، الماء والنوم، ملخص الصباح، تنبيه الميزانية، ميزانية التصنيفات،
 // التوفير من الدخل، صورة الفاتورة، الغياب والملاحظات، «كم أحتاج»، خطة المراجعة، أوزان الجيم، مؤقت الراحة،
 // وزن الجسم، والوضع الغامق اليدوي.
@@ -5717,7 +5717,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* extras2.js */
+  <script>/* js/features/extras2.js */
 // حياتي — إضافات 2: تقسيم الفاتورة، تحديات التوفير، ملخص السنة، الدرجات الجزئية، بطاقات المراجعة،
 // الاختبارات الجاية، وضع التركيز، تمارين بديلة، المساعد الذكي، المناسبات، المشتريات، اليوميات والمزاج.
 (function () {
@@ -6296,7 +6296,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* extras3.js */
+  <script>/* js/features/extras3.js */
 // تقرير الأسبوع + وضع الحارس ⚽🧤
 (function () {
   'use strict';
@@ -6546,7 +6546,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* study.js */
+  <script>/* js/features/study.js */
 // الدراسة: سؤال الحضور بعد كل محاضرة · هدف مذاكرة أسبوعي لكل مادة · جاهزية الاختبارات (مواضيع)
 (function () {
   'use strict';
@@ -6747,7 +6747,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* watch.js */
+  <script>/* js/features/watch.js */
 // ⌚ Apple Watch: اختصار بالآيفون يقرا النوم من تطبيق الصحة كل صبح ويفتح التطبيق برابط فيه الأرقام
 //   …/#health?sleep=7.25&deep=1.1&rem=1.6&rhr=54&hrv=48&steps=8200   (date اختياري = اليوم)
 (function () {
@@ -6915,7 +6915,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* import.js */
+  <script>/* js/features/import.js */
 // ⚽ استيراد جدول تمارين كرة القدم: صورة · PDF · أو رسالة المدرب (نص)
 // داخل Claude: Claude يقرا الملف. برّاه: قارئ محلي للنص (أيام + أوقات).
 (function () {
@@ -7131,7 +7131,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* lock.js */
+  <script>/* js/features/lock.js */
 // قفل التطبيق برمز سري: يحمي بياناتك لو أحد مسك جوالك وهو مفتوح
 // الرمز ما ينحفظ — بس بصمته (PBKDF2 + ملح) على هالجهاز. نسيت الرمز؟ امسح بيانات الموقع وسجّل دخول Claude من جديد.
 (function (global) {
@@ -7341,7 +7341,7 @@ window.HAYATI_CONFIG = {
 })(window);
 
 </script>
-  <script>/* motion.js */
+  <script>/* js/features/motion.js */
 // الحركة: دخول الشاشات، فتح وسكر النوافذ، وتحريك الأرقام والأشرطة لما تتغيّر
 (function (global) {
   'use strict';
@@ -7677,7 +7677,7 @@ window.HAYATI_CONFIG = {
 })(window);
 
 </script>
-  <script>/* pwa.js */
+  <script>/* js/features/pwa.js */
 // 🔴 رقم على أيقونة التطبيق = مهام اليوم + المتأخرة اللي ما خلصت (iOS 16.4+ بعد ما تثبّته وتسمح بالتنبيهات)
 (function () {
   'use strict';
@@ -7727,7 +7727,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* find.js */
+  <script>/* js/features/find.js */
 // 🔎 بحث بكل التطبيق (مصاريف، مهام، جدول، مباريات) + ↩️ تراجع بعد أي حذف
 (function () {
   'use strict';
@@ -7867,7 +7867,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* insights.js */
+  <script>/* js/features/insights.js */
 // 📈 توقع آخر الشهر + 🧤 جاهزية اليوم (نوم + HRV + نبض + حِمل أمس)
 (function () {
   'use strict';
@@ -7972,7 +7972,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* community.js */
+  <script>/* js/features/community.js */
 // 👥 «حياتي» للكل: بطاقة تعارف أول مرة (الاسم، مين أنت، الصلاة، الميزانية) + «ملفك» بالإعدادات
 //   roles فاضية = كل الميزات (المستخدمين القدامى ما يتغير عليهم شي)
 (function () {
@@ -8137,7 +8137,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* privacy.js */
+  <script>/* js/features/privacy.js */
 // 🔒 الخصوصية: إخفاء أرقام البطاقات بالرسايل القديمة + «سياسة الخصوصية» + «احذف كل بياناتي»
 (function () {
   'use strict';
@@ -8244,7 +8244,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* native.js */
+  <script>/* js/native/native.js */
 // 📱 نسخة الآيفون (Capacitor): تنبيهات «الحين وقت…» والتطبيق مسكّر، اهتزاز خفيف، ومشاركة الملفات
 //   بالمتصفح (Vercel وClaude) هالملف ما يسوي شي، لأن Capacitor مو موجود
 (function () {

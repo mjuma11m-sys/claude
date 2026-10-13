@@ -49,7 +49,7 @@ PAGES['a7-five-cta.jpg'] = [W, H, BASE(W, H) + `<div style="position:absolute;in
 <div style="position:absolute;left:0;right:0;top:1190px;display:flex;justify-content:center;align-items:center;gap:18px;color:var(--sea);font-size:38px;direction:ltr">${LOGO(70)}@hayati.bh</div>`];
 
 // ================= كاروسيل B: «التذكيرات الذكية» (الجمعة 23 أكتوبر) =================
-// النص حرفياً من hayati-app/native.js
+// النص حرفياً من hayati-app/js/native/native.js
 const NOTE = (title, body, when) => `<div style="display:flex;gap:22px;align-items:flex-start;padding:24px 26px;border-radius:40px;background:rgba(245,245,247,.82);backdrop-filter:blur(20px);color:#111;box-shadow:0 20px 40px -20px rgba(0,0,0,.45)">
 <div style="flex:none;width:84px;height:84px;border-radius:20px;overflow:hidden">${LOGO(84)}</div>
 <div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;font-size:30px;font-weight:400;color:#555"><span>حياتي</span><span>${when}</span></div>

@@ -5,7 +5,7 @@ const fs = require('fs'), path = require('path'), vm = require('vm');
 const D = __dirname, OUT = path.join(D, 'out');
 fs.mkdirSync(OUT, { recursive: true });
 // نفس أيقونات التطبيق
-const ctx = { window: {} }; vm.runInNewContext(fs.readFileSync('/home/user/claude/hayati-app/icons.js', 'utf8'), ctx);
+const ctx = { window: {} }; vm.runInNewContext(fs.readFileSync('/home/user/claude/hayati-app/js/core/icons.js', 'utf8'), ctx);
 const I = (n, w) => ctx.window.icon(n).replace('class="i"', 'width="' + w + '" height="' + w + '"');
 const shot = (n) => 'file://' + path.join(D, '../hayati-promo-v2/shots/' + n + '.png');
 const MARK = '<svg viewBox="0 0 512 512" class="mark"><rect width="512" height="512" rx="116" fill="#0E3B43" stroke="rgba(232,220,196,.22)" stroke-width="6"/><path d="M 383.3 172.7 A 160 160 0 1 1 300 102.2" fill="none" stroke="#E8DCC4" stroke-opacity=".28" stroke-width="22" stroke-linecap="round"/><path d="M 304 166 L 196 166 L 264 222 C 204 222 168 254 168 292 C 168 336 206 360 256 360 C 292 360 318 348 338 332" fill="none" stroke="#E8DCC4" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/><circle cx="352" cy="128" r="30" fill="#FF6B4A"/></svg>';
