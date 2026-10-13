@@ -2065,6 +2065,9 @@ window.HAYATI_EN = {
 // بيانات الربط مع Supabase (Project Settings → API)
 // إذا عبّيتها هنا، كل الأجهزة تتربط تلقائياً وتحتاج بس تسجيل دخول.
 // إذا تركتها فاضية، تقدر تدخلها من الإعدادات داخل التطبيق.
+// ⚠️ نسخة المتجر (DW-001 + DW-008): الاختبار المغلق الأول يطلع وهالملف فاضي (بدون حسابات).
+//   لو عبّيته بنسخة المتجر: Google Play ← Data safety يتغير لـ «Personal info + Financial info: Collected»،
+//   وسياسة الخصوصية لازم تذكر دولة سيرفر Supabase. لا تعبّيه قبل ما تحدّثهم.
 window.HAYATI_CONFIG = {
   SUPABASE_URL: '',
   SUPABASE_ANON_KEY: '',
@@ -8816,7 +8819,21 @@ window.HAYATI_CONFIG = {
     try { const r = AppP.addListener('appUrlOpen', (ev) => onAuthUrl(ev && ev.url)); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
   }
 
-  window.HayatiNative = { saveFile, shareText, reschedule, upcoming, testNotification, prefs, savePrefs, oauth, onAuthUrl };
+  // ◀️ زر الرجوع بأندرويد: يسكّر النافذة المفتوحة، أو يرجع لـ «اليوم»، وبعدها بس يطلع من التطبيق
+  //   (بدونه الزر يسكّر التطبيق على طول حتى لو فيه نافذة مفتوحة)
+  function onBack() {
+    const dlg = document.querySelector('dialog[open]');
+    if (dlg) { if (dlg.id === 'sheet') A.closeSheet(); else dlg.close(); return 'closed'; }
+    if (A.ui && A.ui.tab !== 'today') { A.go('today'); return 'today'; }
+    if (AppP && typeof AppP.minimizeApp === 'function') AppP.minimizeApp();
+    else if (AppP && typeof AppP.exitApp === 'function') AppP.exitApp();
+    return 'exit';
+  }
+  if (AppP && typeof AppP.addListener === 'function') {
+    try { const r = AppP.addListener('backButton', onBack); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
+  }
+
+  window.HayatiNative = { saveFile, shareText, reschedule, upcoming, testNotification, prefs, savePrefs, oauth, onAuthUrl, onBack };
 })();
 
 </script>

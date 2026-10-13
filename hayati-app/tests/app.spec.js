@@ -1113,3 +1113,25 @@ test('accounts on iPhone: Apple opens the system browser, the bh.hayati.app://au
   // روابط ثانية ما تنلمس
   expect(await store(page, () => HayatiNative.onAuthUrl('https://example.com/x'))).toBe(false);
 });
+
+// 🤖 أندرويد (DW-008): زر الرجوع يسكّر النافذة، بعدها يرجع لـ «اليوم»، وبعدها بس يطلع
+test('Android back button: closes the open sheet, then returns to Today, then leaves the app', async ({ page }) => {
+  await page.addInitScript(() => {
+    const log = window.__nat = { back: null, minimized: 0 };
+    window.Capacitor = { isNativePlatform: () => true, Plugins: {
+      App: { addListener: (ev, cb) => { if (ev === 'backButton') log.back = cb; return Promise.resolve({ remove() {} }); }, minimizeApp: async () => { log.minimized++; } },
+    } };
+  });
+  await open(page);
+  await store(page, () => App.go('tasks'));
+  await page.click('#settingsBtn');
+  await expect(page.locator('#sheet')).toBeVisible();
+  expect(await store(page, () => window.__nat.back({ canGoBack: false }))).toBe('closed');
+  await expect(page.locator('#sheet')).toBeHidden();
+  expect(await store(page, () => App.ui.tab)).toBe('tasks');               // سكّر النافذة بس، ما غيّر الصفحة
+  expect(await store(page, () => window.__nat.back({ canGoBack: false }))).toBe('today');
+  expect(await store(page, () => App.ui.tab)).toBe('today');
+  expect(await store(page, () => window.__nat.minimized)).toBe(0);
+  expect(await store(page, () => window.__nat.back({ canGoBack: false }))).toBe('exit');
+  expect(await store(page, () => window.__nat.minimized)).toBe(1);
+});

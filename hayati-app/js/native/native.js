@@ -354,5 +354,19 @@
     try { const r = AppP.addListener('appUrlOpen', (ev) => onAuthUrl(ev && ev.url)); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
   }
 
-  window.HayatiNative = { saveFile, shareText, reschedule, upcoming, testNotification, prefs, savePrefs, oauth, onAuthUrl };
+  // ◀️ زر الرجوع بأندرويد: يسكّر النافذة المفتوحة، أو يرجع لـ «اليوم»، وبعدها بس يطلع من التطبيق
+  //   (بدونه الزر يسكّر التطبيق على طول حتى لو فيه نافذة مفتوحة)
+  function onBack() {
+    const dlg = document.querySelector('dialog[open]');
+    if (dlg) { if (dlg.id === 'sheet') A.closeSheet(); else dlg.close(); return 'closed'; }
+    if (A.ui && A.ui.tab !== 'today') { A.go('today'); return 'today'; }
+    if (AppP && typeof AppP.minimizeApp === 'function') AppP.minimizeApp();
+    else if (AppP && typeof AppP.exitApp === 'function') AppP.exitApp();
+    return 'exit';
+  }
+  if (AppP && typeof AppP.addListener === 'function') {
+    try { const r = AppP.addListener('backButton', onBack); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
+  }
+
+  window.HayatiNative = { saveFile, shareText, reschedule, upcoming, testNotification, prefs, savePrefs, oauth, onAuthUrl, onBack };
 })();

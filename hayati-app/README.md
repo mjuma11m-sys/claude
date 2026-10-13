@@ -15,11 +15,11 @@ hayati-app/
 │   ├── i18n/       i18n-en · i18n                            ← الإنجليزي (طبقة عرض بس)
 │   ├── features/   الميزات (كل ملف يضيف على window.Extras)
 │   └── native/     native.js                                 ← الآيفون بس (Capacitor)
-├── docs/           IOS.md · STORE.md · MONEY.md · DATA.md (خريطة البيانات)
+├── docs/           IOS.md · ANDROID.md · STORE.md · MONEY.md · DATA.md (خريطة البيانات)
 ├── icons/ · brand/ · store/ (صور المتاجر) · supabase/
 ├── tests/          app.spec.js (متصفح بمقاس الآيفون) · unit/ (قارئ رسايل البنك)
 ├── scripts/        cap-www.js (يجهّز www/ للآيفون) · ios-smoke.sh (اختبار السميوليتر)
-└── ios/ · www/ · dist/   ← تنبني: Xcode، نسخة الآيفون، ونسخة ملف واحد بدون نت
+└── ios/ · android/ · www/ · dist/   ← تنبني: Xcode، Android Studio، ملفات التطبيق للجوال، ونسخة ملف واحد بدون نت
 ```
 **ترتيب السكربتات** بـ `index.html` مهم (كل ملف يعتمد على اللي قبله). أي سكربت جديد: أضفه هناك **وبـ `SHELL` في `sw.js`** (فيه اختبار يتأكد).
 

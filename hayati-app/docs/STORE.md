@@ -1,6 +1,7 @@
 # «حياتي» على المتاجر
 
-> قرار الديوانية (جلسة 22): **Google Play أول** (TWA عن طريق PWABuilder)، و**iOS بعدين** (Capacitor + ميزات أصلية + TestFlight).
+> قرار الديوانية (جلسة 22): **Google Play أول**، و**iOS بعدين**.
+> **DW-008 (شركة الديوانية):** نسخة Google Play صارت **Capacitor أندرويد أصلية** بدال PWABuilder، عشان المختبرين توصلهم التذكيرات وأزرار التنبيه وسؤال الحضور والتطبيق مسكّر. نفس كود الآيفون.
 > التطبيق **قيد التطوير**: ينشر كاختبار مغلق أول، ولا تاريخ إطلاق بأي نص.
 
 ## 💰 التكاليف
@@ -14,24 +15,30 @@
 ---
 
 ## 🤖 Google Play: الخطوات
-### 1) رابط عام للتطبيق
+### 1) رابط عام للتطبيق (لسياسة الخصوصية بس)
 - Vercel ← مشروع **claude** ← Settings ← **Deployment Protection** ← طفّ **Vercel Authentication** للـ Production.
-- ادمج PR #10 عشان النسخة الجديدة تصير Production.
-- خذ رابط Production من Vercel ← **Domains** (مثل `xxxx.vercel.app`). افتحه بمتصفح خاص بدون تسجيل دخول وتأكد إن التطبيق يفتح.
-- (اختياري) دومين خاص مثل `hayati.bh` يطلع أحلى بالمتجر، بس مو شرط.
+- خذ رابط Production (مثل `xxxx.vercel.app`). Google Play يحتاج رابط `privacy.html` منه.
 
-### 2) سوّ ملف التطبيق
-1. افتح **pwabuilder.com** ← الصق رابط Production ← **Start**.
-2. **Package for stores** ← **Android** ← **Generate Package**:
-   - Package ID: `bh.hayati.app`
-   - App name: `حياتي` · Launcher name: `حياتي`
-   - Signing key: **Create new** (خلّ PWABuilder يسويه)
-3. ينزل لك ملف zip فيه:
-   - `*.aab`: هذا اللي ترفعه لـ Google Play.
-   - `signing.keystore` + كلمة السر: **احفظهم بمكان آمن (Google Drive خاص + نسخة ثانية)**. لو ضاعوا ما تقدر تحدّث التطبيق أبد.
-   - `assetlinks.json`: أرسله لي، وأنا أحطه بـ `hayati-app/.well-known/assetlinks.json`. بدونه التطبيق يطلع بشريط عنوان المتصفح فوق.
+### 2) سوّ ملف التطبيق بـ Android Studio (مرة وحدة تثبّت، وبعدها 10 دقايق لكل نسخة)
+1. **developer.android.com/studio** ← نزّل Android Studio وثبّته (ساعة تقريباً مع التحميلات).
+2. بالـ Terminal:
+   ```bash
+   cd ~/Desktop/claude && git pull
+   cd hayati-app && npm install
+   npm run cap:sync:android      # ينسخ ملفات التطبيق لمشروع أندرويد
+   npm run cap:open:android      # يفتح Android Studio
+   ```
+3. جرّبه أول (اختياري): فوق اختار جهاز (Pixel أو جوالك بالكيبل) ← ▶️ ← ⚙️ ← «التنبيهات» ← «جرّب التنبيه».
+4. **Build ← Generate Signed App Bundle or APK ← Android App Bundle**:
+   - **Key store path ← Create new**: احفظه برّا مجلد المشروع (مثل `~/Documents/hayati-upload.jks`)، وكلمة سر قوية.
+   - **Build Variant: release** ← **Create**.
+5. الملف يطلع بـ `android/app/release/app-release.aab`. هذا اللي ترفعه.
 
-> ⚠️ لا ترسل `signing.keystore` ولا كلمة سره بالشات. بس `assetlinks.json`.
+> 🔐 **مفتاح التوقيع (`.jks`) وكلمة سره:** احفظهم بمكانين (مثل Google Drive خاص + فلاش). بدونهم ما تقدر ترفع تحديث.
+> فعّل **Play App Signing** (يطلع لك أول رفع): Google تحفظ مفتاح التوزيع، ومفتاحك يصير «مفتاح الرفع» بس، فلو ضاع تقدر تطلب تغييره.
+> ⚠️ لا ترسل المفتاح ولا كلمة السر بالشات، ولا تحطه داخل مجلد `hayati-app`. الريبو يرفض ملفات `.jks` و`.keystore` أصلاً.
+
+> ℹ️ ما تحتاج `assetlinks.json` ولا PWABuilder بعد: كان لنسخة الويب الملفوفة.
 
 ### 3) Google Play Console
 1. **play.google.com/console** ← سجّل (حساب شخصي) ← ادفع 25$ ← تحقق من الهوية (البطاقة الذكية).
@@ -43,7 +50,8 @@
    | Feature graphic 1024×500 | `store/out/play-feature-1024x500.png` |
    | Phone screenshots (2–8) | `store/out/android-01…05_*.png` |
 4. **App content**: الإجابات تحت (Privacy policy، Data safety، Content rating…).
-5. **Testing ← Closed testing** ← ارفع `.aab` ← أضف المختبرين بالإيميل (Google Group أو قائمة).
+5. **Testing ← Closed testing** ← ارفع `app-release.aab` ← أضف المختبرين بالإيميل (Google Group أو قائمة).
+6. **App content ← Exact alarms** (لو سألك): التطبيق يستخدم `SCHEDULE_EXACT_ALARM` (يوافق عليه المستخدم) لتذكيرات المحاضرات والاختبارات، **مو** `USE_EXACT_ALARM`. على أندرويد 14 لو المستخدم ما وافق، التذكير ممكن يتأخر دقايق.
 
 ### 4) ⚠️ شرط الـ 12 مختبر
 الحسابات الشخصية الجديدة لازم:
@@ -154,6 +162,5 @@ Expenses, studies, prayer times and tasks in one place. A Bahraini app (beta).
 - [x] موافقة صريحة قبل أول رسالة بنك (DW-002)
 - [ ] `privacy.html` يفتح من الرابط العام
 - [ ] `terms.html` يفتح من الرابط العام، ومحامي مرخّص بالبحرين راجع الشروط والسياسة
-- [ ] ملف `.aab` من PWABuilder + المفتاح محفوظ بمكانين
-- [ ] `assetlinks.json` منشور (أرسله لي)
+- [ ] `app-release.aab` من Android Studio + مفتاح الرفع (`.jks`) محفوظ بمكانين + Play App Signing مفعّل
 - [ ] 12 مختبر جاهزين

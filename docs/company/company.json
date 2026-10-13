@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 8,
+  "next": 9,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -56,6 +56,14 @@
       "owner": "CEO",
       "priority": "P2",
       "status": "review",
+      "opened": "2026-10-13",
+      "updated": "2026-10-13"
+    },
+    "DW-008": {
+      "title": "حياتي: نسخة أندرويد أصلية (Capacitor) بدال PWABuilder، عشان مختبرين Google Play توصلهم التذكيرات",
+      "owner": "CEO",
+      "priority": "P1",
+      "status": "in_progress",
       "opened": "2026-10-13",
       "updated": "2026-10-13"
     }
