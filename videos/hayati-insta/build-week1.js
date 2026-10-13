@@ -131,4 +131,23 @@ PAGES['s3-story-tests.jpg'] = [W, SH, BASE(W, SH) + `<div class="sea"></div>
   await p.screenshot({ path: path.join(OUT, 'grid-preview.jpg'), type: 'jpeg', quality: 80, fullPage: true });
   fs.unlinkSync(f);
   await b.close();
+
+  // كل بوست بمجلده: الصور مرقّمة بترتيب النشر + caption.txt جاهز للنسخ
+  const cap = fs.readFileSync(path.join(D, 'week1-captions.md'), 'utf8');
+  const block = (h) => { const i = cap.indexOf(h); return cap.slice(cap.indexOf('```', i) + 4, cap.indexOf('```', cap.indexOf('```', i) + 3)).trim(); };
+  const GROUPS = [
+    ['1-الخميس15-ستوري-تصويت', ['s1-story-poll.jpg'], 'ستوري (بدون كابشن)\n\nحط ملصق «تصويت» بالمربع المنقط:\nالسؤال: وش تنساه أكثر؟\nالخيارات: الاختبارات 📝 / الاشتراكات 💳'],
+    ['2-الجمعة16-كاروسيل-5-أشياء', ['a1-five-cover.jpg', 'a2-five-1.jpg', 'a3-five-2.jpg', 'a4-five-3.jpg', 'a5-five-4.jpg', 'a6-five-5.jpg', 'a7-five-cta.jpg'], block('## كاروسيل «5 أشياء»') + '\n\n---\nAlt text:\nلقطات من تطبيق حياتي: البحث عن المصاريف، توقع الميزانية، جدول اليوم والصلاة، جاهزية الاختبار، وإحصائيات حارس المرمى.'],
+    ['3-السبت17-ستوري-أسئلة', ['s2-story-ask.jpg'], 'ستوري (بدون كابشن)\n\nحط ملصق «أسئلة» بالمربع المنقط:\nاكتب الميزة 👇'],
+    ['4-الاثنين19-ستوري-كواليس', ['s3-story-tests.jpg'], 'ستوري (بدون كابشن)\n\nبدون ملصق، أو ملصق «رابط» لو اشتغل رابط التطبيق.'],
+    ['5-الجمعة23-كاروسيل-التذكيرات', ['b1-remind-cover.jpg', 'b2-remind-evening.jpg', 'b3-remind-examday.jpg', 'b4-remind-subs.jpg', 'b5-remind-control.jpg'], block('## كاروسيل «التذكيرات الذكية»')],
+  ];
+  const POSTS = path.join(OUT, 'posts');
+  fs.rmSync(POSTS, { recursive: true, force: true });
+  for (const [dir, files, text] of GROUPS) {
+    fs.mkdirSync(path.join(POSTS, dir), { recursive: true });
+    files.forEach((f, i) => fs.copyFileSync(path.join(OUT, f), path.join(POSTS, dir, (files.length > 1 ? i + 1 + '-' : '') + f)));
+    fs.writeFileSync(path.join(POSTS, dir, 'caption.txt'), text + '\n');
+  }
+  console.log('posts/ ✓');
 })();
