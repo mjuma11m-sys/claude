@@ -1,5 +1,11 @@
 // قاموس الإنقليزي: النص العربي كما يظهر ← الإنقليزي. الكلمات القصيرة اللي ممكن تكون أسماء (علي، لي…) مو فيه عشان ما تتغير بياناتك
 window.HAYATI_EN = {
+"قبل أول رسالة بنك":"Before your first bank message","أوافق وأكمل":"I agree, continue","مو الحين":"Not now",
+"رسايل البنك فيها معلومات مالية، فنبي موافقتك قبل ما نقراها:":"Bank messages contain financial information, so we need your consent before reading them:",
+"اقرأ سياسة الخصوصية كاملة":"Read the full privacy policy",
+"نحفظ المبلغ والمحل والتاريخ، والرسالة نفسها بعد إخفاء أرقام البطاقة والحساب.":"We store the amount, merchant and date, and the message itself with card and account numbers masked.",
+"البيانات على جهازك، وتنرفع لحسابك بس لو فعّلت المزامنة.":"Your data stays on your device and only goes to your account if you turn on sync.",
+"ما نبيع بياناتك ولا نعرض إعلانات، وتقدر تمسح كل شي من الإعدادات ← «احذف كل بياناتي».":"We never sell your data or show ads, and you can erase everything from Settings → «Delete all my data».",
 "رأيك بالتطبيق":"Your feedback","دقيقة وحدة، وكل رأي ينقرا":"One minute, and every opinion is read","انسخ وأرسل":"Copy & send",
 "«حياتي» قيد التطوير، ورأيك يقرر وش ينبني بعد. نجهّز لك الرسالة، تنسخها، وترسلها لنا على إنستقرام":"Hayati is in development, and your feedback decides what gets built next. We prepare the message, you copy it and send it to us on Instagram",
 "تقييمك":"Your rating","وش ضايقك أو ما اشتغل زين؟":"What bothered you or didn't work well?","وش الميزة اللي تبيها؟":"What feature do you want?",

@@ -17,6 +17,7 @@ description: فهرس وموجّه الـ skills — يحدد أي skill (أو �
 | تطبيق نادي/أكاديمية | `sports-admin` | `supabase-schema` ← `flask-api` |
 | تطبيق عقارات/إيجارات | `real-estate-tracker` | `bh-business` |
 | فواتير، VAT، تسعير BHD | `bh-business` | — |
+| عقد، سياسة خصوصية، شروط، PDPL، سجل تجاري، «المحامي» | `company-lawyer` | `bh-business` |
 | خطأ / error / ما يشتغل | `bug-hunter` | — |
 | قبل النشر / بعد فشل النشر | `deploy-check` | — |
 | Swift / iOS native | `write-swift` | — |
