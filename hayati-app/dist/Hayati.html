@@ -8150,6 +8150,14 @@ window.HAYATI_CONFIG = {
     try { return Object.assign({}, DEF, JSON.parse(localStorage.getItem(PREFS) || '{}')); } catch (e) { return Object.assign({}, DEF); }
   }
   function savePrefs(p) { try { localStorage.setItem(PREFS, JSON.stringify(p)); } catch (e) { /* تجاهل */ } }
+  const TASK_ACTIONS = 'HAYATI_TASK';
+  const SNOOZE = 'hayati-snoozes', HOUR = 3600e3;
+  function snoozes() {
+    let list = [];
+    try { list = JSON.parse(localStorage.getItem(SNOOZE) || '[]'); } catch (e) { /* تجاهل */ }
+    return Array.isArray(list) ? list.filter((z) => z && z.at > Date.now()) : [];
+  }
+  function saveSnoozes(list) { try { localStorage.setItem(SNOOZE, JSON.stringify(list)); } catch (e) { /* تجاهل */ } }
   const EVENING = 20 * 60;          // تذكير «بكرة…» الساعة 8 الليل
   const TASK_DAYS = 14, SUB_DAYS = 30;
 
@@ -8168,7 +8176,12 @@ window.HAYATI_CONFIG = {
   function upcoming(now, p) {
     p = p || prefs();
     const out = [];
-    const add = (key, when, title, body) => { if (when > now) out.push({ id: nid(key), title, body: body || '', schedule: { at: when, allowWhileIdle: true } }); };
+    const add = (key, when, title, body, extra) => {
+      if (!(when > now)) return;
+      const n = { id: nid(key), title, body: body || '', schedule: { at: when, allowWhileIdle: true }, extra: extra || { kind: 'today' } };
+      if (extra && extra.kind === 'task' && extra.act) n.actionTypeId = TASK_ACTIONS;   // «✓ خلصته» و«⏰ بعد ساعة»
+      out.push(n);
+    };
     const today = midnight(now);
 
     // 📅 الجدول (محاضرات، تمرين، مواعيد) والصلاة لو مفعّلة
@@ -8180,7 +8193,8 @@ window.HAYATI_CONFIG = {
           const t = A.ACT_TYPES[it.type] || A.ACT_TYPES.activity;
           add(it.src + ':' + it.id + ':' + day.toDateString(), at(day, it.start - (prayer ? 0 : BEFORE)),
             prayer ? t.now + ' ' + it.name : 'بعد ' + BEFORE + ' دقايق: ' + it.name,
-            prayer ? '' : [t.label, it.room].filter(Boolean).join(' · '));
+            prayer ? '' : [t.label, it.room].filter(Boolean).join(' · '),
+            it.src === 'task' ? { kind: 'task', id: it.id } : { kind: 'today' });
         }
       }
     }
@@ -8195,12 +8209,13 @@ window.HAYATI_CONFIG = {
       if ((exam && !p.exams) || (hw && !p.homework) || (!exam && !hw)) continue;
       const dueDay = midnight(due);
       const eve = new Date(dueDay.getFullYear(), dueDay.getMonth(), dueDay.getDate() - 1);
-      add('task-eve:' + tk.id, at(eve, EVENING), (exam ? 'بكرة اختبار: ' : 'بكرة تسليم: ') + tk.title, exam ? 'راجع وارتاح زين 🤍' : '');
+      const ex = { kind: 'task', id: tk.id, act: true };
+      add('task-eve:' + tk.id, at(eve, EVENING), (exam ? 'بكرة اختبار: ' : 'بكرة تسليم: ') + tk.title, exam ? 'راجع وارتاح زين 🤍' : '', ex);
       if (exam) {
         const mins = due.getHours() * 60 + due.getMinutes();
         // اختبار قبل 9:30 الصبح: التذكير 7:30، مو بنص الليل
         const when = mins < 9 * 60 + 30 ? at(dueDay, 7 * 60 + 30) : new Date(due.getTime() - 2 * 3600e3);
-        add('task-day:' + tk.id, when, (mins < 9 * 60 + 30 ? 'اليوم' : 'بعد ساعتين') + ': اختبار ' + tk.title, tk.place || '');
+        add('task-day:' + tk.id, when, (mins < 9 * 60 + 30 ? 'اليوم' : 'بعد ساعتين') + ': اختبار ' + tk.title, tk.place || '', ex);
       }
     }
 
@@ -8216,7 +8231,7 @@ window.HAYATI_CONFIG = {
         const rd = midnight(ren);
         const day = new Date(rd.getFullYear(), rd.getMonth(), rd.getDate() - before);
         add('sub:' + sub.id + ':' + rd.toDateString(), at(day, before === 0 ? 9 * 60 : EVENING),
-          dayWord(before) + ' يتجدد: ' + sub.name, A.fmt(sub.amount) + ' د.ب');
+          dayWord(before) + ' يتجدد: ' + sub.name, A.fmt(sub.amount) + ' د.ب', { kind: 'sub', id: sub.id });
       }
     }
 
@@ -8233,6 +8248,13 @@ window.HAYATI_CONFIG = {
         for (const tk of dueToday) parts.push((tk.kind === 'exam' ? 'اختبار ' : 'تسليم ') + tk.title);
         add('brief:' + day.toDateString(), at(day, (bh || 0) * 60 + (bm || 0)), 'صباح الخير ☀️ هذا يومك', parts.join(' · '));
       }
+    }
+
+    // ⏰ «ذكّرني بعد ساعة»: محفوظة لين يجي وقتها، عشان إعادة الجدولة ما تمسحها
+    for (const z of snoozes()) {
+      const t = (z.extra && z.extra.kind === 'task') ? (A.st.tasks || []).find((x) => x.id === z.extra.id) : null;
+      if (t && t.done) continue;   // خلّصها بعد ما أجّل
+      add(z.key, new Date(z.at), z.title, z.body, z.extra);
     }
 
     return out.sort((a, b) => a.schedule.at - b.schedule.at).slice(0, MAX);
@@ -8270,6 +8292,47 @@ window.HAYATI_CONFIG = {
   S.subscribe(soon);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) soon(); });
   soon();
+
+  // 👆 الضغط على التنبيه: يفتح الشي نفسه. وتنبيه الواجب والاختبار فيه زرين: «✓ خلصته» و«⏰ بعد ساعة»
+  //   الزرين يفتحون التطبيق (foreground) عشان الحفظ مضمون وتشوف «انحفظ ✓»
+  function openFor(extra) {
+    const t = extra.kind === 'task' && (A.st.tasks || []).find((x) => x.id === extra.id);
+    if (extra.kind === 'task') { A.go('tasks'); if (t) setTimeout(() => A.taskForm(t), 50); else A.toast('ما لقيت المهمة، يمكن انحذفت'); return; }
+    if (extra.kind === 'sub') { A.ui.moneySeg = 'subs'; A.go('money'); return; }
+    A.go('today');
+  }
+  function onAction(ev) {
+    const n = (ev && ev.notification) || {};
+    const extra = n.extra || { kind: 'today' };
+    if (ev.actionId === 'done') {
+      const t = (A.st.tasks || []).find((x) => x.id === extra.id);
+      if (!t) { A.toast('ما لقيت المهمة، يمكن انحذفت'); return; }
+      if (!t.done) S.upsert('tasks', Object.assign({}, t, { done: true }));   // reschedule يشيل تنبيهاتها الجاية
+      A.go('tasks');
+      A.toast('انحفظ ✓ خلصت «' + t.title + '» 💪');
+      return;
+    }
+    if (ev.actionId === 'snooze') {
+      const list = snoozes();
+      list.push({ key: 'snooze:' + extra.id + ':' + Date.now(), at: Date.now() + HOUR, title: n.title, body: n.body || '', extra });
+      saveSnoozes(list);
+      soon();
+      A.toast('بذكّرك بعد ساعة ⏰');
+      return;
+    }
+    openFor(extra);
+  }
+  if (LN && typeof LN.registerActionTypes === 'function') {
+    try {
+      Promise.resolve(LN.registerActionTypes({ types: [{ id: TASK_ACTIONS, actions: [
+        { id: 'done', title: '✓ خلصته', foreground: true },
+        { id: 'snooze', title: '⏰ ذكّرني بعد ساعة', foreground: true },
+      ] }] })).catch(() => {});
+    } catch (e) { /* نسخة قديمة بدون أزرار: التنبيه يشتغل عادي */ }
+  }
+  if (LN && typeof LN.addListener === 'function') {
+    try { const r = LN.addListener('localNotificationActionPerformed', onAction); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
+  }
 
   // اهتزاز خفيف عند الحفظ والحذف
   const tap = (style) => { if (Hap) Hap.impact({ style }).catch(() => {}); };

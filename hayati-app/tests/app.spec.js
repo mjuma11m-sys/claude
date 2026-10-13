@@ -515,11 +515,12 @@ test('iPhone build (www/ + real Capacitor core): plugins register through the na
     let perm = 'prompt', pending = [];
     window.Capacitor = {
       PluginHeaders: [
-        { name: 'LocalNotifications', methods: m('checkPermissions', 'requestPermissions', 'getPending', 'cancel', 'schedule') },
+        { name: 'LocalNotifications', methods: m('checkPermissions', 'requestPermissions', 'getPending', 'cancel', 'schedule', 'registerActionTypes').concat([{ name: 'addListener', rtype: 'callback' }, { name: 'removeListener', rtype: 'promise' }]) },
         { name: 'Haptics', methods: m('impact') },
         { name: 'Share', methods: m('share') },
         { name: 'Filesystem', methods: m('writeFile') },
       ],
+      nativeCallback: (plugin, method, opts) => { (window.__listeners = window.__listeners || []).push(opts.eventName); return 'cb' + window.__listeners.length; },
       nativePromise: async (plugin, method, opts) => {
         calls.push({ plugin, method, opts });
         if (method === 'checkPermissions') return { display: perm };
@@ -585,7 +586,8 @@ test('iPhone build: «جرّب التنبيه» asks permission, schedules a tes
     window.webkit = { messageHandlers: { bridge: { postMessage() {} } } };
     let perm = 'prompt', pending = [];
     window.Capacitor = {
-      PluginHeaders: [{ name: 'LocalNotifications', methods: m('checkPermissions', 'requestPermissions', 'getPending', 'cancel', 'schedule') }],
+      PluginHeaders: [{ name: 'LocalNotifications', methods: m('checkPermissions', 'requestPermissions', 'getPending', 'cancel', 'schedule', 'registerActionTypes').concat([{ name: 'addListener', rtype: 'callback' }, { name: 'removeListener', rtype: 'promise' }]) }],
+      nativeCallback: (plugin, method, opts) => { (window.__listeners = window.__listeners || []).push(opts.eventName); return 'cb' + window.__listeners.length; },
       nativePromise: async (plugin, method, opts) => {
         calls.push({ method, opts });
         if (method === 'checkPermissions') return { display: perm };
@@ -614,6 +616,9 @@ test('iPhone build: «جرّب التنبيه» asks permission, schedules a tes
   await store(page, () => App.S.upsert('courses', { id: 'tn1', name: 'مادة', type: 'lecture', days: [(new Date().getDay() + 1) % 7], start_time: '09:00', end_time: '10:00' }));
   await page.waitForFunction(() => window.__bridge.some((c) => c.method === 'schedule' && c.opts.notifications.some((n) => n.title.includes('مادة'))), null, { timeout: 5000 });
   expect(await store(page, () => window.__bridge.filter((c) => c.method === 'cancel').flatMap((c) => c.opts.notifications.map((n) => n.id)))).not.toContain(990001);
+  // أزرار التنبيه تتسجل عبر الجسر الحقيقي، والمستمع مرة وحدة
+  expect(await store(page, () => window.__bridge.some((c) => c.method === 'registerActionTypes' && c.opts.types[0].actions.length === 2))).toBe(true);
+  expect(await store(page, () => window.__listeners.filter((e) => e === 'localNotificationActionPerformed').length)).toBe(1);
 });
 
 // تذكيرات ذكية (جلسة الديوانية 25): بكرة اختبار/تسليم/تجديد 8 الليل، قبل الاختبار بساعتين، ملخص صباح اختياري، ومفتاح لكل نوع
@@ -689,4 +694,66 @@ test('iPhone: smart reminders for exams, homework and renewals, morning brief op
   expect(saved.exams).toBe(false);
   expect(saved.brief).toBe(true);
   expect(saved.briefAt).toBe('07:00');
+});
+
+// أزرار التنبيه (جلسة الديوانية «أزرار التنبيه»): الضغطة تفتح الشي، «✓ خلصته» و«⏰ بعد ساعة» على الواجب والاختبار
+test('iPhone: tapping a reminder opens it, «خلصته» marks it done and clears its alerts, «بعد ساعة» survives rescheduling @webkit', async ({ page }) => {
+  await page.addInitScript(() => {
+    const log = window.__cap = { scheduled: [], types: null, handler: null };
+    window.Capacitor = {
+      isNativePlatform: () => true,
+      Plugins: {
+        LocalNotifications: {
+          checkPermissions: async () => ({ display: 'granted' }),
+          requestPermissions: async () => ({ display: 'granted' }),
+          getPending: async () => ({ notifications: log.scheduled.map((n) => ({ id: n.id })) }),
+          cancel: async () => { log.scheduled = []; },
+          schedule: async ({ notifications }) => { log.scheduled = notifications; },
+          registerActionTypes: async (o) => { log.types = o.types; },
+          addListener: (ev, fn) => { if (ev === 'localNotificationActionPerformed') { if (log.handler) log.dup = true; log.handler = fn; } return Promise.resolve({ remove() {} }); },
+        },
+      },
+    };
+  });
+  await open(page);
+  const types = await store(page, () => window.__cap.types);
+  expect(types[0].actions.map((a) => a.id)).toEqual(['done', 'snooze']);
+  expect(types[0].actions.every((a) => a.foreground)).toBe(true);
+  expect(await store(page, () => !!window.__cap.dup)).toBe(false);
+
+  await store(page, () => {
+    const d = new Date(); d.setDate(d.getDate() + 2); d.setHours(23, 59, 0, 0);
+    App.S.upsert('tasks', { id: 'hw1', kind: 'homework', title: 'تقرير التسويق', due_at: d.toISOString(), done: false });
+  });
+  await page.waitForFunction(() => window.__cap.scheduled.some((n) => n.title === 'بكرة تسليم: تقرير التسويق'), null, { timeout: 5000 });
+  const n = await store(page, () => window.__cap.scheduled.find((x) => x.title === 'بكرة تسليم: تقرير التسويق'));
+  expect(n.actionTypeId).toBe(types[0].id);
+  expect(n.extra).toEqual({ kind: 'task', id: 'hw1', act: true });
+
+  // ⏰ بعد ساعة: تنبيه جديد بعد ساعة، ويظل بعد إعادة الجدولة
+  await store(page, (n) => window.__cap.handler({ actionId: 'snooze', notification: n }), n);
+  await expect(page.locator('.toast')).toContainText('بعد ساعة');
+  await page.waitForFunction(() => window.__cap.scheduled.filter((x) => x.title === 'بكرة تسليم: تقرير التسويق').length === 2, null, { timeout: 5000 });
+  const inMin = await store(page, () => { const z = window.__cap.scheduled.filter((x) => x.title === 'بكرة تسليم: تقرير التسويق').map((x) => x.schedule.at - Date.now()).sort((a, b) => a - b)[0]; return Math.round(z / 60000); });
+  expect(inMin).toBeGreaterThanOrEqual(58);
+  expect(inMin).toBeLessThanOrEqual(60);
+  await store(page, () => App.S.upsert('courses', { id: 'cx', name: 'مادة', type: 'lecture', days: [(new Date().getDay() + 1) % 7], start_time: '09:00', end_time: '10:00' }));
+  await page.waitForFunction(() => window.__cap.scheduled.some((x) => x.title.includes('مادة')), null, { timeout: 5000 });
+  expect(await store(page, () => window.__cap.scheduled.filter((x) => x.title === 'بكرة تسليم: تقرير التسويق').length)).toBe(2);
+
+  // ✓ خلصته: المهمة منجزة، وكل تنبيهاتها (والتأجيل) تختفي
+  await store(page, (n) => window.__cap.handler({ actionId: 'done', notification: n }), n);
+  await expect(page.locator('.toast')).toContainText('خلصت «تقرير التسويق»');
+  expect(await store(page, () => App.st.tasks.find((t) => t.id === 'hw1').done)).toBe(true);
+  await page.waitForFunction(() => !window.__cap.scheduled.some((x) => x.title.includes('تقرير التسويق')), null, { timeout: 5000 });
+
+  // الضغطة: الاشتراك يفتح «اشتراكات»، والمهمة المحذوفة ما تكسر
+  await store(page, () => window.__cap.handler({ actionId: 'tap', notification: { title: 'بكرة يتجدد: الجيم', extra: { kind: 'sub', id: 's1' } } }));
+  expect(await store(page, () => [App.ui.tab, App.ui.moneySeg])).toEqual(['money', 'subs']);
+  await store(page, () => window.__cap.handler({ actionId: 'tap', notification: { title: 'x', extra: { kind: 'task', id: 'gone' } } }));
+  await expect(page.locator('.toast')).toContainText('ما لقيت المهمة');
+  expect(await store(page, () => App.ui.tab)).toBe('tasks');
+  // الضغطة على مهمة موجودة تفتح ورقتها
+  await store(page, () => window.__cap.handler({ actionId: 'tap', notification: { title: 'x', extra: { kind: 'task', id: 'hw1' } } }));
+  await expect(page.locator('#sheet')).toBeVisible();
 });
