@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { PageTitle } from '../components/PageTitle'
 import { Link } from 'react-router'
 import { useAuth } from '../auth/AuthProvider'
 import { useMyClub } from '../data/MyClub'
@@ -27,7 +28,7 @@ export function Settings() {
 
   return (
     <section className="max-w-2xl space-y-5">
-      <h1 className="text-2xl font-bold md:text-3xl">الإعدادات</h1>
+      <PageTitle>الإعدادات</PageTitle>
 
       <div className="glass divide-y divide-white/10">
         <div className="flex items-center justify-between p-4">

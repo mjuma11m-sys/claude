@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ClubBadge } from '../components/ClubBadge'
+import { PageTitle } from '../components/PageTitle'
 import { ShareButton } from '../components/ShareButton'
 import { useNow } from '../components/Countdown'
 import { DemoNote } from '../components/DemoNote'
@@ -7,6 +8,7 @@ import { Failed, Loading } from '../components/States'
 import { useMyClub } from '../data/MyClub'
 import { castVote, getNextMatch, getVotes } from '../data/source'
 import { useLoad } from '../data/useLoad'
+import { vars } from '../lib/css'
 import { fmtPercent } from '../lib/format'
 
 const NOTICE = { already: 'صوّتت قبل لهالمباراة', closed: 'التصويت مسكّر لهالمباراة' } as const
@@ -21,6 +23,7 @@ export function Vote() {
   })
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  const [goal, setGoal] = useState<string | null>(null) // the card that just scored: drives the one-off flash
 
   if (load.loading && !load.data) return <Loading variant="list" />
   if (!load.data) return <Failed retry={load.reload} />
@@ -51,6 +54,7 @@ export function Vote() {
     try {
       const r = await castVote(match.id, id)
       if (r !== 'ok') setNotice(NOTICE[r])
+      else { setGoal(id); navigator.vibrate?.(14) }
       load.reload()
     } catch {
       setNotice('ما انحسب الصوت، حاول مرة ثانية')
@@ -61,9 +65,9 @@ export function Vote() {
 
   return (
     <section className="space-y-5">
-      <h1 className="rise text-2xl font-bold md:text-3xl" style={{ '--i': 0 } as React.CSSProperties}>رجل المباراة</h1>
+      <PageTitle>رجل المباراة</PageTitle>
 
-      <div className="glass rise flex flex-wrap items-center justify-between gap-3 p-4" style={{ '--i': 1 } as React.CSSProperties}>
+      <div className="glass rise flex flex-wrap items-center justify-between gap-3 p-4" style={vars({ '--i': 1 })}>
         <div className="flex items-center gap-3">
           <ClubBadge name={match.home} mine={match.home === club} />
           <span className="text-sm text-mute">ضد</span>
@@ -82,21 +86,22 @@ export function Vote() {
           const picked = choice === p.id
           const leading = showResults && total > 0 && n === lead
           return (
-            <li key={p.id} className="rise" style={{ '--i': i + 2 } as React.CSSProperties}>
+            <li key={p.id} className="rise" style={vars({ '--i': i + 2 })}>
               <button
                 onClick={() => vote(p.id)}
                 disabled={!!choice || busy || closed}
                 aria-pressed={picked}
-                className={`glass relative min-h-[4.5rem] w-full overflow-hidden p-4 text-start transition active:scale-[0.99] disabled:cursor-default ${picked ? 'border-pulse/60' : closed || choice ? '' : 'hover:border-white/25'}`}
+                className={`glass relative min-h-[4.5rem] w-full overflow-hidden p-4 text-start transition active:scale-[0.99] disabled:cursor-default ${picked ? 'border-pulse/60' : closed || choice ? '' : 'hover:border-white/25'} ${goal === p.id ? 'goal-ring' : ''}`}
               >
-                {showResults && <span className="absolute inset-y-0 start-0 bg-pulse/10 transition-[width] duration-700" style={{ width: `${share * 100}%` }} />}
+                {showResults && <span className="absolute inset-y-0 start-0 bg-pulse/10 transition-[width] duration-700 ease-[var(--ease-kick)]" style={{ width: `${share * 100}%` }} />}
+                {goal === p.id && <span aria-hidden className="goal-flash pointer-events-none absolute inset-0 m-auto size-44 rounded-full bg-[radial-gradient(circle,rgb(0_229_255/0.45),transparent_70%)]" />}
                 <span className="relative flex items-center gap-3">
-                  <span className={`num grid size-11 shrink-0 place-items-center rounded-xl text-lg font-bold ${leading ? 'bg-gold/15 text-gold' : 'bg-white/5'}`}>{p.num ?? '—'}</span>
+                  <span className={`grid size-14 shrink-0 place-items-center rounded-xl font-display text-4xl leading-none transition-colors ${picked ? 'bg-pulse text-pulse-ink' : leading ? 'bg-gold/15 text-gold' : 'bg-white/5'}`}>{p.num ?? '—'}</span>
                   <span className="min-w-0 flex-1">
                     <span className="block font-bold">{p.name}{picked && <span className="ms-2 text-xs font-normal text-pulse">اختيارك</span>}</span>
                     <span className="block text-xs text-mute">{p.pos}{leading && <span className="ms-2 text-gold">· يتصدر</span>}</span>
                   </span>
-                  {showResults && <span className={`num text-sm ${picked ? 'text-pulse' : 'text-mute'}`}>{fmtPercent(share)}</span>}
+                  {showResults && <span className={`font-display text-2xl ${picked ? 'text-pulse' : 'text-mute'}`}>{fmtPercent(share)}</span>}
                 </span>
               </button>
             </li>

@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useLocation } from 'react-router'
 import { useAuth } from '../auth/AuthProvider'
+import { Icon } from '../components/Icon'
 import { Logo, Wordmark } from '../components/Logo'
+import { PitchLines } from '../components/PitchLines'
 import { PRIVACY_CONTACT } from '../lib/legal'
 import { supabase } from '../lib/supabase'
 import { DEMO_ROLES, ROLE_LABEL } from '../lib/roles'
@@ -28,8 +30,9 @@ export function Login() {
   }
 
   return (
-    <main className="grid min-h-dvh place-items-center p-4">
-      <div className="glass w-full max-w-sm space-y-6 p-6">
+    <main className="relative grid min-h-dvh place-items-center overflow-hidden p-4">
+      <PitchLines className="text-white/[0.05]" />
+      <div className="glass rise relative w-full max-w-sm space-y-6 p-6">
         <div className="flex items-center gap-3">
           <Logo className="size-10" />
           <div>
@@ -46,9 +49,10 @@ export function Login() {
                 <button
                   key={r}
                   onClick={() => signInDemo(r)}
-                  className="rounded-xl border border-white/10 px-4 py-3 text-start transition-colors hover:border-pulse/50 hover:bg-pulse/5 active:scale-[0.99]"
+                  className="stub flex min-h-14 items-center gap-3 bg-white/[0.06] px-5 text-start transition-colors hover:bg-pulse/10 active:scale-[0.99]"
                 >
-                  {ROLE_LABEL[r]}
+                  <Icon name={r === 'medical' ? 'pulse' : 'vote'} className="size-5 text-pulse" />
+                  <span className="font-display text-xl">{ROLE_LABEL[r]}</span>
                 </button>
               ))}
             </div>

@@ -13,5 +13,5 @@ export function Logo({ className = 'size-8' }: { className?: string }) {
 }
 
 export function Wordmark({ className = '' }: { className?: string }) {
-  return <span dir="ltr" className={`font-extrabold uppercase tracking-[0.1em] ${className}`}>Sports Hub</span>
+  return <span dir="ltr" className={`font-display uppercase tracking-[0.08em] ${className}`}>Sports Hub</span>
 }

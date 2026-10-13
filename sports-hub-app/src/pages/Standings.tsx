@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { PageTitle } from '../components/PageTitle'
 import { DemoNote } from '../components/DemoNote'
 import { DataStamp } from '../components/DataStamp'
 import { StandingsTable } from '../components/StandingsTable'
@@ -17,7 +18,7 @@ export function Standings() {
 
   return (
     <section className="space-y-5">
-      <h1 className="text-2xl font-bold md:text-3xl">ترتيب الدوري</h1>
+      <PageTitle>ترتيب الدوري</PageTitle>
       {!league ? (
         <p className="text-mute">ما فيه دوريات مسجّلة بعد.</p>
       ) : (

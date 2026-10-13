@@ -1,4 +1,5 @@
 import { useRef, type PointerEvent } from 'react'
+import { PageTitle } from '../components/PageTitle'
 import { Logo } from '../components/Logo'
 import { Link } from 'react-router'
 import { useMyClub } from '../data/MyClub'
@@ -23,13 +24,13 @@ export function Pass() {
 
   return (
     <section className="space-y-6">
-      <h1 className="text-2xl font-bold md:text-3xl">تذكرتي الموسمية</h1>
+      <PageTitle>تذكرتي الموسمية</PageTitle>
       <div className="grid place-items-center py-4 [perspective:1000px]">
         <div
           ref={card}
           onPointerMove={move}
           onPointerLeave={reset}
-          className="relative aspect-[1.586] w-full max-w-md touch-pan-y overflow-hidden rounded-3xl border border-gold/40 bg-gradient-to-br from-[#14213a] via-night to-[#2a0a10] p-6 shadow-[0_30px_80px_-20px_rgb(0_229_255/0.35)] transition-transform duration-200 ease-out [transform:rotateX(var(--rx,0deg))_rotateY(var(--ry,0deg))]"
+          className="stub relative aspect-[1.586] w-full max-w-md touch-pan-y overflow-hidden rounded-3xl border border-gold/40 bg-gradient-to-br from-[#14213a] via-night to-[#2a0a10] p-6 shadow-[0_30px_80px_-20px_rgb(0_229_255/0.35)] transition-transform duration-200 ease-out [transform:rotateX(var(--rx,0deg))_rotateY(var(--ry,0deg))]"
         >
           <div
             aria-hidden
@@ -40,7 +41,7 @@ export function Pass() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="num text-xs tracking-[0.3em] text-gold">VIP PASS</p>
-                <p className="mt-1 text-2xl font-bold">{club ?? <Link to="/settings" className="text-base text-pulse">اختر ناديك</Link>}</p>
+                <p className="mt-1 font-display text-4xl leading-tight">{club ?? <Link to="/settings" className="text-base text-pulse">اختر ناديك</Link>}</p>
               </div>
               <Logo className="size-10" />
             </div>

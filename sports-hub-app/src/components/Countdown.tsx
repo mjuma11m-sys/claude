@@ -14,20 +14,26 @@ function parts(ms: number) {
   return { d: Math.floor(m / 1440), h: Math.floor((m % 1440) / 60), m: m % 60 }
 }
 
+/* One scoreboard cell. `key={value}` remounts the number when it changes, so only the changed cell flips. */
+function Digit({ value, label }: { value: number; label: string }) {
+  return (
+    <div className="digit">
+      <p key={value} className="tick font-display text-4xl leading-none md:text-5xl">{String(value).padStart(2, '0')}</p>
+      <p className="mt-1.5 text-[11px] text-mute">{label}</p>
+    </div>
+  )
+}
+
 export function Countdown({ to, started = 'بدأت المباراة' }: { to: string; started?: string }) {
   const now = useNow()
   const left = new Date(to).getTime() - now
-  if (left <= 0) return <p className="text-sm font-bold text-pulse">{started}</p>
+  if (left <= 0) return <p className="font-display text-2xl text-pulse">{started}</p>
   const { d, h, m } = parts(left)
-  const cell = (v: number, label: string) => (
-    <div className="min-w-14 rounded-xl bg-white/5 px-3 py-2 text-center">
-      <p className="num text-2xl font-bold leading-none">{String(v).padStart(2, '0')}</p>
-      <p className="mt-1 text-[11px] text-mute">{label}</p>
-    </div>
-  )
   return (
-    <div role="timer" aria-label={`باقي ${d} يوم و${h} ساعة و${m} دقيقة`} className="flex justify-center gap-2" dir="rtl">
-      {cell(d, 'يوم')}{cell(h, 'ساعة')}{cell(m, 'دقيقة')}
+    <div role="timer" aria-label={`باقي ${d} يوم و${h} ساعة و${m} دقيقة`} className="flex justify-center gap-2.5" dir="rtl">
+      <Digit value={d} label="يوم" />
+      <Digit value={h} label="ساعة" />
+      <Digit value={m} label="دقيقة" />
     </div>
   )
 }

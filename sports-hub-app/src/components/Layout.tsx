@@ -19,7 +19,7 @@ const NAV: Item[] = [
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors ${
-    isActive ? 'bg-pulse/10 text-pulse' : 'text-mute hover:bg-white/5 hover:text-ink'
+    isActive ? 'nav-active nav-side bg-pulse/10 text-pulse' : 'text-mute hover:bg-white/5 hover:text-ink'
   }`
 
 export function Layout() {
@@ -50,7 +50,7 @@ export function Layout() {
       <aside className="sticky top-0 hidden h-dvh flex-col border-e border-white/10 bg-white/[0.02] p-3 md:flex lg:p-4">
         <div className="mb-8 flex items-center gap-3 px-1.5 pt-2">
           <Logo className="size-9 shrink-0" />
-          <Wordmark className="hidden text-base lg:inline" />
+          <Wordmark className="hidden text-xl lg:inline" />
         </div>
         <nav className="flex flex-1 flex-col gap-1">
           {items.map((i) => (
@@ -75,7 +75,7 @@ export function Layout() {
         <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-white/10 bg-night/70 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-xl md:px-8">
           <div className="flex shrink-0 items-center gap-2 md:hidden">
             <Logo className="size-7" />
-            <Wordmark className="whitespace-nowrap text-xs" />
+            <Wordmark className="whitespace-nowrap text-lg" />
           </div>
           <div className="flex min-w-0 items-center gap-1.5 whitespace-nowrap text-sm md:ms-auto md:gap-2">
             {demo && <span className="rounded-full bg-warn/15 px-2.5 py-0.5 text-xs text-warn"><span className="sm:hidden">تجريبي</span><span className="hidden sm:inline">وضع تجريبي</span></span>}
@@ -99,7 +99,7 @@ export function Layout() {
               to={i.to}
               end
               className={({ isActive }) =>
-                `flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] ${isActive ? 'bg-pulse/10 text-pulse' : 'text-mute'}`
+                `flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] ${isActive ? 'nav-active nav-tab bg-pulse/10 text-pulse' : 'text-mute'}`
               }
             >
               <Icon name={i.icon} />
