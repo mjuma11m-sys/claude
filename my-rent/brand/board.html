@@ -1,0 +1,220 @@
+<title>هوية إداراتي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Readex+Pro:wght@500;600;700&display=swap">
+<style>
+/* Layout: لوحة هوية عمودية، كل قسم = قرار واحد من DW-008 */
+:root {
+  --night: #14213A; --brand: #1E3A5F; --gold: #C9963A; --stone: #F5F2EB;
+  --bg: #F5F2EB; --surface: #FFFFFF; --surface-2: #EDE8DD; --line: #DDD6C8;
+  --text: #14213A; --muted: #5B6578;
+  --paid: #1E7A4C; --due: #965F00; --late: #B83A2B;
+  --paid-soft: #E3F1E8; --due-soft: #F7ECD6; --late-soft: #F8E2DE;
+  --display: "Readex Pro", "IBM Plex Sans Arabic", Tahoma, sans-serif;
+  --body: "IBM Plex Sans Arabic", -apple-system, "SF Arabic", "Segoe UI", Tahoma, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0D1524; --surface: #152036; --surface-2: #1C2942; --line: #26344F; --text: #ECE7DC; --muted: #9AA4B6;
+  --brand: #8FB3E8; --paid: #5FCB91; --due: #F0B54A; --late: #FF8A78;
+  --paid-soft: #16352A; --due-soft: #3A2E14; --late-soft: #3D1F1C; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0D1524; --surface: #152036; --surface-2: #1C2942; --line: #26344F; --text: #ECE7DC; --muted: #9AA4B6;
+  --brand: #8FB3E8; --paid: #5FCB91; --due: #F0B54A; --late: #FF8A78;
+  --paid-soft: #16352A; --due-soft: #3A2E14; --late-soft: #3D1F1C; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.7 var(--body); }
+.wrap { max-width: 1040px; margin: 0 auto; padding-inline: 20px; padding-block: 0 64px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; text-wrap: balance; margin: 0; }
+h2 { font-size: 26px; margin-bottom: 6px; }
+.lead { color: var(--muted); margin: 0 0 20px; max-width: 62ch; }
+section { padding-block: 48px; border-top: 1px solid var(--line); }
+.eyebrow { font-size: 12px; letter-spacing: .08em; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+.num { direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; }
+
+/* الهيرو: الشعار على ليل المحرق */
+.hero { background: var(--night); color: var(--stone); margin-inline: -20px; padding: 56px 20px 48px; }
+.hero-in { max-width: 1040px; margin: 0 auto; display: flex; gap: 40px; align-items: center; flex-wrap: wrap; }
+.hero svg { width: 150px; height: auto; flex: none; }
+.hero h1 { font-size: clamp(48px, 9vw, 88px); line-height: 1.45; font-weight: 700; }
+.hero p { margin: 4px 0 0; color: rgb(245 242 235 / .75); max-width: 44ch; }
+.hero .tag { display: inline-block; margin-top: 16px; font-size: 13px; color: var(--gold); }
+
+/* المفاهيم */
+.concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.concept { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.concept svg { width: 100%; max-width: 160px; aspect-ratio: 1; border-radius: 22%; align-self: center; }
+.concept.win { outline: 2px solid var(--gold); outline-offset: -1px; }
+.verdict { font-size: 13px; font-weight: 600; }
+.verdict.ok { color: var(--paid); } .verdict.no { color: var(--late); }
+.concept p { margin: 0; font-size: 14px; color: var(--muted); }
+
+/* الأيقونة بالأحجام */
+.sizes { display: flex; gap: 28px; align-items: end; flex-wrap: wrap; }
+.sizes figure { margin: 0; text-align: center; font-size: 12px; color: var(--muted); }
+.sizes svg { display: block; margin-bottom: 6px; }
+.phone { background: linear-gradient(160deg, #2b3d63, #0e1830); border-radius: 28px; padding: 22px 18px; display: grid; grid-template-columns: repeat(4, 60px); gap: 18px 16px; width: max-content; max-width: 100%; }
+.phone div { text-align: center; font-size: 11px; color: #fff; line-height: 1.3; }
+.phone .app { display: block; width: 60px; height: 60px; border-radius: 14px; background: rgb(255 255 255 / .14); margin-bottom: 4px; }
+.phone svg { width: 60px; height: 60px; border-radius: 14px; display: block; margin-bottom: 4px; }
+
+/* الألوان */
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.sw { border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: var(--surface); }
+.sw .chip { height: 84px; display: flex; align-items: end; padding: 8px 10px; font-family: var(--display); font-weight: 600; font-size: 22px; }
+.sw .meta { padding: 8px 10px; font-size: 13px; }
+.sw .meta b { display: block; }
+.sw .meta span { color: var(--muted); font-size: 12px; }
+.rule { margin-top: 16px; padding: 12px 14px; background: var(--surface-2); border-radius: 10px; font-size: 14px; max-width: 70ch; }
+
+.status { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.pill { padding: 3px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+
+/* الخط */
+.type { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.spec { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; min-width: 0; }
+.spec .big { font-size: 56px; line-height: 1.2; margin: 6px 0 10px; }
+.spec .d { font-family: var(--display); }
+.spec .weights { display: flex; gap: 14px; flex-wrap: wrap; font-size: 18px; }
+.scale { margin-top: 16px; display: grid; gap: 6px; }
+.scale div { display: flex; gap: 14px; align-items: baseline; border-bottom: 1px dashed var(--line); padding-bottom: 6px; }
+.scale small { color: var(--muted); font-size: 12px; min-width: 64px; }
+
+/* القرارات */
+.table { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 14px; }
+th, td { text-align: start; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: .04em; }
+.dos { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.dos ul { margin: 0; padding-inline-start: 18px; font-size: 15px; }
+.dos h3 { font-size: 17px; margin-bottom: 6px; }
+.note { font-size: 12px; color: var(--muted); margin-top: 24px; }
+</style>
+
+<div class="wrap" dir="rtl" lang="ar">
+
+<header class="hero">
+  <div class="hero-in">
+    <svg viewBox="150 120 212 340" aria-label="شعار إداراتي">
+      <path d="M166 372V232a90 90 0 0 1 180 0v140z" fill="#F5F2EB"/>
+      <rect x="243" y="196" width="26" height="136" rx="13" fill="#14213A"/>
+      <path d="M256 400l24 24-24 24-24-24z" fill="#C9963A"/>
+    </svg>
+    <div>
+      <h1>إداراتي</h1>
+      <p>نظام العائلة لإدارة الأملاك والإيجارات والميزانية. باب البيت البحريني المقوّس، وداخله «ا» ونقطة ذهب تحتها، فتنقرا «إ».</p>
+      <span class="tag">DW-008 · هوية «حجر وليل» · قيد التطوير · نسخة تجريبية</span>
+    </div>
+  </div>
+</header>
+
+<section>
+    <div class="eyebrow">الشعار</div>
+  <h2>ثلاث أفكار، وحدة انعتمدت</h2>
+  <p class="lead">المعيار: ينعرف بحجم 48px على شاشة الجوال، وما يشبه أيقونة «حياتي» اللي جنبه.</p>
+  <div class="concepts">
+    <div class="concept">
+      <svg viewBox="0 0 512 512"><rect width="512" height="512" fill="#14213A"/><path d="M156 404V236a100 100 0 0 1 200 0v168" fill="none" stroke="#F5F2EB" stroke-width="36" stroke-linecap="round"/><path d="M116 404h280" stroke="#F5F2EB" stroke-width="36" stroke-linecap="round"/><circle cx="256" cy="300" r="26" fill="#C9963A"/></svg>
+      <h3>أ · باب ونقطة</h3>
+      <div class="verdict no">انرفض</div>
+      <p>الخطوط الرفيعة تختفي بحجم 48px، والباب بروحه يشبه أي تطبيق عقارات.</p>
+    </div>
+    <div class="concept win">
+      <svg viewBox="0 0 512 512"><rect width="512" height="512" fill="#14213A"/><g transform="translate(-38.4 -83.25) scale(1.15)"><path d="M166 372V232a90 90 0 0 1 180 0v140z" fill="#F5F2EB"/><rect x="243" y="196" width="26" height="136" rx="13" fill="#14213A"/><path d="M256 400l24 24-24 24-24-24z" fill="#C9963A"/></g></svg>
+      <h3>ب · باب فيه «إ»</h3>
+      <div class="verdict ok">انعتمد</div>
+      <p>كتلة وحدة تنقرا بأي حجم. الألف المفرّغة ونقطة الخط العربي الذهبية تحتها تعطي «إ» أول حرف من الاسم، والقوس يعطي البيت.</p>
+    </div>
+    <div class="concept">
+      <svg viewBox="0 0 512 512"><rect width="512" height="512" fill="#14213A"/><rect x="132" y="260" width="64" height="140" rx="10" fill="#F5F2EB"/><rect x="224" y="180" width="64" height="220" rx="10" fill="#F5F2EB"/><rect x="316" y="120" width="64" height="280" rx="10" fill="#C9963A"/></svg>
+      <h3>ج · أعمدة مبانٍ</h3>
+      <div class="verdict no">انرفض</div>
+      <p>يتقري رسم بياني لتطبيق بنك، ومو له علاقة بالعائلة ولا بالبحرين.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">الأيقونة</div>
+  <h2>بكل الأحجام</h2>
+  <p class="lead">ملفات PNG جاهزة في <code>public/icons</code>: ‏512 و192 للـ PWA و180 لآيفون. الشعار داخل الـ 80% الآمنة، فما ينقص لو أندرويد قصّه دائرة.</p>
+  <div class="sizes">
+    <figure><svg width="120" height="120" style="border-radius:26px" viewBox="0 0 512 512"><rect width="512" height="512" fill="#14213A"/><g transform="translate(-38.4 -83.25) scale(1.15)"><path d="M166 372V232a90 90 0 0 1 180 0v140z" fill="#F5F2EB"/><rect x="243" y="196" width="26" height="136" rx="13" fill="#14213A"/><path d="M256 400l24 24-24 24-24-24z" fill="#C9963A"/></g></svg><span class="num">512</span></figure>
+    <figure><svg width="76" height="76" style="border-radius:17px" viewBox="0 0 512 512"><rect width="512" height="512" fill="#14213A"/><g transform="translate(-38.4 -83.25) scale(1.15)"><path d="M166 372V232a90 90 0 0 1 180 0v140z" fill="#F5F2EB"/><rect x="243" y="196" width="26" height="136" rx="13" fill="#14213A"/><path d="M256 400l24 24-24 24-24-24z" fill="#C9963A"/></g></svg><span class="num">180</span></figure>
+    <figure><svg width="48" height="48" style="border-radius:11px" viewBox="0 0 512 512"><rect width="512" height="512" fill="#14213A"/><g transform="translate(-38.4 -83.25) scale(1.15)"><path d="M166 372V232a90 90 0 0 1 180 0v140z" fill="#F5F2EB"/><rect x="243" y="196" width="26" height="136" rx="13" fill="#14213A"/><path d="M256 400l24 24-24 24-24-24z" fill="#C9963A"/></g></svg><span class="num">48</span></figure>
+    <figure><svg width="29" height="29" style="border-radius:6px" viewBox="0 0 512 512"><rect width="512" height="512" fill="#14213A"/><g transform="translate(-38.4 -83.25) scale(1.15)"><path d="M166 372V232a90 90 0 0 1 180 0v140z" fill="#F5F2EB"/><rect x="243" y="196" width="26" height="136" rx="13" fill="#14213A"/><path d="M256 400l24 24-24 24-24-24z" fill="#C9963A"/></g></svg><span class="num">29</span></figure>
+    <div class="phone" aria-label="شكل الأيقونة على شاشة الجوال">
+      <div><span class="app"></span>الصور</div><div><span class="app" style="display:block"></span>البنك</div><div><svg viewBox="0 0 512 512"><rect width="512" height="512" fill="#14213A"/><g transform="translate(-38.4 -83.25) scale(1.15)"><path d="M166 372V232a90 90 0 0 1 180 0v140z" fill="#F5F2EB"/><rect x="243" y="196" width="26" height="136" rx="13" fill="#14213A"/><path d="M256 400l24 24-24 24-24-24z" fill="#C9963A"/></g></svg>إداراتي</div><div><span class="app" style="display:block"></span>الخرائط</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">الألوان</div>
+  <h2>ثلاث ألوان للهوية، وثلاث للحالة</h2>
+  <p class="lead">كل لون له وظيفة وحدة. الأقسام الثمانية كلها بنفس الألوان، واللي يفرّقها الأيقونة والعنوان.</p>
+  <div class="swatches">
+    <div class="sw"><div class="chip" style="background:#14213A;color:#F5F2EB">ليل</div><div class="meta"><b class="num">#14213A</b><span>الشعار، الهيدر، الشريط الجانبي</span></div></div>
+    <div class="sw"><div class="chip" style="background:#F5F2EB;color:#14213A">حجر</div><div class="meta"><b class="num">#F5F2EB</b><span>الخلفية، حرف الشعار</span></div></div>
+    <div class="sw"><div class="chip" style="background:#C9963A;color:#14213A">ذهب</div><div class="meta"><b class="num">#C9963A</b><span>زر الإضافة ونقطة الشعار بس</span></div></div>
+    <div class="sw"><div class="chip" style="background:#1E3A5F;color:#FFFFFF">بحري</div><div class="meta"><b class="num">#1E3A5F · #8FB3E8</b><span>الأزرار والروابط · فاتح · داكن</span></div></div>
+  </div>
+  <div class="status">
+    <span class="pill" style="background:var(--paid-soft);color:var(--paid)">مدفوع</span>
+    <span class="pill" style="background:var(--due-soft);color:var(--due)">مستحق</span>
+    <span class="pill" style="background:var(--late-soft);color:var(--late)">متأخر</span>
+  </div>
+  <div class="rule"><b>القاعدة:</b> الذهبي يطلع مرة وحدة بالشاشة. ألوان الحالة لها معنى وحد بكل التطبيق، ودايماً معاها كلمة. كل النصوص تباينها فوق 4.5 بالوضعين.</div>
+</section>
+
+<section>
+  <div class="eyebrow">الخط</div>
+  <h2>عائلتين، كل وحدة لها شغل</h2>
+  <p class="lead">الاثنين مجانيين (رخصة SIL OFL) ومن Google Fonts. Readex Pro يفرّق إداراتي عن «حياتي» بالعناوين، وIBM Plex Sans Arabic يبقى للنص والجداول لأن أرقامه بعرض ثابت.</p>
+  <div class="type">
+    <div class="spec">
+      <div class="eyebrow">العناوين والأرقام الكبيرة</div>
+      <div class="big d">إداراتي <span class="num">2,450</span></div>
+      <div class="weights d"><span style="font-weight:500">Readex Pro 500</span><span style="font-weight:600">600</span><span style="font-weight:700">700</span></div>
+    </div>
+    <div class="spec">
+      <div class="eyebrow">النص والجداول</div>
+      <div class="big" style="font-size:40px">عقد شقة 3 · المالكية</div>
+      <div class="weights"><span>IBM Plex Sans Arabic 400</span><span style="font-weight:500">500</span><span style="font-weight:600">600</span></div>
+    </div>
+  </div>
+  <div class="scale">
+    <div><small class="num">32 · 700</small><span style="font:700 32px/1.3 var(--display)">مبلغ التحصيل</span></div>
+    <div><small class="num">22 · 600</small><span style="font:600 22px/1.4 var(--display)">عنوان الصفحة</span></div>
+    <div><small class="num">17 · 600</small><span style="font-weight:600;font-size:17px">عنوان البطاقة</span></div>
+    <div><small class="num">16 · 400</small><span>نص عادي وحقول الإدخال</span></div>
+    <div><small class="num">13 · 500</small><span style="font-size:13px;font-weight:500;color:var(--muted)">نص ثانوي وتواريخ</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">الاستخدام</div>
+  <h2>يصير وما يصير</h2>
+  <div class="dos">
+    <div><h3 style="color:var(--paid)">يصير</h3><ul><li>الشعار على الليل أو الحجر بس</li><li>مساحة فاضية حوله ربع عرضه</li><li>المبالغ بثلاث خانات <span class="num">180.000</span> د.ب</li><li>كل لون من tokens.css</li></ul></div>
+    <div><h3 style="color:var(--late)">ما يصير</h3><ul><li>تغيير ألوان الشعار أو مطّه أو ظل عليه</li><li>لون خاص لكل قسم</li><li>الذهبي للمبالغ أو التنبيهات</li><li>كتابة hex داخل component</li></ul></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">اجتماع الشركة · DW-008</div>
+  <h2>القرارات</h2>
+  <div class="table"><table>
+    <thead><tr><th>القرار</th><th>القسم</th><th>ليش</th><th>مين اعترض</th></tr></thead>
+    <tbody>
+      <tr><td>الشعار ب: باب فيه «إ»</td><td>التصميم</td><td>كتلة وحدة تنقرا بحجم 48px، والحرف يربطه بالاسم</td><td>المنتج فضّل ج، ورجع عن رأيه لأنه يشبه تطبيقات البنوك</td></tr>
+      <tr><td>الألوان تبقى نفسها من DW-007</td><td>الرئيس التنفيذي</td><td>انقاس تباينها وانبنى عليها الكود، والتغيير ما يضيف شي</td><td>—</td></tr>
+      <tr><td>Readex Pro للعناوين و IBM Plex للنص</td><td>التصميم</td><td>يفرّق عن «حياتي» ويحافظ على أرقام الجداول ثابتة</td><td>الهندسة: خط ثاني يزيد التحميل حوالي 40KB، فانحصر بثلاث أوزان</td></tr>
+      <tr><td>الاسم «إداراتي» للعائلة بس، بدون تسجيل علامة تجارية</td><td>القانونية</td><td>أداة داخلية ما تنباع؛ التسجيل يصير لو تحولت منتج</td><td>—</td></tr>
+      <tr><td>الأيقونات PNG بثلاث مقاسات من SVG واحد</td><td>العمليات</td><td>مصدر وحد، ونفس الشكل على آيفون وأندرويد والكمبيوتر</td><td>—</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">* الأرقام والأسماء بالأمثلة بيانات تجريبية.</p>
+</section>
+
+</div>

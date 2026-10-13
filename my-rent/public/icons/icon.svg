@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- إداراتي: باب مقوّس فيه «ا» مفرّغة ونقطة خط عربي ذهبية تحته = «إ» + الملك والمفتاح -->
+  <rect width="512" height="512" fill="#14213A"/>
+  <g transform="translate(-38.4 -83.25) scale(1.15)">
+  <path d="M166 372V232a90 90 0 0 1 180 0v140z" fill="#F5F2EB"/>
+  <rect x="243" y="196" width="26" height="136" rx="13" fill="#14213A"/>
+  <path d="M256 400l24 24-24 24-24-24z" fill="#C9963A"/>
+  </g>
+</svg>

@@ -18,7 +18,7 @@ module.exports = {
         due: { DEFAULT: "var(--due)", soft: "var(--due-soft)" },
         late: { DEFAULT: "var(--late)", soft: "var(--late-soft)" },
       },
-      fontFamily: { sans: ["var(--font)"] },
+      fontFamily: { sans: ["var(--font)"], display: ["var(--font-display)"] },
       borderRadius: { sm: "var(--radius-sm)", DEFAULT: "var(--radius)", lg: "var(--radius-lg)" },
       boxShadow: { card: "var(--shadow)" },
       transitionTimingFunction: { out: "var(--ease-out)", drawer: "var(--ease-drawer)" },
