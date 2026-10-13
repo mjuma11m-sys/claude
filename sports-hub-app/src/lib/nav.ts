@@ -1,4 +1,5 @@
 import type { IconName } from '../components/Icon'
+import { FAN_ZONE } from './features'
 import type { Role } from './roles'
 
 export type NavItem = { to: string; label: string; icon: IconName }
@@ -14,11 +15,12 @@ const STANDINGS: NavItem = { to: '/standings', label: 'الترتيب', icon: 't
 const LOADS: NavItem = { to: '/medical', label: 'الأحمال', icon: 'pulse' }
 
 /* The workspace comes first for staff; the fan screens shrink to one tab. At most five fit the phone tab bar. */
-export function navFor(role: Role): NavItem[] {
+export function navFor(role: Role, fanZone = FAN_ZONE): NavItem[] {
+  const zone = fanZone ? [ZONE] : []
   switch (role) {
-    case 'club_admin': return [{ to: '/club', label: 'غرفة النادي', icon: 'club' }, LOADS, STANDINGS, ZONE]
-    case 'bfa_admin': return [{ to: '/federation', label: 'غرفة الاتحاد', icon: 'hub' }, STANDINGS, ZONE]
-    case 'medical': return [LOADS, ...FAN]
-    default: return FAN
+    case 'club_admin': return [{ to: '/club', label: 'غرفة النادي', icon: 'club' }, LOADS, STANDINGS, ...zone]
+    case 'bfa_admin': return [{ to: '/federation', label: 'غرفة الاتحاد', icon: 'hub' }, STANDINGS, ...zone]
+    case 'medical': return fanZone ? [LOADS, ...FAN] : [LOADS, STANDINGS]
+    default: return fanZone ? FAN : [STANDINGS]
   }
 }

@@ -57,7 +57,12 @@ export const SQUAD_LOADS = [
 import type { PlayerStatus } from '../lib/squad'
 
 export const DEMO_CLUB = 'نادي تجريبي 01'
-export const FFP_LIMIT_DEMO = 0.7 // a demo value, not an official rule
+/* The two divisions. The wage-to-revenue limit differs per division; both numbers are demo values, not official rules. */
+export type DivisionId = 'premier' | 'second'
+export const DIVISIONS: readonly DivisionId[] = ['premier', 'second']
+export const DIVISION_LABEL: Record<DivisionId, string> = { premier: 'الدوري الممتاز', second: 'الدرجة الثانية' }
+export const LIMITS_DEMO: Record<DivisionId, number> = { premier: 0.7, second: 0.8 }
+export const FFP_LIMIT_DEMO = LIMITS_DEMO.premier
 
 const inDays = (n: number) => new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10)
 const sq = (num: number, pos: string, days: number, wage: number, status: PlayerStatus, note: string | null = null) =>
@@ -72,9 +77,11 @@ export const DEMO_SQUAD = [
 ]
 
 /* [club, revenue BHD, wages BHD] for the season; null = has not filed. */
-const fin = (n: number, revenue: number | null, wages: number | null) => ({ club: `نادي تجريبي ${String(n).padStart(2, '0')}`, revenue, wages })
+const fin = (n: number, revenue: number | null, wages: number | null) =>
+  ({ club: `نادي تجريبي ${String(n).padStart(2, '0')}`, league: (n <= 12 ? 'premier' : 'second') as DivisionId, revenue, wages })
 export const DEMO_FINANCE = [
   fin(1, 520000, 360000), fin(2, 880000, 470000), fin(3, 410000, 340000), fin(4, 760000, 500000), fin(5, 1200000, 640000), fin(6, 330000, 215000),
   fin(7, 590000, 300000), fin(8, 450000, 335000), fin(9, 980000, 520000), fin(10, 270000, 150000), fin(11, null, null), fin(12, null, null),
+  fin(13, 210000, 150000), fin(14, 180000, 160000), fin(15, 240000, 120000), fin(16, 150000, 100000), fin(17, 130000, 100000), fin(18, 110000, 70000), fin(19, null, null), fin(20, null, null),
 ]
 export const DEMO_SEASON = '2026/27'

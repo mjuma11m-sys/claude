@@ -14,6 +14,7 @@ import { vars } from '../lib/css'
 import { ffpStatus, wageRatio } from '../lib/ffp'
 import { fmtDate, fmtDateTime, fmtMoney } from '../lib/format'
 import { readiness, STATUS } from '../lib/squad'
+import { DIVISION_LABEL } from '../data/demo'
 
 type SortKey = 'num' | 'end' | 'wage'
 const SORTS: { key: SortKey; label: string }[] = [{ key: 'num', label: 'رقم القميص' }, { key: 'end', label: 'نهاية العقد' }, { key: 'wage', label: 'الراتب' }]
@@ -102,7 +103,10 @@ export function Club() {
     <section className="space-y-5 md:space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <PageTitle>غرفة النادي</PageTitle>
-        <span className="flex items-center gap-2 rounded-full bg-white/5 py-1 pe-3 ps-1"><ClubBadge name={room.clubName} size="sm" /> <span className="text-sm">{room.clubName}</span></span>
+        <span className="flex flex-wrap items-center gap-2">
+          <span className="flex items-center gap-2 rounded-full bg-white/5 py-1 pe-3 ps-1"><ClubBadge name={room.clubName} size="sm" /> <span className="text-sm">{room.clubName}</span></span>
+          <span className="rounded-full bg-pulse/15 px-3 py-1 text-xs text-pulse">{room.league ? DIVISION_LABEL[room.league] : 'الدرجة غير محددة'}</span>
+        </span>
       </div>
 
       <div className="rise grid grid-cols-2 gap-2 md:grid-cols-4" style={vars({ '--i': 1 })}>
@@ -119,7 +123,7 @@ export function Club() {
           <div className="flex items-start justify-between gap-3">
             <div>
               <h2 className="font-display text-2xl">تقرير الموسم للاتحاد</h2>
-              <p className="text-xs text-mute">موسم <span className="num">{room.finance?.season ?? '—'}</span> · الحد <bdi dir="ltr" className="num">{Math.round(room.limit * 100)}%</bdi> (قيمة تجريبية)</p>
+              <p className="text-xs text-mute">موسم <span className="num">{room.finance?.season ?? '—'}</span> · حد {room.league ? DIVISION_LABEL[room.league] : 'الممتاز'} <bdi dir="ltr" className="num">{Math.round(room.limit * 100)}%</bdi> (قيمة تجريبية)</p>
             </div>
             <StatusChip status={status} />
           </div>

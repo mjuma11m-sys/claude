@@ -22,6 +22,11 @@ describe('wage ratio and FFP status', () => {
     const rows = [{ ratio: 0.5 }, { ratio: null }, { ratio: 0.9 }, { ratio: 0.7 }]
     expect(byRisk(rows).map((r) => r.ratio)).toEqual([0.9, 0.7, 0.5, null])
   })
+  it('ranks by distance to each club\'s own limit, not by the raw ratio', () => {
+    const second = { ratio: 0.79, limit: 0.8 } // near its limit
+    const premier = { ratio: 0.72, limit: 0.7 } // over its limit
+    expect(byRisk([second, premier])).toEqual([premier, second])
+  })
 })
 
 describe('contracts', () => {

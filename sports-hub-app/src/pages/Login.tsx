@@ -40,7 +40,7 @@ export function Login() {
           <Logo className="size-10" />
           <div>
             <h1 className="text-xl"><Wordmark /></h1>
-            <p className="text-sm text-mute">غرف عمل للأندية والاتحاد، وزاوية للجمهور</p>
+            <p className="text-sm text-mute">غرف عمل للأندية والاتحاد: الدوري الممتاز والدرجة الثانية</p>
           </div>
         </div>
 

@@ -93,8 +93,12 @@ begin;
 delete from public.club_finance_reports where is_demo;
 
 insert into public.clubs (name, is_fictional)
-select 'نادي تجريبي ' || lpad(n::text, 2, '0'), true from generate_series(1, 12) n
+select 'نادي تجريبي ' || lpad(n::text, 2, '0'), true from generate_series(1, 20) n
 on conflict (name) do nothing;
+
+-- 01–12 play in the Premier League, 13–20 in the Second Division (same size as the demo Second Division table)
+update public.clubs set league_id = case when right(name, 2)::int <= 12 then 'premier' else 'second' end
+where is_fictional and name like 'نادي تجريبي %';
 
 -- Squad of club 01 (cascades to its contracts and statuses)
 delete from public.players where club_id = (select id from public.clubs where name = 'نادي تجريبي 01');
@@ -125,13 +129,15 @@ select p.id, p.club_id, s.status, s.note
 from public.players p join squad s on s.num = p.num
 where p.club_id = (select id from public.clubs where name = 'نادي تجريبي 01');
 
--- Season finance reports: 10 submitted, 2 clubs (11, 12) have not filed yet
+-- Season finance reports: 16 submitted; clubs 11, 12 (Premier) and 19, 20 (Second) have not filed yet
 insert into public.club_finance_reports (club_id, season, revenue_bhd, wages_bhd)
 select c.id, '2026/27', v.revenue, v.wages
 from public.clubs c join (values
   ('نادي تجريبي 01', 520000, 360000), ('نادي تجريبي 02', 880000, 470000), ('نادي تجريبي 03', 410000, 340000),
   ('نادي تجريبي 04', 760000, 500000), ('نادي تجريبي 05', 1200000, 640000), ('نادي تجريبي 06', 330000, 215000),
   ('نادي تجريبي 07', 590000, 300000), ('نادي تجريبي 08', 450000, 335000), ('نادي تجريبي 09', 980000, 520000),
-  ('نادي تجريبي 10', 270000, 150000)
+  ('نادي تجريبي 10', 270000, 150000),
+  ('نادي تجريبي 13', 210000, 150000), ('نادي تجريبي 14', 180000, 160000), ('نادي تجريبي 15', 240000, 120000),
+  ('نادي تجريبي 16', 150000, 100000), ('نادي تجريبي 17', 130000, 100000), ('نادي تجريبي 18', 110000, 70000)
 ) as v(name, revenue, wages) on v.name = c.name;
 commit;

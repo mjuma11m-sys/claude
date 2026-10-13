@@ -4,7 +4,8 @@ import { supabase } from '../lib/supabase'
 import type { Row } from '../lib/standings'
 import { acwr, zone } from '../lib/acwr'
 import type { PlayerStatus } from '../lib/squad'
-import { DEMO_CLUB, DEMO_FINANCE, DEMO_SEASON, DEMO_SQUAD, FFP_LIMIT_DEMO, LEAGUES, MOTM_CANDIDATES, MOTM_SEED, MY_CLUB, NEXT_MATCH, SQUAD_LOADS } from './demo'
+import type { DivisionId } from './demo'
+import { DEMO_CLUB, DEMO_FINANCE, DEMO_SEASON, DEMO_SQUAD, LEAGUES, LIMITS_DEMO, MOTM_CANDIDATES, MOTM_SEED, MY_CLUB, NEXT_MATCH, SQUAD_LOADS } from './demo'
 
 type League = { id: string; name: string; rows: Row[]; updatedAt: string | null; source: string | null }
 type Candidate = { id: string; name: string; num: number | null; pos: string }
@@ -143,13 +144,20 @@ export async function setMyClub(userId: string, club: Club): Promise<void> {
 
 export type SquadRow = { id: string; num: number | null; name: string; pos: string; status: PlayerStatus; note: string | null; endsOn: string; wage: number }
 export type ClubFinance = { season: string; revenue: number; wages: number; submittedAt: string }
-export type ClubRoom = { clubName: string; squad: SquadRow[]; finance: ClubFinance | null; limit: number; loadAlerts: number | null }
+export type ClubRoom = { clubName: string; league: DivisionId | null; squad: SquadRow[]; finance: ClubFinance | null; limit: number; loadAlerts: number | null }
 
-export async function getFfpLimit(): Promise<number> {
-  if (!supabase) return FFP_LIMIT_DEMO
-  const { data } = await supabase.from('rules').select('value').eq('key', 'ffp_wage_ratio_limit').maybeSingle<{ value: number }>()
-  return data?.value ?? FFP_LIMIT_DEMO
+export type Limits = Record<DivisionId, number>
+
+/* One wage limit per division. A missing rule falls back to the demo value, never to "no limit". */
+export async function getLimits(): Promise<Limits> {
+  if (!supabase) return { ...LIMITS_DEMO }
+  const { data } = await supabase.from('rules').select('key, value').like('key', 'ffp_wage_ratio_limit:%').returns<{ key: string; value: number }[]>()
+  const out = { ...LIMITS_DEMO }
+  for (const r of data ?? []) { const id = r.key.split(':')[1]; if (isDivision(id)) out[id] = Number(r.value) }
+  return out
 }
+
+export const isDivision = (v: unknown): v is DivisionId => v === 'premier' || v === 'second'
 
 function readDemoReport(): ClubFinance | null {
   try { const raw = localStorage.getItem(DEMO_FIN_KEY); return raw ? (JSON.parse(raw) as ClubFinance) : null } catch { return null }
@@ -161,9 +169,9 @@ export async function getClubRoom(userId: string): Promise<Result<ClubRoom>> {
     const mine = readDemoReport() ?? { season: DEMO_SEASON, revenue: seed.revenue!, wages: seed.wages!, submittedAt: new Date().toISOString() }
     // Load alerts come from the demo ACWR series (loads are never stored in the database).
     const alerts = SQUAD_LOADS.filter((p) => { const r = acwr(p.loads); return r !== null && zone(r) !== 'safe' && zone(r) !== 'low' }).length
-    return { data: { clubName: DEMO_CLUB, squad: DEMO_SQUAD, finance: mine, limit: FFP_LIMIT_DEMO, loadAlerts: alerts }, demo: true }
+    return { data: { clubName: DEMO_CLUB, league: DEMO_FINANCE[0].league, squad: DEMO_SQUAD, finance: mine, limit: LIMITS_DEMO[DEMO_FINANCE[0].league], loadAlerts: alerts }, demo: true }
   }
-  const me = await supabase.from('profiles').select('club_id, clubs!profiles_club_id_fkey(name)').eq('id', userId).single<{ club_id: string | null; clubs: { name: string } | null }>()
+  const me = await supabase.from('profiles').select('club_id, clubs!profiles_club_id_fkey(name, league_id)').eq('id', userId).single<{ club_id: string | null; clubs: { name: string; league_id: string | null } | null }>()
   if (me.error) throw me.error
   const clubId = me.data.club_id
   if (!clubId) throw new Error('no-club')
@@ -172,7 +180,7 @@ export async function getClubRoom(userId: string): Promise<Result<ClubRoom>> {
     supabase.from('contracts').select('player_id, ends_on, monthly_wage_bhd, is_demo').eq('club_id', clubId).returns<{ player_id: string; ends_on: string; monthly_wage_bhd: number; is_demo: boolean }[]>(),
     supabase.from('player_status').select('player_id, status, note, is_demo').eq('club_id', clubId).returns<{ player_id: string; status: PlayerStatus; note: string | null; is_demo: boolean }[]>(),
     supabase.from('club_finance_reports').select('season, revenue_bhd, wages_bhd, submitted_at, is_demo').eq('club_id', clubId).order('season', { ascending: false }).limit(1).returns<{ season: string; revenue_bhd: number; wages_bhd: number; submitted_at: string; is_demo: boolean }[]>(),
-    getFfpLimit(),
+    getLimits(),
   ])
   for (const r of [players, contracts, statuses, reports]) if (r.error) throw r.error
   const c = new Map(contracts.data!.map((x) => [x.player_id, x]))
@@ -182,8 +190,9 @@ export async function getClubRoom(userId: string): Promise<Result<ClubRoom>> {
     return ct ? [{ id: p.id, num: p.num, name: p.name, pos: p.pos, status: s.get(p.id)?.status ?? 'fit', note: s.get(p.id)?.note ?? null, endsOn: ct.ends_on, wage: Number(ct.monthly_wage_bhd) }] : []
   })
   const r = reports.data![0]
+  const league = isDivision(me.data.clubs?.league_id) ? me.data.clubs.league_id : null
   return {
-    data: { clubName: me.data.clubs?.name ?? '—', squad, finance: r ? { season: r.season, revenue: Number(r.revenue_bhd), wages: Number(r.wages_bhd), submittedAt: r.submitted_at } : null, limit, loadAlerts: null },
+    data: { clubName: me.data.clubs?.name ?? '—', league, squad, finance: r ? { season: r.season, revenue: Number(r.revenue_bhd), wages: Number(r.wages_bhd), submittedAt: r.submitted_at } : null, limit: limit[league ?? 'premier'], loadAlerts: null },
     demo: contracts.data!.some((x) => x.is_demo) || statuses.data!.some((x) => x.is_demo) || !!r?.is_demo,
   }
 }
@@ -206,30 +215,30 @@ export async function submitFinance(userId: string, season: string, revenue: num
 
 /* ---------- federation room ---------- */
 
-export type FedRow = { club: string; revenue: number | null; wages: number | null; submittedAt: string | null }
-export type FederationRoom = { limit: number; season: string; rows: FedRow[]; leagues: { id: string; name: string; updatedAt: string | null; source: string | null }[] }
+export type FedRow = { club: string; league: DivisionId | null; revenue: number | null; wages: number | null; submittedAt: string | null }
+export type FederationRoom = { limits: Limits; season: string; rows: FedRow[]; leagues: { id: string; name: string; updatedAt: string | null; source: string | null }[] }
 
 export async function getFederationRoom(): Promise<Result<FederationRoom>> {
   const leagues = await getLeagues()
   const lg = leagues.data.map(({ id, name, updatedAt, source }) => ({ id, name, updatedAt, source }))
   if (!supabase) {
     const mine = readDemoReport()
-    const rows = DEMO_FINANCE.map((f, i) => (i === 0 && mine ? { club: f.club, revenue: mine.revenue, wages: mine.wages, submittedAt: mine.submittedAt } : { club: f.club, revenue: f.revenue, wages: f.wages, submittedAt: f.revenue === null ? null : new Date(Date.now() - (i + 1) * 86_400_000 * 3).toISOString() }))
-    return { data: { limit: FFP_LIMIT_DEMO, season: DEMO_SEASON, rows, leagues: lg }, demo: true }
+    const rows = DEMO_FINANCE.map((f, i) => (i === 0 && mine ? { club: f.club, league: f.league, revenue: mine.revenue, wages: mine.wages, submittedAt: mine.submittedAt } : { club: f.club, league: f.league, revenue: f.revenue, wages: f.wages, submittedAt: f.revenue === null ? null : new Date(Date.now() - (i + 1) * 86_400_000 * 3).toISOString() }))
+    return { data: { limits: { ...LIMITS_DEMO }, season: DEMO_SEASON, rows, leagues: lg }, demo: true }
   }
-  const [reports, real, limit] = await Promise.all([
-    supabase.from('club_finance_reports').select('season, revenue_bhd, wages_bhd, submitted_at, is_demo, clubs(name)').order('season', { ascending: false }).returns<{ season: string; revenue_bhd: number; wages_bhd: number; submitted_at: string; is_demo: boolean; clubs: { name: string } | null }[]>(),
-    supabase.from('league_entries').select('clubs(name)').eq('is_demo', false).returns<{ clubs: { name: string } | null }[]>(),
-    getFfpLimit(),
+  const [reports, real, limits] = await Promise.all([
+    supabase.from('club_finance_reports').select('season, revenue_bhd, wages_bhd, submitted_at, is_demo, clubs(name, league_id)').order('season', { ascending: false }).returns<{ season: string; revenue_bhd: number; wages_bhd: number; submitted_at: string; is_demo: boolean; clubs: { name: string; league_id: string | null } | null }[]>(),
+    supabase.from('league_entries').select('league_id, clubs(name)').eq('is_demo', false).returns<{ league_id: string; clubs: { name: string } | null }[]>(),
+    getLimits(),
   ])
   if (reports.error) throw reports.error
   const season = reports.data[0]?.season ?? DEMO_SEASON
   const filed = reports.data.filter((r) => r.season === season)
-  const rows: FedRow[] = filed.map((r) => ({ club: r.clubs?.name ?? '—', revenue: Number(r.revenue_bhd), wages: Number(r.wages_bhd), submittedAt: r.submitted_at }))
+  const rows: FedRow[] = filed.map((r) => ({ club: r.clubs?.name ?? '—', league: isDivision(r.clubs?.league_id) ? r.clubs.league_id : null, revenue: Number(r.revenue_bhd), wages: Number(r.wages_bhd), submittedAt: r.submitted_at }))
   // Clubs in a real (imported) league table that have not filed yet show up as "has not filed", never as fine.
   for (const e of real.data ?? []) {
     const name = e.clubs?.name
-    if (name && !rows.some((r) => r.club === name)) rows.push({ club: name, revenue: null, wages: null, submittedAt: null })
+    if (name && !rows.some((r) => r.club === name)) rows.push({ club: name, league: isDivision(e.league_id) ? e.league_id : null, revenue: null, wages: null, submittedAt: null })
   }
-  return { data: { limit, season, rows, leagues: lg }, demo: filed.some((r) => r.is_demo) }
+  return { data: { limits, season, rows, leagues: lg }, demo: filed.some((r) => r.is_demo) }
 }

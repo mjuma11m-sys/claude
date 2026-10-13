@@ -101,21 +101,21 @@ test.describe('federation room', () => {
   test.beforeEach(async ({ page }) => { await as(page, 'الاتحاد') })
 
   test('summarises who filed and who is over the limit', async ({ page }) => {
-    await expect(page.locator('.sr-only', { hasText: '10/12' })).toHaveCount(1)
+    await expect(page.locator('.sr-only', { hasText: '16/20' })).toHaveCount(1)
     const tab = (name: RegExp) => page.getByRole('tab', { name })
-    await expect(tab(/^الكل/)).toContainText('12')
-    await expect(tab(/^تجاوزوا/)).toContainText('2')
-    await expect(tab(/^قريبون/)).toContainText('3')
-    await expect(tab(/^لم يرفعوا/)).toContainText('2')
+    await expect(tab(/^الكل/)).toContainText('20')
+    await expect(tab(/^تجاوزوا/)).toContainText('3')
+    await expect(tab(/^قريبون/)).toContainText('4')
+    await expect(tab(/^لم يرفعوا/)).toContainText('4')
   })
 
   test('worst offenders first, and the filter narrows the list', async ({ page }) => {
     const list = page.getByRole('heading', { name: /امتثال الأندية/ }).locator('..').locator('..')
-    await expect(list.getByRole('listitem').first()).toContainText('نادي تجريبي 03') // 83%
+    await expect(list.getByRole('listitem').first()).toContainText('نادي تجريبي 03') // 83% of a 70% limit: furthest past its own limit
     await page.getByRole('tab', { name: /^تجاوزوا/ }).click()
-    await expect(list.getByRole('listitem')).toHaveCount(2)
+    await expect(list.getByRole('listitem')).toHaveCount(3)
     await page.getByRole('tab', { name: /^لم يرفعوا/ }).click()
-    await expect(list.getByRole('listitem')).toHaveCount(2)
+    await expect(list.getByRole('listitem')).toHaveCount(4)
     await expect(list.getByRole('listitem').first()).toContainText('ما رفع تقرير الموسم')
   })
 

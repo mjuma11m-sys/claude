@@ -1,7 +1,8 @@
-import { createBrowserRouter } from 'react-router'
+import { createBrowserRouter, Navigate } from 'react-router'
 import { RequireArea, RequireAuth } from './auth/RequireAuth'
 import { Layout } from './components/Layout'
 import { RouteError } from './components/RouteError'
+import { FAN_ZONE } from './lib/features'
 import { Club } from './pages/Club'
 import { Federation } from './pages/Federation'
 import { Home } from './pages/Home'
@@ -24,12 +25,13 @@ export const router = createBrowserRouter([
     element: <RequireAuth><Layout /></RequireAuth>,
     children: [
       { index: true, handle: { title: 'الرئيسية' }, element: <Landing /> },
-      { path: 'zone', handle: { title: 'الجمهور' }, element: <Home /> },
+      ...(FAN_ZONE ? [{ path: 'zone', handle: { title: 'الجمهور' }, element: <Home /> }] : []),
       { path: 'club', handle: { title: 'غرفة النادي' }, element: <RequireArea area="club"><Club /></RequireArea> },
       { path: 'federation', handle: { title: 'غرفة الاتحاد' }, element: <RequireArea area="federation"><Federation /></RequireArea> },
       { path: 'standings', handle: { title: 'الترتيب' }, element: <Standings /> },
-      { path: 'vote', handle: { title: 'رجل المباراة' }, element: <Vote /> },
-      { path: 'pass', handle: { title: 'تذكرتي' }, element: <Pass /> },
+      ...(FAN_ZONE
+        ? [{ path: 'vote', handle: { title: 'رجل المباراة' }, element: <Vote /> }, { path: 'pass', handle: { title: 'تذكرتي' }, element: <Pass /> }]
+        : ['zone', 'vote', 'pass'].map((path) => ({ path, element: <Navigate to="/" replace /> }))),
       { path: 'settings', handle: { title: 'الإعدادات' }, element: <Settings /> },
       { path: 'medical', handle: { title: 'الأحمال' }, element: <RequireArea area="medical"><Medical /></RequireArea> },
     ],

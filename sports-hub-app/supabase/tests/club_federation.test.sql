@@ -26,7 +26,7 @@ update public.profiles set role = 'bfa_admin'                                 wh
 update public.profiles set role = 'player',     club_id = (select a from w) where id = 'c0000000-0000-0000-0000-00000000000e';
 
 select pg_temp.check((select count(*) >= 14 from public.contracts where club_id = (select a from w)), 'seed: club 01 has a squad with contracts');
-select pg_temp.check((select count(*) = 12 from public.club_finance_reports) or (select count(*) between 10 and 12 from public.club_finance_reports), 'seed: federation demo has finance reports');
+select pg_temp.check((select count(*) = 16 from public.club_finance_reports), 'seed: federation demo has 16 finance reports across both divisions');
 select pg_temp.denied($$ insert into public.contracts (player_id, club_id, starts_on, ends_on, monthly_wage_bhd) select p.id, (select b from w), current_date, current_date + 30, 1 from public.players p where p.club_id = (select a from w) limit 1 $$, 'a contract cannot name a player from another club (composite key)');
 
 -- Club admin A
@@ -42,6 +42,9 @@ select pg_temp.denied($$ insert into public.club_finance_reports (club_id, seaso
 select pg_temp.denied($$ update public.club_finance_reports set submitted_by = null $$, 'club admin cannot rewrite who submitted');
 update public.club_finance_reports set wages_bhd = wages_bhd + 1000 where club_id = (select a from w);
 select pg_temp.check((select count(*) = 1 from public.club_finance_reports where submitted_at > now() - interval '1 minute'), 'amending refreshes submitted_at');
+
+select pg_temp.check(pg_temp.rows_changed($$ update public.clubs set league_id = 'second' where id = (select a from w) $$) = 0, 'club admin cannot move its own club to another division (0 rows change)');
+select pg_temp.denied($$ update public.rules set value = 0.99 where key like 'ffp_wage_ratio_limit:%' $$, 'club admin cannot edit a division limit');
 
 -- Medical staff A: availability yes, pay no
 set request.jwt.claim.sub = 'c0000000-0000-0000-0000-00000000000c';
@@ -59,12 +62,15 @@ select pg_temp.check((select count(*) = 0 from public.player_status where club_i
 
 -- Federation: finance reports yes, pay and health no, and no writes
 set request.jwt.claim.sub = 'c0000000-0000-0000-0000-00000000000d';
-select pg_temp.check((select count(*) between 10 and 12 from public.club_finance_reports), 'federation reads every submitted finance report');
+select pg_temp.check((select count(*) = 16 from public.club_finance_reports), 'federation reads every submitted finance report');
 select pg_temp.check((select count(*) = 0 from public.contracts), 'federation never sees player pay');
 select pg_temp.check((select count(*) = 0 from public.player_status), 'federation never sees player health');
 select pg_temp.check(pg_temp.rows_changed($$ update public.club_finance_reports set wages_bhd = 0 $$) = 0, 'federation cannot edit a club''s report (0 rows change)');
 select pg_temp.denied($$ insert into public.club_finance_reports (club_id, season, revenue_bhd, wages_bhd) values ((select a from w), '2098', 1, 1) $$, 'federation cannot file a report for a club');
 select pg_temp.check((select count(*) = 1 from public.rules where key = 'ffp_wage_ratio_limit'), 'federation reads the limit rule');
+select pg_temp.check((select count(*) = 2 from public.rules where key like 'ffp_wage_ratio_limit:%' and is_demo), 'both division limits exist and are marked demo');
+select pg_temp.check((select count(*) = 12 from public.clubs where is_fictional and league_id = 'premier') and (select count(*) = 8 from public.clubs where is_fictional and league_id = 'second'), 'seed: 12 fictional Premier clubs and 8 fictional Second Division clubs');
+select pg_temp.check((select count(*) = 6 from public.club_finance_reports r join public.clubs c on c.id = r.club_id where c.league_id = 'second'), 'seed: 6 Second Division reports filed');
 select pg_temp.denied($$ update public.rules set value = 9 $$, 'nobody edits the rule from the app');
 
 -- Player and fan: nothing
