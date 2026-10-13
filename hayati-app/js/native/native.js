@@ -10,6 +10,7 @@
   // Capacitor 8: الإضافة ما تبين بـ Capacitor.Plugins إلا بعد registerPlugin (من capacitor.js اللي يحطه cap-www.js)
   const plug = (n) => (Cap.Plugins && Cap.Plugins[n]) || (typeof Cap.registerPlugin === 'function' ? Cap.registerPlugin(n) : null);
   const LN = plug('LocalNotifications'), Hap = plug('Haptics'), Share = plug('Share'), FS = plug('Filesystem');
+  const Browser = plug('Browser'), AppP = plug('App');
 
   const DAYS = 7;      // iOS يسمح بـ 64 تنبيه مجدول بالكثير، فنجدول أسبوع بس
   const MAX = 60;
@@ -331,5 +332,27 @@
     };
   }
 
-  window.HayatiNative = { saveFile, shareText, reschedule, upcoming, testNotification, prefs, savePrefs };
+  // 🍎 / G الدخول السريع: Google يمنع الدخول من داخل WebView، فنفتح متصفح النظام،
+  //   والمزود يرجّعنا بـ bh.hayati.app://auth?code=… (CFBundleURLTypes بـ Info.plist) ونبدّل الكود بجلسة (PKCE)
+  const AUTH_URL = 'bh.hayati.app://auth';
+  async function oauth(provider) {
+    if (!Browser) throw new Error('الدخول السريع يحتاج آخر نسخة من التطبيق');
+    const url = await S.signInWithProvider(provider, { redirectTo: AUTH_URL, skipBrowserRedirect: true });
+    await Browser.open({ url, presentationStyle: 'popover' });
+  }
+  async function onAuthUrl(url) {
+    if (!url || url.indexOf(AUTH_URL) !== 0) return false;
+    try { if (Browser) await Browser.close(); } catch (e) { /* انسكر */ }
+    const q = new URL(url.replace(AUTH_URL, 'https://auth.local/')).searchParams;
+    if (q.get('error')) { A.toast(q.get('error_description') || 'ما تم الدخول'); return true; }
+    if (q.get('code')) {
+      try { await S.exchangeCode(q.get('code')); A.toast('أهلاً 👋'); } catch (e) { A.toast(e.message || 'ما تم الدخول'); }
+    }
+    return true;
+  }
+  if (AppP && typeof AppP.addListener === 'function') {
+    try { const r = AppP.addListener('appUrlOpen', (ev) => onAuthUrl(ev && ev.url)); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
+  }
+
+  window.HayatiNative = { saveFile, shareText, reschedule, upcoming, testNotification, prefs, savePrefs, oauth, onAuthUrl };
 })();

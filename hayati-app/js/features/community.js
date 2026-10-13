@@ -70,7 +70,7 @@
       '<p class="small muted" style="margin:2px 0 12px">عشان «حياتي» يوريك اللي يهمك بس. بياناتك تظل بجهازك.</p>' +
       form(st.settings || {}) +
       // حساب خاص (يحفظ بياناتك بين أجهزتك): يطلع بس لو المزامنة مركّبة، وإلا ملفك يكون على هالجهاز
-      (S.getConfig && S.getConfig() ? '<button type="button" class="btn ghost block" style="margin-bottom:10px" data-action="ob-account">🔐 أنشئ حساب (بياناتك على كل أجهزتك)</button>' :
+      (S.getConfig && S.getConfig() ? '<button type="button" class="btn ghost block" style="margin-bottom:10px" data-action="ob-account">🔐 سجّل دخول أو أنشئ حساب (بياناتك لك بروحك)</button>' :
         '<p class="small muted" style="margin:0 0 10px">🔒 ملفك محفوظ على هالجهاز. الحسابات والمزامنة بين الأجهزة لسه قيد التطوير.</p>') +
       '<div class="btn-row"><button class="btn primary" data-action="ob-save">يلا نبدأ</button><button class="btn ghost" data-action="ob-skip">بعدين</button></div>' +
       '<p class="small muted ob-terms" style="margin:10px 2px 0">باستخدامك «حياتي» توافق على <a href="terms.html" target="_blank" rel="noopener">شروط الاستخدام</a> و<a href="privacy.html" target="_blank" rel="noopener">سياسة الخصوصية</a>. الأرقام كلها تقدير، وبياناتك على جهازك.</p></div>';

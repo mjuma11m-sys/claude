@@ -884,6 +884,7 @@ test('English: user data stays untouched (no «Exam المحاسبة»), units r
   expect(text).not.toMatch(/\d\s*(أيام|دقيقة)/);
   expect(await store(page, () => window.HayatiLang.tr('بعد 3 أيام · 49 دقيقة · 1.5 س · 30 د · 3 مرات · قبل 34 أيام'))).toBe('in 3 days · 49 min · 1.5 h · 30 min · 3 times · 34 days ago');
   expect(await store(page, () => window.HayatiLang.tr('صباح الخير يا محمد'))).toBe('Good morning, محمد');
+  expect(await store(page, () => window.HayatiLang.tr('بعد ساعتين و51 دقيقة'))).not.toMatch(/[\u0600-\u06FF]/);
 });
 
 test('backup reminder: shows after 30 days with 10+ records, «بعدين» hides it for a week, backing up clears it; version matches sw.js', async ({ page }) => {
@@ -944,4 +945,149 @@ test('brand: app colours match brand/tokens.css, and text colours pass 4.5:1 con
       for (const bg of ['--bg', '--surface', '--surface-2']) expect(ratio(set[fg], set[bg]), t + ' ' + fg + ' on ' + bg).toBeGreaterThanOrEqual(4.5);
     }
   }
+});
+
+// 🔐 الحسابات (جلسة الديوانية «الحسابات»): كل مستخدم بياناته بروحه، والدخول بـ Apple وGoogle
+//   Supabase وهمي: «سيرفر» فيه بيانات كل مستخدم لحاله، مثل RLS
+const fakeSupabase = () => {
+  const srv = window.__srv = { data: {}, calls: [], session: null, cb: null };
+  const rows = (uid, t) => ((srv.data[uid] = srv.data[uid] || {})[t] = srv.data[uid][t] || []);
+  const q = (table) => {
+    const uid = () => srv.session && srv.session.user.id;
+    const res = (v) => Object.assign(Promise.resolve(v), b);
+    const b = {
+      select: () => res({ data: table === 'settings' ? null : rows(uid(), table).slice(), error: null }),
+      eq: () => res({ data: [], error: null }), order: () => res({ data: [], error: null }),
+      maybeSingle: () => Promise.resolve({ data: null, error: null }),
+      upsert: (r) => { srv.calls.push(['upsert', uid(), table, r]); if (table !== 'settings') { const l = rows(uid(), table); const i = l.findIndex((x) => x.id === r.id); if (i >= 0) l[i] = r; else l.push(r); } return Promise.resolve({ error: null }); },
+      delete: () => ({ eq: (k, id) => { const l = rows(uid(), table); const i = l.findIndex((x) => x.id === id); if (i >= 0) l.splice(i, 1); return Promise.resolve({ error: null }); } }),
+      update: () => ({ eq: () => Promise.resolve({ error: null }) }),
+    };
+    return b;
+  };
+  const user = (id, email, provider) => ({ access_token: 't', user: { id, email, app_metadata: { provider } } });
+  window.__signInAs = (id, email, provider) => { srv.session = id ? user(id, email, provider || 'email') : null; srv.cb && srv.cb(id ? 'SIGNED_IN' : 'SIGNED_OUT', srv.session); };
+  window.supabase = {
+    createClient: () => ({
+      auth: {
+        getSession: async () => ({ data: { session: srv.session } }),
+        onAuthStateChange: (cb) => { srv.cb = cb; return { data: { subscription: { unsubscribe() {} } } }; },
+        signInWithPassword: async ({ email }) => { window.__signInAs('u-' + email.split('@')[0], email); return { error: null }; },
+        signUp: async ({ email }) => { window.__signInAs('u-' + email.split('@')[0], email); return { data: { session: srv.session }, error: null }; },
+        signOut: async () => { srv.calls.push(['signOut']); window.__signInAs(null); return { error: null }; },
+        signInWithOAuth: async (o) => { srv.calls.push(['oauth', o.provider, o.options]); return { data: { url: 'https://auth.example/' + o.provider }, error: null }; },
+        exchangeCodeForSession: async (code) => { srv.calls.push(['exchange', code]); window.__signInAs('u-apple', 'a@privaterelay.appleid.com', 'apple'); return { error: null }; },
+        resetPasswordForEmail: async (email, o) => { srv.calls.push(['reset', email, o.redirectTo]); return { error: null }; },
+        updateUser: async () => ({ error: null }),
+      },
+      from: q, rpc: async () => ({ error: null }),
+      channel: () => ({ on() { return this; }, subscribe() { return this; } }), removeChannel() {},
+    }),
+  };
+  localStorage.setItem('hayati-supabase', JSON.stringify({ url: 'https://x.supabase.co', key: 'k'.repeat(40) }));
+};
+const txs = (page) => store(page, () => App.st.transactions.map((t) => t.merchant).sort());
+
+test('accounts: guest data is offered to the first account, sign-out wipes the device, a second user never sees the first one\'s data', async ({ page }) => {
+  await page.addInitScript(fakeSupabase);
+  await open(page);
+  // بدون حساب: التطبيق يشتغل عادي
+  await store(page, () => App.S.upsert('transactions', { id: 'g1', kind: 'expense', amount: 1, merchant: 'Guest Cafe', category: 'قهوة', occurred_at: new Date().toISOString() }));
+  // أول دخول وعلى الجهاز بيانات: يسأل، وما يرفع شي قبل الجواب
+  await store(page, () => window.__signInAs('u-mo', 'mo@x.bh'));
+  await expect(page.locator('#mgKeep')).toBeVisible();
+  expect(await store(page, () => window.__srv.calls.filter((c) => c[0] === 'upsert').length)).toBe(0);
+  await page.click('#mgKeep');
+  await page.waitForFunction(() => (window.__srv.data['u-mo'] || {}).transactions?.some((r) => r.data.merchant === 'Guest Cafe'));
+  expect(await store(page, () => App.st.owner)).toBe('u-mo');
+  await store(page, () => App.S.upsert('transactions', { id: 'm1', kind: 'expense', amount: 2, merchant: 'Mo Only', category: 'قهوة', occurred_at: new Date().toISOString() }));
+  await page.waitForFunction(() => window.__srv.data['u-mo'].transactions.some((r) => r.data.merchant === 'Mo Only'));
+
+  // الخروج: الجهاز يفضى
+  await store(page, () => App.S.signOut());
+  expect(await txs(page)).toEqual([]);
+  expect(await store(page, () => App.st.owner)).toBe(null);
+
+  // مستخدم ثاني على نفس الجهاز: ما يشوف شي من الأول، وتعديلاته تروح لحسابه هو
+  await store(page, () => { window.__srv.data['u-sara'] = { transactions: [{ id: 's1', data: { id: 's1', kind: 'expense', amount: 5, merchant: 'Sara Shop', category: 'بقالة', occurred_at: new Date().toISOString() } }] }; window.__signInAs('u-sara', 'sara@x.bh'); });
+  await page.waitForFunction(() => App.st.transactions.length === 1);
+  expect(await store(page, () => App.S.status.needsMerge)).toBe(0);           // الجهاز فاضي = ما فيه سؤال
+  await expect(page.locator('#mgKeep')).toBeHidden();
+  expect(await txs(page)).toEqual(['Sara Shop']);
+  await store(page, () => App.S.upsert('transactions', { id: 's2', kind: 'expense', amount: 1, merchant: 'Sara Two', category: 'قهوة', occurred_at: new Date().toISOString() }));
+  await page.waitForFunction(() => window.__srv.data['u-sara'].transactions.length === 2);
+  expect(await store(page, () => window.__srv.data['u-mo'].transactions.map((r) => r.data.merchant).sort())).toEqual(['Guest Cafe', 'Mo Only']);
+
+  // تبديل حساب مباشر (بدون خروج): بيانات سارة تنمسح، وتجي بيانات محمد
+  await store(page, () => window.__signInAs('u-mo', 'mo@x.bh'));
+  await page.waitForFunction(() => App.st.transactions.length === 2);
+  expect(await txs(page)).toEqual(['Guest Cafe', 'Mo Only']);
+});
+
+test('accounts: «لا، ابدأ من حسابي» drops guest data; sign-out with unsynced edits warns first', async ({ page, context }) => {
+  await page.addInitScript(fakeSupabase);
+  await open(page);
+  await store(page, () => App.S.upsert('transactions', { id: 'g1', kind: 'expense', amount: 1, merchant: 'Not Mine', category: 'قهوة', occurred_at: new Date().toISOString() }));
+  await store(page, () => window.__signInAs('u-mo', 'mo@x.bh'));
+  await page.click('#mgDrop');
+  await page.click('#askDlg [data-ok]');
+  await page.waitForFunction(() => App.st.owner === 'u-mo');
+  expect(await txs(page)).toEqual([]);
+  expect(await store(page, () => (window.__srv.data['u-mo'] || {}).transactions || [])).toEqual([]);
+  // بدون نت: الخروج يرفض لين يتأكد
+  await context.setOffline(true);
+  await store(page, () => App.S.upsert('transactions', { id: 'o1', kind: 'expense', amount: 1, merchant: 'Offline', category: 'قهوة', occurred_at: new Date().toISOString() }));
+  const err = await store(page, () => App.S.signOut().then(() => null, (e) => ({ code: e.code, count: e.count })));
+  expect(err).toEqual({ code: 'PENDING', count: 1 });
+  expect(await txs(page)).toEqual(['Offline']);
+  await store(page, () => App.S.signOut({ force: true }));
+  expect(await txs(page)).toEqual([]);
+  await context.setOffline(false);
+});
+
+test('accounts: Apple/Google buttons only when enabled, web OAuth returns to the app, password reset, account screen', async ({ page }) => {
+  await page.addInitScript(fakeSupabase);
+  await open(page);
+  await page.click('#settingsBtn');
+  await expect(page.locator('.account-card')).toContainText('بدون حساب؟ التطبيق يشتغل عادي');
+  await expect(page.locator('[data-set="sso"]')).toHaveCount(0);       // PROVIDERS فاضي = ولا زر ميت
+  await store(page, () => App.closeSheet());
+  await store(page, () => { window.HAYATI_CONFIG.PROVIDERS = ['apple', 'google']; });
+  await page.waitForFunction(() => !document.getElementById('sheet').open);
+  await page.click('#settingsBtn');
+  const sso = page.locator('[data-set="sso"]');
+  await expect(sso).toHaveCount(2);
+  await expect(sso.first()).toContainText('تابع مع Apple');            // Apple أول (إرشاد 4.8)
+  await sso.nth(1).click();
+  await page.waitForFunction(() => window.__srv.calls.some((c) => c[0] === 'oauth'));
+  const call = await store(page, () => window.__srv.calls.find((c) => c[0] === 'oauth'));
+  expect(call[1]).toBe('google');
+  expect(call[2].redirectTo).toBe(new URL(page.url()).origin + '/index.html');
+  expect(call[2].skipBrowserRedirect).toBe(false);
+  // نسيت كلمة المرور
+  await page.fill('.account-card [name=email]', 'mo@x.bh');
+  await page.click('[data-set="forgot"]');
+  await expect(page.locator('.toast')).toContainText('أرسلنا رابط');
+  expect(await store(page, () => window.__srv.calls.find((c) => c[0] === 'reset')[1])).toBe('mo@x.bh');
+});
+
+test('accounts on iPhone: Apple opens the system browser, the bh.hayati.app://auth link signs in @webkit', async ({ page }) => {
+  await page.addInitScript(fakeSupabase);
+  await page.addInitScript(() => {
+    const log = window.__nat = { opened: [], closed: 0, urlCb: null };
+    window.Capacitor = { isNativePlatform: () => true, Plugins: {
+      Browser: { open: async (o) => { log.opened.push(o.url); }, close: async () => { log.closed++; } },
+      App: { addListener: (ev, cb) => { if (ev === 'appUrlOpen') log.urlCb = cb; return Promise.resolve({ remove() {} }); } },
+    } };
+  });
+  await open(page);
+  await store(page, () => HayatiNative.oauth('apple'));
+  const st = await store(page, () => ({ opened: window.__nat.opened, call: window.__srv.calls.find((c) => c[0] === 'oauth') }));
+  expect(st.opened).toEqual(['https://auth.example/apple']);
+  expect(st.call[2]).toEqual({ redirectTo: 'bh.hayati.app://auth', skipBrowserRedirect: true });
+  await store(page, () => window.__nat.urlCb({ url: 'bh.hayati.app://auth?code=abc123' }));
+  await page.waitForFunction(() => App.S.status.signedIn);
+  expect(await store(page, () => [window.__srv.calls.find((c) => c[0] === 'exchange')[1], window.__nat.closed, App.S.status.provider])).toEqual(['abc123', 1, 'apple']);
+  // روابط ثانية ما تنلمس
+  expect(await store(page, () => HayatiNative.onAuthUrl('https://example.com/x'))).toBe(false);
 });

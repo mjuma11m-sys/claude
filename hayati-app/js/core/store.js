@@ -16,10 +16,12 @@
   let pullTimer = null;
 
   const state = load();
-  const status = { configured: false, signedIn: false, email: '', syncing: false, error: '', lastSync: null };
+  // needsMerge: عدد سجلات «بدون حساب» على الجهاز، ننتظر المستخدم يقرر يضيفها لحسابه أو لا (والرفع موقف لين يقرر)
+  const status = { configured: false, signedIn: false, email: '', provider: '', syncing: false, error: '', lastSync: null, needsMerge: 0, recovery: false };
 
   function blank() {
-    const b = { settings: { budget: null, ingest_token: null, prior_gpa: null, prior_credits: null, focus_minutes: 25 }, pending: [] };
+    // owner: صاحب بيانات هالجهاز (رقم المستخدم بـ Supabase)، أو null = بدون حساب
+    const b = { settings: { budget: null, ingest_token: null, prior_gpa: null, prior_credits: null, focus_minutes: 25 }, pending: [], owner: null };
     for (const t of TABLES) b[t] = [];
     return b;
   }
@@ -30,6 +32,8 @@
       if (raw) {
         const b = blank();
         const saved = JSON.parse(raw);
+        // نسخ قبل «owner»: لو فيه جلسة، البيانات أصلاً لصاحبها (نثبّته أول ما تجي الجلسة، بدون سؤال)
+        if (!('owner' in saved)) saved.owner = 'legacy';
         return Object.assign(b, saved, { settings: Object.assign(b.settings, saved.settings || {}) });
       }
     } catch (e) { /* تخزين غير متاح */ }
@@ -222,7 +226,8 @@
       return;
     }
     try {
-      sb = global.supabase.createClient(cfg.url, cfg.key, { auth: { persistSession: true, autoRefreshToken: true } });
+      // PKCE: Google وApple يرجعون بـ ?code= ، والمكتبة تبدّله بجلسة
+      sb = global.supabase.createClient(cfg.url, cfg.key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' } });
     } catch (e) {
       status.error = 'رابط Supabase أو المفتاح غير صحيح';
       emit();
@@ -231,20 +236,62 @@
     status.configured = true;
     const { data } = await sb.auth.getSession();
     onSession(data.session);
-    sb.auth.onAuthStateChange((_evt, s) => onSession(s));
+    sb.auth.onAuthStateChange((evt, s) => {
+      if (evt === 'PASSWORD_RECOVERY') { status.recovery = true; }
+      onSession(s);
+    });
   }
 
+  function localCount() { return TABLES.reduce((n, t) => n + state[t].length, 0); }
+
+  // يفرّغ الجهاز (الجداول والإعدادات والطابور) ويحط صاحب جديد
+  function resetLocal(owner) {
+    const fresh = blank();
+    for (const k of Object.keys(state)) if (!(k in fresh)) delete state[k];
+    for (const k of Object.keys(fresh)) state[k] = fresh[k];
+    state.owner = owner;
+    save();
+  }
+
+  // 🔐 كل جهاز يعرف صاحب بياناته: بيانات حساب ما تطلع لحساب ثاني، ولا تعديلاته تنرفع لغيره
   function onSession(s) {
     const was = session && session.user.id;
     session = s;
     status.signedIn = !!s;
-    status.email = s ? s.user.email : '';
+    status.email = s ? s.user.email || '' : '';
+    status.provider = s ? ((s.user.app_metadata || {}).provider || 'email') : '';
+    if (s) {
+      const uid = s.user.id;
+      if (state.owner === 'legacy') state.owner = uid;
+      if (state.owner !== uid) {
+        if (state.owner == null && localCount() > 0) {
+          // بيانات «بدون حساب» على الجهاز: نسأل قبل ما نرفعها
+          status.needsMerge = localCount();
+          save(); emit();
+          return;
+        }
+        if (state.owner == null) state.owner = uid;
+        else resetLocal(uid);   // بيانات حساب ثاني: تنمسح، وتجي بيانات هالحساب من السحابة
+        save();
+      }
+    } else if (state.owner === 'legacy') { state.owner = null; save(); }
     emit();
     if (s && was !== s.user.id) {
       subscribe();
       sync();
     }
     if (!s) teardown();
+  }
+
+  // جواب سؤال «نضيف بيانات الجهاز لحسابك؟»
+  function resolveMerge(keep) {
+    if (!session || !status.needsMerge) return;
+    status.needsMerge = 0;
+    if (keep) state.owner = session.user.id;
+    else resetLocal(session.user.id);
+    save(); emit();
+    subscribe();
+    sync();
   }
 
   function teardown() {
@@ -263,8 +310,56 @@
     return !data.session; // true = يحتاج تأكيد الإيميل
   }
 
-  async function signOut() {
-    await sb.auth.signOut();
+  // الخروج: نرفع اللي باقي أول. لو ما انرفع شي (بدون نت)، نرجع خطأ PENDING والواجهة تسأل.
+  //   بعد الخروج الجهاز ينمسح: اللي يسجّل بعدك ما يشوف بياناتك
+  async function signOut(opts) {
+    if (!sb) return;
+    if (!status.needsMerge) await flush();
+    if (state.pending.length && !(opts && opts.force) && !status.needsMerge) {
+      const e = new Error('فيه ' + state.pending.length + ' تعديل ما انرفع');
+      e.code = 'PENDING'; e.count = state.pending.length;
+      throw e;
+    }
+    teardown();
+    const merging = status.needsMerge;
+    status.needsMerge = 0;
+    try { await sb.auth.signOut(); } catch (e) { /* نكمل المسح حتى لو فشل الطلب */ }
+    // ما قرر يضيف بيانات الجهاز؟ هي «بدون حساب» أصلاً، فتظل
+    if (!merging) resetLocal(null);
+    session = null; status.signedIn = false; status.email = ''; status.provider = '';
+    emit();
+  }
+
+  // 🍎 Apple / Google (OAuth بـ PKCE). بالمتصفح: يحوّل للمزود ويرجع لنفس الصفحة.
+  //   بالآيفون (skipBrowserRedirect): يرجع الرابط، و native.js يفتحه بمتصفح النظام
+  async function signInWithProvider(provider, opts) {
+    if (!sb) throw new Error('الحسابات تحتاج ربط Supabase');
+    opts = opts || {};
+    const { data, error } = await sb.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: opts.redirectTo || (location.origin + location.pathname), skipBrowserRedirect: !!opts.skipBrowserRedirect },
+    });
+    if (error) throw new Error(arabicAuthError(error.message));
+    return data && data.url;
+  }
+  async function exchangeCode(code) {
+    const { error } = await sb.auth.exchangeCodeForSession(code);
+    if (error) throw new Error(arabicAuthError(error.message));
+  }
+  async function resetPassword(email) {
+    if (!sb) throw new Error('الحسابات تحتاج ربط Supabase');
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+    if (error) throw new Error(arabicAuthError(error.message));
+  }
+  async function updatePassword(password) {
+    const { error } = await sb.auth.updateUser({ password });
+    if (error) throw new Error(arabicAuthError(error.message));
+    status.recovery = false; emit();
+  }
+  // المزودين المفعّلين بلوحة Supabase (صاحب التطبيق يكتبهم بـ config.js لما يفعّلهم)
+  function providers() {
+    const p = (global.HAYATI_CONFIG || {}).PROVIDERS;
+    return sb && Array.isArray(p) ? p.filter((x) => x === 'apple' || x === 'google') : [];
   }
 
   function arabicAuthError(msg) {
@@ -272,12 +367,14 @@
     if (/not confirmed/i.test(msg)) return 'لازم تأكد إيميلك أول (شيّك صندوق الوارد)';
     if (/already registered/i.test(msg)) return 'هذا الإيميل مسجّل من قبل، سجّل دخول';
     if (/at least 6/i.test(msg)) return 'كلمة المرور لازم ٦ أحرف أو أكثر';
+    if (/provider is not enabled|Unsupported provider/i.test(msg)) return 'هالطريقة مو مفعّلة للحين، استخدم الإيميل';
+    if (/rate limit/i.test(msg)) return 'محاولات كثيرة، جرّب بعد شوي';
     return msg;
   }
 
   function ready() {
     if (adb) return navigator.onLine !== false;
-    return sb && session && navigator.onLine !== false;
+    return sb && session && !status.needsMerge && navigator.onLine !== false;
   }
 
   async function flush() {
@@ -506,7 +603,7 @@
     subscribe: (fn) => { listeners.add(fn); return () => listeners.delete(fn); },
     upsert, remove, setSettings,
     init, getConfig, saveConfig, clearConfig,
-    signIn, signUp, signOut, sync, getSeed, processInbox, smsToTransaction,
+    signIn, signUp, signOut, sync, resolveMerge, signInWithProvider, exchangeCode, resetPassword, updatePassword, providers, localCount, getSeed, processInbox, smsToTransaction,
     ensureIngestToken, rotateIngestToken, exportJSON, importJSON, wipeAll,
   };
 })(window);

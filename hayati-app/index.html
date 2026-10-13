@@ -290,6 +290,12 @@
     .btn:active { transform: scale(.98); }
     .btn svg.i { width: 18px; height: 18px; }
     .btn.primary { background: var(--brand); border-color: transparent; color: var(--on-brand); }
+    /* أزرار الدخول السريع (إرشادات Apple وGoogle: أسود/أبيض بالشعار) */
+    .btn.sso { gap: 10px; margin-bottom: 10px; font-weight: 600; }
+    .btn.sso.apple { background: #000; border-color: #000; color: #fff; }
+    .btn.sso.google { background: #fff; border-color: #dadce0; color: #1f1f1f; }
+    .or-line { display: flex; align-items: center; gap: 10px; margin: 6px 0 12px; color: var(--muted); font-size: 13px; }
+    .or-line::before, .or-line::after { content: ""; flex: 1; height: 1px; background: var(--border); }
     .btn.danger { background: var(--danger-soft); color: var(--expense); border-color: transparent; box-shadow: none; }
     .btn.ghost { background: var(--surface-2); border-color: transparent; box-shadow: none; }
     .btn.block { width: 100%; }

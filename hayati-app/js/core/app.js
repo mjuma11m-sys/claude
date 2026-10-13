@@ -84,6 +84,46 @@
   // ---------- أدوات ----------
   function readPref(k, d) { try { return localStorage.getItem('hayati-ui-' + k) || d; } catch (e) { return d; } }
   function writePref(k, v) { try { localStorage.setItem('hayati-ui-' + k, v); } catch (e) { /* تجاهل */ } }
+  // 🍎 / G : أيقونات أزرار الدخول (Apple بلون النص، وGoogle بألوانه الرسمية)
+  const SSO_ICON = {
+    apple: '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M16.37 12.62c-.03-2.68 2.19-3.97 2.29-4.03-1.25-1.82-3.19-2.07-3.88-2.1-1.65-.17-3.22.97-4.06.97-.84 0-2.13-.95-3.5-.92-1.8.03-3.46 1.05-4.39 2.66-1.87 3.24-.48 8.04 1.34 10.67.89 1.29 1.95 2.73 3.34 2.68 1.34-.05 1.85-.87 3.47-.87 1.62 0 2.08.87 3.5.84 1.44-.02 2.36-1.31 3.24-2.6 1.02-1.49 1.44-2.94 1.47-3.01-.03-.01-2.82-1.08-2.85-4.29zM13.7 4.74c.74-.9 1.24-2.14 1.1-3.38-1.07.04-2.36.71-3.12 1.6-.69.79-1.29 2.06-1.13 3.27 1.19.09 2.41-.61 3.15-1.49z"/></svg>',
+    google: '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.27c0-.82-.07-1.6-.21-2.36H12v4.47h6.45a5.52 5.52 0 0 1-2.39 3.62v3h3.87c2.26-2.09 3.57-5.16 3.57-8.73z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.94-2.9l-3.87-3A7.2 7.2 0 0 1 12 19.3a7.16 7.16 0 0 1-6.73-4.95h-4v3.09A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.27 14.35a7.2 7.2 0 0 1 0-4.6V6.66h-4a12 12 0 0 0 0 10.78l4-3.09z"/><path fill="#EA4335" d="M12 4.77c1.76 0 3.34.61 4.59 1.8l3.43-3.43A11.97 11.97 0 0 0 12 0 12 12 0 0 0 1.27 6.66l4 3.09A7.16 7.16 0 0 1 12 4.77z"/></svg>',
+  };
+  // أول دخول وعلى الجهاز بيانات «بدون حساب»: نسأل مرة كل فتحة، و«بعدين» تخليها للمرة الجاية
+  let mergeAsked = false, recoveryAsked = false;
+  function mergeSheet(n) {
+    openSheet({
+      title: 'بيانات هالجهاز', cancelLabel: 'بعدين',
+      body: '<p style="margin:4px 4px 14px;line-height:1.8">عندك <b class="num">' + n + '</b> سجل على هالجهاز من قبل ما تسجّل دخول.<br>نضيفها لحسابك؟</p>' +
+        '<button class="btn primary block" id="mgKeep">' + I('check') + 'ضيفها لحسابي</button>' +
+        '<button class="btn block" id="mgDrop" style="margin-top:10px">لا، ابدأ من حسابي</button>' +
+        '<p class="small muted" style="margin:10px 4px 0">«لا» تمسحها من هالجهاز. نزّل نسخة احتياطية أول لو تبيها.</p>',
+      mount(root) {
+        root.querySelector('#mgKeep').onclick = () => { S.resolveMerge(true); closeSheet(); toast('انضافت لحسابك ✓'); };
+        root.querySelector('#mgDrop').onclick = async () => {
+          if (!(await ask('بيانات هالجهاز بتنمسح. أكيد؟'))) return;
+          S.resolveMerge(false); closeSheet(); toast('بدأنا من حسابك');
+        };
+      },
+    });
+  }
+  function recoverySheet() {
+    openSheet({
+      title: 'كلمة مرور جديدة', saveLabel: 'حفظ',
+      body: '<div class="field"><label>كلمة المرور الجديدة</label><input name="newpw" type="password" class="ltr" autocomplete="new-password"></div>',
+      async onSave(root) {
+        const pw = root.querySelector('[name=newpw]').value;
+        if (pw.length < 6) throw new Error('كلمة المرور لازم ٦ أحرف أو أكثر');
+        await S.updatePassword(pw);
+        toast('تغيّرت كلمة المرور ✓');
+      },
+    });
+  }
+  S.subscribe((_st, s) => {
+    if (s.needsMerge && !mergeAsked) { mergeAsked = true; setTimeout(() => mergeSheet(s.needsMerge), 300); }
+    if (s.recovery && !recoveryAsked) { recoveryAsked = true; setTimeout(recoverySheet, 300); }
+  });
+
   // 💾 آخر نسخة احتياطية: بياناتك على هالجهاز بس، فنذكّرك (privacy.js يعرض البطاقة)
   const LAST_BACKUP = 'hayati-last-backup';
   function lastBackup() { try { const v = localStorage.getItem(LAST_BACKUP); return v ? new Date(v) : null; } catch (e) { return null; } }
@@ -1717,7 +1757,7 @@
     const cfg = S.getConfig();
     let body = '';
 
-    body += '<div class="group-title">' + I('cloud') + 'المزامنة بين الجوال والماك</div><div class="card">';
+    body += '<div class="group-title">' + I('user') + 'حسابك</div><div class="card account-card">';
     if (s.mode === 'artifact') {
       body += '<div class="status-line"><div class="ico">' + I('check') + '</div><div style="flex:1;min-width:0"><b style="display:block">محفوظ في حسابك على Claude</b>' +
         '<span class="small ' + (s.error ? 'late' : 'muted') + '">' + (s.error ? h(s.error) : 'افتح نفس الرابط من الجوال أو الماك وتلقى نفس بياناتك' + (s.lastSync ? ' · آخر تحديث ' + timeOf(s.lastSync) : '')) +
@@ -1728,13 +1768,21 @@
         '<div class="field"><label>anon public key</label><input name="sb_key" class="ltr" placeholder="eyJhbGciOi…" autocapitalize="off" autocorrect="off"></div>' +
         '<button class="btn primary block" data-set="connect">' + I('link') + 'ربط</button>';
     } else if (!s.signedIn) {
-      body += '<p class="small muted" style="margin:0 0 12px">سجّل دخول بنفس الإيميل على الجوال والماك.</p>' +
+      const prov = S.providers();
+      body += '<p class="small muted" style="margin:0 0 12px">بياناتك لك بروحك، وتتزامن بين جوالك والماك.</p>' +
+        (prov.includes('apple') ? '<button class="btn block sso apple" data-set="sso" data-p="apple">' + SSO_ICON.apple + 'تابع مع Apple</button>' : '') +
+        (prov.includes('google') ? '<button class="btn block sso google" data-set="sso" data-p="google">' + SSO_ICON.google + 'تابع مع Google</button>' : '') +
+        (prov.length ? '<div class="or-line"><span>أو بالإيميل</span></div>' : '') +
         '<div class="field"><label>الإيميل</label><input name="email" type="email" class="ltr" autocomplete="username" autocapitalize="off"></div>' +
         '<div class="field"><label>كلمة المرور</label><input name="password" type="password" class="ltr" autocomplete="current-password"></div>' +
         '<div class="btn-row"><button class="btn primary" data-set="signin">دخول</button><button class="btn" data-set="signup">حساب جديد</button></div>' +
+        '<button class="btn ghost block" style="margin-top:6px" data-set="forgot">نسيت كلمة المرور؟</button>' +
+        '<p class="small muted" style="margin:10px 2px 0">بدون حساب؟ التطبيق يشتغل عادي، وبياناتك على جهازك بس.</p>' +
         (cfg && !cfg.fromFile ? '<button class="btn ghost block" style="margin-top:10px" data-set="disconnect">تغيير بيانات Supabase</button>' : '');
     } else {
-      body += '<div class="status-line"><div class="ico">' + I('user') + '</div><div style="flex:1;min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis">' + h(s.email) + '</b>' +
+      const via = { apple: 'Apple', google: 'Google' }[s.provider];
+      body += '<div class="status-line"><div class="ico">' + I('user') + '</div><div style="flex:1;min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis">' + h(s.email || 'حسابك') + '</b>' +
+        (via ? '<span class="small muted" style="display:block">مسجّل بـ ' + via + '</span>' : '') +
         '<span class="small ' + (s.error ? 'late' : 'muted') + '">' + (s.error ? h(s.error) : s.lastSync ? 'آخر مزامنة ' + timeOf(s.lastSync) : 'جاري المزامنة…') +
         (st.pending.length ? ' · ' + st.pending.length + ' بانتظار الرفع' : '') + '</span></div></div>' +
         '<div class="btn-row" style="margin-top:14px"><button class="btn" data-set="sync">' + I('refresh') + 'زامن</button><button class="btn" data-set="signout">' + I('logout') + 'خروج</button></div>';
@@ -1828,8 +1876,25 @@
           toast(confirmNeeded ? 'أرسلنا لك إيميل تأكيد، أكّده وارجع سجّل دخول' : 'تم إنشاء الحساب ✓');
         }
         setTimeout(settingsSheet, 300);
+      } else if (act === 'sso') {
+        b.disabled = true;
+        // بالآيفون: متصفح النظام (Google يمنع الدخول من داخل التطبيق). بالمتصفح: تحويل ورجوع
+        if (window.HayatiNative && window.HayatiNative.oauth) { await window.HayatiNative.oauth(b.dataset.p); setTimeout(settingsSheet, 300); }
+        else await S.signInWithProvider(b.dataset.p);
+      } else if (act === 'forgot') {
+        const email = val(root, 'email');
+        if (!email) throw new Error('اكتب إيميلك فوق أول');
+        await S.resetPassword(email);
+        toast('أرسلنا رابط تغيير كلمة المرور لإيميلك');
       } else if (act === 'signout') {
-        if (await ask('تبي تطلع؟ البيانات تبقى محفوظة بالسحابة.')) { await S.signOut(); settingsSheet(); }
+        if (!(await ask('تطلع؟ بياناتك محفوظة بحسابك، وبتنمسح من هالجهاز.'))) return;
+        try { await S.signOut(); }
+        catch (err) {
+          if (err.code !== 'PENDING') throw err;
+          if (!(await ask('فيه ' + err.count + ' تعديل ما انرفع (يمكن ما فيه نت). لو طلعت الحين تضيع. تطلع؟'))) return;
+          await S.signOut({ force: true });
+        }
+        toast('طلعت ✓'); settingsSheet();
       } else if (act === 'disconnect') {
         S.clearConfig(); settingsSheet();
       } else if (act === 'sync') {
