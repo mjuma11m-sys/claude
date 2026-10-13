@@ -30,6 +30,13 @@
                 <data android:scheme="bh.hayati.app" android:host="auth" />
             </intent-filter>
 
+            <!-- «شارك ← حياتي»: رسالة البنك من تطبيق الرسائل (DW-009). نص بس، وبدون صلاحية قراءة الرسايل -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+
         </activity>
 
         <provider

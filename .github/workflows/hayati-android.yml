@@ -53,6 +53,7 @@ jobs:
           name: android-screenshot
           path: |
             hayati-app/android-smoke/launch.png
+            hayati-app/android-smoke/share.png
             hayati-app/android-smoke/build.log
             hayati-app/android-smoke/logcat.txt
           retention-days: 14

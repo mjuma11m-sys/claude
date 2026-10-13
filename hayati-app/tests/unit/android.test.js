@@ -33,3 +33,15 @@ test('notifications use the white status-bar icon, and every density has it', ()
   for (const d of ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi']) assert.ok(fs.existsSync(path.join(A, `app/src/main/res/drawable-${d}/ic_stat_hayati.png`)), d);
   assert.match(read('app/src/main/res/values/ic_launcher_background.xml'), /#0E3B43/);
 });
+
+test('share to Hayati (DW-009): plain text only, registered, capped, and no permission to read SMS', () => {
+  const m = read('app/src/main/AndroidManifest.xml');
+  assert.match(m, /<action android:name="android.intent.action.SEND" \/>[\s\S]*?<data android:mimeType="text\/plain" \/>/);
+  assert.doesNotMatch(m, /READ_SMS|RECEIVE_SMS/);
+  assert.match(read('app/src/main/java/bh/hayati/app/MainActivity.java'), /registerPlugin\(ShareInPlugin\.class\);\s*super\.onCreate/);
+  const p = read('app/src/main/java/bh/hayati/app/ShareInPlugin.java');
+  assert.match(p, /@CapacitorPlugin\(name = "ShareIn"\)/);
+  assert.match(p, /static final int MAX = 2000;/);
+  const web = JSON.parse(fs.readFileSync(path.join(__dirname, '../../manifest.webmanifest'), 'utf8'));
+  assert.equal(web.share_target.params.text, 'share_text');
+});

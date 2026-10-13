@@ -10,7 +10,7 @@
   // Capacitor 8: الإضافة ما تبين بـ Capacitor.Plugins إلا بعد registerPlugin (من capacitor.js اللي يحطه cap-www.js)
   const plug = (n) => (Cap.Plugins && Cap.Plugins[n]) || (typeof Cap.registerPlugin === 'function' ? Cap.registerPlugin(n) : null);
   const LN = plug('LocalNotifications'), Hap = plug('Haptics'), Share = plug('Share'), FS = plug('Filesystem');
-  const Browser = plug('Browser'), AppP = plug('App');
+  const Browser = plug('Browser'), AppP = plug('App'), ShareIn = plug('ShareIn');
 
   const DAYS = 7;      // iOS يسمح بـ 64 تنبيه مجدول بالكثير، فنجدول أسبوع بس
   const MAX = 60;
@@ -368,5 +368,15 @@
     try { const r = AppP.addListener('backButton', onBack); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
   }
 
-  window.HayatiNative = { saveFile, shareText, reschedule, upcoming, testNotification, prefs, savePrefs, oauth, onAuthUrl, onBack };
+  // «شارك ← حياتي» (أندرويد، DW-009): رسالة البنك توصل من تطبيق الرسائل وتفتح نافذة اللصق معبّاة
+  function onShared(text) {
+    if (!text || typeof A.sharedSms !== 'function') return Promise.resolve(null);
+    return A.sharedSms(text).then((kind) => { console.info('hayati-share:' + kind); return kind; });
+  }
+  if (ShareIn && typeof ShareIn.take === 'function') {
+    try { const r = ShareIn.addListener('shared', (ev) => onShared(ev && ev.text)); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
+    Promise.resolve().then(() => ShareIn.take()).then((r) => onShared(r && r.text)).catch(() => {});
+  }
+
+  window.HayatiNative = { saveFile, shareText, reschedule, upcoming, testNotification, prefs, savePrefs, oauth, onAuthUrl, onBack, onShared };
 })();

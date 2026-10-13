@@ -38,5 +38,19 @@ if ! adb shell pidof "$PKG" >/dev/null; then
   adb logcat -d -t 300 > "$OUT/logcat.txt" || true
   echo "❌ التطبيق طاح بعد الفتح"; exit 1
 fi
-adb logcat -d -t 300 > "$OUT/logcat.txt" || true
 echo "✅ «حياتي» انفتح على أندرويد"
+
+# DW-009: «شارك ← حياتي» — نرسل رسالة بنك مثل ما يسوي تطبيق الرسائل، والواجهة لازم تفتح نافذتها
+echo "▶ مشاركة رسالة بنك لحياتي"
+adb logcat -c || true
+adb shell "am start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT 'Your card XX4821 was used for BHD 3.750 at COSTA COFFEE SEEF' -n $PKG/.MainActivity" >/dev/null
+shared=""
+for try in $(seq 1 15); do
+  sleep 2
+  shared=$(adb logcat -d | grep -o 'hayati-share:[a-z]*' | head -1 || true)
+  [ -n "$shared" ] && break
+done
+adb exec-out screencap -p > "$OUT/share.png" || true
+adb logcat -d -t 300 > "$OUT/logcat.txt" || true
+[ -n "$shared" ] || { echo "❌ المشاركة ما فتحت نافذة اللصق خلال 30 ثانية"; exit 1; }
+echo "✅ المشاركة وصلت ($shared)"

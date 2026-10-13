@@ -1237,7 +1237,7 @@
 
   // --- لصق رسالة ---
   // موافقة صريحة مرة وحدة قبل أول رسالة بنك (بيانات مالية حساسة — قانون حماية البيانات الشخصية البحريني).
-  function smsConsentForm() {
+  function smsConsentForm(prefill) {
     openSheet({
       title: 'قبل أول رسالة بنك',
       saveLabel: 'أوافق وأكمل',
@@ -1250,17 +1250,20 @@
         '<a class="small" href="privacy.html" target="_blank" rel="noopener" style="margin:0 4px">اقرأ سياسة الخصوصية كاملة</a></div>',
       onSave() {
         S.setSettings({ sms_consent_at: new Date().toISOString() });
-        setTimeout(pasteSmsForm, 350);
+        setTimeout(() => pasteSmsForm(prefill), 350);
       },
     });
   }
 
-  function pasteSmsForm() {
-    if (!st.settings.sms_consent_at) return smsConsentForm();
+  // prefill: نص وصل من «شارك ← حياتي» (أندرويد أو نسخة الويب المثبّتة). ما ينحفظ شي إلا بـ «إضافة».
+  function pasteSmsForm(prefill) {
+    const shared = typeof prefill === 'string' && prefill.trim() ? prefill.trim().slice(0, SHARE_MAX) : '';
+    if (!st.settings.sms_consent_at) return smsConsentForm(shared);
     openSheet({
       title: 'لصق رسالة بنك',
       saveLabel: 'إضافة',
-      body: '<p class="small muted" style="margin:0 4px 12px">انسخ رسالة البنك أو BenefitPay والصقها هنا، والتطبيق يطلّع المبلغ والمحل لحاله.</p>' +
+      body: (shared ? '<p class="small muted" id="smsShared" style="margin:0 4px 12px">وصلت من المشاركة. راجع المبلغ والمحل، وبعدين اضغط «إضافة».</p>'
+        : '<p class="small muted" style="margin:0 4px 12px">انسخ رسالة البنك أو BenefitPay والصقها هنا، والتطبيق يطلّع المبلغ والمحل لحاله.</p>') +
         '<div class="field"><textarea name="sms" placeholder="مثال: Purchase of BHD 3.500 at TALABAT using card XXXX1234"></textarea></div>' +
         '<div id="smsPreview"></div>',
       mount(root) {
@@ -1276,7 +1279,7 @@
             (p.needs_review ? '<p class="small" style="color:var(--warn);margin:4px 0 0">مو متأكد ١٠٠٪، بتنضاف وعليها علامة «راجعها»</p>' : '<p class="small" style="color:var(--income);margin:4px 0 0">' + I('check') + ' فهمتها</p>') + '</div>';
         };
         ta.addEventListener('input', update);
-        setTimeout(() => autoFocus(ta), 300);
+        if (shared) { ta.value = shared; update(); } else setTimeout(() => autoFocus(ta), 300);
       },
       onSave(root) {
         const tx = S.smsToTransaction(val(root, 'sms'), new Date().toISOString());
@@ -1286,6 +1289,39 @@
         toast('انضافت ✓');
       },
     });
+  }
+
+  // «شارك ← حياتي»: يستنى لين تنقرا البيانات (عشان نعرف هل وافق قبل)، ويسكّر أي نافذة مفتوحة
+  const SHARE_MAX = 2000;
+  let booted = null;
+  function sharedSms(text) {
+    const t = String(text == null ? '' : text).trim();
+    if (!t) return Promise.resolve(null);
+    return (booted || Promise.resolve()).catch(() => {}).then(whenUnlocked).then(() => {
+      if (document.querySelector('#sheet[open]')) closeSheet();
+      return new Promise((done) => setTimeout(() => {
+        const kind = st.settings.sms_consent_at ? 'form' : 'consent';
+        pasteSmsForm(t);
+        done(kind);
+      }, 60));
+    });
+  }
+  // التطبيق مقفول برمز؟ النافذة ما تنفتح فوق القفل، تستنى لين يفتح
+  function whenUnlocked() {
+    if (!document.body.classList.contains('locked')) return Promise.resolve();
+    return new Promise((done) => {
+      const mo = new MutationObserver(() => { if (!document.body.classList.contains('locked')) { mo.disconnect(); done(); } });
+      mo.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    });
+  }
+  // نسخة الويب المثبّتة: manifest share_target يفتح ./?share_text=…
+  function sharedFromUrl() {
+    let q;
+    try { q = new URLSearchParams(location.search); } catch (e) { return; }
+    const t = [q.get('share_title'), q.get('share_text'), q.get('share_url')].filter(Boolean).join('\n');
+    if (!q.has('share_text') && !q.has('share_title')) return;
+    try { history.replaceState(null, '', location.pathname); } catch (e) { /* تجاهل */ }
+    if (t) sharedSms(t);
   }
 
   function budgetForm() {
@@ -2072,16 +2108,17 @@
     S, st, I, ui, h, fmt, money, tint, catMeta, catIcon, pad, monthKey, sameDay, startOfDay, daysBetween, time12, timeOf, minutesOf,
     nowMinutes, toLocalInput, dayLabel, nDays, toast, ask, courseById, lectures, lecturesOn, agendaOn, empty, secHead, ring, openSheet,
     closeSheet, val, parseAmount, segPick, render, go, txInMonth, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, courseForm, taskForm,
-    notify, has, nextRenewal, expensesCSV, lastBackup, markBackup, backupNow, APP_VERSION, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
+    notify, has, nextRenewal, sharedSms, expensesCSV, lastBackup, markBackup, backupNow, APP_VERSION, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
   };
   setInterval(timerTickUI, 1000);
   timerCheck();
   postSubscriptions();
   render();
-  S.init().then(async () => {
+  booted = S.init().then(async () => {
     postSubscriptions();
     render();
     ui.seed = await S.getSeed();
     if (ui.seed) render();
   });
+  sharedFromUrl();
 })();

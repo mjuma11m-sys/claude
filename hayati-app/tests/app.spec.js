@@ -1135,3 +1135,59 @@ test('Android back button: closes the open sheet, then returns to Today, then le
   expect(await store(page, () => window.__nat.back({ canGoBack: false }))).toBe('exit');
   expect(await store(page, () => window.__nat.minimized)).toBe(1);
 });
+
+// DW-009: «شارك ← حياتي»
+const SHARED = 'Your card XX4821 was used for BHD 3.750 at COSTA COFFEE SEEF on 11/10/26. Avl bal BHD 412.300';
+
+test('installed web app: a shared bank message asks consent first, then opens the paste sheet filled, and saves only on Add', async ({ page }) => {
+  await open(page, '/index.html?share_text=' + encodeURIComponent(SHARED));
+  await expect(page.locator('#smsConsent')).toBeVisible();
+  expect(new URL(page.url()).search).toBe('');                               // الرابط نظف، التحديث ما يعيد فتحها
+  await page.click('#sheetSave');                                             // أوافق
+  await expect(page.locator('#sheetBody [name=sms]')).toHaveValue(SHARED);
+  await expect(page.locator('#smsShared')).toBeVisible();
+  await expect(page.locator('#smsPreview')).toContainText('COSTA COFFEE');
+  expect(await store(page, () => App.st.transactions.length)).toBe(0);       // ما ينحفظ شي قبل «إضافة»
+  await page.click('#sheetSave');
+  await expect.poll(() => store(page, () => App.st.transactions.map((t) => [t.amount, t.source]))).toEqual([[3.75, 'sms']]);
+});
+
+test('declining consent on a shared message stores nothing', async ({ page }) => {
+  await open(page, '/index.html?share_text=' + encodeURIComponent(SHARED));
+  await expect(page.locator('#smsConsent')).toBeVisible();
+  await page.click('#sheetCancel');
+  expect(await store(page, () => [App.st.transactions.length, App.st.settings.sms_consent_at || null])).toEqual([0, null]);
+});
+
+test('Android share: replaces an open sheet, waits for the PIN lock, and caps the text', async ({ page }) => {
+  await page.addInitScript((text) => {
+    const log = window.__share = { listener: null, taken: 0 };
+    window.Capacitor = { isNativePlatform: () => true, Plugins: {
+      ShareIn: {
+        take: async () => { log.taken++; return { text }; },
+        addListener: (ev, cb) => { if (ev === 'shared') log.listener = cb; return Promise.resolve({ remove() {} }); },
+      },
+    } };
+  }, SHARED);
+  await open(page);
+  await store(page, () => App.S.setSettings({ sms_consent_at: new Date().toISOString() }));
+  // فتح بارد: النص اللي فتح التطبيق
+  await expect(page.locator('#sheetBody [name=sms]')).toHaveValue(SHARED);
+  expect(await store(page, () => window.__share.taken)).toBe(1);
+
+  // التطبيق مفتوح على نافذة ثانية: المشاركة تبدّلها
+  await page.click('#sheetCancel');
+  await page.click('#settingsBtn');
+  await store(page, () => window.__share.listener({ text: 'BHD 1.200 at TALABAT' }));
+  await expect(page.locator('#sheetBody [name=sms]')).toHaveValue('BHD 1.200 at TALABAT');
+
+  // مقفول برمز: ما تنفتح لين ينفتح القفل
+  await page.click('#sheetCancel');
+  await store(page, () => document.body.classList.add('locked'));
+  const kind = store(page, () => App.sharedSms('x'.repeat(5000)));
+  await page.waitForTimeout(300);
+  await expect(page.locator('#sheet')).toBeHidden();
+  await store(page, () => document.body.classList.remove('locked'));
+  expect(await kind).toBe('form');
+  expect(await store(page, () => document.querySelector('#sheetBody [name=sms]').value.length)).toBe(2000);
+});
