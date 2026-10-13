@@ -9,7 +9,7 @@ import { rank } from '../lib/standings'
 export function Standings() {
   const load = useLoad(getLeagues)
   const [id, setId] = useState<string | null>(null)
-  if (load.loading && !load.data) return <Loading />
+  if (load.loading && !load.data) return <Loading variant="table" />
   if (!load.data) return <Failed retry={load.reload} />
   const leagues = load.data.data
   const league = leagues.find((l) => l.id === id) ?? leagues[0]

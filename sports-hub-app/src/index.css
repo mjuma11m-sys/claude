@@ -45,6 +45,15 @@
   .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 }
 
+@layer utilities {
+  /* Cards rise in a short stagger (--i); pages fade. Both are removed under reduced motion below. */
+  .rise { animation: rise .42s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(var(--i, 0) * 55ms); }
+  .page { animation: fade .2s ease-out both; }
+}
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
 @media (prefers-reduced-motion: reduce) {
+  .rise, .page { animation: none; }
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }

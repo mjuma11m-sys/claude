@@ -1,6 +1,6 @@
-import { Spinner } from './Spinner'
+import { PageSkeleton } from './Skeleton'
 
-export const Loading = () => <div className="grid min-h-40 place-items-center"><Spinner /></div>
+export const Loading = ({ variant }: { variant?: 'home' | 'list' | 'table' }) => <PageSkeleton variant={variant} />
 
 export function Failed({ retry }: { retry: () => void }) {
   return (

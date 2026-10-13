@@ -12,3 +12,6 @@ export const fmtMoney = (n: number | string) => money.format(Number(n))
 export const fmtDate = (d: string | Date) => date.format(new Date(d))
 export const fmtDateTime = (d: string | Date) => dateTime.format(new Date(d))
 export const fmtPercent = (ratio: number) => percent.format(ratio)
+
+/* Goal difference with a real minus sign (U+2212): the hyphen is too short beside tabular numerals. */
+export const fmtGd = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `\u2212${Math.abs(n)}` : '0')

@@ -13,6 +13,10 @@ import '@fontsource/inter/500.css'
 import '@fontsource/inter/700.css'
 import './index.css'
 
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => { /* offline shell is optional */ }) })
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>

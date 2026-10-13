@@ -1,5 +1,7 @@
 import { useMyClub } from '../data/MyClub'
 import type { Ranked } from '../lib/standings'
+import { ClubBadge } from './ClubBadge'
+import { fmtGd } from '../lib/format'
 
 export function StandingsTable({ rows, compact = false }: { rows: Ranked[]; compact?: boolean }) {
   const { club } = useMyClub()
@@ -26,12 +28,15 @@ export function StandingsTable({ rows, compact = false }: { rows: Ranked[]; comp
             >
               <td className="text-start">{r.pos}</td>
               <td className="font-sans text-start">
-                {r.team}
-                {mine && <span className="ms-2 rounded bg-gold/20 px-1.5 py-0.5 text-[10px] font-medium">ناديك</span>}
+                <span className="flex items-center gap-2.5">
+                  <ClubBadge name={r.team} size="sm" mine={mine} />
+                  <span>{r.team}</span>
+                  {mine && <span className="rounded bg-gold/20 px-1.5 py-0.5 text-[10px] font-medium">ناديك</span>}
+                </span>
               </td>
               <td>{r.played}</td>
               {!compact && <><td className="hidden sm:table-cell">{r.won}</td><td className="hidden sm:table-cell">{r.drawn}</td><td className="hidden sm:table-cell">{r.lost}</td></>}
-              <td dir="ltr">{r.gd > 0 ? `+${r.gd}` : r.gd}</td>
+              <td dir="ltr">{fmtGd(r.gd)}</td>
               <td className={mine ? '' : 'text-ink'}>{r.pts}</td>
             </tr>
           )
