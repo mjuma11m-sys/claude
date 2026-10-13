@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 9,
+  "next": 10,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -63,7 +63,15 @@
       "title": "إداراتي: الشعار + الهوية + الألوان + الخط النهائي",
       "owner": "CEO",
       "priority": "P1",
-      "status": "review",
+      "status": "rejected",
+      "opened": "2026-10-13",
+      "updated": "2026-10-13"
+    },
+    "DW-009": {
+      "title": "إداراتي: هوية احترافية من جديد (يلغي شعار DW-008)",
+      "owner": "CEO",
+      "priority": "P1",
+      "status": "blocked",
       "opened": "2026-10-13",
       "updated": "2026-10-13"
     }

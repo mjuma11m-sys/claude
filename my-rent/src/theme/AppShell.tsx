@@ -45,7 +45,7 @@ export function AppShell({ items, active, onNavigate, title, actions, onAdd, chi
     <div className="shell" dir="rtl">
       <aside className="shell-side" aria-label="الأقسام">
         <div className="shell-logo">
-          <img src="/icons/icon-192.png" alt="" width={32} height={32} style={{ borderRadius: 8 }} />
+          <img src="/icons/symbol.svg" alt="" width={32} height={32} />
           <span>إداراتي</span>
         </div>
         <nav>
