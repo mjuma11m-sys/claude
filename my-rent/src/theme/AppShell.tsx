@@ -1,9 +1,11 @@
 // إداراتي — هيكل التطبيق لكل الأجهزة (DW-007)
 // جوال < 768px: شريط سفلي (4 أقسام + «المزيد») · تابلت 768–1199: شريط جانبي أيقونات · ديسكتوب ≥ 1200: شريط جانبي كامل
 // بدون مكتبات إضافية: الأيقونات تنمرر كـ ReactNode (lucide-react أو SVG).
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import "./tokens.css";
 import "./AppShell.css";
+import "./motion.css";
+import { useCountUp, usePresence, usePulseOn, useReplayClass } from "./motion";
 
 export type NavItem = { id: string; label: string; icon: ReactNode; badge?: number };
 
@@ -24,6 +26,15 @@ export function AppShell({ items, active, onNavigate, title, actions, onAdd, chi
   const primary = items.slice(0, MOBILE_SLOTS);
   const overflow = items.slice(MOBILE_SLOTS);
   const overflowActive = overflow.some((i) => i.id === active);
+  const sheet = usePresence(moreOpen);
+  const mainRef = useReplayClass<HTMLElement>(active, "page-enter");
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMoreOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [moreOpen]);
 
   const go = (id: string) => {
     setMoreOpen(false);
@@ -59,11 +70,11 @@ export function AppShell({ items, active, onNavigate, title, actions, onAdd, chi
           <h1>{title}</h1>
           <div className="shell-actions">{actions}</div>
         </header>
-        <main className="shell-content">{children}</main>
+        <main className="shell-content" ref={mainRef}>{children}</main>
       </div>
 
       {onAdd && (
-        <button className="fab" onClick={onAdd} aria-label="إضافة">
+        <button className="fab" onClick={onAdd} aria-label="إضافة" data-hidden={moreOpen}>
           <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
             <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
           </svg>
@@ -90,10 +101,10 @@ export function AppShell({ items, active, onNavigate, title, actions, onAdd, chi
         )}
       </nav>
 
-      {moreOpen && (
+      {sheet && (
         <>
-          <div className="sheet-backdrop" onClick={() => setMoreOpen(false)} />
-          <div className="sheet" role="dialog" aria-label="باقي الأقسام">
+          <div className="sheet-backdrop" data-state={sheet} onClick={() => setMoreOpen(false)} />
+          <div className="sheet" data-state={sheet} role="dialog" aria-modal="true" aria-label="باقي الأقسام">
             <div className="sheet-grip" />
             {overflow.map((i) => (
               <button key={i.id} className="sheet-item hoverable" aria-current={i.id === active ? "page" : undefined} onClick={() => go(i.id)}>
@@ -111,11 +122,19 @@ export function AppShell({ items, active, onNavigate, title, actions, onAdd, chi
 // شارة حالة موحدة: نفس الألوان بالمستأجرين والميزانية والبنك
 export function StatusPill({ status }: { status: "paid" | "due" | "late" }) {
   const label = { paid: "مدفوع", due: "مستحق", late: "متأخر" }[status];
-  return <span className={`pill pill-${status}`}>{label}</span>;
+  const pulse = usePulseOn(status, "paid");
+  return <span className={`pill pill-${status}${pulse ? " pill-pulse" : ""}`}>{label}</span>;
 }
 
 // مبلغ بالدينار: 3 خانات عشرية، LTR داخل نص عربي
-export function Money({ fils, tone }: { fils: number; tone?: "in" | "out" }) {
-  const v = (fils / 1000).toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+// animate: يعد للرقم الجديد لما يتغيّر (دفعة جديدة / realtime)، مو عند كل فتح
+export function Money({ fils, tone, animate }: { fils: number; tone?: "in" | "out"; animate?: boolean }) {
+  const counted = useCountUp(fils);
+  const v = ((animate ? counted : fils) / 1000).toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
   return <span className={`num bhd money ${tone ? `money-${tone}` : ""}`}>{v}</span>;
+}
+
+// مكان المحتوى وقت التحميل من Supabase
+export function Skeleton({ w = "100%", h = 16 }: { w?: number | string; h?: number }) {
+  return <span className="skeleton" style={{ display: "block", width: w, height: h }} aria-hidden="true" />;
 }
