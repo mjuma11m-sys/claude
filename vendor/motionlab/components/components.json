@@ -1,0 +1,273 @@
+{
+  "library": "minimalist",
+  "description": "A collection of minimalist, production-ready Remotion animation components built for clean, Apple-inspired video sequences. All components are self-contained Remotion scenes (AbsoluteFill) that drive their own animations using useCurrentFrame, spring, and interpolate.",
+  "components": [
+    {
+      "name": "BigText",
+      "file": "BigText.tsx",
+      "description": "Displays a single bold statement word or short phrase in enormous uppercase black text centered on a white background. On playback start, the text animates in with a spring-driven scale (0.8 → 1), fade-in, and collapsing letter-spacing (20px → 0), creating a punchy, attention-grabbing entrance. Ideal for chapter titles, key facts, or impactful single-word moments.",
+      "props": [
+        {
+          "name": "text",
+          "type": "string",
+          "required": true,
+          "description": "The text content to display. Works best with short phrases or single words due to the 140px font size."
+        }
+      ]
+    },
+    {
+      "name": "FloatingCard",
+      "file": "FloatingCard.tsx",
+      "description": "Renders a rounded white card centered on a light slate background. The card enters with a spring-driven upward slide and fade-in, then immediately begins a continuous sinusoidal floating and gentle rotation animation to give the impression of an object suspended in space. Useful for showcasing a product feature, quote, or highlight in a premium, dynamic way.",
+      "props": [
+        {
+          "name": "title",
+          "type": "string",
+          "required": true,
+          "description": "Main heading displayed inside the card in large, bold serif-style text."
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "required": false,
+          "description": "Optional supporting text rendered below the title in smaller, slate-gray text. If omitted, only the title is shown."
+        },
+        {
+          "name": "backgroundSrc",
+          "type": "string",
+          "required": false,
+          "description": "Reserved prop for a future background image URL. Currently declared in the interface but not used in the render output."
+        }
+      ]
+    },
+    {
+      "name": "GradientTextReveal",
+      "file": "GradientTextReveal.tsx",
+      "description": "Shows a large headline whose characters are painted with an animated, shifting indigo-to-pink-to-rose gradient (similar to a Stripe-style chromatic palette). The gradient position is driven by the current frame (looping), making the colors continuously travel across the letters. On entrance, the text glides up from 30px below and scales from 0.95 to 1, overlaid with a subtle indigo drop-shadow. Best used as a premium headline or brand moment.",
+      "props": [
+        {
+          "name": "text",
+          "type": "string",
+          "required": true,
+          "description": "The headline text to display with the animated gradient fill. Renders at 120px font size so short phrases work best."
+        }
+      ]
+    },
+    {
+      "name": "HeroCentered",
+      "file": "HeroCentered.tsx",
+      "description": "A staggered word-by-word reveal hero section on a white background. Each word of the title slides up from 150px below with its own spring animation, delayed sequentially (3 frames apart), creating a cinematic typeface cascade. An optional subtitle fades and slides in after all title words have appeared. The entire container also has a subtle zoom-in (0.95 → 1) over the first 60 frames. Perfect as a video intro or section opening.",
+      "props": [
+        {
+          "name": "title",
+          "type": "string",
+          "required": true,
+          "description": "Main headline text. It will be split by spaces and each word animated independently with staggered spring entrances."
+        },
+        {
+          "name": "subtitle",
+          "type": "string",
+          "required": false,
+          "description": "Optional supporting line rendered below the title in gray text at 4xl size. Animates in after all title words have appeared."
+        }
+      ]
+    },
+    {
+      "name": "ImageBlurToSharp",
+      "file": "ImageBlurToSharp.tsx",
+      "description": "Presents a full-screen image that starts extremely blurry and out-of-scale, then progressively sharpens and zooms in (scale 1.1 → 1) over the first 45 frames while simultaneously fading in. The combination of deblurring and gentle zoom creates a dramatic focus-pull reveal effect, well-suited for revealing a product, landscape, or hero image.",
+      "props": [
+        {
+          "name": "src",
+          "type": "string",
+          "required": true,
+          "description": "URL or static asset path of the image to display. The image fills the entire frame using object-cover."
+        }
+      ]
+    },
+    {
+      "name": "ImageFullscreen",
+      "file": "ImageFullscreen.tsx",
+      "description": "A simple, elegant full-screen image scene on a black background. The image fades in and slowly scales from 1.0 to 1.05 over the first 30 frames (a subtle Ken Burns–style zoom). Useful as a cinematic cut, background scene, or clean image showcase between motion segments.",
+      "props": [
+        {
+          "name": "src",
+          "type": "string",
+          "required": true,
+          "description": "URL or static asset path of the image to display. Rendered in object-cover mode to fill the frame."
+        }
+      ]
+    },
+    {
+      "name": "ImageParallax",
+      "file": "ImageParallax.tsx",
+      "description": "Creates a multi-layer depth illusion using a single image. A blurred, semi-transparent copy of the image moves slowly in one direction (background layer), while a focused, rounded-rectangle crop of the same image moves independently in the opposite direction (foreground layer). A top-to-bottom vignette overlay adds cinematic atmosphere. The result mimics a parallax depth effect, making the scene feel three-dimensional.",
+      "props": [
+        {
+          "name": "src",
+          "type": "string",
+          "required": true,
+          "description": "URL or static asset path of the image. The same source is used for both the blurred background layer and the sharp foreground layer."
+        }
+      ]
+    },
+    {
+      "name": "ImageWithText",
+      "file": "ImageWithText.tsx",
+      "description": "A split-screen layout dividing the frame into an image panel (left or right) and a bold text panel. The image slides in horizontally using a spring animation while the text fades and translates upward slightly with a delayed start. The layout direction can be reversed so the image appears on the right and text on the left, making it flexible for alternating content slides.",
+      "props": [
+        {
+          "name": "src",
+          "type": "string",
+          "required": true,
+          "description": "URL or static asset path of the image displayed in the image panel."
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "required": true,
+          "description": "Bold heading text rendered in the text panel at 6xl size."
+        },
+        {
+          "name": "reverse",
+          "type": "boolean",
+          "required": false,
+          "default": false,
+          "description": "When true, places the image on the right and the text on the left. When false (default), image is on the left."
+        }
+      ]
+    },
+    {
+      "name": "ImageZoomFocus",
+      "file": "ImageZoomFocus.tsx",
+      "description": "Animates a smooth spring-based zoom into a configurable focal point on an image. The image scales from 1× to the specified zoom level, keeping the focus point anchored at the center of the viewport. As the zoom progresses, a radial vignette grows around the periphery to further draw the eye to the focused area. Ideal for highlighting a specific detail or UI element within a screenshot or photograph.",
+      "props": [
+        {
+          "name": "src",
+          "type": "string",
+          "required": true,
+          "description": "URL or static asset path of the image to zoom into."
+        },
+        {
+          "name": "focusX",
+          "type": "number",
+          "required": false,
+          "default": 50,
+          "description": "Horizontal position of the zoom focus point, expressed as a percentage (0 = left edge, 100 = right edge)."
+        },
+        {
+          "name": "focusY",
+          "type": "number",
+          "required": false,
+          "default": 50,
+          "description": "Vertical position of the zoom focus point, expressed as a percentage (0 = top edge, 100 = bottom edge)."
+        },
+        {
+          "name": "zoomLevel",
+          "type": "number",
+          "required": false,
+          "default": 2.5,
+          "description": "Final scale multiplier at the end of the zoom animation. A value of 2.5 means the image will be 2.5× its original size."
+        }
+      ]
+    },
+    {
+      "name": "OutroCentered",
+      "file": "OutroCentered.tsx",
+      "description": "A cleanly minimal outro slide with centered bold text on a white background. The text fades in and scales from 0.95 to 1 over the first 30 frames with no spring — just a smooth linear interpolation for a calm, conclusive feel. Use as a closing statement, call-to-action, or end card.",
+      "props": [
+        {
+          "name": "text",
+          "type": "string",
+          "required": true,
+          "description": "The closing message or call-to-action text. Rendered in bold black at 7xl size, centered within 70% of the frame width."
+        }
+      ]
+    },
+    {
+      "name": "SlideCarousel",
+      "file": "SlideCarousel.tsx",
+      "description": "Displays a horizontal row of image cards that automatically scroll to the left across 1500 frames. The entire carousel enters with a spring-driven scale (0.9 → 1) and fade-in. Each card is a 600×400px rounded white tile with a subtle shadow. Useful for showcasing a portfolio, screenshot gallery, or feature walkthrough.",
+      "props": [
+        {
+          "name": "images",
+          "type": "string[]",
+          "required": true,
+          "description": "Array of image URLs or static asset paths. Each entry creates one card in the horizontal scrolling row."
+        }
+      ]
+    },
+    {
+      "name": "SplitTextReveal",
+      "file": "SplitTextReveal.tsx",
+      "description": "Splits the provided text by spaces and animates each word emerging from beneath a clipping boundary (overflow-hidden), creating the classic 'text reveal from below' effect seen in high-end motion graphics. Words are staggered 4 frames apart with spring physics (damping 12, mass 0.6) for a natural cascading feel. Great for narrative copy, taglines, or chapter transitions.",
+      "props": [
+        {
+          "name": "text",
+          "type": "string",
+          "required": true,
+          "description": "The text to reveal word by word. Each word is treated as an independent animated unit emerging from below a clipped container."
+        }
+      ]
+    },
+    {
+      "name": "StackCards",
+      "file": "StackCards.tsx",
+      "description": "Starts with all cards stacked on top of each other at the center, then spring-animates them spreading outward in a fan/arc layout. Cards also rotate slightly based on their position in the array, produce a subtle vertical arc (cards farther from center rise a bit), and are z-ordered so the center card sits on top. Each card displays a large number badge and a text label. Ideal for presenting a list of features, steps, or options in a memorable visual format.",
+      "props": [
+        {
+          "name": "items",
+          "type": "string[]",
+          "required": true,
+          "description": "Array of text labels, one per card. Each item's index is also displayed as a numbered badge on the card. Best results with 3–5 items."
+        }
+      ]
+    },
+    {
+      "name": "TextMaskReveal",
+      "file": "TextMaskReveal.tsx",
+      "description": "Reveals text from left to right by animating a CSS clip-path (`inset`) over 45 frames, as if a curtain is being drawn open. The text itself is white background / black text at 100px bold, on a centered layout. This is a sharp, precise reveal effect with no spring softening — perfect for impactful one-liners or titles that need a dramatic, wipe-style entrance.",
+      "props": [
+        {
+          "name": "text",
+          "type": "string",
+          "required": true,
+          "description": "The text to reveal via the left-to-right wipe clip-path animation. Rendered as a single non-wrapping line at 100px bold."
+        }
+      ]
+    },
+    {
+      "name": "TypingText",
+      "file": "TypingText.tsx",
+      "description": "Simulates a terminal typing animation inside a dark code-editor–style window. Text characters are revealed one-by-one based on the current frame multiplied by a speed factor, styled in green monospace font with a pink dollar-sign prompt prefix. A blinking block cursor (toggles every 10 frames) appears after the revealed characters. Ideal for showcasing code commands, technical demos, or developer-focused product features.",
+      "props": [
+        {
+          "name": "text",
+          "type": "string",
+          "required": true,
+          "description": "The full string to type out. Characters are progressively revealed frame by frame at the configured speed."
+        },
+        {
+          "name": "speed",
+          "type": "number",
+          "required": false,
+          "default": 1,
+          "description": "Number of characters revealed per frame. A value of 1 reveals one character per frame; higher values type faster. Defaults to 1."
+        }
+      ]
+    },
+    {
+      "name": "WindowMockup",
+      "file": "WindowMockup.tsx",
+      "description": "Renders an image inside a macOS-style browser/app window frame, complete with the three traffic-light control dots (red, yellow, green) in the header bar. The window enters with a spring-driven upward slide from 150px below, combined with a scale entrance (0.95 → 1) and fade-in. The content image fills the window body aligned to the top, ideal for showing website screenshots, dashboards, or app UIs in a polished presentation context.",
+      "props": [
+        {
+          "name": "src",
+          "type": "string",
+          "required": true,
+          "description": "URL or static asset path of the screenshot or UI image to display inside the macOS window frame. Rendered with object-top alignment to show the top of the content first."
+        }
+      ]
+    }
+  ]
+}
