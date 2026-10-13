@@ -42,6 +42,10 @@ export function Layout() {
             </NavLink>
           ))}
         </nav>
+        <NavLink to="/settings" className={linkClass} title="الإعدادات">
+          <Icon name="gear" className="size-5 shrink-0" />
+          <span className="hidden lg:inline">الإعدادات</span>
+        </NavLink>
         <button onClick={signOut} title="تسجيل الخروج" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-mute hover:bg-white/5 hover:text-ink">
           <Icon name="out" className="size-5 shrink-0" />
           <span className="hidden lg:inline">تسجيل الخروج</span>
@@ -57,9 +61,9 @@ export function Layout() {
           <div className="flex items-center gap-2 text-sm md:ms-auto">
             {demo && <span className="rounded-full bg-warn/15 px-2.5 py-0.5 text-xs text-warn">وضع تجريبي</span>}
             {user && <span className="rounded-full bg-white/5 px-2.5 py-0.5 text-mute">{ROLE_LABEL[user.role]}</span>}
-            <button onClick={signOut} className="rounded-full p-1.5 text-mute hover:text-ink md:hidden" aria-label="تسجيل الخروج">
-              <Icon name="out" />
-            </button>
+            <NavLink to="/settings" className="rounded-full p-1.5 text-mute hover:text-ink md:hidden" aria-label="الإعدادات">
+              <Icon name="gear" />
+            </NavLink>
           </div>
         </header>
 

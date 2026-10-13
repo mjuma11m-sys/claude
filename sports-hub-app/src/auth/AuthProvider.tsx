@@ -12,7 +12,7 @@ type AuthState = {
 }
 
 const AuthContext = createContext<AuthState | null>(null)
-const DEMO_KEY = 'sh.demoRole'
+const DEMO_KEY = 'sh.demoRole' // listed in lib/legal.ts DEMO_KEYS for erasure
 
 function readDemoRole(): Role | null {
   try {

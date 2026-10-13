@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
-import { Navigate, useLocation } from 'react-router'
+import { Link, Navigate, useLocation } from 'react-router'
 import { useAuth } from '../auth/AuthProvider'
 import { Logo } from '../components/Logo'
+import { PRIVACY_CONTACT } from '../lib/legal'
 import { supabase } from '../lib/supabase'
 import { ROLES, ROLE_LABEL } from '../lib/roles'
 
@@ -52,6 +53,8 @@ export function Login() {
               ))}
             </div>
           </div>
+        ) : !PRIVACY_CONTACT ? (
+          <p role="status" className="text-sm text-mute">التسجيل مقفول حالياً: النسخة تجريبية.</p>
         ) : sent ? (
           <p role="status" className="text-sm">أرسلنا رابط الدخول إلى <bdi dir="ltr">{email}</bdi>. افتحه من نفس الجهاز.</p>
         ) : (
@@ -70,6 +73,10 @@ export function Login() {
             </button>
           </form>
         )}
+        <p className="flex gap-4 text-xs text-mute">
+          <Link to="/privacy" className="hover:text-ink">سياسة الخصوصية</Link>
+          <Link to="/terms" className="hover:text-ink">شروط الاستخدام</Link>
+        </p>
       </div>
     </main>
   )
