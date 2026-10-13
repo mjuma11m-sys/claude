@@ -1,0 +1,89 @@
+import { NavLink, Outlet } from 'react-router'
+import { useAuth } from '../auth/AuthProvider'
+import { canAccess, ROLE_LABEL, type Area } from '../lib/roles'
+import { Icon, type IconName } from './Icon'
+import { Logo } from './Logo'
+
+type Item = { to: string; label: string; icon: IconName; area: Area }
+const NAV: Item[] = [
+  { to: '/', label: 'الرئيسية', icon: 'home', area: 'fan' },
+  { to: '/standings', label: 'الترتيب', icon: 'table', area: 'fan' },
+  { to: '/vote', label: 'رجل المباراة', icon: 'vote', area: 'fan' },
+  { to: '/pass', label: 'تذكرتي', icon: 'pass', area: 'fan' },
+  { to: '/medical', label: 'الأحمال', icon: 'pulse', area: 'medical' },
+  { to: '/club', label: 'غرفة العمليات', icon: 'club', area: 'club' },
+  { to: '/bfa', label: 'غرفة الاتحاد', icon: 'hub', area: 'bfa' },
+]
+
+const linkClass = ({ isActive }: { isActive: boolean }) =>
+  `flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors ${
+    isActive ? 'bg-pulse/10 text-pulse' : 'text-mute hover:bg-white/5 hover:text-ink'
+  }`
+
+export function Layout() {
+  const { user, demo, signOut } = useAuth()
+  const items = NAV.filter((i) => user && canAccess(user.role, i.area))
+  /* Phone tab bar holds 5 at most: staff get their own area first, fans get the 4 fan tabs. */
+  const tabs = [...items.filter((i) => i.area !== 'fan'), ...items.filter((i) => i.area === 'fan')].slice(0, 5)
+
+  return (
+    <div className="min-h-dvh md:grid md:grid-cols-[4.75rem_1fr] lg:grid-cols-[16rem_1fr]">
+      {/* iPad: icon rail · desktop: full sidebar */}
+      <aside className="sticky top-0 hidden h-dvh flex-col border-e border-white/10 bg-white/[0.02] p-3 md:flex lg:p-4">
+        <div className="mb-8 flex items-center gap-3 px-1.5 pt-2">
+          <Logo className="size-9 shrink-0" />
+          <span className="hidden text-lg font-bold lg:inline">Sports Hub</span>
+        </div>
+        <nav className="flex flex-1 flex-col gap-1">
+          {items.map((i) => (
+            <NavLink key={i.to} to={i.to} end className={linkClass} title={i.label}>
+              <Icon name={i.icon} className="size-5 shrink-0" />
+              <span className="hidden lg:inline">{i.label}</span>
+            </NavLink>
+          ))}
+        </nav>
+        <button onClick={signOut} title="تسجيل الخروج" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-mute hover:bg-white/5 hover:text-ink">
+          <Icon name="out" className="size-5 shrink-0" />
+          <span className="hidden lg:inline">تسجيل الخروج</span>
+        </button>
+      </aside>
+
+      <div className="flex min-w-0 flex-col">
+        <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-white/10 bg-night/70 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-xl md:px-8">
+          <div className="flex items-center gap-2 md:hidden">
+            <Logo className="size-7" />
+            <span className="font-bold">Sports Hub</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm md:ms-auto">
+            {demo && <span className="rounded-full bg-warn/15 px-2.5 py-0.5 text-xs text-warn">وضع تجريبي</span>}
+            {user && <span className="rounded-full bg-white/5 px-2.5 py-0.5 text-mute">{ROLE_LABEL[user.role]}</span>}
+            <button onClick={signOut} className="rounded-full p-1.5 text-mute hover:text-ink md:hidden" aria-label="تسجيل الخروج">
+              <Icon name="out" />
+            </button>
+          </div>
+        </header>
+
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-28 pt-5 md:px-8 md:pb-10 md:pt-8">
+          <Outlet />
+        </main>
+
+        {/* Phone: bottom tab bar in thumb reach, above the home indicator */}
+        <nav className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-20 grid auto-cols-fr grid-flow-col rounded-2xl border border-white/10 bg-deep/85 p-1.5 backdrop-blur-xl md:hidden">
+          {tabs.map((i) => (
+            <NavLink
+              key={i.to}
+              to={i.to}
+              end
+              className={({ isActive }) =>
+                `flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] ${isActive ? 'bg-pulse/10 text-pulse' : 'text-mute'}`
+              }
+            >
+              <Icon name={i.icon} />
+              <span className="max-w-full truncate px-1">{i.label}</span>
+            </NavLink>
+          ))}
+        </nav>
+      </div>
+    </div>
+  )
+}
