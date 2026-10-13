@@ -138,7 +138,7 @@
     if (lec.length) lines.push(['📚', lec.length + (lec.length === 1 ? ' محاضرة' : ' محاضرات') + '، أولها ' + A.time12(A.hhmm(lec[0].start)) + ' (' + h(lec[0].name) + ')']);
     if (gym) lines.push(['💪', 'تمرين ' + h(gym.workout ? gym.workout.focus : gym.name) + ' الساعة ' + A.time12(A.hhmm(gym.start))]);
     if (dueToday.length) lines.push(['✅', dueToday.length + (dueToday.length === 1 ? ' مهمة' : ' مهام') + ' موعدها اليوم']);
-    if (exam) { const d = A.daysBetween(now, new Date(exam.due_at)); lines.push(['📝', 'أقرب اختبار: ' + h(exam.title) + (d === 0 ? ' اليوم!' : ' بعد ' + A.nDays(d))]); }
+    if (exam) { const d = A.daysBetween(now, new Date(exam.due_at)); lines.push(['📝', 'أقرب اختبار: <bdi>' + h(exam.title) + '</bdi>' + (d === 0 ? ' اليوم!' : ' بعد ' + A.nDays(d))]); }
     if (allow != null) lines.push(['💸', allow > 0 ? 'تقدر تصرف اليوم ' + fmt(allow) + ' د.ب' : 'تعدّيت ميزانية الشهر، خفّف الصرف']);
     if (!lines.length) lines.push(['☀️', 'يومك فاضي، استغله صح']);
     return '<div class="card morning"><div class="m-head"><b>☀️ صباح الخير، هذا يومك</b><button class="icon-x" data-action="morning-close" aria-label="إخفاء">✕</button></div>' +

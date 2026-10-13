@@ -126,7 +126,7 @@
       const r = readiness(t), n = A.daysBetween(new Date(), new Date(t.due_at));
       const color = r == null ? 'var(--muted)' : r >= 80 ? 'var(--income)' : r >= 50 ? '#f59e0b' : 'var(--expense)';
       return '<div class="cat" data-action="exam-topics" data-id="' + t.id + '" style="cursor:pointer"><div class="ex-n num' + (n <= 3 ? ' soon' : '') + '" style="width:44px;height:44px;font-size:16px">' + n + '<small>' + (n === 1 ? 'يوم' : 'أيام') + '</small></div><div class="body">' +
-        '<div class="line"><span>' + h(t.title) + '</span><b class="num" style="color:' + color + '">' + (r == null ? 'حط المواضيع' : r + '%') + '</b></div>' +
+        '<div class="line"><span><bdi>' + h(t.title) + '</bdi></span><b class="num" style="color:' + color + '">' + (r == null ? 'حط المواضيع' : r + '%') + '</b></div>' +
         '<div class="meter"><span style="width:' + (r || 0) + '%;background:' + color + '"></span></div></div></div>';
     }).join('') + '</div>';
   }

@@ -143,7 +143,7 @@
     // ⏰ «ذكّرني بعد ساعة»: محفوظة لين يجي وقتها، عشان إعادة الجدولة ما تمسحها
     for (const z of snoozes()) {
       const t = (z.extra && z.extra.kind === 'task') ? (A.st.tasks || []).find((x) => x.id === z.extra.id) : null;
-      if (t && t.done) continue;   // خلّصها بعد ما أجّل
+      if (z.extra && z.extra.kind === 'task' && (!t || t.done)) continue;   // خلّصها أو حذفها بعد ما أجّل
       add(z.key, new Date(z.at), z.title, z.body, z.extra);
     }
 

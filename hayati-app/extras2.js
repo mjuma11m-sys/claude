@@ -412,7 +412,7 @@
     const todo = exams.filter((e) => !planned(e));
     return '<div class="card exams-card"><div class="m-head"><b>📝 الاختبارات الجاية</b></div>' + exams.slice(0, 6).map((e) => {
       const d = new Date(e.due_at), n = A.daysBetween(new Date(), d);
-      return '<div class="ex-line"><span class="ex-n num' + (n <= 3 ? ' soon' : '') + '">' + n + '<small>' + (n === 1 ? 'يوم' : 'أيام') + '</small></span><div style="flex:1;min-width:0"><b>' + h(e.title) + '</b><div class="small muted">' + A.DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + A.MONTHS[d.getMonth()] + '</div></div>' + (planned(e) ? '<span class="tag brand">✓ خطة</span>' : '') + '</div>';
+      return '<div class="ex-line"><span class="ex-n num' + (n <= 3 ? ' soon' : '') + '">' + n + '<small>' + (n === 1 ? 'يوم' : 'أيام') + '</small></span><div style="flex:1;min-width:0"><b><bdi>' + h(e.title) + '</bdi></b><div class="small muted">' + A.DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + A.MONTHS[d.getMonth()] + '</div></div>' + (planned(e) ? '<span class="tag brand">✓ خطة</span>' : '') + '</div>';
     }).join('') + (todo.length ? '<button class="btn primary block" style="margin-top:10px" data-action="plan-all">' + I('book') + 'سوّ خطة مراجعة لكل الاختبارات (' + todo.length + ')</button>' : '') + '</div>';
   }
   function planAll() {

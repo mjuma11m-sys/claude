@@ -23,7 +23,25 @@
     return s.replace(RE, (m) => D[m])
       .replace(/(\d)\s*م(?![؀-ۿ])/g, '$1 pm').replace(/(\d)\s*ص(?![؀-ۿ])/g, '$1 am')
       .replace(/(^|[\s\d.])من(?=$|[\s\d])/g, '$1of')
+      // أرقام بوحدات عربية: «بعد 3 أيام»، «49 دقيقة»، «30 د»، «1.5 س»، «3 مرات»
+      .replace(/قبل\s+(\d+)\s*(?:أيام|days)(?![؀-ۿ])/g, '$1 days ago').replace(/قبل\s+(?:يومين|two days|2 days)(?![؀-ۿ])/g, '2 days ago').replace(/قبل\s+(?:يوم|a day|1 day|Day)(?![؀-ۿ\w])/g, 'a day ago')
+      .replace(/بعد\s+(\d+)\s*(?:أيام|يوم|days)(?![؀-ۿ])/g, 'in $1 days').replace(/(\d+)\s*أيام(?![؀-ۿ])/g, '$1 days')
+      .replace(/(\d+)\s*(?:دقيقة|دقايق|دقائق)(?![؀-ۿ])/g, '$1 min').replace(/(\d+(?:\.\d+)?)\s*س(?![؀-ۿ.])/g, '$1 h')
+      .replace(/(\d+)\s*د(?![؀-ۿ.])/g, '$1 min').replace(/(\d+)\s*مرات(?![؀-ۿ])/g, '$1 times')
+      .replace(/(^|\s)يا\s+(?=\S)/g, ', ')
       .replace(/،/g, ',').replace(/؟/g, '?').replace(/٪/g, '%');
+  }
+  // بيانات المستخدم (اسم مهمة، محل، مادة) ما نترجم كلمة منها: «اختبار المحاسبة» تظل مثل ما كتبها.
+  //   نترجمها بس لو كلها كلمة معروفة (مثل «مصروف» أو «مذاكرة عامة» اللي يحطها التطبيق نفسه)
+  const USER = '.t, bdi';
+  function trText(n) {
+    const p = n.parentElement;
+    if (p && p.closest(USER)) {
+      const k = n.nodeValue.trim();
+      if (D[k]) n.nodeValue = n.nodeValue.replace(k, D[k]);
+      return;
+    }
+    const v = tr(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v;
   }
   const ATTRS = ['placeholder', 'aria-label', 'title'];
   const SKIP = /^(SCRIPT|STYLE|TEXTAREA|INPUT|CODE)$/;
@@ -32,7 +50,7 @@
       // نص داخل <script> أو حقل إدخال ما نلمسه أبداً
       const p = root.parentElement;
       if (!p || SKIP.test(p.tagName) || p.closest('[data-noi18n]')) return;
-      const v = tr(root.nodeValue); if (v !== root.nodeValue) root.nodeValue = v; return;
+      trText(root); return;
     }
     if (root.nodeType !== 1 || SKIP.test(root.tagName) || root.closest('[data-noi18n]')) return;
     for (const a of ATTRS) { const v = root.getAttribute(a); if (v && hasAr(v)) root.setAttribute(a, tr(v)); }
@@ -42,7 +60,7 @@
       if (n.nodeType === 3) {
         const p = n.parentElement;
         if (p && (SKIP.test(p.tagName) || p.closest('[data-noi18n]'))) continue;
-        const v = tr(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v;
+        trText(n);
       } else if (!SKIP.test(n.tagName)) {
         for (const a of ATTRS) { const v = n.getAttribute(a); if (v && hasAr(v)) n.setAttribute(a, tr(v)); }
       }

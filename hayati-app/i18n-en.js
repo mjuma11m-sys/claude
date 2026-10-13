@@ -1238,5 +1238,14 @@ window.HAYATI_EN = {
 "كل العمليات بملف ينفتح بـ Excel وNumbers": "All transactions in a file for Excel and Numbers",
 "ما فيه عمليات للتصدير": "No transactions to export",
 "باستخدامك «حياتي» توافق على": "By using Hayati you agree to the",
-"الأرقام كلها تقدير، وبياناتك على جهازك.": "All numbers are estimates, and your data stays on your device."
+"الأرقام كلها تقدير، وبياناتك على جهازك.": "All numbers are estimates, and your data stays on your device.",
+"الحين": "Now",
+"ما عندك نسخة احتياطية": "You have no backup",
+"آخر نسخة احتياطية": "Last backup",
+"بياناتك على هالجهاز بس. لو ضاع، تضيع معه.": "Your data lives only on this device. Lose it, and the data goes with it.",
+"نزّلها الحين": "Back up now",
+"آخر نسخة:": "Last backup:",
+"قيد التطوير · نسخة تجريبية": "In development · beta",
+"أيام": "days",
+"حياتي": "Hayati"
 };

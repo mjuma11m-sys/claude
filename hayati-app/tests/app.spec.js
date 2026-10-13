@@ -866,3 +866,61 @@ test('«صدّر مصاريفك»: Excel-ready CSV with BOM, numbers as numbers,
   expect(saved.name).toMatch(/^hayati-expenses-\d{4}-\d{2}-\d{2}\.csv$/);
   expect(saved.mime).toBe('text/csv');
 });
+
+// اجتماع الفحص الشامل: الإنجليزي ما يخرّب بيانات المستخدم ويترجم الوحدات، تذكير النسخة الاحتياطية، رقم الإصدار
+test('English: user data stays untouched (no «Exam المحاسبة»), units read «in 3 days» and «49 min»', async ({ page }) => {
+  await page.addInitScript(() => { if (!sessionStorage.getItem('i')) { localStorage.setItem('hayati-lang', 'en'); sessionStorage.setItem('i', '1'); } });
+  await open(page);
+  await store(page, () => {
+    const d = (o, h) => { const x = new Date(); x.setDate(x.getDate() + o); x.setHours(h, 0, 0, 0); return x.toISOString(); };
+    App.S.upsert('tasks', { id: 'e1', kind: 'exam', title: 'اختبار المحاسبة', due_at: d(3, 9), done: false });
+    App.S.upsert('tasks', { id: 'a1', kind: 'appointment', title: 'موعد الطبيب', due_at: d(0, 23), done: false });
+    App.go('tasks');
+  });
+  const text = await page.locator('#view').innerText();
+  expect(text).toContain('اختبار المحاسبة');
+  expect(text).not.toContain('Exam المحاسبة');
+  expect(text).not.toContain('Appointment الطبيب');
+  expect(text).not.toMatch(/\d\s*(أيام|دقيقة)/);
+  expect(await store(page, () => window.HayatiLang.tr('بعد 3 أيام · 49 دقيقة · 1.5 س · 30 د · 3 مرات · قبل 34 أيام'))).toBe('in 3 days · 49 min · 1.5 h · 30 min · 3 times · 34 days ago');
+  expect(await store(page, () => window.HayatiLang.tr('صباح الخير يا محمد'))).toBe('Good morning, محمد');
+});
+
+test('backup reminder: shows after 30 days with 10+ records, «بعدين» hides it for a week, backing up clears it; version matches sw.js', async ({ page }) => {
+  await open(page);
+  const seed = (n, daysAgo) => store(page, ([n, daysAgo]) => {
+    const t = new Date(Date.now() - daysAgo * 864e5).toISOString();
+    for (let i = 0; i < n; i++) App.S.upsert('transactions', { id: 'b' + i, kind: 'expense', amount: 1, merchant: 'x', category: 'قهوة', occurred_at: t });
+    // updated_at يصير الحين مع upsert، فنرجّعه للماضي مثل بيانات قديمة
+    App.st.transactions.forEach((r) => { r.updated_at = t; });
+  }, [n, daysAgo]);
+  await seed(5, 40);
+  expect(await store(page, () => App.backupDue())).toBe(null);                       // أقل من 10 سجلات
+  await seed(12, 40);
+  expect(await store(page, () => App.backupDue())).toEqual({ days: 40, never: true });
+  await store(page, () => App.render());
+  await expect(page.locator('.backup-nudge')).toContainText('ما عندك نسخة احتياطية');
+  await page.click('[data-action="backup-later"]');
+  await expect(page.locator('.backup-nudge')).toHaveCount(0);
+  await store(page, () => localStorage.removeItem('hayati-backup-snooze'));
+  await store(page, () => App.render());
+  await page.evaluate(() => { window.HayatiNative = { saveFile: async () => true }; });
+  await page.click('[data-action="backup-now"]');
+  await expect(page.locator('.backup-nudge')).toHaveCount(0);
+  expect(await store(page, () => App.backupDue())).toBe(null);
+  // الإعدادات: «آخر نسخة: اليوم» ورقم الإصدار نفس sw.js
+  await page.click('#settingsBtn');
+  await expect(page.locator('[data-set="export"]')).toContainText('آخر نسخة: اليوم');
+  const sw = fs.readFileSync(path.join(__dirname, '../sw.js'), 'utf8').match(/hayati-(v\d+)/)[1];
+  expect(await store(page, () => App.APP_VERSION)).toBe(sw);
+  await expect(page.locator('.app-version')).toContainText('حياتي ' + sw);
+});
+
+test('iPhone: a snoozed reminder for a task that was deleted does not ring', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('hayati-snoozes', JSON.stringify([{ key: 'snooze:gone:1', at: Date.now() + 3600e3, title: 'بكرة تسليم: محذوفة', body: '', extra: { kind: 'task', id: 'gone', act: true } }]));
+    window.Capacitor = { isNativePlatform: () => true, Plugins: {} };
+  });
+  await open(page);
+  expect(await store(page, () => HayatiNative.upcoming(new Date()).some((n) => n.title.includes('محذوفة')))).toBe(false);
+});

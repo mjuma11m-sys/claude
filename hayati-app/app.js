@@ -5,6 +5,7 @@
   const S = window.Store;
   const st = S.state;
   const I = window.icon;
+  const APP_VERSION = 'v14';   // نفس رقم sw.js (فيه اختبار يتأكد)
 
   // ---------- ثوابت ----------
   const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
@@ -83,6 +84,15 @@
   // ---------- أدوات ----------
   function readPref(k, d) { try { return localStorage.getItem('hayati-ui-' + k) || d; } catch (e) { return d; } }
   function writePref(k, v) { try { localStorage.setItem('hayati-ui-' + k, v); } catch (e) { /* تجاهل */ } }
+  // 💾 آخر نسخة احتياطية: بياناتك على هالجهاز بس، فنذكّرك (privacy.js يعرض البطاقة)
+  const LAST_BACKUP = 'hayati-last-backup';
+  function lastBackup() { try { const v = localStorage.getItem(LAST_BACKUP); return v ? new Date(v) : null; } catch (e) { return null; } }
+  function markBackup() { try { localStorage.setItem(LAST_BACKUP, new Date().toISOString()); } catch (e) { /* تجاهل */ } }
+  async function backupNow() {
+    const ok = await saveFile('hayati-backup-' + new Date().toISOString().slice(0, 10) + '.json', S.exportJSON(), 'application/json');
+    if (ok) { markBackup(); render(); }
+    return ok;
+  }
 
   function h(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -253,7 +263,7 @@
     const wk = c.workout && Array.isArray(c.workout.exercises) ? c.workout : null;
     return '<div class="slot ' + (state || '') + '" style="--c:' + h(c.color) + '" data-action="' + (c.src === 'task' ? 'edit-task' : c.src === 'prayer' ? 'noop' : wk ? 'open-workout' : c.type === 'lecture' ? 'open-course' : 'edit-course') + '" data-id="' + c.id + '">' +
       '<div class="when"><b>' + time12(hhmm(c.start)) + '</b><small>حتى ' + time12(hhmm(c.end)) + '</small></div>' +
-      '<div class="box"><div class="name"><span class="type-ico">' + I(ty.icon) + '</span>' + h(c.name) + (state === 'now' ? '<span class="tag brand"><span class="pulse"></span>الحين</span>' : '') + '</div>' +
+      '<div class="box"><div class="name"><span class="type-ico">' + I(ty.icon) + '</span><bdi>' + h(c.name) + '</bdi>' + (state === 'now' ? '<span class="tag brand"><span class="pulse"></span>الحين</span>' : '') + '</div>' +
       '<div class="where">' + (wk ? h(wk.focus || ty.label) + ' · ' + workoutProgress(c.id, wk) : ty.label + (c.room ? ' · ' + I('pin') + h(c.room) : '')) + '</div>' +
       (state === 'now' ? '<div class="prog"><span style="width:' + progress + '%"></span></div>' : '') + '</div></div>';
   }
@@ -298,17 +308,17 @@
       const ty = ACT_TYPES[current.type] || ACT_TYPES.lecture;
       const pct = ((nm - current.start) / (current.end - current.start)) * 100;
       out += '<div class="hero"><span class="eyebrow"><span class="pulse"></span>' + ty.now + '</span>' +
-        '<div class="big"><span class="hero-ico">' + I(ty.icon) + '</span>' + h(current.name) + '</div><div class="meta">' +
+        '<div class="big"><span class="hero-ico">' + I(ty.icon) + '</span>' + '<bdi>' + h(current.name) + '</bdi>' + '</div><div class="meta">' +
         (current.room ? '<span>' + I('pin') + h(current.room) + '</span>' : '') +
         '<span>' + I('clock') + 'يخلص بعد ' + inMinutes(current.end - nm) + '</span></div>' +
         '<div class="track"><span style="width:' + pct + '%"></span></div>' +
         (current.workout ? '<div class="meta" style="margin-top:10px"><span>' + I('dumbbell') + h(current.workout.focus || '') + '</span></div>' +
           '<button class="hero-btn" style="margin-top:12px;padding:8px 14px;font-size:14px" data-action="open-workout" data-id="' + current.id + '">' + I('tasks') + 'شوف التمارين · ' + workoutProgress(current.id, current.workout) + '</button>' : '') +
-        (next ? '<div class="meta" style="margin-top:12px">بعده: ' + h(next.name) + ' · ' + time12(hhmm(next.start)) + '</div>' : '') + '</div>';
+        (next ? '<div class="meta" style="margin-top:12px">بعده: ' + '<bdi>' + h(next.name) + '</bdi>' + ' · ' + time12(hhmm(next.start)) + '</div>' : '') + '</div>';
     } else if (next) {
       const ty = ACT_TYPES[next.type] || ACT_TYPES.lecture;
       out += '<div class="hero"><span class="eyebrow">' + I('clock') + ty.next + ' بعد ' + inMinutes(next.start - nm) + '</span>' +
-        '<div class="big"><span class="hero-ico">' + I(ty.icon) + '</span>' + h(next.name) + '</div><div class="meta"><span>' + I('calendar') + time12(hhmm(next.start)) + ' — ' + time12(hhmm(next.end)) + '</span>' +
+        '<div class="big"><span class="hero-ico">' + I(ty.icon) + '</span>' + '<bdi>' + h(next.name) + '</bdi>' + '</div><div class="meta"><span>' + I('calendar') + time12(hhmm(next.start)) + ' — ' + time12(hhmm(next.end)) + '</span>' +
         (next.room ? '<span>' + I('pin') + h(next.room) + '</span>' : '') + '</div></div>';
     } else {
       const open = st.tasks.filter((t) => !t.done && t.due_at && sameDay(new Date(t.due_at), now)).length;
@@ -1765,7 +1775,7 @@
     body += X('settingsExtra');
     body += '<div class="group-title">' + I('settings') + 'عام</div><div class="menu">' +
       '<button data-set="budget"><div class="ico" style="' + tint('#1A8A8F') + '">' + I('target') + '</div><div style="flex:1"><b>الميزانية الشهرية</b><small>' + (st.settings.budget ? fmt(st.settings.budget) + ' د.ب' : 'غير محددة') + '</small></div>' + I('chevL') + '</button>' +
-      '<button data-set="export"><div class="ico" style="' + tint('#0d9488') + '">' + I('download') + '</div><div style="flex:1"><b>نسخة احتياطية</b><small>تصدير كل بياناتك كملف</small></div>' + I('chevL') + '</button>' +
+      '<button data-set="export"><div class="ico" style="' + tint('#0d9488') + '">' + I('download') + '</div><div style="flex:1"><b>نسخة احتياطية</b><small>' + (lastBackup() ? 'آخر نسخة: ' + (daysBetween(lastBackup(), new Date()) === 0 ? 'اليوم' : 'قبل ' + nDays(daysBetween(lastBackup(), new Date()))) : 'تصدير كل بياناتك كملف') + '</small></div>' + I('chevL') + '</button>' +
       '<button data-set="export-csv"><div class="ico" style="' + tint('#16a34a') + '">' + I('download') + '</div><div style="flex:1"><b>صدّر مصاريفك (Excel)</b><small>كل العمليات بملف ينفتح بـ Excel وNumbers</small></div>' + I('chevL') + '</button>' +
       '<label style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:16px;border:1px solid var(--border);background:var(--surface);cursor:pointer"><div class="ico" style="' + tint('#f59e0b') + '">' + I('upload') + '</div><div style="flex:1"><b style="display:block">استيراد نسخة</b><small class="muted">من ملف نسخة احتياطية</small></div><input type="file" accept="application/json,.json" data-set="import" hidden></label>' +
       '</div>';
@@ -1837,7 +1847,7 @@
       } else if (act === 'budget') {
         budgetForm();
       } else if (act === 'export') {
-        await saveFile('hayati-backup-' + new Date().toISOString().slice(0, 10) + '.json', S.exportJSON(), 'application/json');
+        await backupNow();
       } else if (act === 'export-csv') {
         const csv = expensesCSV();
         if (!csv) toast('ما فيه عمليات للتصدير');
@@ -1977,7 +1987,7 @@
     S, st, I, ui, h, fmt, money, tint, catMeta, catIcon, pad, monthKey, sameDay, startOfDay, daysBetween, time12, timeOf, minutesOf,
     nowMinutes, toLocalInput, dayLabel, nDays, toast, ask, courseById, lectures, lecturesOn, agendaOn, empty, secHead, ring, openSheet,
     closeSheet, val, parseAmount, segPick, render, go, txInMonth, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, courseForm, taskForm,
-    notify, has, nextRenewal, expensesCSV, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
+    notify, has, nextRenewal, expensesCSV, lastBackup, markBackup, backupNow, APP_VERSION, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
   };
   setInterval(timerTickUI, 1000);
   timerCheck();

@@ -1925,7 +1925,16 @@ window.HAYATI_EN = {
 "كل العمليات بملف ينفتح بـ Excel وNumbers": "All transactions in a file for Excel and Numbers",
 "ما فيه عمليات للتصدير": "No transactions to export",
 "باستخدامك «حياتي» توافق على": "By using Hayati you agree to the",
-"الأرقام كلها تقدير، وبياناتك على جهازك.": "All numbers are estimates, and your data stays on your device."
+"الأرقام كلها تقدير، وبياناتك على جهازك.": "All numbers are estimates, and your data stays on your device.",
+"الحين": "Now",
+"ما عندك نسخة احتياطية": "You have no backup",
+"آخر نسخة احتياطية": "Last backup",
+"بياناتك على هالجهاز بس. لو ضاع، تضيع معه.": "Your data lives only on this device. Lose it, and the data goes with it.",
+"نزّلها الحين": "Back up now",
+"آخر نسخة:": "Last backup:",
+"قيد التطوير · نسخة تجريبية": "In development · beta",
+"أيام": "days",
+"حياتي": "Hayati"
 };
 
 </script>
@@ -1955,7 +1964,25 @@ window.HAYATI_EN = {
     return s.replace(RE, (m) => D[m])
       .replace(/(\d)\s*م(?![؀-ۿ])/g, '$1 pm').replace(/(\d)\s*ص(?![؀-ۿ])/g, '$1 am')
       .replace(/(^|[\s\d.])من(?=$|[\s\d])/g, '$1of')
+      // أرقام بوحدات عربية: «بعد 3 أيام»، «49 دقيقة»، «30 د»، «1.5 س»، «3 مرات»
+      .replace(/قبل\s+(\d+)\s*(?:أيام|days)(?![؀-ۿ])/g, '$1 days ago').replace(/قبل\s+(?:يومين|two days|2 days)(?![؀-ۿ])/g, '2 days ago').replace(/قبل\s+(?:يوم|a day|1 day|Day)(?![؀-ۿ\w])/g, 'a day ago')
+      .replace(/بعد\s+(\d+)\s*(?:أيام|يوم|days)(?![؀-ۿ])/g, 'in $1 days').replace(/(\d+)\s*أيام(?![؀-ۿ])/g, '$1 days')
+      .replace(/(\d+)\s*(?:دقيقة|دقايق|دقائق)(?![؀-ۿ])/g, '$1 min').replace(/(\d+(?:\.\d+)?)\s*س(?![؀-ۿ.])/g, '$1 h')
+      .replace(/(\d+)\s*د(?![؀-ۿ.])/g, '$1 min').replace(/(\d+)\s*مرات(?![؀-ۿ])/g, '$1 times')
+      .replace(/(^|\s)يا\s+(?=\S)/g, ', ')
       .replace(/،/g, ',').replace(/؟/g, '?').replace(/٪/g, '%');
+  }
+  // بيانات المستخدم (اسم مهمة، محل، مادة) ما نترجم كلمة منها: «اختبار المحاسبة» تظل مثل ما كتبها.
+  //   نترجمها بس لو كلها كلمة معروفة (مثل «مصروف» أو «مذاكرة عامة» اللي يحطها التطبيق نفسه)
+  const USER = '.t, bdi';
+  function trText(n) {
+    const p = n.parentElement;
+    if (p && p.closest(USER)) {
+      const k = n.nodeValue.trim();
+      if (D[k]) n.nodeValue = n.nodeValue.replace(k, D[k]);
+      return;
+    }
+    const v = tr(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v;
   }
   const ATTRS = ['placeholder', 'aria-label', 'title'];
   const SKIP = /^(SCRIPT|STYLE|TEXTAREA|INPUT|CODE)$/;
@@ -1964,7 +1991,7 @@ window.HAYATI_EN = {
       // نص داخل <script> أو حقل إدخال ما نلمسه أبداً
       const p = root.parentElement;
       if (!p || SKIP.test(p.tagName) || p.closest('[data-noi18n]')) return;
-      const v = tr(root.nodeValue); if (v !== root.nodeValue) root.nodeValue = v; return;
+      trText(root); return;
     }
     if (root.nodeType !== 1 || SKIP.test(root.tagName) || root.closest('[data-noi18n]')) return;
     for (const a of ATTRS) { const v = root.getAttribute(a); if (v && hasAr(v)) root.setAttribute(a, tr(v)); }
@@ -1974,7 +2001,7 @@ window.HAYATI_EN = {
       if (n.nodeType === 3) {
         const p = n.parentElement;
         if (p && (SKIP.test(p.tagName) || p.closest('[data-noi18n]'))) continue;
-        const v = tr(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v;
+        trText(n);
       } else if (!SKIP.test(n.tagName)) {
         for (const a of ATTRS) { const v = n.getAttribute(a); if (v && hasAr(v)) n.setAttribute(a, tr(v)); }
       }
@@ -3066,6 +3093,7 @@ window.HAYATI_CONFIG = {
   const S = window.Store;
   const st = S.state;
   const I = window.icon;
+  const APP_VERSION = 'v14';   // نفس رقم sw.js (فيه اختبار يتأكد)
 
   // ---------- ثوابت ----------
   const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
@@ -3144,6 +3172,15 @@ window.HAYATI_CONFIG = {
   // ---------- أدوات ----------
   function readPref(k, d) { try { return localStorage.getItem('hayati-ui-' + k) || d; } catch (e) { return d; } }
   function writePref(k, v) { try { localStorage.setItem('hayati-ui-' + k, v); } catch (e) { /* تجاهل */ } }
+  // 💾 آخر نسخة احتياطية: بياناتك على هالجهاز بس، فنذكّرك (privacy.js يعرض البطاقة)
+  const LAST_BACKUP = 'hayati-last-backup';
+  function lastBackup() { try { const v = localStorage.getItem(LAST_BACKUP); return v ? new Date(v) : null; } catch (e) { return null; } }
+  function markBackup() { try { localStorage.setItem(LAST_BACKUP, new Date().toISOString()); } catch (e) { /* تجاهل */ } }
+  async function backupNow() {
+    const ok = await saveFile('hayati-backup-' + new Date().toISOString().slice(0, 10) + '.json', S.exportJSON(), 'application/json');
+    if (ok) { markBackup(); render(); }
+    return ok;
+  }
 
   function h(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -3314,7 +3351,7 @@ window.HAYATI_CONFIG = {
     const wk = c.workout && Array.isArray(c.workout.exercises) ? c.workout : null;
     return '<div class="slot ' + (state || '') + '" style="--c:' + h(c.color) + '" data-action="' + (c.src === 'task' ? 'edit-task' : c.src === 'prayer' ? 'noop' : wk ? 'open-workout' : c.type === 'lecture' ? 'open-course' : 'edit-course') + '" data-id="' + c.id + '">' +
       '<div class="when"><b>' + time12(hhmm(c.start)) + '</b><small>حتى ' + time12(hhmm(c.end)) + '</small></div>' +
-      '<div class="box"><div class="name"><span class="type-ico">' + I(ty.icon) + '</span>' + h(c.name) + (state === 'now' ? '<span class="tag brand"><span class="pulse"></span>الحين</span>' : '') + '</div>' +
+      '<div class="box"><div class="name"><span class="type-ico">' + I(ty.icon) + '</span><bdi>' + h(c.name) + '</bdi>' + (state === 'now' ? '<span class="tag brand"><span class="pulse"></span>الحين</span>' : '') + '</div>' +
       '<div class="where">' + (wk ? h(wk.focus || ty.label) + ' · ' + workoutProgress(c.id, wk) : ty.label + (c.room ? ' · ' + I('pin') + h(c.room) : '')) + '</div>' +
       (state === 'now' ? '<div class="prog"><span style="width:' + progress + '%"></span></div>' : '') + '</div></div>';
   }
@@ -3359,17 +3396,17 @@ window.HAYATI_CONFIG = {
       const ty = ACT_TYPES[current.type] || ACT_TYPES.lecture;
       const pct = ((nm - current.start) / (current.end - current.start)) * 100;
       out += '<div class="hero"><span class="eyebrow"><span class="pulse"></span>' + ty.now + '</span>' +
-        '<div class="big"><span class="hero-ico">' + I(ty.icon) + '</span>' + h(current.name) + '</div><div class="meta">' +
+        '<div class="big"><span class="hero-ico">' + I(ty.icon) + '</span>' + '<bdi>' + h(current.name) + '</bdi>' + '</div><div class="meta">' +
         (current.room ? '<span>' + I('pin') + h(current.room) + '</span>' : '') +
         '<span>' + I('clock') + 'يخلص بعد ' + inMinutes(current.end - nm) + '</span></div>' +
         '<div class="track"><span style="width:' + pct + '%"></span></div>' +
         (current.workout ? '<div class="meta" style="margin-top:10px"><span>' + I('dumbbell') + h(current.workout.focus || '') + '</span></div>' +
           '<button class="hero-btn" style="margin-top:12px;padding:8px 14px;font-size:14px" data-action="open-workout" data-id="' + current.id + '">' + I('tasks') + 'شوف التمارين · ' + workoutProgress(current.id, current.workout) + '</button>' : '') +
-        (next ? '<div class="meta" style="margin-top:12px">بعده: ' + h(next.name) + ' · ' + time12(hhmm(next.start)) + '</div>' : '') + '</div>';
+        (next ? '<div class="meta" style="margin-top:12px">بعده: ' + '<bdi>' + h(next.name) + '</bdi>' + ' · ' + time12(hhmm(next.start)) + '</div>' : '') + '</div>';
     } else if (next) {
       const ty = ACT_TYPES[next.type] || ACT_TYPES.lecture;
       out += '<div class="hero"><span class="eyebrow">' + I('clock') + ty.next + ' بعد ' + inMinutes(next.start - nm) + '</span>' +
-        '<div class="big"><span class="hero-ico">' + I(ty.icon) + '</span>' + h(next.name) + '</div><div class="meta"><span>' + I('calendar') + time12(hhmm(next.start)) + ' — ' + time12(hhmm(next.end)) + '</span>' +
+        '<div class="big"><span class="hero-ico">' + I(ty.icon) + '</span>' + '<bdi>' + h(next.name) + '</bdi>' + '</div><div class="meta"><span>' + I('calendar') + time12(hhmm(next.start)) + ' — ' + time12(hhmm(next.end)) + '</span>' +
         (next.room ? '<span>' + I('pin') + h(next.room) + '</span>' : '') + '</div></div>';
     } else {
       const open = st.tasks.filter((t) => !t.done && t.due_at && sameDay(new Date(t.due_at), now)).length;
@@ -4826,7 +4863,7 @@ window.HAYATI_CONFIG = {
     body += X('settingsExtra');
     body += '<div class="group-title">' + I('settings') + 'عام</div><div class="menu">' +
       '<button data-set="budget"><div class="ico" style="' + tint('#1A8A8F') + '">' + I('target') + '</div><div style="flex:1"><b>الميزانية الشهرية</b><small>' + (st.settings.budget ? fmt(st.settings.budget) + ' د.ب' : 'غير محددة') + '</small></div>' + I('chevL') + '</button>' +
-      '<button data-set="export"><div class="ico" style="' + tint('#0d9488') + '">' + I('download') + '</div><div style="flex:1"><b>نسخة احتياطية</b><small>تصدير كل بياناتك كملف</small></div>' + I('chevL') + '</button>' +
+      '<button data-set="export"><div class="ico" style="' + tint('#0d9488') + '">' + I('download') + '</div><div style="flex:1"><b>نسخة احتياطية</b><small>' + (lastBackup() ? 'آخر نسخة: ' + (daysBetween(lastBackup(), new Date()) === 0 ? 'اليوم' : 'قبل ' + nDays(daysBetween(lastBackup(), new Date()))) : 'تصدير كل بياناتك كملف') + '</small></div>' + I('chevL') + '</button>' +
       '<button data-set="export-csv"><div class="ico" style="' + tint('#16a34a') + '">' + I('download') + '</div><div style="flex:1"><b>صدّر مصاريفك (Excel)</b><small>كل العمليات بملف ينفتح بـ Excel وNumbers</small></div>' + I('chevL') + '</button>' +
       '<label style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:16px;border:1px solid var(--border);background:var(--surface);cursor:pointer"><div class="ico" style="' + tint('#f59e0b') + '">' + I('upload') + '</div><div style="flex:1"><b style="display:block">استيراد نسخة</b><small class="muted">من ملف نسخة احتياطية</small></div><input type="file" accept="application/json,.json" data-set="import" hidden></label>' +
       '</div>';
@@ -4898,7 +4935,7 @@ window.HAYATI_CONFIG = {
       } else if (act === 'budget') {
         budgetForm();
       } else if (act === 'export') {
-        await saveFile('hayati-backup-' + new Date().toISOString().slice(0, 10) + '.json', S.exportJSON(), 'application/json');
+        await backupNow();
       } else if (act === 'export-csv') {
         const csv = expensesCSV();
         if (!csv) toast('ما فيه عمليات للتصدير');
@@ -5038,7 +5075,7 @@ window.HAYATI_CONFIG = {
     S, st, I, ui, h, fmt, money, tint, catMeta, catIcon, pad, monthKey, sameDay, startOfDay, daysBetween, time12, timeOf, minutesOf,
     nowMinutes, toLocalInput, dayLabel, nDays, toast, ask, courseById, lectures, lecturesOn, agendaOn, empty, secHead, ring, openSheet,
     closeSheet, val, parseAmount, segPick, render, go, txInMonth, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, courseForm, taskForm,
-    notify, has, nextRenewal, expensesCSV, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
+    notify, has, nextRenewal, expensesCSV, lastBackup, markBackup, backupNow, APP_VERSION, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
   };
   setInterval(timerTickUI, 1000);
   timerCheck();
@@ -5194,7 +5231,7 @@ window.HAYATI_CONFIG = {
     if (lec.length) lines.push(['📚', lec.length + (lec.length === 1 ? ' محاضرة' : ' محاضرات') + '، أولها ' + A.time12(A.hhmm(lec[0].start)) + ' (' + h(lec[0].name) + ')']);
     if (gym) lines.push(['💪', 'تمرين ' + h(gym.workout ? gym.workout.focus : gym.name) + ' الساعة ' + A.time12(A.hhmm(gym.start))]);
     if (dueToday.length) lines.push(['✅', dueToday.length + (dueToday.length === 1 ? ' مهمة' : ' مهام') + ' موعدها اليوم']);
-    if (exam) { const d = A.daysBetween(now, new Date(exam.due_at)); lines.push(['📝', 'أقرب اختبار: ' + h(exam.title) + (d === 0 ? ' اليوم!' : ' بعد ' + A.nDays(d))]); }
+    if (exam) { const d = A.daysBetween(now, new Date(exam.due_at)); lines.push(['📝', 'أقرب اختبار: <bdi>' + h(exam.title) + '</bdi>' + (d === 0 ? ' اليوم!' : ' بعد ' + A.nDays(d))]); }
     if (allow != null) lines.push(['💸', allow > 0 ? 'تقدر تصرف اليوم ' + fmt(allow) + ' د.ب' : 'تعدّيت ميزانية الشهر، خفّف الصرف']);
     if (!lines.length) lines.push(['☀️', 'يومك فاضي، استغله صح']);
     return '<div class="card morning"><div class="m-head"><b>☀️ صباح الخير، هذا يومك</b><button class="icon-x" data-action="morning-close" aria-label="إخفاء">✕</button></div>' +
@@ -6095,7 +6132,7 @@ window.HAYATI_CONFIG = {
     const todo = exams.filter((e) => !planned(e));
     return '<div class="card exams-card"><div class="m-head"><b>📝 الاختبارات الجاية</b></div>' + exams.slice(0, 6).map((e) => {
       const d = new Date(e.due_at), n = A.daysBetween(new Date(), d);
-      return '<div class="ex-line"><span class="ex-n num' + (n <= 3 ? ' soon' : '') + '">' + n + '<small>' + (n === 1 ? 'يوم' : 'أيام') + '</small></span><div style="flex:1;min-width:0"><b>' + h(e.title) + '</b><div class="small muted">' + A.DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + A.MONTHS[d.getMonth()] + '</div></div>' + (planned(e) ? '<span class="tag brand">✓ خطة</span>' : '') + '</div>';
+      return '<div class="ex-line"><span class="ex-n num' + (n <= 3 ? ' soon' : '') + '">' + n + '<small>' + (n === 1 ? 'يوم' : 'أيام') + '</small></span><div style="flex:1;min-width:0"><b><bdi>' + h(e.title) + '</bdi></b><div class="small muted">' + A.DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + A.MONTHS[d.getMonth()] + '</div></div>' + (planned(e) ? '<span class="tag brand">✓ خطة</span>' : '') + '</div>';
     }).join('') + (todo.length ? '<button class="btn primary block" style="margin-top:10px" data-action="plan-all">' + I('book') + 'سوّ خطة مراجعة لكل الاختبارات (' + todo.length + ')</button>' : '') + '</div>';
   }
   function planAll() {
@@ -6638,7 +6675,7 @@ window.HAYATI_CONFIG = {
       const r = readiness(t), n = A.daysBetween(new Date(), new Date(t.due_at));
       const color = r == null ? 'var(--muted)' : r >= 80 ? 'var(--income)' : r >= 50 ? '#f59e0b' : 'var(--expense)';
       return '<div class="cat" data-action="exam-topics" data-id="' + t.id + '" style="cursor:pointer"><div class="ex-n num' + (n <= 3 ? ' soon' : '') + '" style="width:44px;height:44px;font-size:16px">' + n + '<small>' + (n === 1 ? 'يوم' : 'أيام') + '</small></div><div class="body">' +
-        '<div class="line"><span>' + h(t.title) + '</span><b class="num" style="color:' + color + '">' + (r == null ? 'حط المواضيع' : r + '%') + '</b></div>' +
+        '<div class="line"><span><bdi>' + h(t.title) + '</bdi></span><b class="num" style="color:' + color + '">' + (r == null ? 'حط المواضيع' : r + '%') + '</b></div>' +
         '<div class="meter"><span style="width:' + (r || 0) + '%;background:' + color + '"></span></div></div></div>';
     }).join('') + '</div>';
   }
@@ -8123,6 +8160,49 @@ window.HAYATI_CONFIG = {
   let masked = false;
   S.subscribe(() => { if (!masked && st.transactions.length) { masked = true; setTimeout(maskOld, 0); } });
 
+  // ---------- 💾 تذكير النسخة الاحتياطية ----------
+  // بعد 30 يوم من آخر نسخة (أو من أقدم سجل لو ما سوّى نسخة أبد)، وبس لو عنده 10 سجلات وفوق
+  const BACKUP_DAYS = 30, MIN_RECORDS = 10, SNOOZE = 'hayati-backup-snooze';
+  function backupDue(now) {
+    now = now || new Date();
+    // جداول البيانات بس (مو طابور المزامنة «pending»)
+    const lists = Object.entries(st).filter(([k, v]) => k !== 'pending' && Array.isArray(v)).map(([, v]) => v);
+    const count = lists.reduce((n, l) => n + l.length, 0);
+    if (count < MIN_RECORDS) return null;
+    try { const z = localStorage.getItem(SNOOZE); if (z && new Date(z) > now) return null; } catch (e) { /* تجاهل */ }
+    const last = A.lastBackup();
+    let since = last;
+    if (!since) {
+      let t = Infinity;
+      for (const l of lists) for (const r of l) { const v = Date.parse(r.updated_at || r.occurred_at || ''); if (v < t) t = v; }
+      if (t === Infinity) return null;
+      since = new Date(t);
+    }
+    const days = A.daysBetween(since, now);
+    return days >= BACKUP_DAYS ? { days, never: !last } : null;
+  }
+  function backupCard() {
+    const d = backupDue();
+    if (!d) return '';
+    return '<div class="card backup-nudge"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div class="ico" style="' + A.tint('#0d9488') + '">' + I('download') + '</div>' +
+      '<div style="flex:1;min-width:0"><b>' + (d.never ? 'ما عندك نسخة احتياطية' : 'آخر نسخة احتياطية قبل ' + A.nDays(d.days)) + '</b>' +
+      '<div class="small muted">بياناتك على هالجهاز بس. لو ضاع، تضيع معه.</div></div></div>' +
+      '<div class="btn-row"><button class="btn primary" data-action="backup-now">' + I('download') + 'نزّلها الحين</button>' +
+      '<button class="btn ghost" data-action="backup-later">بعدين</button></div></div>';
+  }
+  const prevTop = E.todayTop;
+  E.todayTop = function () { return backupCard() + (prevTop ? prevTop.apply(this, arguments) : ''); };
+  const prevAct = E.action;
+  E.action = function (name) {
+    if (name === 'backup-now') { A.backupNow(); return; }
+    if (name === 'backup-later') {
+      try { localStorage.setItem(SNOOZE, new Date(Date.now() + 7 * 864e5).toISOString()); } catch (e) { /* تجاهل */ }
+      A.render(); return;
+    }
+    return prevAct ? prevAct.apply(this, arguments) : undefined;
+  };
+  A.backupDue = backupDue;
+
   // ---------- الإعدادات ----------
   const prevExtra = E.settingsExtra;
   E.settingsExtra = function () {
@@ -8130,7 +8210,8 @@ window.HAYATI_CONFIG = {
       '<div class="group-title">' + I('key') + 'الخصوصية</div><div class="menu">' +
       '<a class="menu-link" href="privacy.html" target="_blank" rel="noopener"><div class="ico" style="' + A.tint('#13636B') + '">' + I('key') + '</div><div style="flex:1;min-width:0"><b>سياسة الخصوصية</b><small>وين بياناتك، ومين يشوفها</small></div>' + I('chevL') + '</a>' +
       '<a class="menu-link" href="terms.html" target="_blank" rel="noopener"><div class="ico" style="' + A.tint('#13636B') + '">' + I('tasks') + '</div><div style="flex:1;min-width:0"><b>شروط الاستخدام</b><small>التقديرات، ومسؤولية كل واحد</small></div>' + I('chevL') + '</a>' +
-      '<button data-set="wipe"><div class="ico" style="' + A.tint('#D63A3A') + '">' + I('trash') + '</div><div style="flex:1;min-width:0"><b style="color:var(--expense)">احذف كل بياناتي</b><small>من الجهاز والمزامنة، وما ترجع</small></div>' + I('chevL') + '</button></div>';
+      '<button data-set="wipe"><div class="ico" style="' + A.tint('#D63A3A') + '">' + I('trash') + '</div><div style="flex:1;min-width:0"><b style="color:var(--expense)">احذف كل بياناتي</b><small>من الجهاز والمزامنة، وما ترجع</small></div>' + I('chevL') + '</button></div>' +
+      '<p class="small muted app-version" style="text-align:center;margin:18px 0 4px">حياتي ' + A.APP_VERSION + ' · قيد التطوير · نسخة تجريبية</p>';
   };
   const prevSet = E.settingsAction;
   E.settingsAction = async function (act) {
@@ -8148,7 +8229,7 @@ window.HAYATI_CONFIG = {
         '<button type="button" class="btn ghost block" id="wipeBackup" style="margin-bottom:14px">' + I('download') + 'نزّل نسخة احتياطية أول</button>' +
         '<div class="field"><label for="wipeWord">اكتب «' + WORD + '» عشان تأكد</label><input id="wipeWord" autocomplete="off"></div>',
       mount(root) {
-        root.querySelector('#wipeBackup').onclick = () => A.saveFile('hayati-backup-' + new Date().toISOString().slice(0, 10) + '.json', S.exportJSON(), 'application/json');
+        root.querySelector('#wipeBackup').onclick = () => A.backupNow();
       },
       async onSave(root) {
         if (root.querySelector('#wipeWord').value.trim() !== WORD) throw new Error('اكتب «' + WORD + '» بالضبط');
@@ -8309,7 +8390,7 @@ window.HAYATI_CONFIG = {
     // ⏰ «ذكّرني بعد ساعة»: محفوظة لين يجي وقتها، عشان إعادة الجدولة ما تمسحها
     for (const z of snoozes()) {
       const t = (z.extra && z.extra.kind === 'task') ? (A.st.tasks || []).find((x) => x.id === z.extra.id) : null;
-      if (t && t.done) continue;   // خلّصها بعد ما أجّل
+      if (z.extra && z.extra.kind === 'task' && (!t || t.done)) continue;   // خلّصها أو حذفها بعد ما أجّل
       add(z.key, new Date(z.at), z.title, z.body, z.extra);
     }
 
