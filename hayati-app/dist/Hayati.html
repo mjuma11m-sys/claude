@@ -28,13 +28,13 @@
       --border: #E4DDD0;
       --text: #0B2328;
       --text-2: #33494D;
-      --muted: #6B7B7D;
+      --muted: #5E6C6E;
       --brand: #13636B;
       --brand-2: #1A8A8F;
       --brand-soft: #E1EEEC;
       --on-brand: #ffffff;
-      --expense: #D63A3A;
-      --income: #2F9E7A;
+      --expense: #C23434;
+      --income: #23765B;
       --warn: #B45309;
       --warn-soft: #FDF1DC;
       --danger-soft: #FBE4E1;
@@ -290,6 +290,12 @@
     .btn:active { transform: scale(.98); }
     .btn svg.i { width: 18px; height: 18px; }
     .btn.primary { background: var(--brand); border-color: transparent; color: var(--on-brand); }
+    /* أزرار الدخول السريع (إرشادات Apple وGoogle: أسود/أبيض بالشعار) */
+    .btn.sso { gap: 10px; margin-bottom: 10px; font-weight: 600; }
+    .btn.sso.apple { background: #000; border-color: #000; color: #fff; }
+    .btn.sso.google { background: #fff; border-color: #dadce0; color: #1f1f1f; }
+    .or-line { display: flex; align-items: center; gap: 10px; margin: 6px 0 12px; color: var(--muted); font-size: 13px; }
+    .or-line::before, .or-line::after { content: ""; flex: 1; height: 1px; background: var(--border); }
     .btn.danger { background: var(--danger-soft); color: var(--expense); border-color: transparent; box-shadow: none; }
     .btn.ghost { background: var(--surface-2); border-color: transparent; box-shadow: none; }
     .btn.block { width: 100%; }
@@ -684,7 +690,7 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-  <script>/* i18n-en.js */
+  <script>/* js/i18n/i18n-en.js */
 // قاموس الإنقليزي: النص العربي كما يظهر ← الإنقليزي. الكلمات القصيرة اللي ممكن تكون أسماء (علي، لي…) مو فيه عشان ما تتغير بياناتك
 window.HAYATI_EN = {
 "قبل أول رسالة بنك":"Before your first bank message","أوافق وأكمل":"I agree, continue","مو الحين":"Not now",
@@ -697,7 +703,6 @@ window.HAYATI_EN = {
 "«حياتي» قيد التطوير، ورأيك يقرر وش ينبني بعد. نجهّز لك الرسالة، تنسخها، وترسلها لنا على إنستقرام":"Hayati is in development, and your feedback decides what gets built next. We prepare the message, you copy it and send it to us on Instagram",
 "تقييمك":"Your rating","وش ضايقك أو ما اشتغل زين؟":"What bothered you or didn't work well?","وش الميزة اللي تبيها؟":"What feature do you want?",
 "اختار تقييم أو اكتب شي":"Pick a rating or write something","انسخت ✓ الصقها بالرسالة":"Copied ✓ paste it in the message","افتحنا إنستقرام — اكتب رأيك هناك":"We opened Instagram — write your feedback there",
-"🔐 أنشئ حساب (بياناتك على كل أجهزتك)":"🔐 Create an account (your data on all your devices)",
 "🔒 ملفك محفوظ على هالجهاز. الحسابات والمزامنة بين الأجهزة لسه قيد التطوير":"🔒 Your profile is saved on this device. Accounts and syncing across devices are still in development",
 "🌐 اللغة · Language":"🌐 Language",
 "حتى":"until",
@@ -718,7 +723,6 @@ window.HAYATI_EN = {
 "التنبيهات": "Notifications",
 "مقارنة بالشهر اللي قبله": "Compared with last month",
 "المواعيد الجاية": "Upcoming appointments",
-"المزامنة بين الجوال والماك": "Sync between phone and Mac",
 "تسجيل رسايل البنك تلقائياً": "Log bank messages automatically",
 "إيقاف مؤقت": "Pause",
 "ثبّت التطبيق": "Install the app",
@@ -728,7 +732,6 @@ window.HAYATI_EN = {
 "عام": "General",
 "ملخص": "Summary",
 "أكثر مكان صرفت فيه": "Where you spent the most",
-"جدولك فاضي": "Your schedule is empty",
 "ما فيه أهداف": "No goals yet",
 "مثلاً": "e.g.",
 "لابتوب جديد ٣٠٠ د.ب": "New laptop 300 BHD",
@@ -995,7 +998,6 @@ window.HAYATI_EN = {
 "بين الجولات": "between sets",
 "تأكد إنها رسالة عملية مالية": "Make sure it's a financial transaction message",
 "تبدأ": "Starts",
-"تبي تطلع؟ البيانات تبقى محفوظة بالسحابة": "Sign out? Your data stays saved in the cloud",
 "تتبّع صرفك ودخلك": "Track your spending and income",
 "تتكرر كل أسبوع": "Repeats every week",
 "تحت الملاحظة ⚠️": "On probation ⚠️",
@@ -1103,7 +1105,6 @@ window.HAYATI_EN = {
 "سبتمبر": "September",
 "سبوتيفاي": "Spotify",
 "سجّل أول مصروف من زر": "Log your first expense with the",
-"سجّل دخول بنفس الإيميل على الجوال والماك": "Sign in with the same email on your phone and Mac",
 "سجّل دخول للمزامنة": "Sign in to sync",
 "سجّل عملية بيدك": "Log a transaction manually",
 "سجّلها": "Log it",
@@ -1910,11 +1911,63 @@ window.HAYATI_EN = {
 "ما قدرت أشارك الملف": "Couldn't share the file",
 "جرّب التنبيه": "Test notification",
 "يوصلك تنبيه تجربة بعد 10 ثواني": "A test notification arrives in 10 seconds",
-"حالة التنبيهات": "Notification status"
+"حالة التنبيهات": "Notification status",
+"📅 الجدول والصلاة": "📅 Schedule & prayer",
+"قبل المحاضرة بـ 10 دقايق، والصلاة بوقتها": "10 minutes before each class, prayers on time",
+"📝 الاختبارات": "📝 Exams",
+"الليلة اللي قبلها، وقبل الاختبار بساعتين": "The evening before, and 2 hours before the exam",
+"📚 الواجبات": "📚 Homework",
+"الليلة اللي قبل التسليم": "The evening before it's due",
+"💳 تجديد الاشتراكات": "💳 Subscription renewals",
+"قبل التجديد بالأيام اللي تحددها بالاشتراك": "Before renewal, by the days set on each subscription",
+"☀️ ملخص الصباح": "☀️ Morning brief",
+"جدولك واختباراتك اليوم، والأيام الفاضية ما فيها": "Today's schedule and exams; skipped on empty days",
+"وقت ملخص الصباح": "Morning brief time",
+"شغّالة": "on",
+"🎓 سؤال الحضور": "🎓 Attendance check",
+"بعد كل محاضرة: حضرت ولا غبت، من التنبيه نفسه": "After each class: attended or absent, right from the alert",
+"شروط الاستخدام": "Terms of use",
+"التقديرات، ومسؤولية كل واحد": "Estimates, and who is responsible for what",
+"صدّر مصاريفك (Excel)": "Export expenses (Excel)",
+"كل العمليات بملف ينفتح بـ Excel وNumbers": "All transactions in a file for Excel and Numbers",
+"ما فيه عمليات للتصدير": "No transactions to export",
+"باستخدامك «حياتي» توافق على": "By using Hayati you agree to the",
+"الأرقام كلها تقدير، وبياناتك على جهازك.": "All numbers are estimates, and your data stays on your device.",
+"الحين": "Now",
+"ما عندك نسخة احتياطية": "You have no backup",
+"آخر نسخة احتياطية": "Last backup",
+"بياناتك على هالجهاز بس. لو ضاع، تضيع معه.": "Your data lives only on this device. Lose it, and the data goes with it.",
+"نزّلها الحين": "Back up now",
+"آخر نسخة:": "Last backup:",
+"قيد التطوير · نسخة تجريبية": "In development · beta",
+"أيام": "days",
+"حياتي": "Hayati",
+"حسابك": "Your account",
+"بياناتك لك بروحك، وتتزامن بين جوالك والماك.": "Your data is yours alone, and syncs between your phone and Mac.",
+"تابع مع Apple": "Continue with Apple",
+"تابع مع Google": "Continue with Google",
+"أو بالإيميل": "or with email",
+"نسيت كلمة المرور؟": "Forgot password?",
+"بدون حساب؟ التطبيق يشتغل عادي، وبياناتك على جهازك بس.": "No account? The app works as usual, and your data stays on this device.",
+"مسجّل بـ": "Signed in with",
+"بيانات هالجهاز": "Data on this device",
+"ضيفها لحسابي": "Add it to my account",
+"لا، ابدأ من حسابي": "No, start from my account",
+"انضافت لحسابك ✓": "Added to your account ✓",
+"بدأنا من حسابك": "Started from your account",
+"كلمة مرور جديدة": "New password",
+"كلمة المرور الجديدة": "New password",
+"تغيّرت كلمة المرور ✓": "Password changed ✓",
+"أرسلنا رابط تغيير كلمة المرور لإيميلك": "We sent a password reset link to your email",
+"اكتب إيميلك فوق أول": "Type your email above first",
+"طلعت ✓": "Signed out ✓",
+"تطلع؟ بياناتك محفوظة بحسابك، وبتنمسح من هالجهاز.": "Sign out? Your data is saved in your account and will be removed from this device.",
+"هالطريقة مو مفعّلة للحين، استخدم الإيميل": "This method isn't enabled yet, use email",
+"🔐 سجّل دخول أو أنشئ حساب (بياناتك لك بروحك)": "🔐 Sign in or create an account (your data stays yours)"
 };
 
 </script>
-  <script>/* i18n.js */
+  <script>/* js/i18n/i18n.js */
 // 🌐 اللغة: العربي الأصل، والإنقليزي طبقة عرض بس — تترجم النص اللي يطلع على الشاشة بدون ما تلمس بياناتك
 //   localStorage «hayati-lang» = 'en' | 'ar'
 (function () {
@@ -1940,7 +1993,26 @@ window.HAYATI_EN = {
     return s.replace(RE, (m) => D[m])
       .replace(/(\d)\s*م(?![؀-ۿ])/g, '$1 pm').replace(/(\d)\s*ص(?![؀-ۿ])/g, '$1 am')
       .replace(/(^|[\s\d.])من(?=$|[\s\d])/g, '$1of')
+      // أرقام بوحدات عربية: «بعد 3 أيام»، «49 دقيقة»، «30 د»، «1.5 س»، «3 مرات»
+      .replace(/قبل\s+(\d+)\s*(?:أيام|days)(?![؀-ۿ])/g, '$1 days ago').replace(/قبل\s+(?:يومين|two days|2 days)(?![؀-ۿ])/g, '2 days ago').replace(/قبل\s+(?:يوم|a day|1 day|Day)(?![؀-ۿ\w])/g, 'a day ago')
+      .replace(/بعد\s+(\d+)\s*(?:أيام|يوم|days)(?![؀-ۿ])/g, 'in $1 days').replace(/(\d+)\s*أيام(?![؀-ۿ])/g, '$1 days')
+      .replace(/(\d+)\s*(?:دقيقة|دقايق|دقائق)(?![؀-ۿ])/g, '$1 min').replace(/(\d+(?:\.\d+)?)\s*س(?![؀-ۿ.])/g, '$1 h')
+      .replace(/(\d+)\s*د(?![؀-ۿ.])/g, '$1 min').replace(/(\d+)\s*مرات(?![؀-ۿ])/g, '$1 times')
+      .replace(/(^|\s)يا\s+(?=\S)/g, ', ')
+      .replace(/(^|\s)بعد(?=\s)/g, '$1in').replace(/(\s)و(?=\d)/g, '$1and ')
       .replace(/،/g, ',').replace(/؟/g, '?').replace(/٪/g, '%');
+  }
+  // بيانات المستخدم (اسم مهمة، محل، مادة) ما نترجم كلمة منها: «اختبار المحاسبة» تظل مثل ما كتبها.
+  //   نترجمها بس لو كلها كلمة معروفة (مثل «مصروف» أو «مذاكرة عامة» اللي يحطها التطبيق نفسه)
+  const USER = '.t, bdi';
+  function trText(n) {
+    const p = n.parentElement;
+    if (p && p.closest(USER)) {
+      const k = n.nodeValue.trim();
+      if (D[k]) n.nodeValue = n.nodeValue.replace(k, D[k]);
+      return;
+    }
+    const v = tr(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v;
   }
   const ATTRS = ['placeholder', 'aria-label', 'title'];
   const SKIP = /^(SCRIPT|STYLE|TEXTAREA|INPUT|CODE)$/;
@@ -1949,7 +2021,7 @@ window.HAYATI_EN = {
       // نص داخل <script> أو حقل إدخال ما نلمسه أبداً
       const p = root.parentElement;
       if (!p || SKIP.test(p.tagName) || p.closest('[data-noi18n]')) return;
-      const v = tr(root.nodeValue); if (v !== root.nodeValue) root.nodeValue = v; return;
+      trText(root); return;
     }
     if (root.nodeType !== 1 || SKIP.test(root.tagName) || root.closest('[data-noi18n]')) return;
     for (const a of ATTRS) { const v = root.getAttribute(a); if (v && hasAr(v)) root.setAttribute(a, tr(v)); }
@@ -1959,7 +2031,7 @@ window.HAYATI_EN = {
       if (n.nodeType === 3) {
         const p = n.parentElement;
         if (p && (SKIP.test(p.tagName) || p.closest('[data-noi18n]'))) continue;
-        const v = tr(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v;
+        trText(n);
       } else if (!SKIP.test(n.tagName)) {
         for (const a of ATTRS) { const v = n.getAttribute(a); if (v && hasAr(v)) n.setAttribute(a, tr(v)); }
       }
@@ -1989,17 +2061,20 @@ window.HAYATI_EN = {
 })();
 
 </script>
-  <script>/* config.js */
+  <script>/* js/core/config.js */
 // بيانات الربط مع Supabase (Project Settings → API)
 // إذا عبّيتها هنا، كل الأجهزة تتربط تلقائياً وتحتاج بس تسجيل دخول.
 // إذا تركتها فاضية، تقدر تدخلها من الإعدادات داخل التطبيق.
 window.HAYATI_CONFIG = {
   SUPABASE_URL: '',
   SUPABASE_ANON_KEY: '',
+  // الدخول السريع: اكتب 'apple' و/أو 'google' بس بعد ما تفعّلهم بلوحة Supabase (الخطوات بـ supabase/SETUP.md)
+  //   فاضي = الأزرار ما تطلع (ولا زر ميت)
+  PROVIDERS: [],
 };
 
 </script>
-  <script>/* sms.js */
+  <script>/* js/core/sms.js */
 // قارئ رسائل البنوك و BenefitPay — يطلّع المبلغ ونوع العملية واسم المحل والتصنيف
 (function (global) {
   'use strict';
@@ -2254,7 +2329,7 @@ window.HAYATI_CONFIG = {
 })(typeof window !== 'undefined' ? window : globalThis);
 
 </script>
-  <script>/* store.js */
+  <script>/* js/core/store.js */
 // حفظ البيانات محلياً + مزامنتها مع Supabase بين الجوال والماك
 (function (global) {
   'use strict';
@@ -2273,10 +2348,12 @@ window.HAYATI_CONFIG = {
   let pullTimer = null;
 
   const state = load();
-  const status = { configured: false, signedIn: false, email: '', syncing: false, error: '', lastSync: null };
+  // needsMerge: عدد سجلات «بدون حساب» على الجهاز، ننتظر المستخدم يقرر يضيفها لحسابه أو لا (والرفع موقف لين يقرر)
+  const status = { configured: false, signedIn: false, email: '', provider: '', syncing: false, error: '', lastSync: null, needsMerge: 0, recovery: false };
 
   function blank() {
-    const b = { settings: { budget: null, ingest_token: null, prior_gpa: null, prior_credits: null, focus_minutes: 25 }, pending: [] };
+    // owner: صاحب بيانات هالجهاز (رقم المستخدم بـ Supabase)، أو null = بدون حساب
+    const b = { settings: { budget: null, ingest_token: null, prior_gpa: null, prior_credits: null, focus_minutes: 25 }, pending: [], owner: null };
     for (const t of TABLES) b[t] = [];
     return b;
   }
@@ -2287,6 +2364,8 @@ window.HAYATI_CONFIG = {
       if (raw) {
         const b = blank();
         const saved = JSON.parse(raw);
+        // نسخ قبل «owner»: لو فيه جلسة، البيانات أصلاً لصاحبها (نثبّته أول ما تجي الجلسة، بدون سؤال)
+        if (!('owner' in saved)) saved.owner = 'legacy';
         return Object.assign(b, saved, { settings: Object.assign(b.settings, saved.settings || {}) });
       }
     } catch (e) { /* تخزين غير متاح */ }
@@ -2479,7 +2558,8 @@ window.HAYATI_CONFIG = {
       return;
     }
     try {
-      sb = global.supabase.createClient(cfg.url, cfg.key, { auth: { persistSession: true, autoRefreshToken: true } });
+      // PKCE: Google وApple يرجعون بـ ?code= ، والمكتبة تبدّله بجلسة
+      sb = global.supabase.createClient(cfg.url, cfg.key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' } });
     } catch (e) {
       status.error = 'رابط Supabase أو المفتاح غير صحيح';
       emit();
@@ -2488,20 +2568,62 @@ window.HAYATI_CONFIG = {
     status.configured = true;
     const { data } = await sb.auth.getSession();
     onSession(data.session);
-    sb.auth.onAuthStateChange((_evt, s) => onSession(s));
+    sb.auth.onAuthStateChange((evt, s) => {
+      if (evt === 'PASSWORD_RECOVERY') { status.recovery = true; }
+      onSession(s);
+    });
   }
 
+  function localCount() { return TABLES.reduce((n, t) => n + state[t].length, 0); }
+
+  // يفرّغ الجهاز (الجداول والإعدادات والطابور) ويحط صاحب جديد
+  function resetLocal(owner) {
+    const fresh = blank();
+    for (const k of Object.keys(state)) if (!(k in fresh)) delete state[k];
+    for (const k of Object.keys(fresh)) state[k] = fresh[k];
+    state.owner = owner;
+    save();
+  }
+
+  // 🔐 كل جهاز يعرف صاحب بياناته: بيانات حساب ما تطلع لحساب ثاني، ولا تعديلاته تنرفع لغيره
   function onSession(s) {
     const was = session && session.user.id;
     session = s;
     status.signedIn = !!s;
-    status.email = s ? s.user.email : '';
+    status.email = s ? s.user.email || '' : '';
+    status.provider = s ? ((s.user.app_metadata || {}).provider || 'email') : '';
+    if (s) {
+      const uid = s.user.id;
+      if (state.owner === 'legacy') state.owner = uid;
+      if (state.owner !== uid) {
+        if (state.owner == null && localCount() > 0) {
+          // بيانات «بدون حساب» على الجهاز: نسأل قبل ما نرفعها
+          status.needsMerge = localCount();
+          save(); emit();
+          return;
+        }
+        if (state.owner == null) state.owner = uid;
+        else resetLocal(uid);   // بيانات حساب ثاني: تنمسح، وتجي بيانات هالحساب من السحابة
+        save();
+      }
+    } else if (state.owner === 'legacy') { state.owner = null; save(); }
     emit();
     if (s && was !== s.user.id) {
       subscribe();
       sync();
     }
     if (!s) teardown();
+  }
+
+  // جواب سؤال «نضيف بيانات الجهاز لحسابك؟»
+  function resolveMerge(keep) {
+    if (!session || !status.needsMerge) return;
+    status.needsMerge = 0;
+    if (keep) state.owner = session.user.id;
+    else resetLocal(session.user.id);
+    save(); emit();
+    subscribe();
+    sync();
   }
 
   function teardown() {
@@ -2520,8 +2642,56 @@ window.HAYATI_CONFIG = {
     return !data.session; // true = يحتاج تأكيد الإيميل
   }
 
-  async function signOut() {
-    await sb.auth.signOut();
+  // الخروج: نرفع اللي باقي أول. لو ما انرفع شي (بدون نت)، نرجع خطأ PENDING والواجهة تسأل.
+  //   بعد الخروج الجهاز ينمسح: اللي يسجّل بعدك ما يشوف بياناتك
+  async function signOut(opts) {
+    if (!sb) return;
+    if (!status.needsMerge) await flush();
+    if (state.pending.length && !(opts && opts.force) && !status.needsMerge) {
+      const e = new Error('فيه ' + state.pending.length + ' تعديل ما انرفع');
+      e.code = 'PENDING'; e.count = state.pending.length;
+      throw e;
+    }
+    teardown();
+    const merging = status.needsMerge;
+    status.needsMerge = 0;
+    try { await sb.auth.signOut(); } catch (e) { /* نكمل المسح حتى لو فشل الطلب */ }
+    // ما قرر يضيف بيانات الجهاز؟ هي «بدون حساب» أصلاً، فتظل
+    if (!merging) resetLocal(null);
+    session = null; status.signedIn = false; status.email = ''; status.provider = '';
+    emit();
+  }
+
+  // 🍎 Apple / Google (OAuth بـ PKCE). بالمتصفح: يحوّل للمزود ويرجع لنفس الصفحة.
+  //   بالآيفون (skipBrowserRedirect): يرجع الرابط، و native.js يفتحه بمتصفح النظام
+  async function signInWithProvider(provider, opts) {
+    if (!sb) throw new Error('الحسابات تحتاج ربط Supabase');
+    opts = opts || {};
+    const { data, error } = await sb.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: opts.redirectTo || (location.origin + location.pathname), skipBrowserRedirect: !!opts.skipBrowserRedirect },
+    });
+    if (error) throw new Error(arabicAuthError(error.message));
+    return data && data.url;
+  }
+  async function exchangeCode(code) {
+    const { error } = await sb.auth.exchangeCodeForSession(code);
+    if (error) throw new Error(arabicAuthError(error.message));
+  }
+  async function resetPassword(email) {
+    if (!sb) throw new Error('الحسابات تحتاج ربط Supabase');
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+    if (error) throw new Error(arabicAuthError(error.message));
+  }
+  async function updatePassword(password) {
+    const { error } = await sb.auth.updateUser({ password });
+    if (error) throw new Error(arabicAuthError(error.message));
+    status.recovery = false; emit();
+  }
+  // المزودين المفعّلين بلوحة Supabase (صاحب التطبيق يكتبهم بـ config.js لما يفعّلهم)
+  function providers() {
+    const p = (global.HAYATI_CONFIG || {}).PROVIDERS;
+    return sb && Array.isArray(p) ? p.filter((x) => x === 'apple' || x === 'google') : [];
   }
 
   function arabicAuthError(msg) {
@@ -2529,12 +2699,14 @@ window.HAYATI_CONFIG = {
     if (/not confirmed/i.test(msg)) return 'لازم تأكد إيميلك أول (شيّك صندوق الوارد)';
     if (/already registered/i.test(msg)) return 'هذا الإيميل مسجّل من قبل، سجّل دخول';
     if (/at least 6/i.test(msg)) return 'كلمة المرور لازم ٦ أحرف أو أكثر';
+    if (/provider is not enabled|Unsupported provider/i.test(msg)) return 'هالطريقة مو مفعّلة للحين، استخدم الإيميل';
+    if (/rate limit/i.test(msg)) return 'محاولات كثيرة، جرّب بعد شوي';
     return msg;
   }
 
   function ready() {
     if (adb) return navigator.onLine !== false;
-    return sb && session && navigator.onLine !== false;
+    return sb && session && !status.needsMerge && navigator.onLine !== false;
   }
 
   async function flush() {
@@ -2763,13 +2935,13 @@ window.HAYATI_CONFIG = {
     subscribe: (fn) => { listeners.add(fn); return () => listeners.delete(fn); },
     upsert, remove, setSettings,
     init, getConfig, saveConfig, clearConfig,
-    signIn, signUp, signOut, sync, getSeed, processInbox, smsToTransaction,
+    signIn, signUp, signOut, sync, resolveMerge, signInWithProvider, exchangeCode, resetPassword, updatePassword, providers, localCount, getSeed, processInbox, smsToTransaction,
     ensureIngestToken, rotateIngestToken, exportJSON, importJSON, wipeAll,
   };
 })(window);
 
 </script>
-  <script>/* calendar.js */
+  <script>/* js/features/calendar.js */
 // تصدير الجدول والمهام إلى تقويم الآيفون/الماك مع تنبيهات
 (function (global) {
   'use strict';
@@ -2963,7 +3135,7 @@ window.HAYATI_CONFIG = {
 })(window);
 
 </script>
-  <script>/* icons.js */
+  <script>/* js/core/icons.js */
 // أيقونات خطية موحّدة (بأسلوب Lucide)
 (function (global) {
   'use strict';
@@ -3043,7 +3215,7 @@ window.HAYATI_CONFIG = {
 })(window);
 
 </script>
-  <script>/* app.js */
+  <script>/* js/core/app.js */
 // حياتي — الواجهة
 (function () {
   'use strict';
@@ -3051,6 +3223,7 @@ window.HAYATI_CONFIG = {
   const S = window.Store;
   const st = S.state;
   const I = window.icon;
+  const APP_VERSION = 'v15';   // نفس رقم sw.js (فيه اختبار يتأكد)
 
   // ---------- ثوابت ----------
   const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
@@ -3129,6 +3302,55 @@ window.HAYATI_CONFIG = {
   // ---------- أدوات ----------
   function readPref(k, d) { try { return localStorage.getItem('hayati-ui-' + k) || d; } catch (e) { return d; } }
   function writePref(k, v) { try { localStorage.setItem('hayati-ui-' + k, v); } catch (e) { /* تجاهل */ } }
+  // 🍎 / G : أيقونات أزرار الدخول (Apple بلون النص، وGoogle بألوانه الرسمية)
+  const SSO_ICON = {
+    apple: '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M16.37 12.62c-.03-2.68 2.19-3.97 2.29-4.03-1.25-1.82-3.19-2.07-3.88-2.1-1.65-.17-3.22.97-4.06.97-.84 0-2.13-.95-3.5-.92-1.8.03-3.46 1.05-4.39 2.66-1.87 3.24-.48 8.04 1.34 10.67.89 1.29 1.95 2.73 3.34 2.68 1.34-.05 1.85-.87 3.47-.87 1.62 0 2.08.87 3.5.84 1.44-.02 2.36-1.31 3.24-2.6 1.02-1.49 1.44-2.94 1.47-3.01-.03-.01-2.82-1.08-2.85-4.29zM13.7 4.74c.74-.9 1.24-2.14 1.1-3.38-1.07.04-2.36.71-3.12 1.6-.69.79-1.29 2.06-1.13 3.27 1.19.09 2.41-.61 3.15-1.49z"/></svg>',
+    google: '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.27c0-.82-.07-1.6-.21-2.36H12v4.47h6.45a5.52 5.52 0 0 1-2.39 3.62v3h3.87c2.26-2.09 3.57-5.16 3.57-8.73z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.94-2.9l-3.87-3A7.2 7.2 0 0 1 12 19.3a7.16 7.16 0 0 1-6.73-4.95h-4v3.09A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.27 14.35a7.2 7.2 0 0 1 0-4.6V6.66h-4a12 12 0 0 0 0 10.78l4-3.09z"/><path fill="#EA4335" d="M12 4.77c1.76 0 3.34.61 4.59 1.8l3.43-3.43A11.97 11.97 0 0 0 12 0 12 12 0 0 0 1.27 6.66l4 3.09A7.16 7.16 0 0 1 12 4.77z"/></svg>',
+  };
+  // أول دخول وعلى الجهاز بيانات «بدون حساب»: نسأل مرة كل فتحة، و«بعدين» تخليها للمرة الجاية
+  let mergeAsked = false, recoveryAsked = false;
+  function mergeSheet(n) {
+    openSheet({
+      title: 'بيانات هالجهاز', cancelLabel: 'بعدين',
+      body: '<p style="margin:4px 4px 14px;line-height:1.8">عندك <b class="num">' + n + '</b> سجل على هالجهاز من قبل ما تسجّل دخول.<br>نضيفها لحسابك؟</p>' +
+        '<button class="btn primary block" id="mgKeep">' + I('check') + 'ضيفها لحسابي</button>' +
+        '<button class="btn block" id="mgDrop" style="margin-top:10px">لا، ابدأ من حسابي</button>' +
+        '<p class="small muted" style="margin:10px 4px 0">«لا» تمسحها من هالجهاز. نزّل نسخة احتياطية أول لو تبيها.</p>',
+      mount(root) {
+        root.querySelector('#mgKeep').onclick = () => { S.resolveMerge(true); closeSheet(); toast('انضافت لحسابك ✓'); };
+        root.querySelector('#mgDrop').onclick = async () => {
+          if (!(await ask('بيانات هالجهاز بتنمسح. أكيد؟'))) return;
+          S.resolveMerge(false); closeSheet(); toast('بدأنا من حسابك');
+        };
+      },
+    });
+  }
+  function recoverySheet() {
+    openSheet({
+      title: 'كلمة مرور جديدة', saveLabel: 'حفظ',
+      body: '<div class="field"><label>كلمة المرور الجديدة</label><input name="newpw" type="password" class="ltr" autocomplete="new-password"></div>',
+      async onSave(root) {
+        const pw = root.querySelector('[name=newpw]').value;
+        if (pw.length < 6) throw new Error('كلمة المرور لازم ٦ أحرف أو أكثر');
+        await S.updatePassword(pw);
+        toast('تغيّرت كلمة المرور ✓');
+      },
+    });
+  }
+  S.subscribe((_st, s) => {
+    if (s.needsMerge && !mergeAsked) { mergeAsked = true; setTimeout(() => mergeSheet(s.needsMerge), 300); }
+    if (s.recovery && !recoveryAsked) { recoveryAsked = true; setTimeout(recoverySheet, 300); }
+  });
+
+  // 💾 آخر نسخة احتياطية: بياناتك على هالجهاز بس، فنذكّرك (privacy.js يعرض البطاقة)
+  const LAST_BACKUP = 'hayati-last-backup';
+  function lastBackup() { try { const v = localStorage.getItem(LAST_BACKUP); return v ? new Date(v) : null; } catch (e) { return null; } }
+  function markBackup() { try { localStorage.setItem(LAST_BACKUP, new Date().toISOString()); } catch (e) { /* تجاهل */ } }
+  async function backupNow() {
+    const ok = await saveFile('hayati-backup-' + new Date().toISOString().slice(0, 10) + '.json', S.exportJSON(), 'application/json');
+    if (ok) { markBackup(); render(); }
+    return ok;
+  }
 
   function h(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -3299,7 +3521,7 @@ window.HAYATI_CONFIG = {
     const wk = c.workout && Array.isArray(c.workout.exercises) ? c.workout : null;
     return '<div class="slot ' + (state || '') + '" style="--c:' + h(c.color) + '" data-action="' + (c.src === 'task' ? 'edit-task' : c.src === 'prayer' ? 'noop' : wk ? 'open-workout' : c.type === 'lecture' ? 'open-course' : 'edit-course') + '" data-id="' + c.id + '">' +
       '<div class="when"><b>' + time12(hhmm(c.start)) + '</b><small>حتى ' + time12(hhmm(c.end)) + '</small></div>' +
-      '<div class="box"><div class="name"><span class="type-ico">' + I(ty.icon) + '</span>' + h(c.name) + (state === 'now' ? '<span class="tag brand"><span class="pulse"></span>الحين</span>' : '') + '</div>' +
+      '<div class="box"><div class="name"><span class="type-ico">' + I(ty.icon) + '</span><bdi>' + h(c.name) + '</bdi>' + (state === 'now' ? '<span class="tag brand"><span class="pulse"></span>الحين</span>' : '') + '</div>' +
       '<div class="where">' + (wk ? h(wk.focus || ty.label) + ' · ' + workoutProgress(c.id, wk) : ty.label + (c.room ? ' · ' + I('pin') + h(c.room) : '')) + '</div>' +
       (state === 'now' ? '<div class="prog"><span style="width:' + progress + '%"></span></div>' : '') + '</div></div>';
   }
@@ -3344,17 +3566,17 @@ window.HAYATI_CONFIG = {
       const ty = ACT_TYPES[current.type] || ACT_TYPES.lecture;
       const pct = ((nm - current.start) / (current.end - current.start)) * 100;
       out += '<div class="hero"><span class="eyebrow"><span class="pulse"></span>' + ty.now + '</span>' +
-        '<div class="big"><span class="hero-ico">' + I(ty.icon) + '</span>' + h(current.name) + '</div><div class="meta">' +
+        '<div class="big"><span class="hero-ico">' + I(ty.icon) + '</span>' + '<bdi>' + h(current.name) + '</bdi>' + '</div><div class="meta">' +
         (current.room ? '<span>' + I('pin') + h(current.room) + '</span>' : '') +
         '<span>' + I('clock') + 'يخلص بعد ' + inMinutes(current.end - nm) + '</span></div>' +
         '<div class="track"><span style="width:' + pct + '%"></span></div>' +
         (current.workout ? '<div class="meta" style="margin-top:10px"><span>' + I('dumbbell') + h(current.workout.focus || '') + '</span></div>' +
           '<button class="hero-btn" style="margin-top:12px;padding:8px 14px;font-size:14px" data-action="open-workout" data-id="' + current.id + '">' + I('tasks') + 'شوف التمارين · ' + workoutProgress(current.id, current.workout) + '</button>' : '') +
-        (next ? '<div class="meta" style="margin-top:12px">بعده: ' + h(next.name) + ' · ' + time12(hhmm(next.start)) + '</div>' : '') + '</div>';
+        (next ? '<div class="meta" style="margin-top:12px">بعده: ' + '<bdi>' + h(next.name) + '</bdi>' + ' · ' + time12(hhmm(next.start)) + '</div>' : '') + '</div>';
     } else if (next) {
       const ty = ACT_TYPES[next.type] || ACT_TYPES.lecture;
       out += '<div class="hero"><span class="eyebrow">' + I('clock') + ty.next + ' بعد ' + inMinutes(next.start - nm) + '</span>' +
-        '<div class="big"><span class="hero-ico">' + I(ty.icon) + '</span>' + h(next.name) + '</div><div class="meta"><span>' + I('calendar') + time12(hhmm(next.start)) + ' — ' + time12(hhmm(next.end)) + '</span>' +
+        '<div class="big"><span class="hero-ico">' + I(ty.icon) + '</span>' + '<bdi>' + h(next.name) + '</bdi>' + '</div><div class="meta"><span>' + I('calendar') + time12(hhmm(next.start)) + ' — ' + time12(hhmm(next.end)) + '</span>' +
         (next.room ? '<span>' + I('pin') + h(next.room) + '</span>' : '') + '</div></div>';
     } else {
       const open = st.tasks.filter((t) => !t.done && t.due_at && sameDay(new Date(t.due_at), now)).length;
@@ -3570,6 +3792,26 @@ window.HAYATI_CONFIG = {
   function renewWhen(d) {
     const n = daysBetween(new Date(), d);
     return n === 0 ? 'اليوم' : n === 1 ? 'بكرة' : 'بعد ' + nDays(n);
+  }
+  // 📊 «صدّر مصاريفك»: CSV للـ Excel (حق نقل البيانات). بدون نص رسالة البنك، ومحمي من حقن الصيغ
+  function csvCell(v) {
+    let s = String(v == null ? '' : v);
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;   // =HYPERLINK(...) ما تشتغل كصيغة
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  function expensesCSV() {
+    const list = st.transactions.slice().sort((a, b) => new Date(a.occurred_at) - new Date(b.occurred_at));
+    if (!list.length) return '';
+    const rows = [['التاريخ', 'الوقت', 'النوع', 'المبلغ (د.ب)', 'المحل', 'الفئة', 'ملاحظة']];
+    for (const t of list) {
+      const d = new Date(t.occurred_at);
+      rows.push([
+        d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()), pad(d.getHours()) + ':' + pad(d.getMinutes()),
+        t.kind === 'income' ? 'دخل' : 'صرف', (Number(t.amount) || 0).toFixed(3), t.merchant || '', t.category || '', t.note || '',
+      ]);
+    }
+    // BOM عشان Excel يقرأ العربي، و CRLF مثل ما يتوقع
+    return '\uFEFF' + rows.map((r, ri) => r.map((c, i) => (ri && i === 3 ? c : csvCell(c))).join(',')).join('\r\n') + '\r\n';   // المبلغ رقم بدون تنصيص عشان Excel يجمعه
   }
   function monthlyCost(sub) { return sub.cycle === 'yearly' ? (Number(sub.amount) || 0) / 12 : Number(sub.amount) || 0; }
 
@@ -4753,7 +4995,7 @@ window.HAYATI_CONFIG = {
     const cfg = S.getConfig();
     let body = '';
 
-    body += '<div class="group-title">' + I('cloud') + 'المزامنة بين الجوال والماك</div><div class="card">';
+    body += '<div class="group-title">' + I('user') + 'حسابك</div><div class="card account-card">';
     if (s.mode === 'artifact') {
       body += '<div class="status-line"><div class="ico">' + I('check') + '</div><div style="flex:1;min-width:0"><b style="display:block">محفوظ في حسابك على Claude</b>' +
         '<span class="small ' + (s.error ? 'late' : 'muted') + '">' + (s.error ? h(s.error) : 'افتح نفس الرابط من الجوال أو الماك وتلقى نفس بياناتك' + (s.lastSync ? ' · آخر تحديث ' + timeOf(s.lastSync) : '')) +
@@ -4764,13 +5006,21 @@ window.HAYATI_CONFIG = {
         '<div class="field"><label>anon public key</label><input name="sb_key" class="ltr" placeholder="eyJhbGciOi…" autocapitalize="off" autocorrect="off"></div>' +
         '<button class="btn primary block" data-set="connect">' + I('link') + 'ربط</button>';
     } else if (!s.signedIn) {
-      body += '<p class="small muted" style="margin:0 0 12px">سجّل دخول بنفس الإيميل على الجوال والماك.</p>' +
+      const prov = S.providers();
+      body += '<p class="small muted" style="margin:0 0 12px">بياناتك لك بروحك، وتتزامن بين جوالك والماك.</p>' +
+        (prov.includes('apple') ? '<button class="btn block sso apple" data-set="sso" data-p="apple">' + SSO_ICON.apple + 'تابع مع Apple</button>' : '') +
+        (prov.includes('google') ? '<button class="btn block sso google" data-set="sso" data-p="google">' + SSO_ICON.google + 'تابع مع Google</button>' : '') +
+        (prov.length ? '<div class="or-line"><span>أو بالإيميل</span></div>' : '') +
         '<div class="field"><label>الإيميل</label><input name="email" type="email" class="ltr" autocomplete="username" autocapitalize="off"></div>' +
         '<div class="field"><label>كلمة المرور</label><input name="password" type="password" class="ltr" autocomplete="current-password"></div>' +
         '<div class="btn-row"><button class="btn primary" data-set="signin">دخول</button><button class="btn" data-set="signup">حساب جديد</button></div>' +
+        '<button class="btn ghost block" style="margin-top:6px" data-set="forgot">نسيت كلمة المرور؟</button>' +
+        '<p class="small muted" style="margin:10px 2px 0">بدون حساب؟ التطبيق يشتغل عادي، وبياناتك على جهازك بس.</p>' +
         (cfg && !cfg.fromFile ? '<button class="btn ghost block" style="margin-top:10px" data-set="disconnect">تغيير بيانات Supabase</button>' : '');
     } else {
-      body += '<div class="status-line"><div class="ico">' + I('user') + '</div><div style="flex:1;min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis">' + h(s.email) + '</b>' +
+      const via = { apple: 'Apple', google: 'Google' }[s.provider];
+      body += '<div class="status-line"><div class="ico">' + I('user') + '</div><div style="flex:1;min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis">' + h(s.email || 'حسابك') + '</b>' +
+        (via ? '<span class="small muted" style="display:block">مسجّل بـ ' + via + '</span>' : '') +
         '<span class="small ' + (s.error ? 'late' : 'muted') + '">' + (s.error ? h(s.error) : s.lastSync ? 'آخر مزامنة ' + timeOf(s.lastSync) : 'جاري المزامنة…') +
         (st.pending.length ? ' · ' + st.pending.length + ' بانتظار الرفع' : '') + '</span></div></div>' +
         '<div class="btn-row" style="margin-top:14px"><button class="btn" data-set="sync">' + I('refresh') + 'زامن</button><button class="btn" data-set="signout">' + I('logout') + 'خروج</button></div>';
@@ -4811,7 +5061,8 @@ window.HAYATI_CONFIG = {
     body += X('settingsExtra');
     body += '<div class="group-title">' + I('settings') + 'عام</div><div class="menu">' +
       '<button data-set="budget"><div class="ico" style="' + tint('#1A8A8F') + '">' + I('target') + '</div><div style="flex:1"><b>الميزانية الشهرية</b><small>' + (st.settings.budget ? fmt(st.settings.budget) + ' د.ب' : 'غير محددة') + '</small></div>' + I('chevL') + '</button>' +
-      '<button data-set="export"><div class="ico" style="' + tint('#0d9488') + '">' + I('download') + '</div><div style="flex:1"><b>نسخة احتياطية</b><small>تصدير كل بياناتك كملف</small></div>' + I('chevL') + '</button>' +
+      '<button data-set="export"><div class="ico" style="' + tint('#0d9488') + '">' + I('download') + '</div><div style="flex:1"><b>نسخة احتياطية</b><small>' + (lastBackup() ? 'آخر نسخة: ' + (daysBetween(lastBackup(), new Date()) === 0 ? 'اليوم' : 'قبل ' + nDays(daysBetween(lastBackup(), new Date()))) : 'تصدير كل بياناتك كملف') + '</small></div>' + I('chevL') + '</button>' +
+      '<button data-set="export-csv"><div class="ico" style="' + tint('#16a34a') + '">' + I('download') + '</div><div style="flex:1"><b>صدّر مصاريفك (Excel)</b><small>كل العمليات بملف ينفتح بـ Excel وNumbers</small></div>' + I('chevL') + '</button>' +
       '<label style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:16px;border:1px solid var(--border);background:var(--surface);cursor:pointer"><div class="ico" style="' + tint('#f59e0b') + '">' + I('upload') + '</div><div style="flex:1"><b style="display:block">استيراد نسخة</b><small class="muted">من ملف نسخة احتياطية</small></div><input type="file" accept="application/json,.json" data-set="import" hidden></label>' +
       '</div>';
 
@@ -4863,8 +5114,25 @@ window.HAYATI_CONFIG = {
           toast(confirmNeeded ? 'أرسلنا لك إيميل تأكيد، أكّده وارجع سجّل دخول' : 'تم إنشاء الحساب ✓');
         }
         setTimeout(settingsSheet, 300);
+      } else if (act === 'sso') {
+        b.disabled = true;
+        // بالآيفون: متصفح النظام (Google يمنع الدخول من داخل التطبيق). بالمتصفح: تحويل ورجوع
+        if (window.HayatiNative && window.HayatiNative.oauth) { await window.HayatiNative.oauth(b.dataset.p); setTimeout(settingsSheet, 300); }
+        else await S.signInWithProvider(b.dataset.p);
+      } else if (act === 'forgot') {
+        const email = val(root, 'email');
+        if (!email) throw new Error('اكتب إيميلك فوق أول');
+        await S.resetPassword(email);
+        toast('أرسلنا رابط تغيير كلمة المرور لإيميلك');
       } else if (act === 'signout') {
-        if (await ask('تبي تطلع؟ البيانات تبقى محفوظة بالسحابة.')) { await S.signOut(); settingsSheet(); }
+        if (!(await ask('تطلع؟ بياناتك محفوظة بحسابك، وبتنمسح من هالجهاز.'))) return;
+        try { await S.signOut(); }
+        catch (err) {
+          if (err.code !== 'PENDING') throw err;
+          if (!(await ask('فيه ' + err.count + ' تعديل ما انرفع (يمكن ما فيه نت). لو طلعت الحين تضيع. تطلع؟'))) return;
+          await S.signOut({ force: true });
+        }
+        toast('طلعت ✓'); settingsSheet();
       } else if (act === 'disconnect') {
         S.clearConfig(); settingsSheet();
       } else if (act === 'sync') {
@@ -4882,7 +5150,11 @@ window.HAYATI_CONFIG = {
       } else if (act === 'budget') {
         budgetForm();
       } else if (act === 'export') {
-        await saveFile('hayati-backup-' + new Date().toISOString().slice(0, 10) + '.json', S.exportJSON(), 'application/json');
+        await backupNow();
+      } else if (act === 'export-csv') {
+        const csv = expensesCSV();
+        if (!csv) toast('ما فيه عمليات للتصدير');
+        else await saveFile('hayati-expenses-' + new Date().toISOString().slice(0, 10) + '.csv', csv, 'text/csv');
       }
     } catch (err) {
       toast(err.message || 'صار خطأ');
@@ -5018,7 +5290,7 @@ window.HAYATI_CONFIG = {
     S, st, I, ui, h, fmt, money, tint, catMeta, catIcon, pad, monthKey, sameDay, startOfDay, daysBetween, time12, timeOf, minutesOf,
     nowMinutes, toLocalInput, dayLabel, nDays, toast, ask, courseById, lectures, lecturesOn, agendaOn, empty, secHead, ring, openSheet,
     closeSheet, val, parseAmount, segPick, render, go, txInMonth, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, courseForm, taskForm,
-    notify, has, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
+    notify, has, nextRenewal, expensesCSV, lastBackup, markBackup, backupNow, APP_VERSION, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
   };
   setInterval(timerTickUI, 1000);
   timerCheck();
@@ -5033,7 +5305,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* extras.js */
+  <script>/* js/features/extras.js */
 // حياتي — الإضافات: الصلاة، العادات، الماء والنوم، ملخص الصباح، تنبيه الميزانية، ميزانية التصنيفات،
 // التوفير من الدخل، صورة الفاتورة، الغياب والملاحظات، «كم أحتاج»، خطة المراجعة، أوزان الجيم، مؤقت الراحة،
 // وزن الجسم، والوضع الغامق اليدوي.
@@ -5174,7 +5446,7 @@ window.HAYATI_CONFIG = {
     if (lec.length) lines.push(['📚', lec.length + (lec.length === 1 ? ' محاضرة' : ' محاضرات') + '، أولها ' + A.time12(A.hhmm(lec[0].start)) + ' (' + h(lec[0].name) + ')']);
     if (gym) lines.push(['💪', 'تمرين ' + h(gym.workout ? gym.workout.focus : gym.name) + ' الساعة ' + A.time12(A.hhmm(gym.start))]);
     if (dueToday.length) lines.push(['✅', dueToday.length + (dueToday.length === 1 ? ' مهمة' : ' مهام') + ' موعدها اليوم']);
-    if (exam) { const d = A.daysBetween(now, new Date(exam.due_at)); lines.push(['📝', 'أقرب اختبار: ' + h(exam.title) + (d === 0 ? ' اليوم!' : ' بعد ' + A.nDays(d))]); }
+    if (exam) { const d = A.daysBetween(now, new Date(exam.due_at)); lines.push(['📝', 'أقرب اختبار: <bdi>' + h(exam.title) + '</bdi>' + (d === 0 ? ' اليوم!' : ' بعد ' + A.nDays(d))]); }
     if (allow != null) lines.push(['💸', allow > 0 ? 'تقدر تصرف اليوم ' + fmt(allow) + ' د.ب' : 'تعدّيت ميزانية الشهر، خفّف الصرف']);
     if (!lines.length) lines.push(['☀️', 'يومك فاضي، استغله صح']);
     return '<div class="card morning"><div class="m-head"><b>☀️ صباح الخير، هذا يومك</b><button class="icon-x" data-action="morning-close" aria-label="إخفاء">✕</button></div>' +
@@ -5660,7 +5932,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* extras2.js */
+  <script>/* js/features/extras2.js */
 // حياتي — إضافات 2: تقسيم الفاتورة، تحديات التوفير، ملخص السنة، الدرجات الجزئية، بطاقات المراجعة،
 // الاختبارات الجاية، وضع التركيز، تمارين بديلة، المساعد الذكي، المناسبات، المشتريات، اليوميات والمزاج.
 (function () {
@@ -6075,7 +6347,7 @@ window.HAYATI_CONFIG = {
     const todo = exams.filter((e) => !planned(e));
     return '<div class="card exams-card"><div class="m-head"><b>📝 الاختبارات الجاية</b></div>' + exams.slice(0, 6).map((e) => {
       const d = new Date(e.due_at), n = A.daysBetween(new Date(), d);
-      return '<div class="ex-line"><span class="ex-n num' + (n <= 3 ? ' soon' : '') + '">' + n + '<small>' + (n === 1 ? 'يوم' : 'أيام') + '</small></span><div style="flex:1;min-width:0"><b>' + h(e.title) + '</b><div class="small muted">' + A.DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + A.MONTHS[d.getMonth()] + '</div></div>' + (planned(e) ? '<span class="tag brand">✓ خطة</span>' : '') + '</div>';
+      return '<div class="ex-line"><span class="ex-n num' + (n <= 3 ? ' soon' : '') + '">' + n + '<small>' + (n === 1 ? 'يوم' : 'أيام') + '</small></span><div style="flex:1;min-width:0"><b><bdi>' + h(e.title) + '</bdi></b><div class="small muted">' + A.DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + A.MONTHS[d.getMonth()] + '</div></div>' + (planned(e) ? '<span class="tag brand">✓ خطة</span>' : '') + '</div>';
     }).join('') + (todo.length ? '<button class="btn primary block" style="margin-top:10px" data-action="plan-all">' + I('book') + 'سوّ خطة مراجعة لكل الاختبارات (' + todo.length + ')</button>' : '') + '</div>';
   }
   function planAll() {
@@ -6239,7 +6511,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* extras3.js */
+  <script>/* js/features/extras3.js */
 // تقرير الأسبوع + وضع الحارس ⚽🧤
 (function () {
   'use strict';
@@ -6489,7 +6761,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* study.js */
+  <script>/* js/features/study.js */
 // الدراسة: سؤال الحضور بعد كل محاضرة · هدف مذاكرة أسبوعي لكل مادة · جاهزية الاختبارات (مواضيع)
 (function () {
   'use strict';
@@ -6532,10 +6804,11 @@ window.HAYATI_CONFIG = {
       '<button class="btn ghost" style="flex:0 0 auto" data-action="att-skip" data-id="' + c.id + '" aria-label="تخطّي">' + I('minus') + '</button></div></div>';
   }
 
-  function mark(id, field) {
+  // day: «2026-10-13»، لما الجواب يجي من تنبيه يوم ثاني (بعد نص الليل مثلاً)
+  function mark(id, field, day) {
     const c = course(id);
-    if (!c) return;
-    const k = dateKey();
+    if (!c) return false;
+    const k = day || dateKey();
     const list = Array.isArray(c[field]) ? c[field].filter((d) => d !== k) : [];
     list.push(k);
     S.upsert('courses', Object.assign({}, c, { [field]: list }));
@@ -6546,7 +6819,9 @@ window.HAYATI_CONFIG = {
         A.toast(left <= 0 ? '⚠️ وصلت حد الغياب في ' + c.name : left <= 2 ? '⚠️ باقي لك ' + left + ' غيابات بس' : 'انسجل الغياب · باقي ' + left);
       } else A.toast('انسجل الغياب');
     } else if (field === 'attended') A.toast('انسجل الحضور ✓');
+    return true;
   }
+  A.markAttendance = mark;   // تنبيه «حضرت؟» بالآيفون (native.js) يستخدم نفس المنطق
 
   // ================= هدف المذاكرة الأسبوعي =================
   // الأسبوع يبدأ الأحد
@@ -6615,7 +6890,7 @@ window.HAYATI_CONFIG = {
       const r = readiness(t), n = A.daysBetween(new Date(), new Date(t.due_at));
       const color = r == null ? 'var(--muted)' : r >= 80 ? 'var(--income)' : r >= 50 ? '#f59e0b' : 'var(--expense)';
       return '<div class="cat" data-action="exam-topics" data-id="' + t.id + '" style="cursor:pointer"><div class="ex-n num' + (n <= 3 ? ' soon' : '') + '" style="width:44px;height:44px;font-size:16px">' + n + '<small>' + (n === 1 ? 'يوم' : 'أيام') + '</small></div><div class="body">' +
-        '<div class="line"><span>' + h(t.title) + '</span><b class="num" style="color:' + color + '">' + (r == null ? 'حط المواضيع' : r + '%') + '</b></div>' +
+        '<div class="line"><span><bdi>' + h(t.title) + '</bdi></span><b class="num" style="color:' + color + '">' + (r == null ? 'حط المواضيع' : r + '%') + '</b></div>' +
         '<div class="meter"><span style="width:' + (r || 0) + '%;background:' + color + '"></span></div></div></div>';
     }).join('') + '</div>';
   }
@@ -6687,7 +6962,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* watch.js */
+  <script>/* js/features/watch.js */
 // ⌚ Apple Watch: اختصار بالآيفون يقرا النوم من تطبيق الصحة كل صبح ويفتح التطبيق برابط فيه الأرقام
 //   …/#health?sleep=7.25&deep=1.1&rem=1.6&rhr=54&hrv=48&steps=8200   (date اختياري = اليوم)
 (function () {
@@ -6855,7 +7130,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* import.js */
+  <script>/* js/features/import.js */
 // ⚽ استيراد جدول تمارين كرة القدم: صورة · PDF · أو رسالة المدرب (نص)
 // داخل Claude: Claude يقرا الملف. برّاه: قارئ محلي للنص (أيام + أوقات).
 (function () {
@@ -7071,7 +7346,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* lock.js */
+  <script>/* js/features/lock.js */
 // قفل التطبيق برمز سري: يحمي بياناتك لو أحد مسك جوالك وهو مفتوح
 // الرمز ما ينحفظ — بس بصمته (PBKDF2 + ملح) على هالجهاز. نسيت الرمز؟ امسح بيانات الموقع وسجّل دخول Claude من جديد.
 (function (global) {
@@ -7281,7 +7556,7 @@ window.HAYATI_CONFIG = {
 })(window);
 
 </script>
-  <script>/* motion.js */
+  <script>/* js/features/motion.js */
 // الحركة: دخول الشاشات، فتح وسكر النوافذ، وتحريك الأرقام والأشرطة لما تتغيّر
 (function (global) {
   'use strict';
@@ -7617,7 +7892,7 @@ window.HAYATI_CONFIG = {
 })(window);
 
 </script>
-  <script>/* pwa.js */
+  <script>/* js/features/pwa.js */
 // 🔴 رقم على أيقونة التطبيق = مهام اليوم + المتأخرة اللي ما خلصت (iOS 16.4+ بعد ما تثبّته وتسمح بالتنبيهات)
 (function () {
   'use strict';
@@ -7667,7 +7942,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* find.js */
+  <script>/* js/features/find.js */
 // 🔎 بحث بكل التطبيق (مصاريف، مهام، جدول، مباريات) + ↩️ تراجع بعد أي حذف
 (function () {
   'use strict';
@@ -7807,7 +8082,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* insights.js */
+  <script>/* js/features/insights.js */
 // 📈 توقع آخر الشهر + 🧤 جاهزية اليوم (نوم + HRV + نبض + حِمل أمس)
 (function () {
   'use strict';
@@ -7912,7 +8187,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* community.js */
+  <script>/* js/features/community.js */
 // 👥 «حياتي» للكل: بطاقة تعارف أول مرة (الاسم، مين أنت، الصلاة، الميزانية) + «ملفك» بالإعدادات
 //   roles فاضية = كل الميزات (المستخدمين القدامى ما يتغير عليهم شي)
 (function () {
@@ -7985,9 +8260,10 @@ window.HAYATI_CONFIG = {
       '<p class="small muted" style="margin:2px 0 12px">عشان «حياتي» يوريك اللي يهمك بس. بياناتك تظل بجهازك.</p>' +
       form(st.settings || {}) +
       // حساب خاص (يحفظ بياناتك بين أجهزتك): يطلع بس لو المزامنة مركّبة، وإلا ملفك يكون على هالجهاز
-      (S.getConfig && S.getConfig() ? '<button type="button" class="btn ghost block" style="margin-bottom:10px" data-action="ob-account">🔐 أنشئ حساب (بياناتك على كل أجهزتك)</button>' :
+      (S.getConfig && S.getConfig() ? '<button type="button" class="btn ghost block" style="margin-bottom:10px" data-action="ob-account">🔐 سجّل دخول أو أنشئ حساب (بياناتك لك بروحك)</button>' :
         '<p class="small muted" style="margin:0 0 10px">🔒 ملفك محفوظ على هالجهاز. الحسابات والمزامنة بين الأجهزة لسه قيد التطوير.</p>') +
-      '<div class="btn-row"><button class="btn primary" data-action="ob-save">يلا نبدأ</button><button class="btn ghost" data-action="ob-skip">بعدين</button></div></div>';
+      '<div class="btn-row"><button class="btn primary" data-action="ob-save">يلا نبدأ</button><button class="btn ghost" data-action="ob-skip">بعدين</button></div>' +
+      '<p class="small muted ob-terms" style="margin:10px 2px 0">باستخدامك «حياتي» توافق على <a href="terms.html" target="_blank" rel="noopener">شروط الاستخدام</a> و<a href="privacy.html" target="_blank" rel="noopener">سياسة الخصوصية</a>. الأرقام كلها تقدير، وبياناتك على جهازك.</p></div>';
   }
   wrap('todayTop', (prev) => welcomeCard() + prev());
   wrap('action', (prev, name, el, e) => {
@@ -8076,7 +8352,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* privacy.js */
+  <script>/* js/features/privacy.js */
 // 🔒 الخصوصية: إخفاء أرقام البطاقات بالرسايل القديمة + «سياسة الخصوصية» + «احذف كل بياناتي»
 (function () {
   'use strict';
@@ -8099,13 +8375,58 @@ window.HAYATI_CONFIG = {
   let masked = false;
   S.subscribe(() => { if (!masked && st.transactions.length) { masked = true; setTimeout(maskOld, 0); } });
 
+  // ---------- 💾 تذكير النسخة الاحتياطية ----------
+  // بعد 30 يوم من آخر نسخة (أو من أقدم سجل لو ما سوّى نسخة أبد)، وبس لو عنده 10 سجلات وفوق
+  const BACKUP_DAYS = 30, MIN_RECORDS = 10, SNOOZE = 'hayati-backup-snooze';
+  function backupDue(now) {
+    now = now || new Date();
+    // جداول البيانات بس (مو طابور المزامنة «pending»)
+    const lists = Object.entries(st).filter(([k, v]) => k !== 'pending' && Array.isArray(v)).map(([, v]) => v);
+    const count = lists.reduce((n, l) => n + l.length, 0);
+    if (count < MIN_RECORDS) return null;
+    try { const z = localStorage.getItem(SNOOZE); if (z && new Date(z) > now) return null; } catch (e) { /* تجاهل */ }
+    const last = A.lastBackup();
+    let since = last;
+    if (!since) {
+      let t = Infinity;
+      for (const l of lists) for (const r of l) { const v = Date.parse(r.updated_at || r.occurred_at || ''); if (v < t) t = v; }
+      if (t === Infinity) return null;
+      since = new Date(t);
+    }
+    const days = A.daysBetween(since, now);
+    return days >= BACKUP_DAYS ? { days, never: !last } : null;
+  }
+  function backupCard() {
+    const d = backupDue();
+    if (!d) return '';
+    return '<div class="card backup-nudge"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div class="ico" style="' + A.tint('#0d9488') + '">' + I('download') + '</div>' +
+      '<div style="flex:1;min-width:0"><b>' + (d.never ? 'ما عندك نسخة احتياطية' : 'آخر نسخة احتياطية قبل ' + A.nDays(d.days)) + '</b>' +
+      '<div class="small muted">بياناتك على هالجهاز بس. لو ضاع، تضيع معه.</div></div></div>' +
+      '<div class="btn-row"><button class="btn primary" data-action="backup-now">' + I('download') + 'نزّلها الحين</button>' +
+      '<button class="btn ghost" data-action="backup-later">بعدين</button></div></div>';
+  }
+  const prevTop = E.todayTop;
+  E.todayTop = function () { return backupCard() + (prevTop ? prevTop.apply(this, arguments) : ''); };
+  const prevAct = E.action;
+  E.action = function (name) {
+    if (name === 'backup-now') { A.backupNow(); return; }
+    if (name === 'backup-later') {
+      try { localStorage.setItem(SNOOZE, new Date(Date.now() + 7 * 864e5).toISOString()); } catch (e) { /* تجاهل */ }
+      A.render(); return;
+    }
+    return prevAct ? prevAct.apply(this, arguments) : undefined;
+  };
+  A.backupDue = backupDue;
+
   // ---------- الإعدادات ----------
   const prevExtra = E.settingsExtra;
   E.settingsExtra = function () {
     return (prevExtra ? prevExtra.apply(this, arguments) : '') +
       '<div class="group-title">' + I('key') + 'الخصوصية</div><div class="menu">' +
       '<a class="menu-link" href="privacy.html" target="_blank" rel="noopener"><div class="ico" style="' + A.tint('#13636B') + '">' + I('key') + '</div><div style="flex:1;min-width:0"><b>سياسة الخصوصية</b><small>وين بياناتك، ومين يشوفها</small></div>' + I('chevL') + '</a>' +
-      '<button data-set="wipe"><div class="ico" style="' + A.tint('#D63A3A') + '">' + I('trash') + '</div><div style="flex:1;min-width:0"><b style="color:var(--expense)">احذف كل بياناتي</b><small>من الجهاز والمزامنة، وما ترجع</small></div>' + I('chevL') + '</button></div>';
+      '<a class="menu-link" href="terms.html" target="_blank" rel="noopener"><div class="ico" style="' + A.tint('#13636B') + '">' + I('tasks') + '</div><div style="flex:1;min-width:0"><b>شروط الاستخدام</b><small>التقديرات، ومسؤولية كل واحد</small></div>' + I('chevL') + '</a>' +
+      '<button data-set="wipe"><div class="ico" style="' + A.tint('#D63A3A') + '">' + I('trash') + '</div><div style="flex:1;min-width:0"><b style="color:var(--expense)">احذف كل بياناتي</b><small>من الجهاز والمزامنة، وما ترجع</small></div>' + I('chevL') + '</button></div>' +
+      '<p class="small muted app-version" style="text-align:center;margin:18px 0 4px">حياتي ' + A.APP_VERSION + ' · قيد التطوير · نسخة تجريبية</p>';
   };
   const prevSet = E.settingsAction;
   E.settingsAction = async function (act) {
@@ -8123,7 +8444,7 @@ window.HAYATI_CONFIG = {
         '<button type="button" class="btn ghost block" id="wipeBackup" style="margin-bottom:14px">' + I('download') + 'نزّل نسخة احتياطية أول</button>' +
         '<div class="field"><label for="wipeWord">اكتب «' + WORD + '» عشان تأكد</label><input id="wipeWord" autocomplete="off"></div>',
       mount(root) {
-        root.querySelector('#wipeBackup').onclick = () => A.saveFile('hayati-backup-' + new Date().toISOString().slice(0, 10) + '.json', S.exportJSON(), 'application/json');
+        root.querySelector('#wipeBackup').onclick = () => A.backupNow();
       },
       async onSave(root) {
         if (root.querySelector('#wipeWord').value.trim() !== WORD) throw new Error('اكتب «' + WORD + '» بالضبط');
@@ -8138,7 +8459,7 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
-  <script>/* native.js */
+  <script>/* js/native/native.js */
 // 📱 نسخة الآيفون (Capacitor): تنبيهات «الحين وقت…» والتطبيق مسكّر، اهتزاز خفيف، ومشاركة الملفات
 //   بالمتصفح (Vercel وClaude) هالملف ما يسوي شي، لأن Capacitor مو موجود
 (function () {
@@ -8151,12 +8472,33 @@ window.HAYATI_CONFIG = {
   // Capacitor 8: الإضافة ما تبين بـ Capacitor.Plugins إلا بعد registerPlugin (من capacitor.js اللي يحطه cap-www.js)
   const plug = (n) => (Cap.Plugins && Cap.Plugins[n]) || (typeof Cap.registerPlugin === 'function' ? Cap.registerPlugin(n) : null);
   const LN = plug('LocalNotifications'), Hap = plug('Haptics'), Share = plug('Share'), FS = plug('Filesystem');
+  const Browser = plug('Browser'), AppP = plug('App');
 
   const DAYS = 7;      // iOS يسمح بـ 64 تنبيه مجدول بالكثير، فنجدول أسبوع بس
   const MAX = 60;
   const BEFORE = 10;   // دقايق قبل المحاضرة/التمرين/الموعد
   const ASKED = 'hayati-notif-asked';
   const TEST_ID = 990001;
+  // ⚙️ التنبيهات: كل نوع له مفتاح، وملخص الصباح مقفل افتراضياً (ما نزعج)
+  const PREFS = 'hayati-notif-prefs';
+  const DEF = { lectures: true, attend: true, exams: true, homework: true, subs: true, brief: false, briefAt: '07:00' };
+  function prefs() {
+    try { return Object.assign({}, DEF, JSON.parse(localStorage.getItem(PREFS) || '{}')); } catch (e) { return Object.assign({}, DEF); }
+  }
+  function savePrefs(p) { try { localStorage.setItem(PREFS, JSON.stringify(p)); } catch (e) { /* تجاهل */ } }
+  const TASK_ACTIONS = 'HAYATI_TASK', ATTEND_ACTIONS = 'HAYATI_ATTEND';
+  const ATTEND_DAYS = 2, ATTEND_AFTER = 5;   // سؤال الحضور: يومين بس (حد iOS)، بعد المحاضرة بـ 5 دقايق
+  const pad = (n) => String(n).padStart(2, '0');
+  const dayKey = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  const SNOOZE = 'hayati-snoozes', HOUR = 3600e3;
+  function snoozes() {
+    let list = [];
+    try { list = JSON.parse(localStorage.getItem(SNOOZE) || '[]'); } catch (e) { /* تجاهل */ }
+    return Array.isArray(list) ? list.filter((z) => z && z.at > Date.now()) : [];
+  }
+  function saveSnoozes(list) { try { localStorage.setItem(SNOOZE, JSON.stringify(list)); } catch (e) { /* تجاهل */ } }
+  const EVENING = 20 * 60;          // تذكير «بكرة…» الساعة 8 الليل
+  const TASK_DAYS = 14, SUB_DAYS = 30;
 
   // رقم ثابت لكل تنبيه (iOS يبي int)
   function nid(key) {
@@ -8165,25 +8507,109 @@ window.HAYATI_CONFIG = {
     return Math.abs(h) % 2000000000 + 1;
   }
 
-  // التنبيهات الجاية: كل اللي بـ agendaOn (محاضرات، تمرين، مواعيد، وصلاة لو مفعّلة)
-  function upcoming(now) {
+  const at = (day, minutes) => new Date(day.getFullYear(), day.getMonth(), day.getDate(), 0, minutes);
+  const midnight = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const dayWord = (n) => (n === 0 ? 'اليوم' : n === 1 ? 'بكرة' : n === 2 ? 'بعد يومين' : 'بعد ' + n + ' أيام');
+
+  // التنبيهات الجاية: الجدول والصلاة، الاختبارات والواجبات، تجديد الاشتراكات، وملخص الصباح
+  function upcoming(now, p) {
+    p = p || prefs();
     const out = [];
-    for (let d = 0; d < DAYS; d++) {
-      const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + d);
-      for (const it of A.agendaOn(day)) {
-        const prayer = it.type === 'prayer';
-        const lead = prayer ? 0 : BEFORE;
-        const at = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 0, it.start - lead);
-        if (at <= now) continue;
-        const t = A.ACT_TYPES[it.type] || A.ACT_TYPES.activity;
-        out.push({
-          id: nid(it.src + ':' + it.id + ':' + day.toDateString()),
-          title: prayer ? t.now + ' ' + it.name : 'بعد ' + BEFORE + ' دقايق: ' + it.name,
-          body: prayer ? '' : [t.label, it.room].filter(Boolean).join(' · '),
-          schedule: { at, allowWhileIdle: true },
-        });
+    const add = (key, when, title, body, extra) => {
+      if (!(when > now)) return;
+      const n = { id: nid(key), title, body: body || '', schedule: { at: when, allowWhileIdle: true }, extra: extra || { kind: 'today' } };
+      if (extra && extra.act) n.actionTypeId = extra.act === 'attend' ? ATTEND_ACTIONS : TASK_ACTIONS;   // «حضرت/غبت» أو «خلصته/بعد ساعة»
+      out.push(n);
+    };
+    const today = midnight(now);
+
+    // 📅 الجدول (محاضرات، تمرين، مواعيد) والصلاة لو مفعّلة
+    if (p.lectures) {
+      for (let d = 0; d < DAYS; d++) {
+        const day = new Date(today.getFullYear(), today.getMonth(), today.getDate() + d);
+        for (const it of A.agendaOn(day)) {
+          const prayer = it.type === 'prayer';
+          const t = A.ACT_TYPES[it.type] || A.ACT_TYPES.activity;
+          add(it.src + ':' + it.id + ':' + day.toDateString(), at(day, it.start - (prayer ? 0 : BEFORE)),
+            prayer ? t.now + ' ' + it.name : 'بعد ' + BEFORE + ' دقايق: ' + it.name,
+            prayer ? '' : [t.label, it.room].filter(Boolean).join(' · '),
+            it.src === 'task' ? { kind: 'task', id: it.id } : { kind: 'today' });
+        }
       }
     }
+
+    // 🎓 «حضرت X؟» بعد كل محاضرة، للطالب بس، وما يرن إذا جاوبت داخل التطبيق
+    if (p.attend && (!A.has || A.has('student'))) {
+      for (let d = 0; d < ATTEND_DAYS; d++) {
+        const day = new Date(today.getFullYear(), today.getMonth(), today.getDate() + d), k = dayKey(day);
+        for (const c of A.lecturesOn(day.getDay())) {
+          if (c.type && c.type !== 'lecture') continue;
+          if ([c.attended, c.absences, c.skipped].some((l) => Array.isArray(l) && l.includes(k))) continue;
+          const end = c.end_time ? A.minutesOf(c.end_time) : A.minutesOf(c.start_time) + 50;
+          add('attend:' + c.id + ':' + k, at(day, end + ATTEND_AFTER), 'حضرت ' + c.name + '؟',
+            ['خلصت ' + A.time12(A.hhmm(end)), c.room].filter(Boolean).join(' · '), { kind: 'attend', id: c.id, day: k, act: 'attend' });
+        }
+      }
+    }
+
+    // 📝 الاختبارات والواجبات: الليلة اللي قبلها، والاختبار كمان قبله بساعتين
+    const horizon = new Date(today.getFullYear(), today.getMonth(), today.getDate() + TASK_DAYS + 1);
+    for (const tk of (A.st.tasks || [])) {
+      if (tk.done || !tk.due_at) continue;
+      const due = new Date(tk.due_at);
+      if (!(due > now) || due > horizon) continue;
+      const exam = tk.kind === 'exam', hw = tk.kind === 'homework';
+      if ((exam && !p.exams) || (hw && !p.homework) || (!exam && !hw)) continue;
+      const dueDay = midnight(due);
+      const eve = new Date(dueDay.getFullYear(), dueDay.getMonth(), dueDay.getDate() - 1);
+      const ex = { kind: 'task', id: tk.id, act: true };
+      add('task-eve:' + tk.id, at(eve, EVENING), (exam ? 'بكرة اختبار: ' : 'بكرة تسليم: ') + tk.title, exam ? 'راجع وارتاح زين 🤍' : '', ex);
+      if (exam) {
+        const mins = due.getHours() * 60 + due.getMinutes();
+        // اختبار قبل 9:30 الصبح: التذكير 7:30، مو بنص الليل
+        const when = mins < 9 * 60 + 30 ? at(dueDay, 7 * 60 + 30) : new Date(due.getTime() - 2 * 3600e3);
+        add('task-day:' + tk.id, when, (mins < 9 * 60 + 30 ? 'اليوم' : 'بعد ساعتين') + ': اختبار ' + tk.title, tk.place || '', ex);
+      }
+    }
+
+    // 💳 تجديد الاشتراكات: قبلها بـ remind_days (افتراضي يوم) الساعة 8 الليل
+    if (p.subs && A.nextRenewal) {
+      const subHorizon = new Date(today.getFullYear(), today.getMonth(), today.getDate() + SUB_DAYS);
+      for (const sub of (A.st.subscriptions || [])) {
+        if (sub.active === false) continue;
+        const ren = A.nextRenewal(sub, now);
+        if (!ren || ren > subHorizon) continue;
+        const rd0 = sub.remind_days === '' || sub.remind_days == null ? 2 : Number(sub.remind_days);
+        const before = Math.max(0, Math.min(7, isNaN(rd0) ? 2 : rd0));
+        const rd = midnight(ren);
+        const day = new Date(rd.getFullYear(), rd.getMonth(), rd.getDate() - before);
+        add('sub:' + sub.id + ':' + rd.toDateString(), at(day, before === 0 ? 9 * 60 : EVENING),
+          dayWord(before) + ' يتجدد: ' + sub.name, A.fmt(sub.amount) + ' د.ب', { kind: 'sub', id: sub.id });
+      }
+    }
+
+    // ☀️ ملخص الصباح (اختياري): محاضرات اليوم واختباراته وتسليماته
+    if (p.brief) {
+      const [bh, bm] = String(p.briefAt || '07:00').split(':').map(Number);
+      for (let d = 0; d < DAYS; d++) {
+        const day = new Date(today.getFullYear(), today.getMonth(), today.getDate() + d);
+        const items = A.agendaOn(day).filter((it) => it.type !== 'prayer');
+        const dueToday = (A.st.tasks || []).filter((tk) => !tk.done && tk.due_at && midnight(new Date(tk.due_at)).getTime() === day.getTime() && (tk.kind === 'exam' || tk.kind === 'homework'));
+        if (!items.length && !dueToday.length) continue;   // يوم فاضي = ما نزعج
+        const parts = [];
+        if (items.length) parts.push((items.length === 1 ? 'شي واحد بجدولك' : items.length === 2 ? 'شيئين بجدولك' : items.length + ' أشياء بجدولك') + '، أولها ' + A.time12(A.hhmm(items[0].start)));
+        for (const tk of dueToday) parts.push((tk.kind === 'exam' ? 'اختبار ' : 'تسليم ') + tk.title);
+        add('brief:' + day.toDateString(), at(day, (bh || 0) * 60 + (bm || 0)), 'صباح الخير ☀️ هذا يومك', parts.join(' · '));
+      }
+    }
+
+    // ⏰ «ذكّرني بعد ساعة»: محفوظة لين يجي وقتها، عشان إعادة الجدولة ما تمسحها
+    for (const z of snoozes()) {
+      const t = (z.extra && z.extra.kind === 'task') ? (A.st.tasks || []).find((x) => x.id === z.extra.id) : null;
+      if (z.extra && z.extra.kind === 'task' && (!t || t.done)) continue;   // خلّصها أو حذفها بعد ما أجّل
+      add(z.key, new Date(z.at), z.title, z.body, z.extra);
+    }
+
     return out.sort((a, b) => a.schedule.at - b.schedule.at).slice(0, MAX);
   }
 
@@ -8219,6 +8645,55 @@ window.HAYATI_CONFIG = {
   S.subscribe(soon);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) soon(); });
   soon();
+
+  // 👆 الضغط على التنبيه: يفتح الشي نفسه. وتنبيه الواجب والاختبار فيه زرين: «✓ خلصته» و«⏰ بعد ساعة»
+  //   الزرين يفتحون التطبيق (foreground) عشان الحفظ مضمون وتشوف «انحفظ ✓»
+  function openFor(extra) {
+    const t = extra.kind === 'task' && (A.st.tasks || []).find((x) => x.id === extra.id);
+    if (extra.kind === 'task') { A.go('tasks'); if (t) setTimeout(() => A.taskForm(t), 50); else A.toast('ما لقيت المهمة، يمكن انحذفت'); return; }
+    if (extra.kind === 'sub') { A.ui.moneySeg = 'subs'; A.go('money'); return; }
+    A.go('today');
+  }
+  function onAction(ev) {
+    const n = (ev && ev.notification) || {};
+    const extra = n.extra || { kind: 'today' };
+    if (ev.actionId === 'done') {
+      const t = (A.st.tasks || []).find((x) => x.id === extra.id);
+      if (!t) { A.toast('ما لقيت المهمة، يمكن انحذفت'); return; }
+      if (!t.done) S.upsert('tasks', Object.assign({}, t, { done: true }));   // reschedule يشيل تنبيهاتها الجاية
+      A.go('tasks');
+      A.toast('انحفظ ✓ خلصت «' + t.title + '» 💪');
+      return;
+    }
+    if (ev.actionId === 'present' || ev.actionId === 'absent') {
+      A.go('today');
+      if (!A.markAttendance || !A.markAttendance(extra.id, ev.actionId === 'present' ? 'attended' : 'absences', extra.day)) A.toast('ما لقيت المادة، يمكن انحذفت');
+      return;
+    }
+    if (ev.actionId === 'snooze') {
+      const list = snoozes();
+      list.push({ key: 'snooze:' + extra.id + ':' + Date.now(), at: Date.now() + HOUR, title: n.title, body: n.body || '', extra });
+      saveSnoozes(list);
+      soon();
+      A.toast('بذكّرك بعد ساعة ⏰');
+      return;
+    }
+    openFor(extra);
+  }
+  if (LN && typeof LN.registerActionTypes === 'function') {
+    try {
+      Promise.resolve(LN.registerActionTypes({ types: [{ id: TASK_ACTIONS, actions: [
+        { id: 'done', title: '✓ خلصته', foreground: true },
+        { id: 'snooze', title: '⏰ ذكّرني بعد ساعة', foreground: true },
+      ] }, { id: ATTEND_ACTIONS, actions: [
+        { id: 'present', title: '✓ حضرت', foreground: true },
+        { id: 'absent', title: '✗ غبت', foreground: true },
+      ] }] })).catch(() => {});
+    } catch (e) { /* نسخة قديمة بدون أزرار: التنبيه يشتغل عادي */ }
+  }
+  if (LN && typeof LN.addListener === 'function') {
+    try { const r = LN.addListener('localNotificationActionPerformed', onAction); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
+  }
 
   // اهتزاز خفيف عند الحفظ والحذف
   const tap = (style) => { if (Hap) Hap.impact({ style }).catch(() => {}); };
@@ -8266,16 +8741,49 @@ window.HAYATI_CONFIG = {
     return rows;
   }
 
-  // زر بالإعدادات (نسخة الآيفون بس)
+  // ⚙️ الإعدادات ← التنبيهات (نسخة الآيفون بس)
+  const TYPES = [['lectures', '📅 الجدول والصلاة', 'قبل المحاضرة بـ 10 دقايق، والصلاة بوقتها'], ['attend', '🎓 سؤال الحضور', 'بعد كل محاضرة: حضرت ولا غبت، من التنبيه نفسه'], ['exams', '📝 الاختبارات', 'الليلة اللي قبلها، وقبل الاختبار بساعتين'],
+    ['homework', '📚 الواجبات', 'الليلة اللي قبل التسليم'], ['subs', '💳 تجديد الاشتراكات', 'قبل التجديد بالأيام اللي تحددها بالاشتراك'], ['brief', '☀️ ملخص الصباح', 'جدولك واختباراتك اليوم، والأيام الفاضية ما فيها']];
+  function prefsSheet() {
+    const p = prefs();
+    A.openSheet({
+      title: 'التنبيهات',
+      body: '<div class="card flush"><ul class="list notif-prefs">' + TYPES.map(([k, l, sub]) =>
+        '<li class="row" style="cursor:default"><label style="display:flex;align-items:center;gap:12px;width:100%;cursor:pointer"><div class="main"><div class="title"><span class="t">' + l + '</span></div><div class="sub">' + sub + '</div></div>' +
+        '<input type="checkbox" data-np="' + k + '"' + (p[k] ? ' checked' : '') + ' style="width:22px;height:22px;accent-color:var(--brand)"></label></li>').join('') + '</ul></div>' +
+        '<div class="field" id="briefAtF"' + (p.brief ? '' : ' hidden') + '><label>وقت ملخص الصباح</label><input type="time" name="briefAt" value="' + A.h(p.briefAt) + '"></div>' +
+        '<button class="btn block" type="button" id="npTest">' + A.I('bell') + 'جرّب التنبيه</button>',
+      mount(root) {
+        root.querySelector('[data-np="brief"]').onchange = (e) => { root.querySelector('#briefAtF').hidden = !e.target.checked; };
+        root.querySelector('#npTest').onclick = async () => {
+          A.closeSheet();
+          const rows = await testNotification();
+          setTimeout(() => A.openSheet({ title: 'حالة التنبيهات', cancelLabel: 'تم', body: '<ul class="notif-test" style="margin:0;padding:0 4px;list-style:none;line-height:2">' + rows.map((r) => '<li>' + A.h(r) + '</li>').join('') + '</ul>' }), 280);
+        };
+      },
+      async onSave(root) {
+        const np = Object.assign({}, prefs());
+        root.querySelectorAll('[data-np]').forEach((c) => { np[c.dataset.np] = c.checked; });
+        np.briefAt = (root.querySelector('[name=briefAt]') || {}).value || DEF.briefAt;
+        savePrefs(np);
+        await reschedule();
+        A.toast('انحفظ ✓');
+      },
+    });
+  }
   const E = window.Extras;
   if (E) {
     const prevExtra = E.settingsExtra;
     E.settingsExtra = function () {
-      return '<div class="group-title">' + A.I('bell') + 'التنبيهات</div><div class="menu"><button data-set="test-notif"><div class="ico" style="' + A.tint('#13636B') + '">' + A.I('bell') + '</div><div style="flex:1;min-width:0"><b>جرّب التنبيه</b><small>يوصلك تنبيه تجربة بعد 10 ثواني</small></div>' + A.I('chevL') + '</button></div>' +
+      const p = prefs(), on = TYPES.filter(([k]) => p[k]).length;
+      return '<div class="group-title">' + A.I('bell') + 'التنبيهات</div><div class="menu">' +
+        '<button data-set="notif-prefs"><div class="ico" style="' + A.tint('#13636B') + '">' + A.I('bell') + '</div><div style="flex:1;min-width:0"><b>التنبيهات</b><small>' + on + ' من ' + TYPES.length + ' شغّالة</small></div>' + A.I('chevL') + '</button>' +
+        '<button data-set="test-notif"><div class="ico" style="' + A.tint('#13636B') + '">' + A.I('bell') + '</div><div style="flex:1;min-width:0"><b>جرّب التنبيه</b><small>يوصلك تنبيه تجربة بعد 10 ثواني</small></div>' + A.I('chevL') + '</button></div>' +
         (prevExtra ? prevExtra.apply(this, arguments) : '');
     };
     const prevSet = E.settingsAction;
     E.settingsAction = async function (act) {
+      if (act === 'notif-prefs') { A.closeSheet(); setTimeout(prefsSheet, 280); return true; }
       if (act === 'test-notif') {
         A.closeSheet();
         const rows = await testNotification();
@@ -8286,7 +8794,29 @@ window.HAYATI_CONFIG = {
     };
   }
 
-  window.HayatiNative = { saveFile, shareText, reschedule, upcoming, testNotification };
+  // 🍎 / G الدخول السريع: Google يمنع الدخول من داخل WebView، فنفتح متصفح النظام،
+  //   والمزود يرجّعنا بـ bh.hayati.app://auth?code=… (CFBundleURLTypes بـ Info.plist) ونبدّل الكود بجلسة (PKCE)
+  const AUTH_URL = 'bh.hayati.app://auth';
+  async function oauth(provider) {
+    if (!Browser) throw new Error('الدخول السريع يحتاج آخر نسخة من التطبيق');
+    const url = await S.signInWithProvider(provider, { redirectTo: AUTH_URL, skipBrowserRedirect: true });
+    await Browser.open({ url, presentationStyle: 'popover' });
+  }
+  async function onAuthUrl(url) {
+    if (!url || url.indexOf(AUTH_URL) !== 0) return false;
+    try { if (Browser) await Browser.close(); } catch (e) { /* انسكر */ }
+    const q = new URL(url.replace(AUTH_URL, 'https://auth.local/')).searchParams;
+    if (q.get('error')) { A.toast(q.get('error_description') || 'ما تم الدخول'); return true; }
+    if (q.get('code')) {
+      try { await S.exchangeCode(q.get('code')); A.toast('أهلاً 👋'); } catch (e) { A.toast(e.message || 'ما تم الدخول'); }
+    }
+    return true;
+  }
+  if (AppP && typeof AppP.addListener === 'function') {
+    try { const r = AppP.addListener('appUrlOpen', (ev) => onAuthUrl(ev && ev.url)); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
+  }
+
+  window.HayatiNative = { saveFile, shareText, reschedule, upcoming, testNotification, prefs, savePrefs, oauth, onAuthUrl };
 })();
 
 </script>

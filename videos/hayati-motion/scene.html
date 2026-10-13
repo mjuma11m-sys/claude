@@ -1,0 +1,300 @@
+<!doctype html>
+<html dir="rtl">
+<head>
+<meta charset="utf-8">
+<!-- ريل «حياتي» 30 ث، 9:16. ميكانيكا موشن مأخوذة من تحليل إعلان مرجعي (ولا قطع، فقاعات تنكتب، 3 سطور جنب الجوال،
+     رقم كبير، أشرطة ودائرة تمسح، نقطة تصير شعار) — بهوية «حياتي»: ورق #F7F4EE، بحري #0E3B43، مرجاني #FF6B4A -->
+<style>
+@font-face { font-family: P; src: url(IBMPlexSansArabic-Bold.ttf); font-weight: 700; }
+@font-face { font-family: P; src: url(IBMPlexSansArabic-Regular.ttf); font-weight: 400; }
+:root { --sea: #0E3B43; --pearl: #E8DCC4; --coral: #FF6B4A; --paper: #F7F4EE; --ink: #0B2328; --ink2: #33494D; }
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; font-family: P; font-weight: 700; color: var(--ink); }
+.abs { position: absolute; }
+#bg { inset: 0; background: var(--paper); }
+#tint { inset: 0; }
+#dark { inset: 0; background: radial-gradient(120% 80% at 50% 40%, #134a52 0%, var(--sea) 50%, #071a1e 100%); }
+.code { left: 60px; right: 60px; font: 400 30px/1.9 P; color: rgba(232,220,196,.16); white-space: nowrap; direction: ltr; text-align: left; }
+.w { display: inline-block; will-change: transform, opacity; }
+.c { color: var(--coral); }
+.label { font: 400 30px P; color: var(--ink2); display: flex; gap: 12px; align-items: center; }
+.label i { width: 14px; height: 14px; border-radius: 50%; background: var(--coral); display: inline-block; }
+.bub { padding: 26px 40px; border-radius: 40px; font-size: 52px; line-height: 1.3; white-space: nowrap; box-shadow: 0 24px 50px -24px rgba(11,35,40,.45); }
+.bub.me { background: var(--coral); color: #2A0E07; }
+.bub.app { background: var(--ink); color: var(--paper); }
+.caret { display: inline-block; width: 4px; height: 1em; background: currentColor; vertical-align: -0.12em; margin-inline-start: 4px; }
+.phone { border-radius: 64px; background: #0b1416; padding: 12px; box-shadow: 0 50px 90px -40px rgba(11,35,40,.6), inset 0 0 0 3px #2a4a50; }
+.phone img { width: 100%; height: 100%; border-radius: 52px; object-fit: cover; object-position: top; display: block; }
+.lines div { font-size: 82px; line-height: 1.12; }
+.tile { width: 150px; height: 150px; border-radius: 38px; display: grid; place-items: center; font-size: 76px; background: #fff; box-shadow: 0 16px 34px -18px rgba(11,35,40,.35); }
+.card { background: #fff; border-radius: 48px; box-shadow: 0 40px 80px -36px rgba(11,35,40,.45); }
+.note { display: flex; gap: 20px; align-items: flex-start; padding: 24px 26px; border-radius: 38px; background: rgba(245,245,247,.92); color: #111; box-shadow: 0 20px 40px -20px rgba(0,0,0,.5); }
+.note b { font-size: 38px; display: block; }
+.note small { font: 400 32px P; color: #333; display: block; }
+.note .ap { flex: none; width: 80px; height: 80px; border-radius: 20px; overflow: hidden; }
+.note .meta { display: flex; justify-content: space-between; font: 400 28px P; color: #666; }
+.acts { display: flex; gap: 14px; margin-top: 14px; }
+.acts span { flex: 1; text-align: center; padding: 16px; border-radius: 22px; background: rgba(0,0,0,.07); font-size: 34px; }
+.bar { height: 150px; background: var(--coral); }
+.demo { left: 0; right: 0; text-align: center; font: 400 30px P; color: var(--ink2); opacity: .75; }
+.hand { font-size: 140px; filter: drop-shadow(0 12px 16px rgba(0,0,0,.25)); }
+.ripple { border-radius: 50%; border: 6px solid var(--coral); }
+/* بصفحة RTL، العنصر المطلق بدون left يلزق يمين؛ هذي العناصر نحرّكها بـ transform من الزاوية */
+#fx > .abs, .tile { left: 0; top: 0; }
+</style>
+</head>
+<body>
+<div id="bg" class="abs"></div>
+<div id="tint" class="abs"></div>
+<div id="dark" class="abs"><div id="code" class="abs code" style="top:300px"></div></div>
+<div id="stage" class="abs" style="inset:0"></div>
+<div id="fx" class="abs" style="inset:0;pointer-events:none"></div>
+
+<script>
+// ===== أدوات الوقت =====
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const eo = (x) => 1 - Math.pow(1 - x, 4);             // دخول: سريع ويهدا (قريب من cubic-bezier(.23,1,.32,1))
+const ei = (x) => x * x * x;                           // خروج
+const eio = (x) => (x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+const back = (x) => { const c = 1.6; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const lerp = (a, b, x) => a + (b - a) * x;
+const $ = (h) => { const d = document.createElement('div'); d.innerHTML = h.trim(); return d.firstElementChild; };
+const stage = document.getElementById('stage'), fx = document.getElementById('fx');
+const add = (h, parent) => { const e = $(h); (parent || stage).appendChild(e); return e; };
+const set = (e, o, tf) => { e.style.opacity = o; e.style.transform = tf || ''; e.style.visibility = o <= 0.001 ? 'hidden' : 'visible'; };
+
+const ARC = 'M 383.3 172.7 A 160 160 0 1 1 300 102.2';
+const HA = 'M 304 166 L 196 166 L 264 222 C 204 222 168 254 168 292 C 168 336 206 360 256 360 C 292 360 318 348 338 332';
+const LOGO = (ink) => `<svg viewBox="0 0 512 512" style="width:100%;height:100%;overflow:visible"><path class="arc" d="${ARC}" fill="none" stroke="${ink}" stroke-opacity=".28" stroke-width="22" stroke-linecap="round"/><path class="ha" d="${HA}" fill="none" stroke="${ink}" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/><circle class="dot" cx="352" cy="128" r="30" fill="#FF6B4A"/></svg>`;
+
+// كلمات تطلع وحدة وحدة (كل كلمة: شفافية + طلعة من تحت)
+function words(el, text) {   // *كلمة* = مرجاني
+  el.innerHTML = text.split(' ').map((w) => (/^\*.*\*[.؟]?$/.test(w) ? '<span class="w c">' + w.replace(/\*/g, '') + '</span>' : '<span class="w">' + w + '</span>')).join(' ');
+  return [...el.querySelectorAll('.w')];
+}
+function showWords(ws, t, start, gap, dur) {
+  ws.forEach((w, i) => { const x = eo(seg(t, start + i * gap, start + i * gap + (dur || .45))); set(w, x, `translateY(${(1 - x) * 40}px)`); });
+}
+// كتابة حرف حرف مع مؤشر
+function typeText(el, text, t, a, b, caretUntil) {
+  const ch = Array.from(text), n = Math.round(ch.length * seg(t, a, b));
+  const on = t < (caretUntil || b + .6) && (Math.floor(t * 2.2) % 2 === 0 || t < b);
+  el.innerHTML = ch.slice(0, n).join('') + '<span class="caret" style="opacity:' + (on ? 1 : 0) + '"></span>';
+}
+
+// ===== المشهد 1 (0–4.2): غامق، سطور بيانات باهتة، «يومك مو ستة تطبيقات.» =====
+const code = document.getElementById('code');
+const ROWS = ['تحويل 3.500 Costa Coffee  ·  occurred_at 08:05  ·  قهوة', 'محاضرة محاسبة إدارية 10:00–11:15 S40-2050', 'صلاة الظهرين 11:24  ·  جعفري', 'بكرة اختبار: محاسبة  ·  20:00', 'Netflix يتجدد 3.500 د.ب  ·  remind_days 2', 'تسليم تقرير التسويق 23:59', 'نوم 6.1 س  ·  HRV −23%  ·  جاهزية 64'];
+code.innerHTML = Array.from({ length: 22 }, (_, i) => '<div>' + ROWS[i % ROWS.length] + '   ' + ROWS[(i + 3) % ROWS.length] + '</div>').join('');
+const h1 = add('<div class="abs" style="left:80px;right:80px;top:760px;text-align:center;color:var(--pearl);font-size:118px;line-height:1.12"></div>');
+const h1w = words(h1, 'يومك مو *ستة* تطبيقات.');
+const h1sub = add('<div class="abs" style="left:80px;right:80px;top:1060px;text-align:center;color:rgba(232,220,196,.7);font:400 52px P">مصاريف، جدول، صلاة، اختبارات…</div>');
+
+// ===== المشهد 2 (4.2–8.6): شبكة «تطبيقات» + بطاقة «تطبيق واحد» + زر + =====
+const EM = ['💸', '📅', '🕌', '📝', '⏰', '📚', '💳', '⚽', '🧾', '🎓', '💧', '😴', '🛒', '🎯', '🔔', '📊', '🏋️', '📆'];
+const tiles = EM.map((e, i) => {
+  const col = i % 3, row = Math.floor(i / 3);
+  return { el: add(`<div class="abs tile">${e}</div>`), x: 150 + col * 300 + (row % 2 ? 60 : -20), y: 300 + row * 230, d: i * 0.035 };
+});
+const card = add('<div class="abs card" style="left:110px;right:110px;top:760px;height:420px"></div>');
+const c1 = add('<div class="abs" style="left:110px;right:110px;top:820px;text-align:center;font:400 46px P;color:var(--ink2)">بدال كل هذا…</div>');
+const c2 = add('<div class="abs" style="left:110px;right:110px;top:900px;text-align:center;font-size:110px;line-height:1.1"></div>');
+const c2w = words(c2, 'تطبيق *واحد.*');
+const plus = add('<div class="abs" style="left:490px;top:1080px;width:100px;height:100px;border-radius:50%;background:var(--coral);display:grid;place-items:center;color:#2A0E07;font-size:64px;box-shadow:0 18px 30px -12px rgba(255,107,74,.7)">+</div>');
+const dot = add('<div class="abs" style="width:60px;height:60px;border-radius:50%;background:var(--coral)"></div>', fx);
+
+// ===== المشهد 3 (8.6–11.6): النقطة تصير شعار «ح»، والاسم، والسطر =====
+const logo = add(`<div class="abs" style="left:340px;top:520px;width:400px;height:400px">${LOGO('#0E3B43')}</div>`);
+const ha = logo.querySelector('.ha'), arc = logo.querySelector('.arc'), ldot = logo.querySelector('.dot');
+const HAL = ha.getTotalLength(), ARCL = arc.getTotalLength();
+const wm = add('<div class="abs" style="left:0;right:0;top:960px;text-align:center;font-size:170px;line-height:1;padding-bottom:70px;color:var(--sea)">حياتي</div>');
+const tag = add('<div class="abs" style="left:60px;right:60px;top:1200px;text-align:center;font:400 54px P;color:var(--ink2)"></div>');
+const sparks = Array.from({ length: 14 }, (_, i) => ({ el: add('<div class="abs" style="width:14px;height:14px;border-radius:50%;background:var(--coral)"></div>', fx), a: (i / 14) * Math.PI * 2 + .2, r: 140 + (i % 3) * 50 }));
+
+// ===== أشرطة مرجانية تمسح الشاشة (درج) =====
+const bars = Array.from({ length: 13 }, (_, i) => add(`<div class="abs bar" style="top:${i * 150}px;left:0;width:1080px"></div>`, fx));
+function barWipe(t, a) {   // يغطي a→a+.35، ويكشف a+.4→a+.75
+  bars.forEach((b, i) => {
+    const d = i * 0.025;
+    const inn = eio(seg(t, a + d, a + d + .3)), out = eio(seg(t, a + .4 + d, a + .4 + d + .3));
+    // يدخل من اليمين ويطلع يسار. بـ clip-path مو translate: العناصر اللي تطلع برّا الإطار كانت تخلي الفريم كله أبيض
+    b.style.clipPath = `inset(0 ${out * 100}% 0 ${(1 - inn) * 100}%)`; b.style.display = inn > 0 && out < 1 ? 'block' : 'none';
+  });
+}
+
+// ===== المشهد 4 (11.9–17): «كم صرفت على كوستا؟» =====
+const l4 = add('<div class="abs label" style="right:80px;top:300px"><i></i><span>حياتي // سؤال اليوم</span></div>');
+const b4 = add('<div class="abs bub me" style="right:80px;top:350px"></div>');
+const r4 = add('<div class="abs bub app" style="right:80px;top:500px">اكتب اسم المحل.</div>');
+const ph4 = add('<div class="abs phone" style="left:80px;top:660px;width:440px;height:952px"><img src="../hayati-promo-v2/shots/03_search.png"></div>');
+const ln4 = add('<div class="abs lines" style="right:70px;top:900px;width:470px;text-align:right"><div>اكتب.</div><div>يطلع</div><div class="c">المجموع.</div></div>');
+const ln4d = [...ln4.children];
+const hand4 = add('<div class="abs hand">👆</div>', fx), rip4 = add('<div class="abs ripple"></div>', fx);
+const d4 = add('<div class="abs demo" style="top:1650px">* لقطات ببيانات تجريبية</div>');
+
+// ===== المشهد 5 (17–22.2): «نسيت اختبار المحاسبة؟» + التنبيه + «حضرت؟» =====
+const l5 = add('<div class="abs label" style="right:80px;top:300px"><i></i><span>حياتي // لاحظ</span></div>');
+const b5 = add('<div class="abs bub me" style="right:80px;top:350px"></div>');
+const lock = add(`<div class="abs" style="left:70px;top:560px;width:560px;height:1060px;border-radius:70px;background:radial-gradient(120% 80% at 30% 10%,#2c6b72,#123c44 45%,#071418);box-shadow:0 50px 90px -40px rgba(11,35,40,.6),inset 0 0 0 10px #0b1416">
+  <div style="position:absolute;left:0;right:0;top:70px;text-align:center;color:#f2efe8"><div style="font:400 28px P">الأربعاء</div><div style="font:400 120px/1 P;direction:ltr">8:00</div></div></div>`);
+const nA = add(`<div class="abs note" style="left:90px;top:840px;width:520px"><div class="ap">${'<svg viewBox="0 0 512 512" style="width:80px;height:80px"><rect width="512" height="512" rx="116" fill="#0E3B43"/><path d="' + ARC + '" fill="none" stroke="#E8DCC4" stroke-opacity=".28" stroke-width="22" stroke-linecap="round"/><path d="' + HA + '" fill="none" stroke="#E8DCC4" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/><circle cx="352" cy="128" r="30" fill="#FF6B4A"/></svg>'}</div><div style="flex:1"><div class="meta"><span>حياتي</span><span>الآن</span></div><b>بكرة اختبار: محاسبة</b><small>راجع وارتاح زين 🤍</small></div></div>`);
+const nB = add(`<div class="abs note" style="left:90px;top:1060px;width:520px"><div class="ap">${nA.querySelector('.ap').innerHTML}</div><div style="flex:1"><div class="meta"><span>حياتي</span><span>11:20</span></div><b>حضرت محاسبة؟</b><div class="acts"><span id="yes">✓ حضرت</span><span>✗ غبت</span></div></div></div>`);
+const yes = nB.querySelector('#yes');
+const ln5 = add('<div class="abs lines" style="right:60px;top:860px;width:400px;text-align:right"><div>الليلة</div><div>اللي قبل.</div><div style="height:30px"></div><div>وتجاوب</div><div class="c">من التنبيه.</div></div>');
+const ln5d = [...ln5.children];
+const hand5 = add('<div class="abs hand">👆</div>', fx), rip5 = add('<div class="abs ripple"></div>', fx);
+const d5 = add('<div class="abs demo" style="top:1650px">* شاشة توضيحية · نسخة الآيفون</div>');
+const circ = add('<div class="abs" style="width:1080px;height:1920px;background:var(--coral)"></div>', fx);   // دائرة بـ clip-path (عنصر 4600px كان ينرسم أبيض)
+
+// ===== المشهد 6 (22.4–26): الرقم الكبير =====
+const l6 = add('<div class="abs label" style="left:0;right:0;justify-content:center;top:560px"><i></i><span>قبل كل تحديث</span></div>');
+const n6 = add('<div class="abs" style="left:0;right:0;top:640px;text-align:center;font-size:420px;line-height:1;color:var(--coral);direction:ltr;font-variant-numeric:tabular-nums">0</div>');
+const t6 = add('<div class="abs" style="left:60px;right:60px;top:1100px;text-align:center;font-size:84px;line-height:1.15"></div>');
+const t6w = words(t6, 'اختبار يمر عليه التطبيق.');
+const s6 = add('<div class="abs" style="left:60px;right:60px;top:1260px;text-align:center;font:400 56px P;color:var(--ink2)"></div>');
+const s6w = words(s6, 'عشان ما يخرّب يومك.');
+
+// ===== المشهد 7 (26.2–30): الشعار الأخير =====
+const logo7 = add(`<div class="abs" style="left:365px;top:470px;width:350px;height:350px">${LOGO('#0E3B43')}</div>`);
+const wm7 = add('<div class="abs" style="left:0;right:0;top:850px;text-align:center;font-size:160px;line-height:1;padding-bottom:70px;color:var(--sea)">حياتي</div>');
+const en7 = add('<div class="abs" style="left:0;right:0;top:1060px;text-align:center;font-size:46px;letter-spacing:.08em;color:#13636B;direction:ltr">HAYATI</div>');
+const tg7 = add('<div class="abs" style="left:60px;right:60px;top:1150px;text-align:center;font:400 50px P;color:var(--ink2)">تطبيق بحريني ليومك كله</div>');
+const pill7 = add('<div class="abs" style="left:50%;top:1270px;padding:14px 38px;border-radius:999px;border:3px solid rgba(14,59,67,.25);font-size:38px;color:var(--sea);white-space:nowrap">🛠️ قيد التطوير · نسخة تجريبية</div>');
+const ig7 = add('<div class="abs" style="left:0;right:0;top:1400px;text-align:center;font:400 40px P;color:var(--ink2);direction:ltr">@hayati.bh</div>');
+
+// ===== الخلفية: إضاءة ملونة تتغير مع كل قصة =====
+const TINTS = [[4.2, '255,180,150'], [8.6, '232,220,196'], [11.9, '255,170,140'], [17, '150,215,190'], [22.3, '190,175,240'], [26.2, '232,220,196']];
+function tintAt(t) {
+  let i = 0; while (i < TINTS.length - 1 && t >= TINTS[i + 1][0]) i++;
+  const [ta, ca] = TINTS[i], nb = TINTS[Math.min(i + 1, TINTS.length - 1)];
+  const ca3 = ca.split(',').map(Number), cb3 = nb[1].split(',').map(Number), x = eio(seg(t, nb[0] - .8, nb[0]));
+  return ca3.map((v, k) => Math.round(lerp(v, cb3[k], i < TINTS.length - 1 ? x : 0))).join(',');
+}
+
+// ===== setT: كل شي دالة بالوقت =====
+function setT(t) {
+  // الخلفية
+  const darkO = 1 - eio(seg(t, 3.5, 4.3));
+  set(document.getElementById('dark'), darkO);
+  code.style.transform = `translateY(${-t * 40}px)`;
+  document.getElementById('tint').style.background = `radial-gradient(90% 60% at 80% 0%, rgba(${tintAt(t)},.45), transparent 70%), radial-gradient(80% 50% at 0% 100%, rgba(${tintAt(t)},.25), transparent 70%)`;
+
+  // 1) العنوان الغامق، ويصغر لكبسولة ويختفي
+  showWords(h1w, t, .3, .32);
+  const sub1 = eo(seg(t, 1.9, 2.4));
+  const out1 = ei(seg(t, 3.3, 3.9));
+  set(h1, 1 - out1, `scale(${1 - out1 * .6})`); set(h1sub, sub1 * (1 - out1), `translateY(${(1 - sub1) * 30}px) scale(${1 - out1 * .6})`);
+
+  // 2) الشبكة والبطاقة والزر
+  tiles.forEach((o) => {
+    const i = eo(seg(t, 4.2 + o.d, 4.9 + o.d)), out = ei(seg(t, 7.8 + o.d * .5, 8.3 + o.d * .5));
+    const fl = Math.sin(t * 1.4 + o.d * 20) * 10;
+    set(o.el, i * (1 - out), `translate(${o.x}px, ${o.y + fl + (1 - i) * 60}px) scale(${(.6 + .4 * i) * (1 - out)}) rotate(${(o.d * 40 - 6) * (1 - i)}deg)`);
+  });
+  const cin = back(seg(t, 4.9, 5.5)), cout = ei(seg(t, 7.7, 8.1));
+  set(card, seg(t, 4.9, 5.1) * (1 - cout), `scale(${(.85 + .15 * cin) * (1 - cout * .3)})`);
+  set(c1, eo(seg(t, 5.3, 5.7)) * (1 - cout));
+  showWords(c2w, t, 5.9, .35); c2.style.opacity = 1 - cout;
+  const pin = back(seg(t, 6.9, 7.3));
+  set(plus, seg(t, 6.9, 7.0) * (t < 7.75 ? 1 : 0), `scale(${pin * (1 - .15 * Math.sin(seg(t, 7.4, 7.7) * Math.PI))})`);
+  // النقطة: من الزر لمكان نقطة «ح» بالشعار (قوس)
+  const fly = eio(seg(t, 7.75, 8.6));
+  const sx = 540, sy = 1130, ex = 340 + 352 / 512 * 400, ey = 520 + 128 / 512 * 400;
+  const dx = lerp(sx, ex, fly), dy = lerp(sy, ey, fly) - Math.sin(fly * Math.PI) * 260;
+  const dsz = lerp(100, 60 / 512 * 400 * 1.0, fly);
+  set(dot, t >= 7.75 && t < 8.75 ? 1 : 0, `translate(${dx - 30}px, ${dy - 30}px) scale(${dsz / 60})`);
+
+  // 3) الشعار ينرسم، شرار، الاسم، السطر
+  const l3 = seg(t, 8.6, 11.6) > 0 && t < 11.75;
+  const hd = eio(seg(t, 8.75, 9.6)), ad = eio(seg(t, 8.9, 9.9));
+  ha.style.strokeDasharray = HAL; ha.style.strokeDashoffset = HAL * (1 - hd);
+  arc.style.strokeDasharray = ARCL; arc.style.strokeDashoffset = ARCL * (1 - ad);
+  ldot.style.opacity = t >= 8.7 ? 1 : 0;
+  set(logo, l3 ? 1 : 0, `scale(${1 + .04 * Math.sin(seg(t, 8.6, 9.0) * Math.PI)})`);
+  sparks.forEach((s) => {
+    const p = eo(seg(t, 8.65, 9.4));
+    set(s.el, (t > 8.65 && t < 9.4) ? 1 - p : 0, `translate(${ex - 7 + Math.cos(s.a) * s.r * p}px, ${ey - 7 + Math.sin(s.a) * s.r * p}px) scale(${1 - p * .5})`);
+  });
+  const wmi = eo(seg(t, 9.6, 10.2));
+  set(wm, l3 ? wmi : 0, `translateY(${(1 - wmi) * 50}px)`);
+  wm.style.clipPath = `inset(0 0 0 ${(1 - wmi) * 100}%)`;
+  typeText(tag, 'تطبيق بحريني ليومك كله', t, 10.2, 11.0, 11.2);
+  tag.style.opacity = l3 ? 1 : 0;
+
+  // 4) كوستا
+  const v4 = t >= 11.6 && t < 17.05;
+  const out4 = ei(seg(t, 16.4, 16.95));  // كل شي يصغر لكبسولة ويختفي
+  const pillT = `scale(${1 - out4 * .85})`;
+  const S4 = (e, o, tf) => set(e, v4 ? o * (1 - out4) : 0, (tf || '') + ' ' + pillT);
+  stage.style.transformOrigin = '540px 960px';
+  S4(l4, eo(seg(t, 11.9, 12.2)));
+  typeText(b4, 'كم صرفت على كوستا؟', t, 12.05, 13.1, 13.4);
+  S4(b4, eo(seg(t, 11.95, 12.15)), `translateY(${(1 - eo(seg(t, 11.95, 12.25))) * 30}px)`);
+  S4(r4, eo(seg(t, 13.3, 13.6)), `translateY(${(1 - eo(seg(t, 13.3, 13.65))) * 30}px)`);
+  const p4 = eo(seg(t, 13.8, 14.5));
+  S4(ph4, p4, `translateY(${(1 - p4) * 500}px)`);
+  ln4d.forEach((d, i) => { const x = eo(seg(t, 14.6 + i * .5, 15.05 + i * .5)); d.style.opacity = x; d.style.transform = `translateY(${(1 - x) * 40}px)`; });
+  S4(ln4, 1);
+  S4(d4, eo(seg(t, 14.3, 14.7)));
+  // اليد تضغط على البحث
+  const hp = seg(t, 15.4, 16.3), hx = 230, hy = 900;
+  set(hand4, v4 && hp > 0 && hp < 1 ? Math.min(1, hp * 5) * (1 - out4) : 0, `translate(${hx + (1 - eo(seg(t, 15.4, 15.75))) * 120}px, ${hy + (1 - eo(seg(t, 15.4, 15.75))) * 160 - (hp > .45 && hp < .6 ? 0 : 10)}px) scale(${hp > .42 && hp < .58 ? .9 : 1})`);
+  const rp = seg(t, 15.8, 16.3);
+  set(rip4, v4 && rp > 0 && rp < 1 ? 1 - rp : 0, `translate(${hx + 10 - rp * 60}px, ${hy - 40 - rp * 60}px)`); rip4.style.width = rip4.style.height = (40 + rp * 120) + 'px';
+
+  // 5) الاختبار والحضور
+  const v5 = t >= 16.95 && t < 22.3;
+  const S5 = (e, o, tf) => set(e, v5 ? o : 0, tf);
+  S5(l5, eo(seg(t, 17.1, 17.4)));
+  typeText(b5, 'نسيت اختبار المحاسبة؟', t, 17.25, 18.35, 18.6);
+  S5(b5, eo(seg(t, 17.15, 17.35)), `translateY(${(1 - eo(seg(t, 17.15, 17.45))) * 30}px)`);
+  const lk = eo(seg(t, 18.4, 19.0));
+  S5(lock, lk, `translateY(${(1 - lk) * 500}px)`);
+  const na = back(seg(t, 19.1, 19.55));
+  S5(nA, seg(t, 19.1, 19.25), `translateY(${(1 - na) * -80}px) scale(${.92 + .08 * na})`);
+  const nb = back(seg(t, 20.4, 20.85));
+  S5(nB, seg(t, 20.4, 20.55), `translateY(${(1 - nb) * -80}px) scale(${.92 + .08 * nb})`);
+  ln5d.forEach((d, i) => { const st = i < 3 ? 19.5 + i * .45 : 20.9 + (i - 3) * .45; const x = eo(seg(t, st, st + .45)); d.style.opacity = x; d.style.transform = `translateY(${(1 - x) * 40}px)`; });
+  S5(ln5, 1);
+  S5(d5, eo(seg(t, 19.2, 19.6)));
+  // اليد تضغط «✓ حضرت»، والزر يصير أخضر
+  const hp5 = seg(t, 21.0, 21.7), hx5 = 160, hy5 = 1250;
+  set(hand5, v5 && hp5 > 0 && hp5 < 1 ? Math.min(1, hp5 * 5) : 0, `translate(${hx5 + (1 - eo(seg(t, 21.0, 21.3))) * 140}px, ${hy5 + (1 - eo(seg(t, 21.0, 21.3))) * 180}px) scale(${hp5 > .45 && hp5 < .6 ? .9 : 1})`);
+  const pressed = t >= 21.35;
+  yes.style.background = pressed ? '#23765B' : 'rgba(0,0,0,.07)'; yes.style.color = pressed ? '#fff' : '#111';
+  // دائرة مرجانية تتوسع من الضغطة وتغطي، وبعدين تنكمش للنص
+  const cg = eio(seg(t, 21.55, 22.15)), cs = eio(seg(t, 22.2, 22.65));
+  const R = 2300 * cg * (1 - cs), cx = cs > 0 ? 540 : 220, cy = cs > 0 ? 900 : 1230;
+  circ.style.display = cg > 0 && cs < 1 ? 'block' : 'none'; circ.style.clipPath = `circle(${R}px at ${cx}px ${cy}px)`;
+
+  // 6) الرقم الكبير
+  const v6 = t >= 22.3 && t < 26.25;
+  set(l6, v6 ? eo(seg(t, 22.5, 22.8)) : 0);
+  const cnt = eo(seg(t, 22.6, 23.7));
+  n6.textContent = String(Math.round(45 * cnt));
+  set(n6, v6 ? eo(seg(t, 22.55, 22.8)) : 0, `scale(${.85 + .15 * back(seg(t, 22.55, 23.0))})`);
+  showWords(t6w, t, 23.6, .2); t6.style.display = v6 ? 'block' : 'none';
+  showWords(s6w, t, 24.4, .2); s6.style.display = v6 ? 'block' : 'none';
+  barWipe(t, t < 20 ? 11.2 : 25.6);
+
+  // 7) الشعار الأخير
+  const v7 = t >= 26.1;
+  const l7 = logo7.querySelector('.ha'), a7 = logo7.querySelector('.arc'), d7 = logo7.querySelector('.dot');
+  const L7 = l7.getTotalLength(), A7 = a7.getTotalLength();
+  l7.style.strokeDasharray = L7; l7.style.strokeDashoffset = L7 * (1 - eio(seg(t, 26.3, 27.1)));
+  a7.style.strokeDasharray = A7; a7.style.strokeDashoffset = A7 * (1 - eio(seg(t, 26.4, 27.3)));
+  const dp = back(seg(t, 27.1, 27.45)); d7.style.transform = `scale(${dp})`; d7.style.transformOrigin = '352px 128px'; d7.style.transformBox = 'view-box';
+  set(logo7, v7 ? 1 : 0);
+  const w7 = eo(seg(t, 27.2, 27.8));
+  set(wm7, v7 ? w7 : 0, `translateY(${(1 - w7) * 40}px)`); wm7.style.clipPath = `inset(0 0 0 ${(1 - w7) * 100}%)`;
+  set(en7, v7 ? eo(seg(t, 27.6, 28.0)) : 0);
+  set(tg7, v7 ? eo(seg(t, 27.9, 28.3)) : 0, `translateY(${(1 - eo(seg(t, 27.9, 28.3))) * 20}px)`);
+  set(pill7, v7 ? eo(seg(t, 28.3, 28.7)) : 0, `translateX(-50%) translateY(${(1 - eo(seg(t, 28.3, 28.7))) * 20}px)`);
+  set(ig7, v7 ? eo(seg(t, 28.6, 29.0)) : 0);
+}
+window.setT = setT;
+window.READY = document.fonts.ready.then(() => Promise.all([...document.images].map((i) => i.complete ? 1 : new Promise((r) => (i.onload = r))))).then(() => setT(0));
+</script>
+</body>
+</html>

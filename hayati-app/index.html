@@ -28,13 +28,13 @@
       --border: #E4DDD0;
       --text: #0B2328;
       --text-2: #33494D;
-      --muted: #6B7B7D;
+      --muted: #5E6C6E;
       --brand: #13636B;
       --brand-2: #1A8A8F;
       --brand-soft: #E1EEEC;
       --on-brand: #ffffff;
-      --expense: #D63A3A;
-      --income: #2F9E7A;
+      --expense: #C23434;
+      --income: #23765B;
       --warn: #B45309;
       --warn-soft: #FDF1DC;
       --danger-soft: #FBE4E1;
@@ -290,6 +290,12 @@
     .btn:active { transform: scale(.98); }
     .btn svg.i { width: 18px; height: 18px; }
     .btn.primary { background: var(--brand); border-color: transparent; color: var(--on-brand); }
+    /* أزرار الدخول السريع (إرشادات Apple وGoogle: أسود/أبيض بالشعار) */
+    .btn.sso { gap: 10px; margin-bottom: 10px; font-weight: 600; }
+    .btn.sso.apple { background: #000; border-color: #000; color: #fff; }
+    .btn.sso.google { background: #fff; border-color: #dadce0; color: #1f1f1f; }
+    .or-line { display: flex; align-items: center; gap: 10px; margin: 6px 0 12px; color: var(--muted); font-size: 13px; }
+    .or-line::before, .or-line::after { content: ""; flex: 1; height: 1px; background: var(--border); }
     .btn.danger { background: var(--danger-soft); color: var(--expense); border-color: transparent; box-shadow: none; }
     .btn.ghost { background: var(--surface-2); border-color: transparent; box-shadow: none; }
     .btn.block { width: 100%; }
@@ -684,28 +690,28 @@
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-  <script src="i18n-en.js"></script>
-  <script src="i18n.js"></script>
-  <script src="config.js"></script>
-  <script src="sms.js"></script>
-  <script src="store.js"></script>
-  <script src="calendar.js"></script>
-  <script src="icons.js"></script>
-  <script src="app.js"></script>
-  <script src="extras.js"></script>
-  <script src="extras2.js"></script>
-  <script src="extras3.js"></script>
-  <script src="study.js"></script>
-  <script src="watch.js"></script>
-  <script src="import.js"></script>
-  <script src="lock.js"></script>
-  <script src="motion.js"></script>
-  <script src="pwa.js"></script>
-  <script src="find.js"></script>
-  <script src="insights.js"></script>
-  <script src="community.js"></script>
-  <script src="privacy.js"></script>
-  <script src="native.js"></script>
+  <script src="js/i18n/i18n-en.js"></script>
+  <script src="js/i18n/i18n.js"></script>
+  <script src="js/core/config.js"></script>
+  <script src="js/core/sms.js"></script>
+  <script src="js/core/store.js"></script>
+  <script src="js/features/calendar.js"></script>
+  <script src="js/core/icons.js"></script>
+  <script src="js/core/app.js"></script>
+  <script src="js/features/extras.js"></script>
+  <script src="js/features/extras2.js"></script>
+  <script src="js/features/extras3.js"></script>
+  <script src="js/features/study.js"></script>
+  <script src="js/features/watch.js"></script>
+  <script src="js/features/import.js"></script>
+  <script src="js/features/lock.js"></script>
+  <script src="js/features/motion.js"></script>
+  <script src="js/features/pwa.js"></script>
+  <script src="js/features/find.js"></script>
+  <script src="js/features/insights.js"></script>
+  <script src="js/features/community.js"></script>
+  <script src="js/features/privacy.js"></script>
+  <script src="js/native/native.js"></script>
 
 
 
