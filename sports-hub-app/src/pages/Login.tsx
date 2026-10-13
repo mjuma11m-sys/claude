@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useLocation } from 'react-router'
 import { useAuth } from '../auth/AuthProvider'
-import { Logo } from '../components/Logo'
+import { Logo, Wordmark } from '../components/Logo'
 import { PRIVACY_CONTACT } from '../lib/legal'
 import { supabase } from '../lib/supabase'
 import { ROLES, ROLE_LABEL } from '../lib/roles'
@@ -33,7 +33,7 @@ export function Login() {
         <div className="flex items-center gap-3">
           <Logo className="size-10" />
           <div>
-            <h1 className="text-xl font-bold">Sports Hub</h1>
+            <h1 className="text-xl"><Wordmark /></h1>
             <p className="text-sm text-mute">منصة كرة القدم البحرينية</p>
           </div>
         </div>

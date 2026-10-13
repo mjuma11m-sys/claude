@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 10,
+  "next": 11,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -72,6 +72,14 @@
       "owner": "CEO",
       "priority": "P2",
       "status": "blocked",
+      "opened": "2026-10-13",
+      "updated": "2026-10-13"
+    },
+    "DW-010": {
+      "title": "Sports Hub: الهوية البصرية — شعار، ألوان محددة، خط محدد، أيقونة التطبيق",
+      "owner": "CEO",
+      "priority": "P2",
+      "status": "review",
       "opened": "2026-10-13",
       "updated": "2026-10-13"
     }

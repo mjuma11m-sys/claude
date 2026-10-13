@@ -2,7 +2,7 @@ import { NavLink, Outlet } from 'react-router'
 import { useAuth } from '../auth/AuthProvider'
 import { canAccess, ROLE_LABEL, type Area } from '../lib/roles'
 import { Icon, type IconName } from './Icon'
-import { Logo } from './Logo'
+import { Logo, Wordmark } from './Logo'
 
 type Item = { to: string; label: string; icon: IconName; area: Area }
 const NAV: Item[] = [
@@ -32,7 +32,7 @@ export function Layout() {
       <aside className="sticky top-0 hidden h-dvh flex-col border-e border-white/10 bg-white/[0.02] p-3 md:flex lg:p-4">
         <div className="mb-8 flex items-center gap-3 px-1.5 pt-2">
           <Logo className="size-9 shrink-0" />
-          <span className="hidden text-lg font-bold lg:inline">Sports Hub</span>
+          <Wordmark className="hidden text-base lg:inline" />
         </div>
         <nav className="flex flex-1 flex-col gap-1">
           {items.map((i) => (
@@ -56,7 +56,7 @@ export function Layout() {
         <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-white/10 bg-night/70 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-xl md:px-8">
           <div className="flex items-center gap-2 md:hidden">
             <Logo className="size-7" />
-            <span className="font-bold">Sports Hub</span>
+            <Wordmark className="text-sm" />
           </div>
           <div className="flex items-center gap-2 text-sm md:ms-auto">
             {demo && <span className="rounded-full bg-warn/15 px-2.5 py-0.5 text-xs text-warn">وضع تجريبي</span>}
