@@ -4,6 +4,7 @@
 > - 🔔 **تنبيهات محلية** «بعد 10 دقايق: محاسبة إدارية · S40-2050» و«الحين وقت صلاة الفجر»، تشتغل والتطبيق مسكّر.
 > - 🧠 **تذكيرات ذكية** (جلسة 25): «بكرة اختبار/تسليم/يتجدد» الساعة 8 الليل، «بعد ساعتين: اختبار…»، وملخص صباح اختياري. كل نوع له مفتاح بالإعدادات ← التنبيهات.
 > - 👆 **أزرار التنبيه**: الضغطة تفتح الشي نفسه (المهمة، الاشتراكات، اليوم)، وضغطة مطوّلة على تنبيه الواجب أو الاختبار فيها «✓ خلصته» و«⏰ ذكّرني بعد ساعة».
+> - 🎓 **سؤال الحضور**: بعد كل محاضرة بـ 5 دقايق «حضرت X؟» بزرين «✓ حضرت» و«✗ غبت»، وينسجل على يوم المحاضرة مع تحذير حد الغياب.
 > - 📳 **اهتزاز خفيف** عند الحفظ والحذف.
 > - 📤 **المشاركة**: النسخة الاحتياطية، ملف التقويم، وملخص تقرير الشهر تروح لقائمة المشاركة.
 >
@@ -64,7 +65,7 @@ npm run cap:open    # يفتح Xcode
 انسخها لما تقدّم للمتجر أو TestFlight الخارجي:
 ```
 Hayati is an offline-first personal organizer for Bahrain: expenses (with on-device bank SMS parsing that masks card numbers), weekly class schedule, prayer times, tasks and athlete readiness.
-Native features: local notifications before each class/appointment, at prayer times, the evening before exams, homework deadlines and subscription renewals, plus an optional morning brief (each type can be switched off in Settings). Homework and exam alerts have actions to mark the task done or snooze it for an hour (scheduled on-device, work while the app is closed), haptic feedback, and the iOS share sheet for backups, calendar files and monthly report summaries.
+Native features: local notifications before each class/appointment, at prayer times, the evening before exams, homework deadlines and subscription renewals, plus an optional morning brief (each type can be switched off in Settings). Homework and exam alerts have actions to mark the task done or snooze it for an hour, and an alert after each class records attendance or absence (scheduled on-device, work while the app is closed), haptic feedback, and the iOS share sheet for backups, calendar files and monthly report summaries.
 No account is required. All data is stored on the device. No ads, no tracking.
 ```
 

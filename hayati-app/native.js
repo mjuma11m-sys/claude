@@ -18,12 +18,15 @@
   const TEST_ID = 990001;
   // ⚙️ التنبيهات: كل نوع له مفتاح، وملخص الصباح مقفل افتراضياً (ما نزعج)
   const PREFS = 'hayati-notif-prefs';
-  const DEF = { lectures: true, exams: true, homework: true, subs: true, brief: false, briefAt: '07:00' };
+  const DEF = { lectures: true, attend: true, exams: true, homework: true, subs: true, brief: false, briefAt: '07:00' };
   function prefs() {
     try { return Object.assign({}, DEF, JSON.parse(localStorage.getItem(PREFS) || '{}')); } catch (e) { return Object.assign({}, DEF); }
   }
   function savePrefs(p) { try { localStorage.setItem(PREFS, JSON.stringify(p)); } catch (e) { /* تجاهل */ } }
-  const TASK_ACTIONS = 'HAYATI_TASK';
+  const TASK_ACTIONS = 'HAYATI_TASK', ATTEND_ACTIONS = 'HAYATI_ATTEND';
+  const ATTEND_DAYS = 2, ATTEND_AFTER = 5;   // سؤال الحضور: يومين بس (حد iOS)، بعد المحاضرة بـ 5 دقايق
+  const pad = (n) => String(n).padStart(2, '0');
+  const dayKey = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
   const SNOOZE = 'hayati-snoozes', HOUR = 3600e3;
   function snoozes() {
     let list = [];
@@ -52,7 +55,7 @@
     const add = (key, when, title, body, extra) => {
       if (!(when > now)) return;
       const n = { id: nid(key), title, body: body || '', schedule: { at: when, allowWhileIdle: true }, extra: extra || { kind: 'today' } };
-      if (extra && extra.kind === 'task' && extra.act) n.actionTypeId = TASK_ACTIONS;   // «✓ خلصته» و«⏰ بعد ساعة»
+      if (extra && extra.act) n.actionTypeId = extra.act === 'attend' ? ATTEND_ACTIONS : TASK_ACTIONS;   // «حضرت/غبت» أو «خلصته/بعد ساعة»
       out.push(n);
     };
     const today = midnight(now);
@@ -68,6 +71,20 @@
             prayer ? t.now + ' ' + it.name : 'بعد ' + BEFORE + ' دقايق: ' + it.name,
             prayer ? '' : [t.label, it.room].filter(Boolean).join(' · '),
             it.src === 'task' ? { kind: 'task', id: it.id } : { kind: 'today' });
+        }
+      }
+    }
+
+    // 🎓 «حضرت X؟» بعد كل محاضرة، للطالب بس، وما يرن إذا جاوبت داخل التطبيق
+    if (p.attend && (!A.has || A.has('student'))) {
+      for (let d = 0; d < ATTEND_DAYS; d++) {
+        const day = new Date(today.getFullYear(), today.getMonth(), today.getDate() + d), k = dayKey(day);
+        for (const c of A.lecturesOn(day.getDay())) {
+          if (c.type && c.type !== 'lecture') continue;
+          if ([c.attended, c.absences, c.skipped].some((l) => Array.isArray(l) && l.includes(k))) continue;
+          const end = c.end_time ? A.minutesOf(c.end_time) : A.minutesOf(c.start_time) + 50;
+          add('attend:' + c.id + ':' + k, at(day, end + ATTEND_AFTER), 'حضرت ' + c.name + '؟',
+            ['خلصت ' + A.time12(A.hhmm(end)), c.room].filter(Boolean).join(' · '), { kind: 'attend', id: c.id, day: k, act: 'attend' });
         }
       }
     }
@@ -185,6 +202,11 @@
       A.toast('انحفظ ✓ خلصت «' + t.title + '» 💪');
       return;
     }
+    if (ev.actionId === 'present' || ev.actionId === 'absent') {
+      A.go('today');
+      if (!A.markAttendance || !A.markAttendance(extra.id, ev.actionId === 'present' ? 'attended' : 'absences', extra.day)) A.toast('ما لقيت المادة، يمكن انحذفت');
+      return;
+    }
     if (ev.actionId === 'snooze') {
       const list = snoozes();
       list.push({ key: 'snooze:' + extra.id + ':' + Date.now(), at: Date.now() + HOUR, title: n.title, body: n.body || '', extra });
@@ -200,6 +222,9 @@
       Promise.resolve(LN.registerActionTypes({ types: [{ id: TASK_ACTIONS, actions: [
         { id: 'done', title: '✓ خلصته', foreground: true },
         { id: 'snooze', title: '⏰ ذكّرني بعد ساعة', foreground: true },
+      ] }, { id: ATTEND_ACTIONS, actions: [
+        { id: 'present', title: '✓ حضرت', foreground: true },
+        { id: 'absent', title: '✗ غبت', foreground: true },
       ] }] })).catch(() => {});
     } catch (e) { /* نسخة قديمة بدون أزرار: التنبيه يشتغل عادي */ }
   }
@@ -254,7 +279,7 @@
   }
 
   // ⚙️ الإعدادات ← التنبيهات (نسخة الآيفون بس)
-  const TYPES = [['lectures', '📅 الجدول والصلاة', 'قبل المحاضرة بـ 10 دقايق، والصلاة بوقتها'], ['exams', '📝 الاختبارات', 'الليلة اللي قبلها، وقبل الاختبار بساعتين'],
+  const TYPES = [['lectures', '📅 الجدول والصلاة', 'قبل المحاضرة بـ 10 دقايق، والصلاة بوقتها'], ['attend', '🎓 سؤال الحضور', 'بعد كل محاضرة: حضرت ولا غبت، من التنبيه نفسه'], ['exams', '📝 الاختبارات', 'الليلة اللي قبلها، وقبل الاختبار بساعتين'],
     ['homework', '📚 الواجبات', 'الليلة اللي قبل التسليم'], ['subs', '💳 تجديد الاشتراكات', 'قبل التجديد بالأيام اللي تحددها بالاشتراك'], ['brief', '☀️ ملخص الصباح', 'جدولك واختباراتك اليوم، والأيام الفاضية ما فيها']];
   function prefsSheet() {
     const p = prefs();

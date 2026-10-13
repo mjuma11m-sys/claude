@@ -40,10 +40,11 @@
       '<button class="btn ghost" style="flex:0 0 auto" data-action="att-skip" data-id="' + c.id + '" aria-label="تخطّي">' + I('minus') + '</button></div></div>';
   }
 
-  function mark(id, field) {
+  // day: «2026-10-13»، لما الجواب يجي من تنبيه يوم ثاني (بعد نص الليل مثلاً)
+  function mark(id, field, day) {
     const c = course(id);
-    if (!c) return;
-    const k = dateKey();
+    if (!c) return false;
+    const k = day || dateKey();
     const list = Array.isArray(c[field]) ? c[field].filter((d) => d !== k) : [];
     list.push(k);
     S.upsert('courses', Object.assign({}, c, { [field]: list }));
@@ -54,7 +55,9 @@
         A.toast(left <= 0 ? '⚠️ وصلت حد الغياب في ' + c.name : left <= 2 ? '⚠️ باقي لك ' + left + ' غيابات بس' : 'انسجل الغياب · باقي ' + left);
       } else A.toast('انسجل الغياب');
     } else if (field === 'attended') A.toast('انسجل الحضور ✓');
+    return true;
   }
+  A.markAttendance = mark;   // تنبيه «حضرت؟» بالآيفون (native.js) يستخدم نفس المنطق
 
   // ================= هدف المذاكرة الأسبوعي =================
   // الأسبوع يبدأ الأحد

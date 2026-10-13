@@ -757,3 +757,65 @@ test('iPhone: tapping a reminder opens it, «خلصته» marks it done and clea
   await store(page, () => window.__cap.handler({ actionId: 'tap', notification: { title: 'x', extra: { kind: 'task', id: 'hw1' } } }));
   await expect(page.locator('#sheet')).toBeVisible();
 });
+
+// سؤال الحضور من التنبيه (جلسة الديوانية «الحضور من التنبيه»)
+test('iPhone: «حضرت X؟» after each lecture, answered from the alert on the right day, gone once answered in the app @webkit', async ({ page }) => {
+  await page.addInitScript(() => {
+    const log = window.__cap = { scheduled: [], types: null, handler: null };
+    window.Capacitor = {
+      isNativePlatform: () => true,
+      Plugins: {
+        LocalNotifications: {
+          checkPermissions: async () => ({ display: 'granted' }),
+          requestPermissions: async () => ({ display: 'granted' }),
+          getPending: async () => ({ notifications: log.scheduled.map((n) => ({ id: n.id })) }),
+          cancel: async () => { log.scheduled = []; },
+          schedule: async ({ notifications }) => { log.scheduled = notifications; },
+          registerActionTypes: async (o) => { log.types = o.types; },
+          addListener: (ev, fn) => { log.handler = fn; return Promise.resolve({ remove() {} }); },
+        },
+      },
+    };
+  });
+  await open(page);
+  const t = await store(page, () => window.__cap.types.find((x) => x.actions.some((a) => a.id === 'present')));
+  expect(t.actions.map((a) => a.title)).toEqual(['✓ حضرت', '✗ غبت']);
+
+  // محاضرة بكرة 10:00–11:15، وتمرين بكرة (التمرين ما له سؤال حضور)
+  const k = await store(page, () => {
+    const d = new Date(); d.setDate(d.getDate() + 1);
+    App.S.upsert('courses', { id: 'at1', name: 'محاسبة إدارية', type: 'lecture', days: [d.getDay()], start_time: '10:00', end_time: '11:15', room: 'S40-2050', absence_limit: 3, absences: ['2026-01-01'] });
+    App.S.upsert('courses', { id: 'gy1', name: 'جيم', type: 'gym', days: [d.getDay()], start_time: '18:00', end_time: '19:00' });
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  });
+  await page.waitForFunction(() => window.__cap.scheduled.some((n) => n.title === 'حضرت محاسبة إدارية؟'), null, { timeout: 5000 });
+  const n = await store(page, () => { const x = window.__cap.scheduled.find((n) => n.title === 'حضرت محاسبة إدارية؟'); return { ...x, mins: x.schedule.at.getHours() * 60 + x.schedule.at.getMinutes() }; });
+  expect(n.mins).toBe(11 * 60 + 20);                 // بعد ما تخلص بـ 5 دقايق
+  expect(n.body).toContain('S40-2050');
+  expect(n.actionTypeId).toBe(t.id);
+  expect(n.extra).toEqual({ kind: 'attend', id: 'at1', day: k, act: 'attend' });
+  expect(await store(page, () => window.__cap.scheduled.some((x) => x.title === 'حضرت جيم؟'))).toBe(false);
+
+  // «✗ غبت»: ينسجل على يوم المحاضرة نفسه (مو اليوم)، ويطلع تحذير حد الغياب، والتنبيه ينشال
+  await store(page, (n) => window.__cap.handler({ actionId: 'absent', notification: n }), n);
+  await expect(page.locator('.toast')).toContainText('باقي لك 1 غيابات بس');
+  expect(await store(page, () => App.st.courses.find((c) => c.id === 'at1').absences)).toEqual(['2026-01-01', k]);
+  await page.waitForFunction(() => !window.__cap.scheduled.some((x) => x.title === 'حضرت محاسبة إدارية؟'), null, { timeout: 5000 });
+
+  // جاوب داخل التطبيق (حضرت) قبل التنبيه ← ما يرن
+  await store(page, () => {
+    const d = new Date(); d.setDate(d.getDate() + 1);
+    App.S.upsert('courses', { id: 'at2', name: 'تسويق', type: 'lecture', days: [d.getDay()], start_time: '12:00', end_time: '13:00' });
+  });
+  await page.waitForFunction(() => window.__cap.scheduled.some((x) => x.title === 'حضرت تسويق؟'), null, { timeout: 5000 });
+  await store(page, (k) => { const c = App.st.courses.find((x) => x.id === 'at2'); App.S.upsert('courses', Object.assign({}, c, { attended: [k] })); }, k);
+  await page.waitForFunction(() => !window.__cap.scheduled.some((x) => x.title === 'حضرت تسويق؟'), null, { timeout: 5000 });
+
+  // «✓ حضرت» على مادة انحذفت ← رسالة بدال الكسر
+  await store(page, () => window.__cap.handler({ actionId: 'present', notification: { extra: { kind: 'attend', id: 'gone', day: '2026-10-13' } } }));
+  await expect(page.locator('.toast')).toContainText('ما لقيت المادة');
+
+  // المفتاح يطفيه
+  const off = await store(page, () => HayatiNative.upcoming(new Date(), Object.assign(HayatiNative.prefs(), { attend: false })).some((x) => x.title.startsWith('حضرت')));
+  expect(off).toBe(false);
+});

@@ -1229,5 +1229,7 @@ window.HAYATI_EN = {
 "☀️ ملخص الصباح": "☀️ Morning brief",
 "جدولك واختباراتك اليوم، والأيام الفاضية ما فيها": "Today's schedule and exams; skipped on empty days",
 "وقت ملخص الصباح": "Morning brief time",
-"شغّالة": "on"
+"شغّالة": "on",
+"🎓 سؤال الحضور": "🎓 Attendance check",
+"بعد كل محاضرة: حضرت ولا غبت، من التنبيه نفسه": "After each class: attended or absent, right from the alert"
 };
