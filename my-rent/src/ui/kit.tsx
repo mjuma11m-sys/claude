@@ -72,7 +72,7 @@ export function Chips<T extends string>({ value, options, onChange, label }: { v
   return (
     <div className="chips" role="radiogroup" aria-label={label}>
       {options.map((o) => (
-        <button key={o.id} role="radio" aria-checked={value === o.id} className="chip press" onClick={() => onChange(o.id)}>
+        <button key={o.id} type="button" role="radio" aria-checked={value === o.id} className="chip press" onClick={() => onChange(o.id)}>
           {o.label}
           {o.count !== undefined && <span className="num chip-count">{o.count}</span>}
         </button>

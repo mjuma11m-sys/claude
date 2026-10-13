@@ -135,7 +135,3 @@ export function Money({ fils, tone, animate }: { fils: number; tone?: "in" | "ou
   return <span className={`num bhd money ${tone ? `money-${tone}` : ""}`}>{v}</span>;
 }
 
-// مكان المحتوى وقت التحميل من Supabase
-export function Skeleton({ w = "100%", h = 16 }: { w?: number | string; h?: number }) {
-  return <span className="skeleton" style={{ display: "block", width: w, height: h }} aria-hidden="true" />;
-}

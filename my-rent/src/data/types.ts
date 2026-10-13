@@ -20,17 +20,19 @@ export type Expense = { id: string; catId: string; label: string; amount: Fils; 
 export type Member = { id: string; name: string };
 export type BankTxn = { id: string; memberId: string; amount: Fils; label: string; date: string };
 
-export type ListItem = { id: string; title: string; sub: string; value?: Fils; tag?: { label: string; tone: Status } };
+export type Account = { id: string; title: string; sub: string; value: Fils };
+export type Task = { id: string; title: string; sub: string; done: boolean };
+export type Vendor = { id: string; name: string; service: string; phone: string };
 
 export type Data = {
+  trackFrom: string; // "YYYY-MM": أول شهر نحسب منه المتأخرات
   units: Unit[];
   payments: Payment[];
   cats: BudgetCat[];
   expenses: Expense[];
   members: Member[];
   bank: BankTxn[];
-  wallet: ListItem[];
-  travel: ListItem[];
-  house: ListItem[];
-  vendors: ListItem[];
+  accounts: Account[];
+  tasks: Task[];
+  vendors: Vendor[];
 };

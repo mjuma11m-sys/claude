@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useStore } from "../data/store";
-import { unitStatus } from "../data/logic";
+import { arrears, monthName, unitStatus } from "../data/logic";
 import type { Status, Unit } from "../data/types";
 import { Money, StatusPill } from "../theme/AppShell";
 import { useStagger } from "../theme/motion";
@@ -46,6 +46,7 @@ export function Tenants({ onOpenUnit }: { onOpenUnit: (u: Unit) => void }) {
                   {s ? <StatusPill status={s} /> : <span className="pill pill-vacant">شاغر</span>}
                 </div>
                 <div className="muted">{u.tenant?.name ?? "بدون مستأجر"}</div>
+                {s === "late" && (() => { const a = arrears(data, u); return <div className="owed-line">متأخر: {a.months.map((m) => monthName(m.month)).join("، ")} · <Money fils={a.amount} /></div>; })()}
                 <div className="unit-foot"><Money fils={u.rent} /><span className="muted small">يستحق يوم <span className="num">{u.dueDay}</span></span></div>
               </button>
             );

@@ -17,7 +17,7 @@ async function waitServer() {
 try {
   await waitServer();
   const browser = await chromium.launch({ executablePath: exe });
-  const pages = ["home", "tenants", "budget", "bank", "wallet", "travel", "house", "vendors"];
+  const pages = ["home", "tenants", "budget", "bank", "house", "vendors", "settings"];
 
   // 1) كل الشاشات بكل الأحجام: بدون scroll أفقي وبدون أخطاء
   for (const [w, h] of [[390, 844], [820, 1180], [1280, 800]]) {
@@ -29,24 +29,35 @@ try {
       const over = await p.evaluate(() => document.documentElement.scrollWidth > innerWidth);
       if (over) ok(false, `no h-scroll ${w}px #${id}`);
     }
-    ok(errors.length === 0, `${w}px: 8 شاشات بدون أخطاء وبدون scroll أفقي`, errors.join(" | "));
+    ok(errors.length === 0, `${w}px: 7 شاشات بدون أخطاء وبدون scroll أفقي`, errors.join(" | "));
     await p.close();
   }
 
-  // 2) تسجيل دفعة + تراجع
+  // 2) متأخرات + واتساب + تسجيل دفعة + تراجع + إيصال
   const p = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await p.goto(URL + "#tenants"); await p.evaluate(() => localStorage.clear()); await p.reload(); await p.waitForTimeout(700);
   await p.getByRole("radio", { name: /متأخر/ }).click();
-  const lateBefore = await p.locator(".unit-card").count();
+  ok(await p.locator(".unit-card").count() >= 1, "فيه وحدات متأخرة من أشهر سابقة");
   await p.locator(".unit-card").first().click(); await p.waitForTimeout(350);
-  ok(await p.getByRole("dialog").isVisible(), "البطاقة تفتح نافذة الوحدة");
+  const name = (await p.locator(".dlg-head h2").innerText()).split(" · ")[0];
+  ok(await p.locator(".arrears").isVisible(), "نافذة الوحدة تبين المتأخرات", await p.locator(".arrears .strong").innerText());
+  ok((await p.locator(".btn-wa").getAttribute("href")).startsWith("https://wa.me/"), "زر تذكير الواتساب فيه الرسالة");
+  const hist0 = await p.locator(".dlg .rows-tap li").count();
   await p.fill("#pay-amount", "abc"); await p.getByRole("button", { name: "سجّل الدفعة" }).click();
   ok(await p.locator(".field-error").isVisible(), "مبلغ غلط يطلع رسالة خطأ");
-  await p.fill("#pay-amount", "200"); await p.getByRole("button", { name: "سجّل الدفعة" }).click(); await p.waitForTimeout(400);
-  ok(await p.locator(".toast").isVisible(), "تطلع رسالة بعد التسجيل", await p.locator(".toast").innerText());
-  ok(await p.locator(".unit-card").count() === lateBefore - 1, "الوحدة طلعت من «متأخر»");
-  await p.getByRole("button", { name: "تراجع" }).click(); await p.waitForTimeout(400);
-  ok(await p.locator(".unit-card").count() === lateBefore, "«تراجع» يرجّعها");
+  const owed0 = await p.locator(".dlg .chips").first().locator(".chip").count();
+  await p.locator(".dlg .chips").first().locator(".chip").first().click();
+  await p.getByRole("button", { name: "سجّل الدفعة" }).click(); await p.waitForTimeout(400);
+  ok(await p.locator(".toast").isVisible(), "تطلع رسالة بعد التسجيل", (await p.locator(".toast").innerText()).split("\n")[0]);
+  await p.getByRole("radio", { name: /الكل/ }).click(); await p.waitForTimeout(100);
+  await p.locator(".unit-card", { hasText: name + " " }).first().click(); await p.waitForTimeout(350);
+  ok(await p.locator(".dlg .rows-tap li").count() === hist0 + 1, "الدفعة انضافت لسجل الوحدة");
+  const owed1 = await p.locator(".dlg .pay-form .chips").first().locator(".chip").count();
+  ok(owed1 === owed0 - 1, "أقدم شهر متأخر انسدّ", `${owed0} → ${owed1}`);
+  await p.locator(".dlg .rows-tap li button").first().click(); await p.waitForTimeout(450);
+  ok(await p.getByRole("dialog", { name: "إيصال استلام إيجار" }).isVisible(), "الإيصال ينفتح من سجل الدفعات");
+  ok(await p.locator("#receipt img[alt='إداراتي']").isVisible(), "الإيصال عليه شعار إداراتي");
+  await p.keyboard.press("Escape"); await p.waitForTimeout(400);
 
   // 3) Escape يسكّر النافذة
   await p.locator(".unit-card").first().click(); await p.waitForTimeout(350);
@@ -58,6 +69,7 @@ try {
   const before = await p.locator(".hero-amount").innerText();
   await p.locator(".fab").click(); await p.waitForTimeout(350);
   await p.locator(".dlg .row-btn").first().click(); await p.waitForTimeout(400);
+  await p.locator(".dlg .pay-form .chips").first().locator(".chip").last().click();
   await p.getByRole("button", { name: "سجّل الدفعة" }).click(); await p.waitForTimeout(900);
   const after = await p.locator(".hero-amount").innerText();
   ok(before !== after, "التحصيل يتحدّث بعد الدفعة", `${before} → ${after}`);
@@ -70,12 +82,30 @@ try {
   await p.getByRole("button", { name: "أضف المصروف" }).click(); await p.waitForTimeout(900);
   ok(spent0 !== await p.locator(".summary .big").first().innerText(), "المصروف ينضاف للميزانية");
 
-  // 6) تقليل الحركة: الرقم يطلع على طول
+  // 6) الصيانة: تأشير «تم»
+  await p.goto(URL + "#house"); await p.waitForTimeout(700);
+  const done0 = await p.locator('.task[aria-checked="true"]').count();
+  await p.locator('.task[aria-checked="false"]').first().click();
+  ok(await p.locator('.task[aria-checked="true"]').count() === done0 + 1, "مهمة الصيانة تتأشّر «تم»");
+
+  // 7) الإعدادات: حذف كل البيانات ثم رجوع التجريبي
+  await p.goto(URL + "#settings"); await p.waitForTimeout(500);
+  await p.getByRole("button", { name: "احذف كل البيانات" }).click();
+  await p.getByRole("button", { name: "أكيد، احذف" }).click(); await p.waitForTimeout(300);
+  await p.goto(URL + "#tenants"); await p.waitForTimeout(700);
+  ok(await p.locator(".unit-card").count() === 0, "الحذف يمسح كل الوحدات");
+  await p.goto(URL + "#settings"); await p.waitForTimeout(400);
+  await p.getByRole("button", { name: "رجّع البيانات التجريبية" }).click(); await p.waitForTimeout(300);
+  await p.goto(URL + "#tenants"); await p.waitForTimeout(700);
+  ok(await p.locator(".unit-card").count() === 7, "التجريبي يرجع");
+
+  // 8) تقليل الحركة: الرقم يطلع على طول
   const r = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
   await r.goto(URL + "#home"); await r.waitForTimeout(600);
   const v0 = await r.locator(".hero-amount").innerText();
   await r.locator(".fab").click(); await r.waitForTimeout(100);
   await r.locator(".dlg .row-btn").first().click(); await r.waitForTimeout(100);
+  await r.locator(".dlg .pay-form .chips").first().locator(".chip").last().click(); // شهر الحين، عشان يتغيّر التحصيل
   await r.getByRole("button", { name: "سجّل الدفعة" }).click(); await r.waitForTimeout(60);
   ok(v0 !== await r.locator(".hero-amount").innerText(), "تقليل الحركة: الرقم يتحدّث فوري");
 

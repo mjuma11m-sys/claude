@@ -1,43 +1,62 @@
 import { useEffect, useState } from "react";
-import type { Method, Unit } from "../data/types";
+import type { Method, Payment, Unit } from "../data/types";
 import { useStore } from "../data/store";
-import { fmt, monthKey, monthName, parseBHD, unitStatus } from "../data/logic";
+import { arrears, fmt, monthName, owedMonths, parseBHD, unitStatus } from "../data/logic";
 import { Chips, Sheet, useToast } from "../ui/kit";
 import { Money, StatusPill } from "../theme/AppShell";
 import { Icon } from "../ui/icons";
 
 const METHODS: Method[] = ["BenefitPay", "تحويل", "نقد", "شيك"];
 
-/** تفاصيل الوحدة + تسجيل دفعة الشهر */
-export function PaySheet({ unit, onClose }: { unit: Unit | null; onClose: () => void }) {
+/** رسالة تذكير صريحة: المبلغ والأشهر، بدون تهديد */
+function reminderUrl(unit: Unit, months: string[], amount: number) {
+  const text = `السلام عليكم ${unit.tenant?.name ?? ""}، تذكير بإيجار ${unit.name} (${months.map(monthName).join("، ")}): ${fmt(amount)} د.ب. إذا تم الدفع تجاهل الرسالة، وشكراً.`;
+  const digits = (unit.tenant?.phone ?? "").replace(/\D/g, "");
+  const to = digits.length === 8 ? `973${digits}` : ""; // رقم بحريني كامل، وإلا يختار المستخدم المحادثة
+  return `https://wa.me/${to}?text=${encodeURIComponent(text)}`;
+}
+
+/** تفاصيل الوحدة + المتأخرات + تسجيل دفعة + الإيصالات */
+export function PaySheet({ unit, onClose, onReceipt }: { unit: Unit | null; onClose: () => void; onReceipt: (p: Payment, u: Unit) => void }) {
   const { data, pay, unpay } = useStore();
   const toast = useToast();
   const [shown, setShown] = useState<Unit | null>(unit);
+  const [month, setMonth] = useState("");
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState<Method>("BenefitPay");
   const [error, setError] = useState("");
 
-  // نخلي آخر وحدة معروضة وقت حركة الإغلاق
+  const owed = shown ? owedMonths(data, shown) : [];
+
+  // أول ما تنفتح: أقدم شهر ما اندفع، والمبلغ الباقي منه
   useEffect(() => {
-    if (unit) {
-      setShown(unit);
-      setAmount(fmt(unit.rent));
-      setMethod("BenefitPay");
-      setError("");
-    }
+    if (!unit) return;
+    setShown(unit);
+    const first = owedMonths(data, unit)[0];
+    setMonth(first?.month ?? "");
+    setAmount(first ? fmt(first.left) : "");
+    setMethod("BenefitPay");
+    setError("");
   }, [unit]);
 
   const u = shown;
   const status = u ? unitStatus(data, u) : "due";
-  const history = u ? data.payments.filter((p) => p.unitId === u.id).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4) : [];
+  const arr = u ? arrears(data, u) : { months: [], amount: 0 };
+  const history = u ? data.payments.filter((p) => p.unitId === u.id).sort((a, b) => b.month.localeCompare(a.month) || b.date.localeCompare(a.date)).slice(0, 6) : [];
+
+  const pickMonth = (m: string) => {
+    setMonth(m);
+    const o = owed.find((x) => x.month === m);
+    if (o) setAmount(fmt(o.left));
+  };
 
   const submit = () => {
-    if (!u) return;
+    if (!u || !month) return;
     const fils = parseBHD(amount);
     if (fils === null) { setError("اكتب المبلغ بالدينار، مثل 180 أو 180.500"); return; }
-    const p = pay(u.id, fils, method);
+    const p = pay(u.id, month, fils, method);
     onClose();
-    toast({ text: `انسجلت دفعة ${u.name} · ${fmt(fils)} د.ب`, undo: () => unpay(p.id) });
+    toast({ text: `انسجلت دفعة ${u.name} · ${monthName(month)} · ${fmt(fils)} د.ب`, undo: () => unpay(p.id) });
   };
 
   return (
@@ -58,9 +77,22 @@ export function PaySheet({ unit, onClose }: { unit: Unit | null; onClose: () => 
             {u.tenant && <div><div className="muted small">من</div><span className="num strong">{u.tenant.since}</span></div>}
           </div>
 
-          {u.tenant && status !== "paid" && (
+          {arr.amount > 0 && (
+            <div className="arrears">
+              <div>
+                <div className="strong">متأخرات {arr.months.length === 1 ? "شهر" : arr.months.length === 2 ? "شهرين" : <><span className="num">{arr.months.length}</span> أشهر</>}</div>
+                <div className="small">{arr.months.map((m) => monthName(m.month)).join("، ")}</div>
+              </div>
+              <Money fils={arr.amount} tone="out" />
+              <a className="btn btn-wa press" href={reminderUrl(u, arr.months.map((m) => m.month), arr.amount)} target="_blank" rel="noreferrer">ذكّره بالواتساب</a>
+            </div>
+          )}
+
+          {u.tenant && owed.length > 0 && (
             <form className="pay-form" onSubmit={(e) => { e.preventDefault(); submit(); }}>
-              <label htmlFor="pay-amount" className="strong">تسجيل دفعة {monthName(monthKey(new Date()))}</label>
+              <span className="strong">تسجيل دفعة</span>
+              <Chips label="عن شهر" value={month} onChange={pickMonth} options={owed.map((o) => ({ id: o.month, label: monthName(o.month) }))} />
+              <label htmlFor="pay-amount" className="sr-only">المبلغ</label>
               <div className="money-input">
                 <input id="pay-amount" inputMode="decimal" dir="ltr" value={amount} onChange={(e) => { setAmount(e.target.value); setError(""); }} aria-invalid={!!error} aria-describedby="pay-err" />
                 <span>د.ب</span>
@@ -73,12 +105,14 @@ export function PaySheet({ unit, onClose }: { unit: Unit | null; onClose: () => 
 
           {history.length > 0 && (
             <div>
-              <div className="muted small" style={{ marginBottom: 6 }}>آخر الدفعات</div>
-              <ul className="rows">
+              <div className="muted small" style={{ marginBottom: 6 }}>الدفعات والإيصالات</div>
+              <ul className="rows rows-tap card-list">
                 {history.map((p) => (
                   <li key={p.id}>
-                    <span>{monthName(p.month)} <span className="muted small">· {p.method}</span></span>
-                    <Money fils={p.amount} tone="in" />
+                    <button className="row-btn press" onClick={() => onReceipt(p, u)} aria-label={`إيصال ${monthName(p.month)}`}>
+                      <span>{monthName(p.month)} <span className="muted small">· {p.method}</span></span>
+                      <span style={{ display: "flex", gap: 8, alignItems: "center" }}><Money fils={p.amount} tone="in" /><span className="receipt-tag">إيصال</span></span>
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -93,11 +127,11 @@ export function PaySheet({ unit, onClose }: { unit: Unit | null; onClose: () => 
 /** زر الإضافة: اختار الوحدة اللي بتسجّل دفعتها */
 export function PickUnitSheet({ open, onClose, onPick }: { open: boolean; onClose: () => void; onPick: (u: Unit) => void }) {
   const { data } = useStore();
-  const unpaid = data.units.filter((u) => u.tenant && unitStatus(data, u) !== "paid");
+  const unpaid = data.units.filter((u) => u.tenant && owedMonths(data, u).length > 0);
   return (
     <Sheet open={open} onClose={onClose} title="دفعة جديدة · اختر الوحدة">
       {unpaid.length === 0 ? (
-        <p className="muted">كل الوحدات مدفوعة هالشهر 🎉</p>
+        <p className="muted">كل الوحدات مدفوعة.</p>
       ) : (
         <ul className="rows rows-tap">
           {unpaid.map((u) => (

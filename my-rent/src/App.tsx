@@ -9,16 +9,19 @@ import { Home } from "./pages/Home";
 import { Tenants } from "./pages/Tenants";
 import { Budget, ExpenseSheet } from "./pages/Budget";
 import { Bank } from "./pages/Bank";
-import { ListPage } from "./pages/ListPage";
+import { Maintenance } from "./pages/Maintenance";
+import { Vendors } from "./pages/Vendors";
+import { Settings } from "./pages/Settings";
+import { ReceiptSheet, type ReceiptRef } from "./pages/Receipt";
 import { PaySheet, PickUnitSheet } from "./pages/PaySheet";
 import "./app.css";
 import symbolUrl from "../brand/symbol.svg";
 
-const PAGES = ["home", "tenants", "budget", "bank", "wallet", "travel", "house", "vendors"] as const;
+const PAGES = ["home", "tenants", "budget", "bank", "house", "vendors", "settings"] as const;
 type Page = (typeof PAGES)[number];
 const TITLES: Record<Page, string> = {
   home: "الرئيسية", tenants: "المستأجرين", budget: "الميزانية", bank: "بنك العائلة",
-  wallet: "المحفظة", travel: "السفر", house: "المنزل", vendors: "الموردين",
+  house: "الصيانة", vendors: "الموردين", settings: "الإعدادات",
 };
 
 const fromHash = (): Page => {
@@ -32,6 +35,7 @@ function Idarati() {
   const [unit, setUnit] = useState<Unit | null>(null);
   const [picking, setPicking] = useState(false);
   const [expense, setExpense] = useState(false);
+  const [receipt, setReceipt] = useState<ReceiptRef>(null);
 
   useEffect(() => {
     const onHash = () => setPage(fromHash());
@@ -59,6 +63,7 @@ function Idarati() {
   const closeUnit = useCallback(() => setUnit(null), []);
   const closePick = useCallback(() => setPicking(false), []);
   const closeExpense = useCallback(() => setExpense(false), []);
+  const closeReceipt = useCallback(() => setReceipt(null), []);
 
   return (
     <AppShell
@@ -72,12 +77,12 @@ function Idarati() {
       {page === "tenants" && <Tenants onOpenUnit={setUnit} />}
       {page === "budget" && <Budget />}
       {page === "bank" && <Bank />}
-      {page === "wallet" && <ListPage items={data.wallet} total="مجموع الحسابات" />}
-      {page === "travel" && <ListPage items={data.travel} total="ميزانية السفرات" />}
-      {page === "house" && <ListPage items={data.house} />}
-      {page === "vendors" && <ListPage items={data.vendors} />}
+      {page === "house" && <Maintenance />}
+      {page === "vendors" && <Vendors />}
+      {page === "settings" && <Settings />}
 
-      <PaySheet unit={unit} onClose={closeUnit} />
+      <PaySheet unit={unit} onClose={closeUnit} onReceipt={(payment, u) => { setUnit(null); setReceipt({ payment, unit: u }); }} />
+      <ReceiptSheet value={receipt} onClose={closeReceipt} />
       <PickUnitSheet open={picking} onClose={closePick} onPick={(u) => { setPicking(false); setUnit(u); }} />
       <ExpenseSheet open={expense} onClose={closeExpense} />
     </AppShell>

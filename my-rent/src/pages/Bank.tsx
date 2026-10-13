@@ -33,6 +33,14 @@ export function Bank() {
         )}
       </section>
       <section>
+        <SectionHead title="الحسابات" />
+        <ul className="rows card-list">
+          {data.accounts.map((a) => (
+            <li key={a.id}><span><span className="strong">{a.title}</span> <span className="muted small">· {a.sub}</span></span><Money fils={a.value} /></li>
+          ))}
+        </ul>
+      </section>
+      <section>
         <SectionHead title="آخر الحركات" />
         <ul className="rows card-list">
           {txns.map((t) => (

@@ -1,5 +1,5 @@
 import { useStore } from "../data/store";
-import { balances, budget, collection, monthName, unitStatus } from "../data/logic";
+import { arrears, balances, budget, collection, monthName, unitStatus } from "../data/logic";
 import type { Unit } from "../data/types";
 import { Money, StatusPill } from "../theme/AppShell";
 import { useStagger } from "../theme/motion";
@@ -27,6 +27,12 @@ export function Home({ onOpenUnit, go }: { onOpenUnit: (u: Unit) => void; go: (i
           <button className="hero-stat press" onClick={() => go("tenants")}><b className="num">{c.due.length}</b><span>مستحق</span></button>
           <div className="hero-stat"><b className="num">{c.vacant}</b><span>شاغر</span></div>
         </div>
+        {c.owed > 0 && (
+          <button className="hero-owed press" onClick={() => go("tenants")}>
+            <span>متأخرات على المستأجرين</span>
+            <Money fils={c.owed} />
+          </button>
+        )}
       </div>
 
       <section>
@@ -41,7 +47,7 @@ export function Home({ onOpenUnit, go }: { onOpenUnit: (u: Unit) => void; go: (i
                 <li key={u.id} className={s.className} style={s.style}>
                   <button className="row-btn press" onClick={() => onOpenUnit(u)}>
                     <span><span className="strong">{u.name}</span> <span className="muted small">· {u.tenant?.name}</span></span>
-                    <span style={{ display: "flex", gap: 10, alignItems: "center" }}><Money fils={u.rent} /><StatusPill status={unitStatus(data, u)} /></span>
+                    <span style={{ display: "flex", gap: 10, alignItems: "center" }}><Money fils={arrears(data, u).amount || u.rent} /><StatusPill status={unitStatus(data, u)} /></span>
                   </button>
                 </li>
               );

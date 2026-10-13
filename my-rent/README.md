@@ -6,7 +6,7 @@ cd my-rent
 npm install
 npm run dev        # http://localhost:5173
 npm run build      # tsc + vite → dist/ (ارفع dist على Netlify)
-npm test           # 12 اختبار Playwright: 8 شاشات × 3 أحجام، دفعة + تراجع، مصروف، Escape، تقليل الحركة
+npm test           # 19 اختبار Playwright: 7 شاشات × 3 أحجام، متأخرات، دفعة + تراجع، إيصال، مصروف، صيانة، حذف البيانات، تقليل الحركة
 ```
 - الشاشات: `src/pages/` · البيانات: `src/data/` (تجريبية، تنحفظ بـ localStorage).
 - **ربط Supabase:** بدّل `load()` و`dispatch` في `src/data/store.tsx` بس؛ الشاشات تقرا من `useStore()` وما تتغيّر.
@@ -23,7 +23,6 @@ npm test           # 12 اختبار Playwright: 8 شاشات × 3 أحجام، 
 |---|---|---|
 | `src/theme/tokens.css` | `src/theme/` | **المصدر الوحيد للألوان** (فاتح + داكن)، الخط، الحركة، أساسيات الجوال |
 | `src/theme/AppShell.tsx` + `.css` | `src/theme/` | هيكل كل الأجهزة + `StatusPill` + `Money` |
-| `src/theme/tailwind.preset.js` | `src/theme/` | لو المشروع يستخدم Tailwind: كلاسات `bg-brand`، `text-late`… |
 | `brand/icon.svg` | `public/icons/` | الشعار ومصدر الأيقونات |
 | `brand/manifest.webmanifest` | `public/` | PWA: الاسم، RTL، ألوان شاشة البداية |
 
