@@ -1,12 +1,17 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { useAuth } from '../auth/AuthProvider'
+import { useMyClub } from '../data/MyClub'
+import { getClubs } from '../data/source'
+import { useLoad } from '../data/useLoad'
 import { DEMO_KEYS } from '../lib/legal'
 import { ROLE_LABEL } from '../lib/roles'
 import { supabase } from '../lib/supabase'
 
 export function Settings() {
   const { user, demo, signOut } = useAuth()
+  const { club, choose } = useMyClub()
+  const clubs = useLoad(getClubs)
   const [confirming, setConfirming] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -29,6 +34,20 @@ export function Settings() {
           <span className="text-mute">الدور</span>
           <span>{user && ROLE_LABEL[user.role]}{demo && ' · تجريبي'}</span>
         </div>
+        <label className="flex items-center justify-between gap-4 p-4">
+          <span className="text-mute">ناديك</span>
+          <select
+            value={clubs.data?.find((c) => c.name === club)?.id ?? ''}
+            onChange={(e) => {
+              const c = clubs.data?.find((x) => x.id === e.target.value)
+              if (c) choose(c).catch(() => setError('ما انحفظ النادي، حاول مرة ثانية'))
+            }}
+            className="min-w-0 rounded-xl border border-white/15 bg-deep px-3 py-2"
+          >
+            <option value="" disabled>اختر</option>
+            {clubs.data?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </label>
         <Link to="/privacy" className="flex items-center justify-between p-4 hover:bg-white/5">سياسة الخصوصية <span className="text-mute">←</span></Link>
         <Link to="/terms" className="flex items-center justify-between p-4 hover:bg-white/5">شروط الاستخدام <span className="text-mute">←</span></Link>
       </div>

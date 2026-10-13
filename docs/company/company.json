@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 9,
+  "next": 10,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -64,6 +64,14 @@
       "owner": "CEO",
       "priority": "P2",
       "status": "review",
+      "opened": "2026-10-13",
+      "updated": "2026-10-13"
+    },
+    "DW-009": {
+      "title": "Sports Hub: ربط التطبيق بقاعدة بيانات Supabase (دوري، مباريات، تصويت، النادي المفضل)",
+      "owner": "CEO",
+      "priority": "P2",
+      "status": "blocked",
       "opened": "2026-10-13",
       "updated": "2026-10-13"
     }

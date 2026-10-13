@@ -1,7 +1,8 @@
-import { MY_CLUB } from '../data/demo'
+import { useMyClub } from '../data/MyClub'
 import type { Ranked } from '../lib/standings'
 
 export function StandingsTable({ rows, compact = false }: { rows: Ranked[]; compact?: boolean }) {
+  const { club } = useMyClub()
   return (
     <table className="w-full text-sm">
       <thead className="text-xs text-mute">
@@ -16,7 +17,7 @@ export function StandingsTable({ rows, compact = false }: { rows: Ranked[]; comp
       </thead>
       <tbody className="num">
         {rows.map((r) => {
-          const mine = r.team === MY_CLUB
+          const mine = r.team === club
           return (
             <tr
               key={r.team}

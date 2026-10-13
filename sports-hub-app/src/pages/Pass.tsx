@@ -1,9 +1,11 @@
 import { useRef, type PointerEvent } from 'react'
 import { Logo } from '../components/Logo'
-import { MY_CLUB } from '../data/demo'
+import { Link } from 'react-router'
+import { useMyClub } from '../data/MyClub'
 
 /* Holographic season pass: tilt + moving sheen follow the pointer; static under reduced motion. */
 export function Pass() {
+  const { club } = useMyClub()
   const card = useRef<HTMLDivElement>(null)
 
   function move(e: PointerEvent) {
@@ -38,7 +40,7 @@ export function Pass() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="num text-xs tracking-[0.3em] text-gold">VIP PASS</p>
-                <p className="mt-1 text-2xl font-bold">{MY_CLUB}</p>
+                <p className="mt-1 text-2xl font-bold">{club ?? <Link to="/settings" className="text-base text-pulse">اختر ناديك</Link>}</p>
               </div>
               <Logo className="size-10" />
             </div>

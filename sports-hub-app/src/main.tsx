@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router'
 import { AuthProvider } from './auth/AuthProvider'
+import { MyClubProvider } from './data/MyClub'
 import { router } from './router'
 // Fonts ship with the app: no request to Google, nothing leaves Bahrain just to draw text.
 import '@fontsource/tajawal/400.css'
@@ -15,7 +16,9 @@ import './index.css'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
-      <RouterProvider router={router} />
+      <MyClubProvider>
+        <RouterProvider router={router} />
+      </MyClubProvider>
     </AuthProvider>
   </StrictMode>,
 )
