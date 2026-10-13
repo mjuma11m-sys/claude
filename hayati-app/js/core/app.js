@@ -1236,7 +1236,27 @@
   }
 
   // --- لصق رسالة ---
+  // موافقة صريحة مرة وحدة قبل أول رسالة بنك (بيانات مالية حساسة — قانون حماية البيانات الشخصية البحريني).
+  function smsConsentForm() {
+    openSheet({
+      title: 'قبل أول رسالة بنك',
+      saveLabel: 'أوافق وأكمل',
+      cancelLabel: 'مو الحين',
+      body: '<div id="smsConsent"><p class="small" style="margin:0 4px 10px">رسايل البنك فيها معلومات مالية، فنبي موافقتك قبل ما نقراها:</p>' +
+        '<ul class="small" style="margin:0 18px 12px;padding:0;line-height:1.9">' +
+        '<li>نحفظ المبلغ والمحل والتاريخ، والرسالة نفسها بعد إخفاء أرقام البطاقة والحساب.</li>' +
+        '<li>البيانات على جهازك، وتنرفع لحسابك بس لو فعّلت المزامنة.</li>' +
+        '<li>ما نبيع بياناتك ولا نعرض إعلانات، وتقدر تمسح كل شي من الإعدادات ← «احذف كل بياناتي».</li></ul>' +
+        '<a class="small" href="privacy.html" target="_blank" rel="noopener" style="margin:0 4px">اقرأ سياسة الخصوصية كاملة</a></div>',
+      onSave() {
+        S.setSettings({ sms_consent_at: new Date().toISOString() });
+        setTimeout(pasteSmsForm, 350);
+      },
+    });
+  }
+
   function pasteSmsForm() {
+    if (!st.settings.sms_consent_at) return smsConsentForm();
     openSheet({
       title: 'لصق رسالة بنك',
       saveLabel: 'إضافة',

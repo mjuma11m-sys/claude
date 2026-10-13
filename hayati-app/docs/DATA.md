@@ -32,7 +32,7 @@
 | `shopping` | قائمة المقاضي | `name`، `qty`، `done` |
 | `journal` | اليوميات | `date`، `mood`، `text` |
 | `matches` | مباريات الحارس | `date`، `opponent`، `comp`، النتيجة والتصديات |
-| `settings` | سجل واحد | `name`، `roles`، `prayer_method`، `prayer_on`، `budget`، `water_goal`، `sleep_goal`، `onboarded` |
+| `settings` | سجل واحد | `name`، `roles`، `prayer_method`، `prayer_on`، `budget`، `water_goal`، `sleep_goal`، `onboarded`، `sms_consent_at` (موافقة قراءة رسايل البنك، على الجهاز) |
 
 `pending` مو جدول: طابور المزامنة (التعديلات اللي ما وصلت Supabase للحين).
 

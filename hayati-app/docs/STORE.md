@@ -53,6 +53,16 @@
 
 **المختبرين:** العايلة، الربع، واللي سجلوا بالفورم. كل واحد يحتاج حساب Google على جوال أندرويد، ويضغط رابط الاشتراك اللي يعطيك Play Console، وينزّل التطبيق.
 
+**رسالة جمع المختبرين (DW-005 · CMO)** — للواتساب والستوري، نفس الرسالة للكل:
+```
+أحتاج فزعتك 🙏
+سويت تطبيق بحريني اسمه «حياتي»: مصاريفك (تلصق رسالة البنك وتنسجل)، جدولك، صلاتك، ومهامك بمكان واحد.
+Google تطلب 12 شخص يجربونه 14 يوم قبل ما ينزل للكل.
+اللي تحتاجه: جوال أندرويد + حساب Google، وتفتحه مرة باليوم بس.
+ردّ علي بإيميل Google حقك وأرسل لك الرابط ✌️
+```
+**المتابعة:** جدول بسيط (الاسم · الإيميل · انضاف؟ · فتح التطبيق يوم 1/7/14). الهدف **15** مو 12 — لو واحد طلع، العداد ما يرجع للصفر.
+
 ---
 
 ## 🍎 iOS (المرحلة الجاية)
@@ -117,7 +127,7 @@ Expenses, studies, prayer times and tasks in one place. A Bahraini app (beta).
 ### Google Play: Data safety
 | السؤال | الجواب |
 |---|---|
-| Does your app collect or share user data? | **No** (البيانات تنحفظ على الجهاز) |
+| Does your app collect or share user data? | **No** (البيانات تنحفظ على الجهاز). ⚠️ صحيح بس طول ما `config.js` فاضي بنسخة المتجر — أي تفعيل للمزامنة يغيّر الجواب قبل الرفع |
 | لو فعّلت المزامنة (Supabase) بعدين | تتغير الإجابة: Financial info + Personal info, **collected, not shared**, encrypted in transit, user can request deletion |
 | Privacy policy URL | `https://<رابط-Production>/privacy.html` |
 | Terms of use / EULA URL | `https://<رابط-Production>/terms.html` (بـ App Store Connect: App Information ← License Agreement ← Custom، أو خلّه Standard Apple EULA) |
@@ -140,7 +150,8 @@ Expenses, studies, prayer times and tasks in one place. A Bahraini app (beta).
 
 ## ✅ قائمة قبل الرفع
 - [ ] حماية Vercel منطفية للـ Production
-- [ ] PR #10 مدموج
+- [x] PR #10 مدموج
+- [x] موافقة صريحة قبل أول رسالة بنك (DW-002)
 - [ ] `privacy.html` يفتح من الرابط العام
 - [ ] `terms.html` يفتح من الرابط العام، ومحامي مرخّص بالبحرين راجع الشروط والسياسة
 - [ ] ملف `.aab` من PWABuilder + المفتاح محفوظ بمكانين

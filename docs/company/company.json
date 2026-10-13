@@ -1,0 +1,63 @@
+{
+  "name": "شركة أبو جعفر",
+  "founded": "2026-10-13",
+  "next": 8,
+  "tickets": {
+    "DW-001": {
+      "title": "حياتي: إطلاق اختبار مغلق على Google Play",
+      "owner": "COO",
+      "priority": "P1",
+      "status": "blocked",
+      "opened": "2026-10-13",
+      "updated": "2026-10-13"
+    },
+    "DW-002": {
+      "title": "حياتي: مراجعة الخصوصية وموافقة رسائل البنك قبل المختبرين",
+      "owner": "Legal",
+      "priority": "P1",
+      "status": "done",
+      "opened": "2026-10-13",
+      "updated": "2026-10-13"
+    },
+    "DW-003": {
+      "title": "إجاراتي: تحقق من الطلب قبل البناء (صفحة + قائمة انتظار)",
+      "owner": "CPO",
+      "priority": "P2",
+      "status": "new",
+      "opened": "2026-10-13",
+      "updated": "2026-10-13"
+    },
+    "DW-004": {
+      "title": "حياتي: محتوى الإطلاق (3 ريلز + كفر)",
+      "owner": "CMO",
+      "priority": "P2",
+      "status": "new",
+      "opened": "2026-10-13",
+      "updated": "2026-10-13"
+    },
+    "DW-005": {
+      "title": "حياتي: 15 مختبر أندرويد لشرط Google (12 × 14 يوم)",
+      "owner": "COO",
+      "priority": "P1",
+      "status": "blocked",
+      "opened": "2026-10-13",
+      "updated": "2026-10-13"
+    },
+    "DW-006": {
+      "title": "حياتي: سياسة الخصوصية تذكر الخدمات الخارجية (خطوط/CDN)",
+      "owner": "Legal",
+      "priority": "P1",
+      "status": "done",
+      "opened": "2026-10-13",
+      "updated": "2026-10-13"
+    },
+    "DW-007": {
+      "title": "Sports Hub: أساس التطبيق — واجهة لكل الأجهزة + هوية وألوان موحدة + Fan Zone",
+      "owner": "CEO",
+      "priority": "P2",
+      "status": "review",
+      "opened": "2026-10-13",
+      "updated": "2026-10-13"
+    }
+  }
+}
