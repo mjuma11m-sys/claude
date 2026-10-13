@@ -9,14 +9,16 @@ export const ROLE_LABEL: Record<Role, string> = {
   bfa_admin: 'الاتحاد',
 }
 
-export type Area = 'fan' | 'medical' | 'club' | 'bfa'
+/* Roles that have a screen of their own today. club_admin and bfa_admin exist in the database for the next
+   phase but have no room yet, so the demo login does not offer them. */
+export const DEMO_ROLES: readonly Role[] = ['fan', 'medical']
+
+export type Area = 'fan' | 'medical'
 
 /* UI gate only. The real firewall is RLS in supabase/migrations: a hidden link is not security. */
 const ACCESS: Record<Area, readonly Role[]> = {
   fan: ROLES,
   medical: ['medical', 'club_admin'],
-  club: ['club_admin'],
-  bfa: ['bfa_admin'],
 }
 
 export const canAccess = (role: Role, area: Area) => ACCESS[area].includes(role)

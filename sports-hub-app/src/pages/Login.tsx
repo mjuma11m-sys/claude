@@ -4,7 +4,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { Logo, Wordmark } from '../components/Logo'
 import { PRIVACY_CONTACT } from '../lib/legal'
 import { supabase } from '../lib/supabase'
-import { ROLES, ROLE_LABEL } from '../lib/roles'
+import { DEMO_ROLES, ROLE_LABEL } from '../lib/roles'
 
 export function Login() {
   const { user, demo, signInDemo } = useAuth()
@@ -40,9 +40,9 @@ export function Login() {
 
         {demo ? (
           <div className="space-y-3">
-            <p className="text-sm text-mute">وضع تجريبي: اختر الدور عشان تشوف الواجهة اللي تطلع له.</p>
+            <p className="text-sm text-mute">وضع تجريبي: اختر الدور عشان تشوف الواجهة اللي تطلع له. باقي الأدوار (إدارة النادي، الاتحاد) ما لها شاشات للحين.</p>
             <div className="grid gap-2">
-              {ROLES.map((r) => (
+              {DEMO_ROLES.map((r) => (
                 <button
                   key={r}
                   onClick={() => signInDemo(r)}

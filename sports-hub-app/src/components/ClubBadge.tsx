@@ -1,7 +1,7 @@
 /* Placeholder badge: a tinted monogram, stable per club name. Not a real crest: swap for official crests once the clubs agree. */
 const hash = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7)
 
-export function monogram(name: string) {
+function monogram(name: string) {
   const words = name.trim().split(/\s+/).map((w) => w.replace(/^ال/, '')).filter(Boolean)
   if (words.length === 0) return '؟'
   const [a, b] = words.length > 1 ? [words[0][0], words[1][0]] : [words[0][0], words[0][1] ?? '']

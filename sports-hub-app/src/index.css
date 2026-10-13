@@ -10,7 +10,6 @@
   --color-deep: #0a1220;       /* solid surface (no blur fallback) */
   --color-ink: #eaf6ff;        /* primary text */
   --color-mute: #93a7bb;       /* secondary text: 7.9:1 on night */
-  --color-line: #5b7083;       /* hairlines only, not text */
   --color-pulse: #00e5ff;      /* accent: live, active, focus */
   --color-pulse-ink: #001a1f;  /* text on pulse */
   --color-crimson: #ce1126;    /* Bahrain red: fills only */

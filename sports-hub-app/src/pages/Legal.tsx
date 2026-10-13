@@ -47,6 +47,7 @@ export function Privacy() {
           <tbody className="[&_td]:border-t [&_td]:border-white/10 [&_td]:py-2">
             <tr><td>الدور اللي اخترته بالوضع التجريبي</td><td>جهازك (localStorage)</td></tr>
             <tr><td>صوتك لرجل المباراة</td><td>جهازك (localStorage)</td></tr>
+            <tr><td>إخفاء تلميح «ثبّت التطبيق»</td><td>جهازك (localStorage)</td></tr>
             <tr><td>ملفات التطبيق (للفتح بدون إنترنت)</td><td>جهازك (Cache Storage). ما فيها بياناتك، بس شاشات التطبيق</td></tr>
             <tr><td>عنوان IP ونوع المتصفح</td><td>مزوّد الاستضافة لما يرسل لك ملفات التطبيق، مثل أي موقع. سيرفراته ممكن تكون برا البحرين</td></tr>
           </tbody>

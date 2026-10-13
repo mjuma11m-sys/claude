@@ -2,7 +2,7 @@ import { createContext, use, useEffect, useState, type ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
 import { isRole, type Role } from '../lib/roles'
 
-export type User = { id: string; email?: string; role: Role }
+type User = { id: string; email?: string; role: Role }
 type AuthState = {
   user: User | null
   loading: boolean

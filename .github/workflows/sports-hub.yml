@@ -1,0 +1,64 @@
+name: Sports Hub tests
+
+on:
+  push:
+    paths: ['sports-hub-app/**', '.github/workflows/sports-hub.yml']
+  pull_request:
+    paths: ['sports-hub-app/**', '.github/workflows/sports-hub.yml']
+
+concurrency:
+  group: sports-hub-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: sports-hub-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: sports-hub-app/package-lock.json
+      - run: npm ci
+      - name: Typecheck
+        run: npx tsc -b
+      - name: Unit tests
+        run: npm test
+      - run: npx playwright install --with-deps chromium
+      - name: Browser tests (phone, iPad, desktop)
+        run: npx playwright test
+        env:
+          CI: 'true'
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: sports-hub-playwright-report
+          path: sports-hub-app/playwright-report
+
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: RLS attack tests (fan/staff wall, one vote per fan, voting window)
+        run: sports-hub-app/supabase/tests/run.sh
+      - name: setup.sql must match the migrations
+        run: git diff --exit-code -- sports-hub-app/supabase/setup.sql

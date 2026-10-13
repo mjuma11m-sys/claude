@@ -1,5 +1,8 @@
 import { Link } from 'react-router'
 import { ClubBadge } from '../components/ClubBadge'
+import { Icon } from '../components/Icon'
+import { InstallPrompt } from '../components/InstallPrompt'
+import { ShareButton } from '../components/ShareButton'
 import { Countdown } from '../components/Countdown'
 import { DemoNote } from '../components/DemoNote'
 import { StandingsTable } from '../components/StandingsTable'
@@ -8,6 +11,7 @@ import { useMyClub } from '../data/MyClub'
 import { getLeagues, getNextMatch, getVotes } from '../data/source'
 import { useLoad } from '../data/useLoad'
 import { fmtDateTime, fmtGd } from '../lib/format'
+import { downloadIcs } from '../lib/ics'
 import { rank } from '../lib/standings'
 
 const Stat = ({ label, value, tone = '' }: { label: string; value: string; tone?: string }) => (
@@ -63,6 +67,12 @@ export function Home() {
                 <Link to="/vote" className="rounded-xl bg-pulse px-5 py-2.5 text-sm font-bold text-pulse-ink transition active:scale-[0.98]">صوّت لرجل المباراة</Link>
                 <Link to="/pass" className="rounded-xl border border-gold/40 px-5 py-2.5 text-sm text-gold transition active:scale-[0.98]">تذكرتي الموسمية</Link>
               </div>
+              <div className="mt-3 flex flex-wrap justify-center gap-2">
+                <button onClick={() => downloadIcs(match)} className="inline-flex items-center gap-2 rounded-xl border border-white/15 px-4 py-2 text-sm transition hover:border-white/30 active:scale-[0.98]">
+                  <Icon name="cal" className="size-4" />أضف للتقويم
+                </button>
+                <ShareButton text={`${match.home} ضد ${match.away}: صوّت لرجل المباراة`} path="/vote" className="!py-2" />
+              </div>
             </>
           ) : (
             <p className="mt-6 text-center text-mute">ما فيه مباريات مجدولة حالياً.</p>
@@ -101,6 +111,7 @@ export function Home() {
           )}
         </div>
       </div>
+      <InstallPrompt />
       {(leagues.demo || next.demo) && <DemoNote />}
     </section>
   )

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 
-export type Load<T> = { data: T | undefined; error: unknown; loading: boolean; reload: () => void }
+type Load<T> = { data: T | undefined; error: unknown; loading: boolean; reload: () => void }
 
 /* Minimal fetch-on-mount hook; ignores results that arrive after unmount or a newer reload. */
 export function useLoad<T>(fn: () => Promise<T>, deps: unknown[] = []): Load<T> {

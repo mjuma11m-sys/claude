@@ -15,8 +15,6 @@ const NAV: Item[] = [
   { to: '/vote', label: 'رجل المباراة', icon: 'vote', area: 'fan' },
   { to: '/pass', label: 'تذكرتي', icon: 'pass', area: 'fan' },
   { to: '/medical', label: 'الأحمال', icon: 'pulse', area: 'medical' },
-  { to: '/club', label: 'غرفة العمليات', icon: 'club', area: 'club' },
-  { to: '/bfa', label: 'غرفة الاتحاد', icon: 'hub', area: 'bfa' },
 ]
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -32,9 +30,12 @@ export function Layout() {
   const main = useRef<HTMLElement>(null)
   const title = [...matches].reverse().map((m) => (m.handle as { title?: string } | undefined)?.title).find(Boolean)
 
-  // Per-page title (history, tab switcher, screen readers) and focus moves to the new page after navigation.
+  // Per-page title (history, tab switcher, screen readers). Focus moves to the new page after in-app navigation,
+  // but not on first load: there the skip link and the nav must stay the first Tab stops.
+  const firstRender = useRef(true)
   useEffect(() => {
     document.title = title ? `${title} · Sports Hub` : 'Sports Hub'
+    if (firstRender.current) { firstRender.current = false; return }
     main.current?.focus({ preventScroll: true })
     scrollTo(0, 0)
   }, [pathname, title])

@@ -4,10 +4,10 @@ import { supabase } from '../lib/supabase'
 import type { Row } from '../lib/standings'
 import { LEAGUES, MOTM_CANDIDATES, MOTM_SEED, MY_CLUB, NEXT_MATCH } from './demo'
 
-export type League = { id: string; name: string; rows: Row[] }
-export type Candidate = { id: string; name: string; num: number | null; pos: string }
-export type Match = { id: string; home: string; away: string; venue: string; kickoff: string; candidates: Candidate[] }
-export type Result<T> = { data: T; demo: boolean }
+type League = { id: string; name: string; rows: Row[] }
+type Candidate = { id: string; name: string; num: number | null; pos: string }
+type Match = { id: string; home: string; away: string; venue: string; kickoff: string; candidates: Candidate[] }
+type Result<T> = { data: T; demo: boolean }
 
 const FAV_KEY = 'sh.favClub'
 const VOTE_KEY = 'sh.motmVote'
@@ -74,7 +74,7 @@ export async function getNextMatch(): Promise<Result<Match | null>> {
   }
 }
 
-export type Votes = { counts: Record<string, number>; mine: string | null }
+type Votes = { counts: Record<string, number>; mine: string | null }
 
 export async function getVotes(matchId: string): Promise<Votes> {
   if (!supabase) {

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ClubBadge } from '../components/ClubBadge'
+import { ShareButton } from '../components/ShareButton'
 import { useNow } from '../components/Countdown'
 import { DemoNote } from '../components/DemoNote'
 import { Failed, Loading } from '../components/States'
@@ -105,6 +106,7 @@ export function Vote() {
       <p role="status" className="min-h-5 text-sm">
         {choice ? <span className="text-pulse">انحسب صوتك ✓ · <span className="num">{total}</span> صوت</span> : notice ? <span role="alert" className="text-warn">{notice}</span> : <span className="text-mute">اضغط على اللاعب اللي تشوفه رجل المباراة. ما تقدر تغيّر صوتك بعدها.</span>}
       </p>
+      {choice && <ShareButton text={`صوّتت لرجل مباراة ${match.home} ضد ${match.away}. صوّت معي:`} path="/vote" label="شارك التصويت" />}
       {next.demo && <DemoNote />}
     </section>
   )

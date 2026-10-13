@@ -9,7 +9,6 @@ import { Medical } from './pages/Medical'
 import { NotFound } from './pages/NotFound'
 import { Pass } from './pages/Pass'
 import { Settings } from './pages/Settings'
-import { Soon } from './pages/Soon'
 import { Standings } from './pages/Standings'
 import { Vote } from './pages/Vote'
 
@@ -27,8 +26,6 @@ export const router = createBrowserRouter([
       { path: 'pass', handle: { title: 'تذكرتي' }, element: <Pass /> },
       { path: 'settings', handle: { title: 'الإعدادات' }, element: <Settings /> },
       { path: 'medical', handle: { title: 'الأحمال' }, element: <RequireArea area="medical"><Medical /></RequireArea> },
-      { path: 'club', handle: { title: 'غرفة العمليات' }, element: <RequireArea area="club"><Soon title="غرفة عمليات النادي" items={['العقود والرواتب', 'ميزانية الموسم بالدينار', 'تنبيهات انتهاء العقود']} /></RequireArea> },
-      { path: 'bfa', handle: { title: 'غرفة الاتحاد' }, element: <RequireArea area="bfa"><Soon title="غرفة تحكم الاتحاد" items={['مراقبة اللعب المالي النظيف للأندية', 'الكشاف الذكي لاستدعاءات المنتخب']} /></RequireArea> },
     ],
   },
   { path: '*', element: <NotFound /> },

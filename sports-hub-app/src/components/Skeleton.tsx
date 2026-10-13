@@ -1,4 +1,4 @@
-export const Bone = ({ className = '' }: { className?: string }) => (
+const Bone = ({ className = '' }: { className?: string }) => (
   <div aria-hidden className={`animate-pulse rounded-xl bg-white/[0.06] motion-reduce:animate-none ${className}`} />
 )
 

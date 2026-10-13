@@ -9,7 +9,7 @@ export function useNow(everyMs = 30_000) {
   return now
 }
 
-export function parts(ms: number) {
+function parts(ms: number) {
   const m = Math.max(0, Math.floor(ms / 60_000))
   return { d: Math.floor(m / 1440), h: Math.floor((m % 1440) / 60), m: m % 60 }
 }
