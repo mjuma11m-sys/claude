@@ -924,3 +924,24 @@ test('iPhone: a snoozed reminder for a task that was deleted does not ring', asy
   await open(page);
   expect(await store(page, () => HayatiNative.upcoming(new Date()).some((n) => n.title.includes('محذوفة')))).toBe(false);
 });
+
+// هوية «حياتي»: ألوان التطبيق = brand/tokens.css بالضبط، والنص يعدّي WCAG AA (4.5:1)
+test('brand: app colours match brand/tokens.css, and text colours pass 4.5:1 contrast', async () => {
+  const tokens = fs.readFileSync(path.join(__dirname, '../brand/tokens.css'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+  const vars = (css) => Object.fromEntries([...css.matchAll(/(--[a-z0-9-]+):\s*(#[0-9A-Fa-f]{6})/g)].map((m) => [m[1], m[2].toUpperCase()]));
+  const block = (css, start, end) => css.slice(css.indexOf(start), css.indexOf(end, css.indexOf(start)));
+  const tLight = vars(block(tokens, 'ألوان الواجهة — فاتح', 'ألوان الواجهة — غامق') + block(tokens, 'ألوان الهوية', 'ألوان الواجهة — فاتح'));
+  const tDark = vars(block(tokens, 'ألوان الواجهة — غامق', '===== الخط'));
+  const aLight = vars(html.slice(html.indexOf(':root {'), html.indexOf('@media (prefers-color-scheme: dark)')));
+  const aDark = vars(html.slice(html.indexOf(':root[data-theme="dark"]'), html.indexOf('}', html.indexOf(':root[data-theme="dark"]'))));
+  for (const [k, v] of Object.entries(tLight)) expect(aLight[k], 'light ' + k).toBe(v);
+  for (const [k, v] of Object.entries(tDark)) expect(aDark[k], 'dark ' + k).toBe(v);
+  const lum = (h) => { const c = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+  const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+  for (const [t, set] of [['light', tLight], ['dark', tDark]]) {
+    for (const fg of ['--text', '--text-2', '--muted', '--brand', '--expense', '--income']) {
+      for (const bg of ['--bg', '--surface', '--surface-2']) expect(ratio(set[fg], set[bg]), t + ' ' + fg + ' on ' + bg).toBeGreaterThanOrEqual(4.5);
+    }
+  }
+});
