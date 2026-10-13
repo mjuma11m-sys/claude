@@ -198,3 +198,71 @@ a.icon-btn { color: var(--brand); }
 .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
 .tbl th, .tbl td { text-align: start; padding: 8px 4px; border-top: 1px solid var(--line); }
 .tbl th { color: var(--muted); font-weight: 500; font-size: 12px; }
+
+/* DW-015: تصميم وأنميشن */
+/* حلقة التحصيل */
+.hero-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.hero-top > div:first-child { min-width: 0; display: grid; gap: 4px; }
+.ring { position: relative; width: 96px; height: 96px; flex: none; }
+.ring svg { transform: rotate(-90deg) scaleY(-1); } /* يبدأ من فوق ويمشي عكس الساعة (RTL) */
+.ring circle { fill: none; stroke-width: 8; }
+.ring-track { stroke: rgb(255 255 255 / .12); }
+.ring-fill { stroke: var(--gold); stroke-linecap: round; transition: stroke-dashoffset 900ms var(--ease-out); animation: ring-in 1100ms var(--ease-out) 150ms backwards; }
+@keyframes ring-in { from { stroke-dashoffset: 238.76; } }
+.ring span { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: 20px; }
+.hero-bar { display: none; }
+.hero-card::after { display: none; } /* الحلقة صارت العنصر البصري؛ الختم الشفاف زحمة */
+
+/* شبكة الرئيسية بالكمبيوتر */
+@media (min-width: 1200px) {
+  .home-grid { grid-template-columns: 1.15fr 1fr; grid-template-areas: "hero att" "hero con" "tiles con" "note note"; align-items: start; grid-template-rows: auto auto 1fr auto; column-gap: 24px; }
+  .area-hero { grid-area: hero; } .area-att { grid-area: att; } .area-con { grid-area: con; } .area-tiles { grid-area: tiles; }
+  .home-grid > .demo-note { grid-area: note; }
+}
+
+/* نقاط الأشهر */
+.trail { display: flex; gap: 5px; margin-top: 4px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; background: var(--line); }
+.dot-paid { background: var(--paid); }
+.dot-late { background: var(--late); }
+.dot-due { background: transparent; box-shadow: inset 0 0 0 2px var(--due); }
+.dot-none { background: var(--surface-2); }
+.stagger .dot { animation: pop 260ms var(--ease-out) backwards; }
+.stagger .dot:nth-child(2) { animation-delay: 30ms; } .stagger .dot:nth-child(3) { animation-delay: 60ms; } .stagger .dot:nth-child(4) { animation-delay: 90ms; } .stagger .dot:nth-child(5) { animation-delay: 120ms; } .stagger .dot:nth-child(6) { animation-delay: 150ms; }
+
+/* المؤشر المنزلق */
+.shell-bottom, .side-nav { position: relative; }
+.nav-ind { position: absolute; top: 0; left: 0; pointer-events: none; opacity: 0; transition: transform 340ms var(--ease-drawer), width 340ms var(--ease-drawer), height 340ms var(--ease-drawer), opacity 200ms; }
+.bottom-ind { z-index: 0; }
+.bottom-ind::after { content: ""; position: absolute; top: 6px; left: 50%; width: 56px; height: 30px; margin-left: -28px; border-radius: 15px; background: color-mix(in srgb, var(--brand) 13%, transparent); }
+.bottom-item, .side-item { position: relative; z-index: 1; }
+.side-ind { border-radius: var(--radius-sm); background: rgb(255 255 255 / .1); box-shadow: inset -3px 0 0 var(--gold); }
+@media (min-width: 768px) { .side-item[aria-current="page"] { background: transparent !important; box-shadow: none !important; } }
+
+/* الختم «مستلم» */
+.stamp { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; pointer-events: none; }
+.stamp img { width: 150px; height: 150px; grid-area: 1 / 1; animation: stamp-in 760ms var(--ease-out) forwards; filter: drop-shadow(0 12px 30px rgb(10 17 32 / .35)); }
+.stamp span { grid-area: 1 / 1; margin-top: 200px; font-family: var(--font-display); font-weight: 700; font-size: 22px; color: var(--gold); animation: stamp-in 760ms var(--ease-out) 60ms both; }
+@keyframes stamp-in {
+  0% { opacity: 0; transform: scale(1.8) rotate(-18deg); }
+  28% { opacity: 1; transform: scale(.94) rotate(-6deg); }
+  40% { transform: scale(1.02) rotate(-6deg); }
+  75% { opacity: 1; transform: scale(1) rotate(-6deg); }
+  100% { opacity: 0; transform: scale(1.05) rotate(-6deg); }
+}
+
+/* الشاشات الفاضية */
+.empty-state { display: grid; justify-items: center; gap: 8px; padding: 28px 16px; text-align: center; color: var(--muted); }
+.empty-state img { opacity: .5; animation: float 4s ease-in-out infinite; }
+.empty-state p { margin: 0; }
+@keyframes float { 50% { transform: translateY(-5px) rotate(4deg); } }
+
+/* السحب: المقبض واضح ويلمّح إنه ينسحب */
+.sheet-grip { cursor: grab; touch-action: none; padding-block: 6px; box-sizing: content-box; background-clip: content-box; }
+.dlg-head { touch-action: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ring-fill { animation: none; transition: none; }
+  .empty-state img { animation: none; }
+  .nav-ind { transition: none; }
+}

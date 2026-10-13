@@ -58,7 +58,7 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit }: { unit: Unit | nu
     if (fils === null) { setError("اكتب المبلغ بالدينار، مثل 180 أو 180.500"); return; }
     const p = pay(u.id, month, fils, method);
     onClose();
-    toast({ text: `انسجلت دفعة ${u.name} · ${monthName(month)} · ${fmt(fils)} د.ب`, undo: () => unpay(p.id) });
+    toast({ text: `انسجلت دفعة ${u.name} · ${monthName(month)} · ${fmt(fils)} د.ب`, undo: () => unpay(p.id), stamp: true });
   };
 
   return (

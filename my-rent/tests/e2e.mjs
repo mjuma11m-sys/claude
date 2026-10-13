@@ -141,6 +141,32 @@ try {
   ok(await op.locator(".hero-card").isVisible(), "يفتح بدون إنترنت (service worker)");
   await oc.close();
 
+  // 12) DW-015: نقاط الأشهر + الختم + السحب + المؤشر
+  await p.goto(URL + "#tenants"); await p.evaluate(() => localStorage.clear()); await p.reload(); await p.waitForTimeout(800);
+  ok(await p.locator(".unit-card", { hasText: "شقة 1 " }).locator(".dot").count() === 6, "6 نقاط أشهر على بطاقة الوحدة");
+  ok(await p.locator(".unit-card", { hasText: "شقة 3 " }).locator(".dot-late").count() >= 2, "نقاط المتأخر حمراء لشقة 3");
+  const ind0 = await p.locator(".bottom-ind").evaluate((e) => e.style.transform);
+  await p.getByRole("button", { name: "الميزانية" }).click(); await p.waitForTimeout(450);
+  ok(ind0 !== await p.locator(".bottom-ind").evaluate((e) => e.style.transform), "مؤشر التبويب ينزلق للتبويب الجديد");
+  await p.goto(URL + "#tenants"); await p.waitForTimeout(600);
+  await p.locator(".unit-card", { hasText: "شقة 2 " }).click(); await p.waitForTimeout(400);
+  await p.getByRole("button", { name: "سجّل الدفعة" }).click(); await p.waitForTimeout(150);
+  ok(await p.locator(".stamp").count() === 1, "ختم «مستلم» يطلع مع الدفعة");
+  await p.waitForTimeout(900);
+  ok(await p.locator(".stamp").count() === 0, "الختم يختفي بروحه");
+  await p.locator(".unit-card").first().click(); await p.waitForTimeout(450);
+  const g = await p.locator(".dlg .sheet-grip").boundingBox();
+  await p.mouse.move(g.x + g.width / 2, g.y + 4); await p.mouse.down();
+  await p.mouse.move(g.x + g.width / 2, g.y + 60, { steps: 4 }); await p.mouse.move(g.x + g.width / 2, g.y + 260, { steps: 6 }); await p.mouse.up();
+  await p.waitForTimeout(450);
+  ok(await p.getByRole("dialog").count() === 0, "سحب النافذة لتحت يسكّرها");
+  await p.locator(".unit-card").first().click(); await p.waitForTimeout(450);
+  const g2 = await p.locator(".dlg .sheet-grip").boundingBox();
+  await p.mouse.move(g2.x + g2.width / 2, g2.y + 4); await p.mouse.down(); await p.mouse.move(g2.x + g2.width / 2, g2.y + 50, { steps: 10 }); await p.mouse.up();
+  await p.waitForTimeout(450);
+  ok(await p.getByRole("dialog").count() === 1, "سحب قصير يرجّعها مكانها");
+  await p.keyboard.press("Escape"); await p.waitForTimeout(300);
+
   // 11) تقليل الحركة: الرقم يطلع على طول
   const r = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
   await r.goto(URL + "#home"); await r.waitForTimeout(600);

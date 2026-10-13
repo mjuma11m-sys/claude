@@ -119,3 +119,17 @@ export function toCSV(rows: (string | number)[][]) {
   };
   return "\uFEFF" + rows.map((r) => r.map(cell).join(",")).join("\r\n");
 }
+
+/** آخر n أشهر للوحدة: مدفوع / متأخر / مستحق / قبل العقد — للنقاط على البطاقة */
+export function monthTrail(data: Data, unit: Unit, now = new Date(), n = 6) {
+  const cur = monthKey(now);
+  const months = monthsBetween(monthKey(new Date(now.getFullYear(), now.getMonth() - (n - 1), 1)), cur);
+  const start = unit.tenant ? (data.trackFrom > unit.tenant.since ? data.trackFrom : unit.tenant.since) : "9999-99";
+  const late = now.getDate() > unit.dueDay + GRACE_DAYS;
+  return months.map((m) => {
+    if (m < start) return { month: m, state: "none" as const };
+    if (paidFor(data, unit.id, m) >= unit.rent) return { month: m, state: "paid" as const };
+    if (m === cur && !late) return { month: m, state: "due" as const };
+    return { month: m, state: "late" as const };
+  });
+}

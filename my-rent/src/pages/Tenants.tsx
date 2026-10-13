@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useStore } from "../data/store";
-import { arrears, monthName, unitStatus } from "../data/logic";
+import { arrears, monthName, monthTrail, unitStatus } from "../data/logic";
 import type { Status, Unit } from "../data/types";
 import { Money, StatusPill } from "../theme/AppShell";
 import { useStagger } from "../theme/motion";
-import { Chips, DemoNote, SkeletonCards } from "../ui/kit";
+import { Chips, DemoNote, EmptyState, SkeletonCards } from "../ui/kit";
 
 type Filter = "all" | Status | "vacant";
 
@@ -34,7 +34,7 @@ export function Tenants({ onOpenUnit }: { onOpenUnit: (u: Unit) => void }) {
         ]}
       />
       {loading ? <SkeletonCards n={6} /> : list.length === 0 ? (
-        <div className="card empty">ما فيه وحدات بهالتصفية.</div>
+        <EmptyState text="ما فيه وحدات بهالتصفية." />
       ) : (
         <div className="grid-cards">
           {list.map(({ u, s }, i) => {
@@ -47,6 +47,13 @@ export function Tenants({ onOpenUnit }: { onOpenUnit: (u: Unit) => void }) {
                 </div>
                 <div className="muted">{u.tenant?.name ?? "بدون مستأجر"}</div>
                 {s === "late" && (() => { const a = arrears(data, u); return <div className="owed-line">متأخر: {a.months.map((m) => monthName(m.month)).join("، ")} · <Money fils={a.amount} /></div>; })()}
+                {u.tenant && (
+                  <div className="trail" aria-label="آخر 6 أشهر">
+                    {monthTrail(data, u).map((m) => (
+                      <i key={m.month} className={`dot dot-${m.state}`} title={`${monthName(m.month)}: ${{ paid: "مدفوع", late: "متأخر", due: "مستحق", none: "قبل العقد" }[m.state]}`} />
+                    ))}
+                  </div>
+                )}
                 <div className="unit-foot"><Money fils={u.rent} /><span className="muted small">يستحق يوم <span className="num">{u.dueDay}</span></span></div>
               </button>
             );

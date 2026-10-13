@@ -1,7 +1,7 @@
 // إداراتي — هيكل التطبيق لكل الأجهزة (DW-008)
 // جوال < 768px: شريط سفلي (4 أقسام + «المزيد») · تابلت 768–1199: شريط جانبي أيقونات · ديسكتوب ≥ 1200: شريط جانبي كامل
 // بدون مكتبات إضافية: الأيقونات تنمرر كـ ReactNode (lucide-react أو SVG).
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import "./tokens.css";
 import "./AppShell.css";
 import "./motion.css";
@@ -22,6 +22,28 @@ type Props = {
 
 const MOBILE_SLOTS = 4;
 
+/** مؤشر التبويب المختار: ينزلق للتبويب الجديد (transform بس). أول قياس بدون حركة. */
+function useIndicator(nav: RefObject<HTMLElement>, ind: RefObject<HTMLElement>, key: unknown) {
+  const placed = useRef(false);
+  useLayoutEffect(() => {
+    const place = () => {
+      const n = nav.current, i = ind.current;
+      if (!n || !i) return;
+      const a = n.querySelector<HTMLElement>('[aria-current="page"]');
+      if (!a || a.offsetParent === null) { i.style.opacity = "0"; return; }
+      i.style.transition = placed.current ? "" : "none";
+      i.style.opacity = "1";
+      i.style.width = `${a.offsetWidth}px`;
+      i.style.height = `${a.offsetHeight}px`;
+      i.style.transform = `translate(${a.offsetLeft}px, ${a.offsetTop}px)`;
+      placed.current = true;
+    };
+    place();
+    window.addEventListener("resize", place);
+    return () => window.removeEventListener("resize", place);
+  }, [nav, ind, key]);
+}
+
 export function AppShell({ items, active, onNavigate, title, actions, onAdd, children }: Props) {
   const [moreOpen, setMoreOpen] = useState(false);
   const primary = items.slice(0, MOBILE_SLOTS);
@@ -29,6 +51,10 @@ export function AppShell({ items, active, onNavigate, title, actions, onAdd, chi
   const overflowActive = overflow.some((i) => i.id === active);
   const sheet = usePresence(moreOpen);
   const mainRef = useReplayClass<HTMLElement>(active, "page-enter");
+  const sideNav = useRef<HTMLElement>(null), sideInd = useRef<HTMLSpanElement>(null);
+  const botNav = useRef<HTMLElement>(null), botInd = useRef<HTMLSpanElement>(null);
+  useIndicator(sideNav, sideInd, active);
+  useIndicator(botNav, botInd, active + String(moreOpen));
 
   useEffect(() => {
     if (!moreOpen) return;
@@ -49,7 +75,8 @@ export function AppShell({ items, active, onNavigate, title, actions, onAdd, chi
           <img src={symbolUrl} alt="" width={32} height={32} />
           <span>إداراتي</span>
         </div>
-        <nav>
+        <nav ref={sideNav} className="side-nav">
+          <span className="nav-ind side-ind" ref={sideInd} aria-hidden="true" />
           {items.map((i) => (
             <button
               key={i.id}
@@ -82,7 +109,8 @@ export function AppShell({ items, active, onNavigate, title, actions, onAdd, chi
         </button>
       )}
 
-      <nav className="shell-bottom" aria-label="الأقسام">
+      <nav className="shell-bottom" aria-label="الأقسام" ref={botNav}>
+        <span className="nav-ind bottom-ind" ref={botInd} aria-hidden="true" />
         {primary.map((i) => (
           <button key={i.id} className="bottom-item" aria-current={i.id === active ? "page" : undefined} onClick={() => go(i.id)}>
             {i.icon}

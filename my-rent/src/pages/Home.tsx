@@ -3,8 +3,22 @@ import { arrears, balances, budget, collection, contractAlerts, monthName, unitS
 import type { Unit } from "../data/types";
 import { Money, StatusPill } from "../theme/AppShell";
 import { useStagger } from "../theme/motion";
-import { Bar, DemoNote, SectionHead, SkeletonCards } from "../ui/kit";
+import { Bar, DemoNote, EmptyState, SectionHead, SkeletonCards } from "../ui/kit";
 import { Icon } from "../ui/icons";
+
+/** حلقة التحصيل: تنرسم لما تتغيّر النسبة (stroke-dashoffset) */
+function Ring({ value, label }: { value: number; label: string }) {
+  const r = 38, c = 2 * Math.PI * r, v = Math.max(0, Math.min(1, value));
+  return (
+    <div className="ring" role="img" aria-label={`نسبة التحصيل ${label}`}>
+      <svg viewBox="0 0 96 96" width="96" height="96">
+        <circle cx="48" cy="48" r={r} className="ring-track" />
+        <circle cx="48" cy="48" r={r} className="ring-fill" strokeDasharray={c} strokeDashoffset={c * (1 - v)} />
+      </svg>
+      <span className="num">{label}</span>
+    </div>
+  );
+}
 
 export function Home({ onOpenUnit, go }: { onOpenUnit: (u: Unit) => void; go: (id: string) => void }) {
   const { data, loading } = useStore();
@@ -17,12 +31,16 @@ export function Home({ onOpenUnit, go }: { onOpenUnit: (u: Unit) => void; go: (i
   const pct = c.expected ? Math.round((c.collected / c.expected) * 100) : 0;
 
   return (
-    <div className="stack-lg">
-      <div className="hero-card">
-        <div className="hero-label">تحصيل {monthName(c.month)}</div>
-        <div className="hero-amount"><Money fils={c.collected} animate /></div>
-        <div className="hero-sub">من <span className="num">{(c.expected / 1000).toLocaleString("en-US")}</span> د.ب · <span className="num">{c.paid.length}</span> من <span className="num">{c.paid.length + c.due.length + c.late.length}</span> وحدات · <span className="num">{pct}%</span></div>
-        <div className="hero-bar"><span style={{ transform: `scaleX(${c.expected ? c.collected / c.expected : 0})` }} /></div>
+    <div className="stack-lg home-grid">
+      <div className="hero-card area-hero">
+        <div className="hero-top">
+          <div>
+            <div className="hero-label">تحصيل {monthName(c.month)}</div>
+            <div className="hero-amount"><Money fils={c.collected} animate /></div>
+            <div className="hero-sub">من <span className="num">{(c.expected / 1000).toLocaleString("en-US")}</span> د.ب · <span className="num">{c.paid.length}</span> من <span className="num">{c.paid.length + c.due.length + c.late.length}</span> وحدات</div>
+          </div>
+          <Ring value={c.expected ? c.collected / c.expected : 0} label={`${pct}%`} />
+        </div>
         <div className="hero-stats">
           <button className="hero-stat press" onClick={() => go("tenants")}><b className="num">{c.late.length}</b><span>متأخر</span></button>
           <button className="hero-stat press" onClick={() => go("tenants")}><b className="num">{c.due.length}</b><span>مستحق</span></button>
@@ -36,10 +54,10 @@ export function Home({ onOpenUnit, go }: { onOpenUnit: (u: Unit) => void; go: (i
         )}
       </div>
 
-      <section>
+      <section className="area-att">
         <SectionHead title="يحتاج انتباهك" action={<button className="link press" onClick={() => go("tenants")}>كل المستأجرين</button>} />
         {loading ? <SkeletonCards n={2} /> : attention.length === 0 ? (
-          <div className="card empty">كل الإيجارات مدفوعة هالشهر.</div>
+          <EmptyState text="كل الإيجارات مدفوعة هالشهر." />
         ) : (
           <ul className="rows rows-tap card-list">
             {attention.map((u, i) => {
@@ -58,7 +76,7 @@ export function Home({ onOpenUnit, go }: { onOpenUnit: (u: Unit) => void; go: (i
       </section>
 
       {contracts.length > 0 && (
-        <section>
+        <section className="area-con">
           <SectionHead title="عقود تنتهي قريب" />
           <ul className="rows rows-tap card-list">
             {contracts.map(({ unit: u, left }) => (
@@ -73,7 +91,7 @@ export function Home({ onOpenUnit, go }: { onOpenUnit: (u: Unit) => void; go: (i
         </section>
       )}
 
-      <div className="grid-2">
+      <div className="grid-2 area-tiles">
         <button className="card tappable press tile" onClick={() => go("budget")}>
           <span className="tile-icon">{Icon.budget}</span>
           <span className="muted small">مصروف الشهر</span>
