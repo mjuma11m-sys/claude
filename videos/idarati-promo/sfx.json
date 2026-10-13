@@ -1,0 +1,20 @@
+[
+  { "type": "whoosh", "at": "scene:s1+0.15" },
+  { "type": "impact", "at": "scene:s1+0.4", "gain": -4 },
+  { "type": "swoosh-pass", "at": "scene:s1+1.9" },
+  { "type": "pop", "at": "scene:s2+0.15" },
+  { "type": "pop", "at": "scene:s2+0.95" },
+  { "type": "pop", "at": "scene:s2+1.75" },
+  { "type": "riser", "at": "scene:s3" },
+  { "type": "impact", "at": "scene:s3+1.05" },
+  { "type": "whoosh", "at": "scene:s4" },
+  { "type": "pop", "at": "scene:s4+1.2" },
+  { "type": "whoosh", "at": "scene:s5" },
+  { "type": "tick", "at": "scene:s5+1.15" },
+  { "type": "pop", "at": "scene:s5+1.55" },
+  { "type": "whoosh", "at": "scene:s6" },
+  { "type": "impact", "at": "scene:s6+1.72", "gain": -3 },
+  { "type": "whoosh", "at": "scene:s7" },
+  { "type": "riser", "at": "scene:s8" },
+  { "type": "impact", "at": "scene:s8+0.3" }
+]

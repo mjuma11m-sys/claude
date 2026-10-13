@@ -1,0 +1,18 @@
+{ "name": "idarati-promo", "fps": 30, "width": 1080, "height": 1920, "bpm": 120, "beatsPerBar": 4, "beatOffset": 0,
+  "palette": { "bg": "#14213A", "ink": "#F5F2EB", "acc": "#C9963A", "clay": "#B83A2B", "hi": "#8FB3E8", "mut": "#9AA4B6" },
+  "fonts": { "display": "Readex Pro", "body": "IBM Plex Sans Arabic", "num": "Inter" },
+  "images": { "sym": "assets/symbol.svg", "word": "assets/logo-horizontal-dark.svg", "late": "assets/late.png", "unit": "assets/unit.png", "receipt": "assets/receipt.png", "home": "assets/home.png", "budget": "assets/budget.png", "bank": "assets/bank.png", "house": "assets/house.png" },
+  "post": { "grain": 0.03, "vignette": 0.22 },
+  "timing": { "snap": "half", "startPad": 0, "tail": 0 },
+  "music": { "key": "D", "scale": "minor", "progression": [0, 5, 3, 4], "level": -4, "duck": 0, "top": { "hat": 10, "pluck": 6 } },
+  "sections": [ { "name": "intro", "at": 0 }, { "name": "build", "at": "scene:s2" }, { "name": "drop", "at": "scene:s3" }, { "name": "outro", "at": "scene:s8" } ],
+  "scenes": [
+    { "id": "s1", "file": "scenes/s1.js", "lines": [], "duration": 2.5 },
+    { "id": "s2", "file": "scenes/s2.js", "lines": [], "duration": 3.0, "transition": { "type": "flash", "dur": 0.3 } },
+    { "id": "s3", "file": "scenes/s3.js", "lines": [], "duration": 3.0, "transition": { "type": "iris", "dur": 0.5 } },
+    { "id": "s4", "file": "scenes/s4.js", "lines": [], "duration": 3.5, "transition": { "type": "push", "dur": 0.4, "dir": "rtl" } },
+    { "id": "s5", "file": "scenes/s5.js", "lines": [], "duration": 3.5, "transition": { "type": "push", "dur": 0.4, "dir": "rtl" } },
+    { "id": "s6", "file": "scenes/s6.js", "lines": [], "duration": 3.5, "transition": { "type": "push", "dur": 0.4, "dir": "rtl" } },
+    { "id": "s7", "file": "scenes/s7.js", "lines": [], "duration": 3.0, "transition": { "type": "zoom", "dur": 0.4 } },
+    { "id": "s8", "file": "scenes/s8.js", "lines": [], "duration": 3.0, "transition": { "type": "iris", "dur": 0.5 } }
+  ] }
