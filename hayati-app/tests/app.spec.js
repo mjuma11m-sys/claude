@@ -45,10 +45,32 @@ test('add an expense by hand and it survives a reload @webkit', async ({ page })
   expect(await store(page, () => App.st.transactions[0].amount)).toBe(4.25);
 });
 
+test('first bank message asks for consent once, declining stores nothing', async ({ page }) => {
+  await open(page);
+  await page.click('#addBtn');
+  await page.click('[data-pick="sms"]');
+  await expect(page.locator('#smsConsent')).toContainText('إخفاء أرقام البطاقة');
+  await page.click('#sheetCancel');
+  expect(await store(page, () => App.st.settings.sms_consent_at || null)).toBeNull();
+
+  await page.click('#addBtn');
+  await page.click('[data-pick="sms"]');
+  await page.click('#sheetSave');
+  await expect(page.locator('#sheetBody [name=sms]')).toBeVisible();
+  expect(await store(page, () => typeof App.st.settings.sms_consent_at)).toBe('string');
+
+  await page.click('#sheetCancel');
+  await page.click('#addBtn');
+  await page.click('[data-pick="sms"]');
+  await expect(page.locator('#sheetBody [name=sms]')).toBeVisible();
+  await expect(page.locator('#smsConsent')).toHaveCount(0);
+});
+
 test('pasting a bank message logs the transaction', async ({ page }) => {
   await open(page);
   await page.click('#addBtn');
   await page.click('[data-pick="sms"]');
+  await page.click('#sheetSave'); // consent
   await page.fill('#sheetBody [name=sms]', 'Your card XX4821 was used for BHD 3.750 at COSTA COFFEE SEEF on 11/10/26. Avl bal BHD 412.300');
   await page.dispatchEvent('#sheetBody [name=sms]', 'input');
   await expect(page.locator('#smsPreview')).toContainText('COSTA COFFEE');
