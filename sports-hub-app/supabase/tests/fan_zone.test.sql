@@ -10,7 +10,7 @@ insert into auth.users (id) values ('a0000000-0000-0000-0000-000000000005'), ('a
 create temp table t as select
   (select id from public.matches limit 1) as match_id,
   (select c.player_id from public.motm_candidates c limit 1) as player_id,
-  (select id from public.players where name = 'اللاعب 10') as p10,
+  (select id from public.players where name = 'اللاعب 10' and club_id = (select id from public.clubs where name = 'المالكية')) as p10,
   (select id from public.clubs where name = 'المالكية') as malkiya;
 grant select on t to anon, authenticated;
 

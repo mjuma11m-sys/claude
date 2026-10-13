@@ -1,9 +1,17 @@
 /* Placeholder badge: a tinted monogram, stable per club name. Not a real crest: swap for official crests once the clubs agree. */
-const hash = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7)
+/* Avalanche the bits so names that differ only in their last character (club 01, 02, 03) still get distant hues. */
+const hash = (s: string) => {
+  let h = [...s].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7)
+  h = Math.imul(h ^ (h >>> 16), 0x45d9f3b) >>> 0
+  h = Math.imul(h ^ (h >>> 16), 0x45d9f3b) >>> 0
+  return (h ^ (h >>> 16)) >>> 0
+}
 
 function monogram(name: string) {
   const words = name.trim().split(/\s+/).map((w) => w.replace(/^ال/, '')).filter(Boolean)
   if (words.length === 0) return '؟'
+  const last = words[words.length - 1]
+  if (/^\d{1,3}$/.test(last)) return last // numbered clubs (the fictional demo ones) show their number
   const [a, b] = words.length > 1 ? [words[0][0], words[1][0]] : [words[0][0], words[0][1] ?? '']
   return `${a}\u200c${b}` // ZWNJ keeps the two Arabic letters from joining into one ligature
 }

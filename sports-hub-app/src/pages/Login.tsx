@@ -6,7 +6,10 @@ import { Logo, Wordmark } from '../components/Logo'
 import { PitchLines } from '../components/PitchLines'
 import { PRIVACY_CONTACT } from '../lib/legal'
 import { supabase } from '../lib/supabase'
-import { DEMO_ROLES, ROLE_LABEL } from '../lib/roles'
+import type { IconName } from '../components/Icon'
+import { DEMO_ROLES, ROLE_LABEL, type Role } from '../lib/roles'
+
+const ROLE_ICON: Record<Role, IconName> = { club_admin: 'club', bfa_admin: 'hub', medical: 'pulse', fan: 'vote', player: 'vote' }
 
 export function Login() {
   const { user, demo, signInDemo } = useAuth()
@@ -37,13 +40,13 @@ export function Login() {
           <Logo className="size-10" />
           <div>
             <h1 className="text-xl"><Wordmark /></h1>
-            <p className="text-sm text-mute">منصة كرة القدم البحرينية</p>
+            <p className="text-sm text-mute">غرف عمل للأندية والاتحاد، وزاوية للجمهور</p>
           </div>
         </div>
 
         {demo ? (
           <div className="space-y-3">
-            <p className="text-sm text-mute">وضع تجريبي: اختر الدور عشان تشوف الواجهة اللي تطلع له. باقي الأدوار (إدارة النادي، الاتحاد) ما لها شاشات للحين.</p>
+            <p className="text-sm text-mute">وضع تجريبي: اختر الدور عشان تشوف الواجهة اللي تطلع له. أندية الاتحاد والأرقام المالية بالوضع التجريبي كلها خيالية.</p>
             <div className="grid gap-2">
               {DEMO_ROLES.map((r) => (
                 <button
@@ -51,7 +54,7 @@ export function Login() {
                   onClick={() => signInDemo(r)}
                   className="stub flex min-h-14 items-center gap-3 bg-white/[0.06] px-5 text-start transition-colors hover:bg-pulse/10 active:scale-[0.99]"
                 >
-                  <Icon name={r === 'medical' ? 'pulse' : 'vote'} className="size-5 text-pulse" />
+                  <Icon name={ROLE_ICON[r]} className="size-5 text-pulse" />
                   <span className="font-display text-xl">{ROLE_LABEL[r]}</span>
                 </button>
               ))}

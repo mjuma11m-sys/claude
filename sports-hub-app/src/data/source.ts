@@ -2,7 +2,9 @@
    Pages never import demo.ts directly, so switching to real data touches nothing else. */
 import { supabase } from '../lib/supabase'
 import type { Row } from '../lib/standings'
-import { LEAGUES, MOTM_CANDIDATES, MOTM_SEED, MY_CLUB, NEXT_MATCH } from './demo'
+import { acwr, zone } from '../lib/acwr'
+import type { PlayerStatus } from '../lib/squad'
+import { DEMO_CLUB, DEMO_FINANCE, DEMO_SEASON, DEMO_SQUAD, FFP_LIMIT_DEMO, LEAGUES, MOTM_CANDIDATES, MOTM_SEED, MY_CLUB, NEXT_MATCH, SQUAD_LOADS } from './demo'
 
 type League = { id: string; name: string; rows: Row[]; updatedAt: string | null; source: string | null }
 type Candidate = { id: string; name: string; num: number | null; pos: string }
@@ -10,6 +12,7 @@ type Match = { id: string; home: string; away: string; venue: string; kickoff: s
 type Result<T> = { data: T; demo: boolean }
 
 const FAV_KEY = 'sh.favClub'
+const DEMO_FIN_KEY = 'sh.demoReport' // a club admin's demo submission, so the federation demo room can show it (cleared with the rest)
 const VOTE_KEY = 'sh.motmVote'
 const local = {
   get: (k: string) => { try { return localStorage.getItem(k) } catch { return null } },
@@ -115,7 +118,7 @@ export type Club = { id: string; name: string }
 
 export async function getClubs(): Promise<Club[]> {
   if (!supabase) return [...new Set(LEAGUES.flatMap((l) => l.rows.map((r) => r.team)))].map((name) => ({ id: name, name }))
-  const { data, error } = await supabase.from('clubs').select('id, name').order('name').returns<Club[]>()
+  const { data, error } = await supabase.from('clubs').select('id, name').eq('is_fictional', false).order('name').returns<Club[]>()
   if (error) throw error
   return data
 }
@@ -134,4 +137,99 @@ export async function setMyClub(userId: string, club: Club): Promise<void> {
   if (!supabase) return local.set(FAV_KEY, club.name)
   const { error } = await supabase.from('profiles').update({ fav_club_id: club.id }).eq('id', userId)
   if (error) throw error
+}
+
+/* ---------- club room (club admins) ---------- */
+
+export type SquadRow = { id: string; num: number | null; name: string; pos: string; status: PlayerStatus; note: string | null; endsOn: string; wage: number }
+export type ClubFinance = { season: string; revenue: number; wages: number; submittedAt: string }
+export type ClubRoom = { clubName: string; squad: SquadRow[]; finance: ClubFinance | null; limit: number; loadAlerts: number | null }
+
+export async function getFfpLimit(): Promise<number> {
+  if (!supabase) return FFP_LIMIT_DEMO
+  const { data } = await supabase.from('rules').select('value').eq('key', 'ffp_wage_ratio_limit').maybeSingle<{ value: number }>()
+  return data?.value ?? FFP_LIMIT_DEMO
+}
+
+function readDemoReport(): ClubFinance | null {
+  try { const raw = localStorage.getItem(DEMO_FIN_KEY); return raw ? (JSON.parse(raw) as ClubFinance) : null } catch { return null }
+}
+
+export async function getClubRoom(userId: string): Promise<Result<ClubRoom>> {
+  if (!supabase) {
+    const seed = DEMO_FINANCE[0]
+    const mine = readDemoReport() ?? { season: DEMO_SEASON, revenue: seed.revenue!, wages: seed.wages!, submittedAt: new Date().toISOString() }
+    // Load alerts come from the demo ACWR series (loads are never stored in the database).
+    const alerts = SQUAD_LOADS.filter((p) => { const r = acwr(p.loads); return r !== null && zone(r) !== 'safe' && zone(r) !== 'low' }).length
+    return { data: { clubName: DEMO_CLUB, squad: DEMO_SQUAD, finance: mine, limit: FFP_LIMIT_DEMO, loadAlerts: alerts }, demo: true }
+  }
+  const me = await supabase.from('profiles').select('club_id, clubs!profiles_club_id_fkey(name)').eq('id', userId).single<{ club_id: string | null; clubs: { name: string } | null }>()
+  if (me.error) throw me.error
+  const clubId = me.data.club_id
+  if (!clubId) throw new Error('no-club')
+  const [players, contracts, statuses, reports, limit] = await Promise.all([
+    supabase.from('players').select('id, name, num, pos').eq('club_id', clubId).order('num').returns<{ id: string; name: string; num: number | null; pos: string }[]>(),
+    supabase.from('contracts').select('player_id, ends_on, monthly_wage_bhd, is_demo').eq('club_id', clubId).returns<{ player_id: string; ends_on: string; monthly_wage_bhd: number; is_demo: boolean }[]>(),
+    supabase.from('player_status').select('player_id, status, note, is_demo').eq('club_id', clubId).returns<{ player_id: string; status: PlayerStatus; note: string | null; is_demo: boolean }[]>(),
+    supabase.from('club_finance_reports').select('season, revenue_bhd, wages_bhd, submitted_at, is_demo').eq('club_id', clubId).order('season', { ascending: false }).limit(1).returns<{ season: string; revenue_bhd: number; wages_bhd: number; submitted_at: string; is_demo: boolean }[]>(),
+    getFfpLimit(),
+  ])
+  for (const r of [players, contracts, statuses, reports]) if (r.error) throw r.error
+  const c = new Map(contracts.data!.map((x) => [x.player_id, x]))
+  const s = new Map(statuses.data!.map((x) => [x.player_id, x]))
+  const squad: SquadRow[] = players.data!.flatMap((p) => {
+    const ct = c.get(p.id)
+    return ct ? [{ id: p.id, num: p.num, name: p.name, pos: p.pos, status: s.get(p.id)?.status ?? 'fit', note: s.get(p.id)?.note ?? null, endsOn: ct.ends_on, wage: Number(ct.monthly_wage_bhd) }] : []
+  })
+  const r = reports.data![0]
+  return {
+    data: { clubName: me.data.clubs?.name ?? '—', squad, finance: r ? { season: r.season, revenue: Number(r.revenue_bhd), wages: Number(r.wages_bhd), submittedAt: r.submitted_at } : null, limit, loadAlerts: null },
+    demo: contracts.data!.some((x) => x.is_demo) || statuses.data!.some((x) => x.is_demo) || !!r?.is_demo,
+  }
+}
+
+/* Submitting is the club's explicit consent for the federation to read these two season totals. */
+export async function submitFinance(userId: string, season: string, revenue: number, wages: number): Promise<void> {
+  if (!supabase) {
+    try { localStorage.setItem(DEMO_FIN_KEY, JSON.stringify({ season, revenue, wages, submittedAt: new Date().toISOString() })) } catch { /* session-only */ }
+    return
+  }
+  const me = await supabase.from('profiles').select('club_id').eq('id', userId).single<{ club_id: string | null }>()
+  if (me.error || !me.data.club_id) throw me.error ?? new Error('no-club')
+  const row = { club_id: me.data.club_id, season, revenue_bhd: revenue, wages_bhd: wages }
+  const ins = await supabase.from('club_finance_reports').insert(row)
+  if (!ins.error) return
+  if (ins.error.code !== '23505') throw ins.error // 23505 = already filed this season: amend it instead
+  const upd = await supabase.from('club_finance_reports').update({ revenue_bhd: revenue, wages_bhd: wages }).eq('club_id', row.club_id).eq('season', season)
+  if (upd.error) throw upd.error
+}
+
+/* ---------- federation room ---------- */
+
+export type FedRow = { club: string; revenue: number | null; wages: number | null; submittedAt: string | null }
+export type FederationRoom = { limit: number; season: string; rows: FedRow[]; leagues: { id: string; name: string; updatedAt: string | null; source: string | null }[] }
+
+export async function getFederationRoom(): Promise<Result<FederationRoom>> {
+  const leagues = await getLeagues()
+  const lg = leagues.data.map(({ id, name, updatedAt, source }) => ({ id, name, updatedAt, source }))
+  if (!supabase) {
+    const mine = readDemoReport()
+    const rows = DEMO_FINANCE.map((f, i) => (i === 0 && mine ? { club: f.club, revenue: mine.revenue, wages: mine.wages, submittedAt: mine.submittedAt } : { club: f.club, revenue: f.revenue, wages: f.wages, submittedAt: f.revenue === null ? null : new Date(Date.now() - (i + 1) * 86_400_000 * 3).toISOString() }))
+    return { data: { limit: FFP_LIMIT_DEMO, season: DEMO_SEASON, rows, leagues: lg }, demo: true }
+  }
+  const [reports, real, limit] = await Promise.all([
+    supabase.from('club_finance_reports').select('season, revenue_bhd, wages_bhd, submitted_at, is_demo, clubs(name)').order('season', { ascending: false }).returns<{ season: string; revenue_bhd: number; wages_bhd: number; submitted_at: string; is_demo: boolean; clubs: { name: string } | null }[]>(),
+    supabase.from('league_entries').select('clubs(name)').eq('is_demo', false).returns<{ clubs: { name: string } | null }[]>(),
+    getFfpLimit(),
+  ])
+  if (reports.error) throw reports.error
+  const season = reports.data[0]?.season ?? DEMO_SEASON
+  const filed = reports.data.filter((r) => r.season === season)
+  const rows: FedRow[] = filed.map((r) => ({ club: r.clubs?.name ?? '—', revenue: Number(r.revenue_bhd), wages: Number(r.wages_bhd), submittedAt: r.submitted_at }))
+  // Clubs in a real (imported) league table that have not filed yet show up as "has not filed", never as fine.
+  for (const e of real.data ?? []) {
+    const name = e.clubs?.name
+    if (name && !rows.some((r) => r.club === name)) rows.push({ club: name, revenue: null, wages: null, submittedAt: null })
+  }
+  return { data: { limit, season, rows, leagues: lg }, demo: filed.some((r) => r.is_demo) }
 }

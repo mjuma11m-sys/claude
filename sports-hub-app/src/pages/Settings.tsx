@@ -35,6 +35,7 @@ export function Settings() {
           <span className="text-mute">الدور</span>
           <span>{user && ROLE_LABEL[user.role]}{demo && ' · تجريبي'}</span>
         </div>
+        {user && !['club_admin', 'bfa_admin'].includes(user.role) && (
         <label className="flex items-center justify-between gap-4 p-4">
           <span className="text-mute">ناديك</span>
           <select
@@ -49,6 +50,7 @@ export function Settings() {
             {clubs.data?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </label>
+        )}
         <Link to="/privacy" className="flex items-center justify-between p-4 hover:bg-white/5">سياسة الخصوصية <span className="text-mute">←</span></Link>
         <Link to="/terms" className="flex items-center justify-between p-4 hover:bg-white/5">شروط الاستخدام <span className="text-mute">←</span></Link>
       </div>

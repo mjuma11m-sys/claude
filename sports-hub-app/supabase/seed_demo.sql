@@ -86,3 +86,52 @@ with m as (
 insert into public.motm_candidates (match_id, player_id)
 select m.id, p.id from m join public.players p on p.club_id = m.home_id;
 commit;
+
+-- ===== Club and federation demo =====
+-- Every club here is fictional ("نادي تجريبي NN"). Pay and finance are never attached to a real club, even as demo data.
+begin;
+delete from public.club_finance_reports where is_demo;
+
+insert into public.clubs (name, is_fictional)
+select 'نادي تجريبي ' || lpad(n::text, 2, '0'), true from generate_series(1, 12) n
+on conflict (name) do nothing;
+
+-- Squad of club 01 (cascades to its contracts and statuses)
+delete from public.players where club_id = (select id from public.clubs where name = 'نادي تجريبي 01');
+insert into public.players (club_id, name, num, pos)
+select c.id, 'اللاعب ' || v.num, v.num, v.pos
+from public.clubs c, (values
+  (1, 'حارس مرمى'), (22, 'حارس مرمى'), (2, 'ظهير أيمن'), (3, 'ظهير أيسر'), (4, 'قلب دفاع'), (5, 'قلب دفاع'),
+  (6, 'وسط ارتكاز'), (8, 'وسط'), (10, 'صانع ألعاب'), (14, 'وسط'), (7, 'جناح'), (11, 'جناح'),
+  (9, 'مهاجم'), (17, 'مهاجم'), (19, 'مهاجم'), (21, 'وسط')
+) as v(num, pos) where c.name = 'نادي تجريبي 01';
+
+-- num, days until the contract ends, monthly wage (BHD), availability, note
+create temp table squad (num int, days int, wage numeric, status text, note text) on commit drop;
+insert into squad values
+  (1, 420, 1800, 'fit', null), (22, 150, 900, 'fit', null), (2, 640, 1500, 'fit', null),
+  (3, 95, 1400, 'doubtful', 'إجهاد بسيط'), (4, 880, 2100, 'fit', null), (5, 300, 1700, 'injured', 'إصابة عضلية'),
+  (6, 1100, 2400, 'fit', null), (8, 170, 1600, 'fit', null), (10, 520, 3200, 'fit', null),
+  (14, 40, 1100, 'suspended', 'إيقاف مباراتين'), (7, 730, 2000, 'fit', null), (11, 200, 1900, 'fit', null),
+  (9, 960, 3500, 'fit', null), (17, 340, 1300, 'fit', null), (19, 130, 1000, 'injured', 'شد بالفخذ'), (21, 560, 600, 'fit', null);
+
+insert into public.contracts (player_id, club_id, starts_on, ends_on, monthly_wage_bhd)
+select p.id, p.club_id, current_date - 700, current_date + s.days, s.wage
+from public.players p join squad s on s.num = p.num
+where p.club_id = (select id from public.clubs where name = 'نادي تجريبي 01');
+
+insert into public.player_status (player_id, club_id, status, note)
+select p.id, p.club_id, s.status, s.note
+from public.players p join squad s on s.num = p.num
+where p.club_id = (select id from public.clubs where name = 'نادي تجريبي 01');
+
+-- Season finance reports: 10 submitted, 2 clubs (11, 12) have not filed yet
+insert into public.club_finance_reports (club_id, season, revenue_bhd, wages_bhd)
+select c.id, '2026/27', v.revenue, v.wages
+from public.clubs c join (values
+  ('نادي تجريبي 01', 520000, 360000), ('نادي تجريبي 02', 880000, 470000), ('نادي تجريبي 03', 410000, 340000),
+  ('نادي تجريبي 04', 760000, 500000), ('نادي تجريبي 05', 1200000, 640000), ('نادي تجريبي 06', 330000, 215000),
+  ('نادي تجريبي 07', 590000, 300000), ('نادي تجريبي 08', 450000, 335000), ('نادي تجريبي 09', 980000, 520000),
+  ('نادي تجريبي 10', 270000, 150000)
+) as v(name, revenue, wages) on v.name = c.name;
+commit;

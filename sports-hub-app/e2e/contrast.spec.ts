@@ -57,11 +57,11 @@ async function measure(page: Page) {
   }, { items, png })
 }
 
-const SCREENS = ['/', '/standings', '/vote', '/pass', '/medical', '/settings', '/privacy', '/terms']
-for (const path of SCREENS) {
+const SCREENS: [string, string][] = [['/zone', 'الطاقم الطبي'], ['/standings', 'الطاقم الطبي'], ['/vote', 'الطاقم الطبي'], ['/pass', 'الطاقم الطبي'], ['/medical', 'الطاقم الطبي'], ['/settings', 'الطاقم الطبي'], ['/club', 'إدارة النادي'], ['/federation', 'الاتحاد'], ['/privacy', 'الطاقم الطبي'], ['/terms', 'الطاقم الطبي']]
+for (const [path, role] of SCREENS) {
   test(`contrast: ${path}`, async ({ page }) => {
     await page.goto('/login')
-    await page.getByRole('button', { name: 'الطاقم الطبي' }).click()
+    await page.getByRole('button', { name: role }).click()
     await page.goto(path)
     await page.waitForTimeout(900)
     const { count, bad } = await measure(page)

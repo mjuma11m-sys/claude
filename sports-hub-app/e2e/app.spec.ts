@@ -52,7 +52,7 @@ test.describe('roles', () => {
 
   test('the demo login only offers roles that have a screen', async ({ page }) => {
     await page.goto('/login')
-    await expect(page.getByRole('button')).toHaveCount(2)
+    await expect(page.getByRole('button')).toHaveCount(4)
   })
 })
 

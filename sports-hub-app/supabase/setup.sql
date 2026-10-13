@@ -185,6 +185,99 @@ create trigger league_entries_touch before update on public.league_entries
 create trigger matches_touch before update on public.matches
   for each row execute function public.touch_updated_at();
 
+-- ===== migrations/0005_club_federation.sql =====
+-- Club and federation workspaces. Tenant isolation is the product: a club sees its own people and money and nobody else's,
+-- and the federation sees only what a club chooses to submit (the season finance report), never player-level pay.
+
+alter table public.clubs add column is_fictional boolean not null default false; -- demo-only clubs: never offered in the fan club picker
+
+-- A composite key lets child tables prove "this player belongs to this club" in the database, not in app code.
+alter table public.players add constraint players_id_club_key unique (id, club_id);
+
+create table public.rules (
+  key     text primary key,
+  value   numeric not null,
+  label   text not null,
+  is_demo boolean not null default true
+);
+insert into public.rules (key, value, label) values
+  ('ffp_wage_ratio_limit', 0.70, 'الحد الأعلى لنسبة الأجور إلى الإيرادات (قيمة تجريبية، مو قاعدة رسمية)');
+
+create table public.contracts (
+  id               uuid primary key default gen_random_uuid(),
+  player_id        uuid not null,
+  club_id          uuid not null,
+  starts_on        date not null,
+  ends_on          date not null,
+  monthly_wage_bhd numeric(10, 3) not null check (monthly_wage_bhd >= 0),
+  is_demo          boolean not null default true,
+  check (ends_on > starts_on),
+  foreign key (player_id, club_id) references public.players (id, club_id) on delete cascade
+);
+create index contracts_club_end_idx on public.contracts (club_id, ends_on);
+
+create table public.player_status (
+  player_id  uuid primary key,
+  club_id    uuid not null,
+  status     text not null check (status in ('fit', 'doubtful', 'injured', 'suspended')),
+  note       text,
+  updated_at timestamptz not null default now(),
+  is_demo    boolean not null default true,
+  foreign key (player_id, club_id) references public.players (id, club_id) on delete cascade
+);
+create trigger player_status_touch before update on public.player_status
+  for each row execute function public.touch_updated_at();
+
+create table public.club_finance_reports (
+  club_id      uuid not null references public.clubs (id) on delete cascade,
+  season       text not null,
+  revenue_bhd  numeric(14, 3) not null check (revenue_bhd >= 0),
+  wages_bhd    numeric(14, 3) not null check (wages_bhd >= 0),
+  submitted_at timestamptz not null default now(),
+  submitted_by uuid default auth.uid() references auth.users (id) on delete set null,
+  is_demo      boolean not null default true,
+  primary key (club_id, season)
+);
+create function public.touch_submitted_at() returns trigger language plpgsql set search_path = '' as
+  $$ begin new.submitted_at = now(); return new; end $$;
+create trigger finance_touch before update on public.club_finance_reports
+  for each row execute function public.touch_submitted_at();
+
+alter table public.rules enable row level security;
+alter table public.contracts enable row level security;
+alter table public.player_status enable row level security;
+alter table public.club_finance_reports enable row level security;
+
+-- Supabase hands new tables to anon/authenticated by default: start from nothing, then grant exactly what each role needs.
+revoke all on public.rules, public.contracts, public.player_status, public.club_finance_reports from anon, authenticated;
+grant select on public.rules, public.contracts, public.player_status, public.club_finance_reports to authenticated;
+grant update (status, note) on public.player_status to authenticated;
+grant insert (club_id, season, revenue_bhd, wages_bhd), update (revenue_bhd, wages_bhd) on public.club_finance_reports to authenticated;
+
+create policy "rules readable by signed-in users" on public.rules for select to authenticated using (true);
+
+-- Pay: the club's own administrators only. Medical staff, players, fans and the federation never see it.
+create policy "club admin reads own contracts" on public.contracts for select to authenticated
+  using ((select public.my_role()) = 'club_admin' and club_id = (select public.my_club()));
+
+-- Availability is health-adjacent: own club's administrators and medical staff.
+create policy "own club staff read status" on public.player_status for select to authenticated
+  using ((select public.my_role()) in ('club_admin', 'medical') and club_id = (select public.my_club()));
+create policy "own club staff update status" on public.player_status for update to authenticated
+  using ((select public.my_role()) in ('club_admin', 'medical') and club_id = (select public.my_club()))
+  with check ((select public.my_role()) in ('club_admin', 'medical') and club_id = (select public.my_club()));
+
+-- Finance report: the club writes its own; the federation reads every submitted one. Submitting IS the consent.
+create policy "club admin reads own report" on public.club_finance_reports for select to authenticated
+  using ((select public.my_role()) = 'club_admin' and club_id = (select public.my_club()));
+create policy "federation reads submitted reports" on public.club_finance_reports for select to authenticated
+  using ((select public.my_role()) = 'bfa_admin');
+create policy "club admin submits own report" on public.club_finance_reports for insert to authenticated
+  with check ((select public.my_role()) = 'club_admin' and club_id = (select public.my_club()));
+create policy "club admin amends own report" on public.club_finance_reports for update to authenticated
+  using ((select public.my_role()) = 'club_admin' and club_id = (select public.my_club()))
+  with check ((select public.my_role()) = 'club_admin' and club_id = (select public.my_club()));
+
 -- ===== seed_demo.sql =====
 -- Demo data mirroring src/data/demo.ts. Every row is is_demo = true; replace with real data via the service role.
 
@@ -273,4 +366,53 @@ with m as (
 )
 insert into public.motm_candidates (match_id, player_id)
 select m.id, p.id from m join public.players p on p.club_id = m.home_id;
+commit;
+
+-- ===== Club and federation demo =====
+-- Every club here is fictional ("نادي تجريبي NN"). Pay and finance are never attached to a real club, even as demo data.
+begin;
+delete from public.club_finance_reports where is_demo;
+
+insert into public.clubs (name, is_fictional)
+select 'نادي تجريبي ' || lpad(n::text, 2, '0'), true from generate_series(1, 12) n
+on conflict (name) do nothing;
+
+-- Squad of club 01 (cascades to its contracts and statuses)
+delete from public.players where club_id = (select id from public.clubs where name = 'نادي تجريبي 01');
+insert into public.players (club_id, name, num, pos)
+select c.id, 'اللاعب ' || v.num, v.num, v.pos
+from public.clubs c, (values
+  (1, 'حارس مرمى'), (22, 'حارس مرمى'), (2, 'ظهير أيمن'), (3, 'ظهير أيسر'), (4, 'قلب دفاع'), (5, 'قلب دفاع'),
+  (6, 'وسط ارتكاز'), (8, 'وسط'), (10, 'صانع ألعاب'), (14, 'وسط'), (7, 'جناح'), (11, 'جناح'),
+  (9, 'مهاجم'), (17, 'مهاجم'), (19, 'مهاجم'), (21, 'وسط')
+) as v(num, pos) where c.name = 'نادي تجريبي 01';
+
+-- num, days until the contract ends, monthly wage (BHD), availability, note
+create temp table squad (num int, days int, wage numeric, status text, note text) on commit drop;
+insert into squad values
+  (1, 420, 1800, 'fit', null), (22, 150, 900, 'fit', null), (2, 640, 1500, 'fit', null),
+  (3, 95, 1400, 'doubtful', 'إجهاد بسيط'), (4, 880, 2100, 'fit', null), (5, 300, 1700, 'injured', 'إصابة عضلية'),
+  (6, 1100, 2400, 'fit', null), (8, 170, 1600, 'fit', null), (10, 520, 3200, 'fit', null),
+  (14, 40, 1100, 'suspended', 'إيقاف مباراتين'), (7, 730, 2000, 'fit', null), (11, 200, 1900, 'fit', null),
+  (9, 960, 3500, 'fit', null), (17, 340, 1300, 'fit', null), (19, 130, 1000, 'injured', 'شد بالفخذ'), (21, 560, 600, 'fit', null);
+
+insert into public.contracts (player_id, club_id, starts_on, ends_on, monthly_wage_bhd)
+select p.id, p.club_id, current_date - 700, current_date + s.days, s.wage
+from public.players p join squad s on s.num = p.num
+where p.club_id = (select id from public.clubs where name = 'نادي تجريبي 01');
+
+insert into public.player_status (player_id, club_id, status, note)
+select p.id, p.club_id, s.status, s.note
+from public.players p join squad s on s.num = p.num
+where p.club_id = (select id from public.clubs where name = 'نادي تجريبي 01');
+
+-- Season finance reports: 10 submitted, 2 clubs (11, 12) have not filed yet
+insert into public.club_finance_reports (club_id, season, revenue_bhd, wages_bhd)
+select c.id, '2026/27', v.revenue, v.wages
+from public.clubs c join (values
+  ('نادي تجريبي 01', 520000, 360000), ('نادي تجريبي 02', 880000, 470000), ('نادي تجريبي 03', 410000, 340000),
+  ('نادي تجريبي 04', 760000, 500000), ('نادي تجريبي 05', 1200000, 640000), ('نادي تجريبي 06', 330000, 215000),
+  ('نادي تجريبي 07', 590000, 300000), ('نادي تجريبي 08', 450000, 335000), ('نادي تجريبي 09', 980000, 520000),
+  ('نادي تجريبي 10', 270000, 150000)
+) as v(name, revenue, wages) on v.name = c.name;
 commit;

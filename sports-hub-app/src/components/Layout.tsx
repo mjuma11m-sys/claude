@@ -1,21 +1,13 @@
 import { useEffect, useRef } from 'react'
 import { NavLink, Outlet, useLocation, useMatches } from 'react-router'
 import { useAuth } from '../auth/AuthProvider'
-import { canAccess, ROLE_LABEL, type Area } from '../lib/roles'
-import { Icon, type IconName } from './Icon'
+import { navFor } from '../lib/nav'
+import { ROLE_LABEL } from '../lib/roles'
+import { Icon } from './Icon'
 import { useMyClub } from '../data/MyClub'
 import { ClubBadge } from './ClubBadge'
 import { Logo, Wordmark } from './Logo'
 import { OfflineBanner } from './OfflineBanner'
-
-type Item = { to: string; label: string; icon: IconName; area: Area }
-const NAV: Item[] = [
-  { to: '/', label: 'الرئيسية', icon: 'home', area: 'fan' },
-  { to: '/standings', label: 'الترتيب', icon: 'table', area: 'fan' },
-  { to: '/vote', label: 'رجل المباراة', icon: 'vote', area: 'fan' },
-  { to: '/pass', label: 'تذكرتي', icon: 'pass', area: 'fan' },
-  { to: '/medical', label: 'الأحمال', icon: 'pulse', area: 'medical' },
-]
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors ${
@@ -39,9 +31,8 @@ export function Layout() {
     main.current?.focus({ preventScroll: true })
     scrollTo(0, 0)
   }, [pathname, title])
-  const items = NAV.filter((i) => user && canAccess(user.role, i.area))
-  /* Phone tab bar holds 5 at most: staff get their own area first, fans get the 4 fan tabs. */
-  const tabs = [...items.filter((i) => i.area !== 'fan'), ...items.filter((i) => i.area === 'fan')].slice(0, 5)
+  const items = user ? navFor(user.role) : []
+  const tabs = items.slice(0, 5) // the phone tab bar holds five at most
 
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[4.75rem_1fr] lg:grid-cols-[16rem_1fr]">
@@ -79,7 +70,7 @@ export function Layout() {
           </div>
           <div className="flex min-w-0 items-center gap-1.5 whitespace-nowrap text-sm md:ms-auto md:gap-2">
             {demo && <span className="rounded-full bg-warn/15 px-2.5 py-0.5 text-xs text-warn"><span className="sm:hidden">تجريبي</span><span className="hidden sm:inline">وضع تجريبي</span></span>}
-            {club && <span className="hidden items-center gap-2 rounded-full bg-white/5 py-0.5 pe-3 ps-1 sm:flex"><ClubBadge name={club} size="sm" mine /> <span>{club}</span></span>}
+            {club && user && !['club_admin', 'bfa_admin'].includes(user.role) && <span className="hidden items-center gap-2 rounded-full bg-white/5 py-0.5 pe-3 ps-1 sm:flex"><ClubBadge name={club} size="sm" mine /> <span>{club}</span></span>}
             {user && <span className="max-w-28 truncate rounded-full bg-white/5 px-2.5 py-0.5 text-xs text-mute sm:text-sm">{ROLE_LABEL[user.role]}</span>}
             <NavLink to="/settings" className="-me-1.5 grid size-11 place-items-center rounded-full text-mute hover:text-ink md:hidden" aria-label="الإعدادات">
               <Icon name="gear" />

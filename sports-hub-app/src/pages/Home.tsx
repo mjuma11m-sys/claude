@@ -6,6 +6,7 @@ import { Icon } from '../components/Icon'
 import { InstallPrompt } from '../components/InstallPrompt'
 import { PageTitle } from '../components/PageTitle'
 import { PitchLines } from '../components/PitchLines'
+import { StatTile } from '../components/StatTile'
 import { ShareButton } from '../components/ShareButton'
 import { StandingsTable } from '../components/StandingsTable'
 import { Failed, Loading } from '../components/States'
@@ -14,23 +15,8 @@ import { getLeagues, getNextMatch, getVotes } from '../data/source'
 import { useLoad } from '../data/useLoad'
 import { vars } from '../lib/css'
 import { fmtDateTime, fmtGd } from '../lib/format'
-import { useCountUp, useIntro } from '../lib/motion'
+import { useIntro } from '../lib/motion'
 import { rank } from '../lib/standings'
-
-/* The final number is in the DOM for readers and tests; the animated one is a visual layer on top of it. */
-function Stat({ label, value, tone = '', animate }: { label: string; value: number | string; tone?: string; animate: boolean }) {
-  const n = typeof value === 'number' ? value : 0
-  const shown = useCountUp(n, animate && typeof value === 'number')
-  return (
-    <div className="glass px-2 py-3 text-center">
-      <p className={`font-display text-4xl leading-none md:text-5xl ${tone}`} dir="ltr">
-        <span className="sr-only">{value}</span>
-        <span aria-hidden>{typeof value === 'number' ? shown : value}</span>
-      </p>
-      <p className="mt-1.5 text-xs text-mute">{label}</p>
-    </div>
-  )
-}
 
 export function Home() {
   const { club } = useMyClub()
@@ -105,10 +91,10 @@ export function Home() {
         <div className="grid content-start gap-4 lg:col-span-2">
           {mine ? (
             <div className="rise grid grid-cols-4 gap-2" style={vars({ '--i': 2 })}>
-              <Stat label="المركز" value={mine.pos} tone="text-gold" animate={intro} />
-              <Stat label="نقاط" value={mine.pts} animate={intro} />
-              <Stat label="الفارق" value={fmtGd(mine.gd)} animate={false} />
-              <Stat label="لعب" value={mine.played} animate={intro} />
+              <StatTile label="المركز" value={mine.pos} tone="text-gold" animate={intro} />
+              <StatTile label="نقاط" value={mine.pts} animate={intro} />
+              <StatTile label="الفارق" value={fmtGd(mine.gd)} animate={false} />
+              <StatTile label="لعب" value={mine.played} animate={intro} />
             </div>
           ) : (
             <Link to="/settings" className="glass rise p-4 text-sm text-pulse" style={vars({ '--i': 2 })}>اختر ناديك عشان نبرز مركزه ونقاطه ←</Link>

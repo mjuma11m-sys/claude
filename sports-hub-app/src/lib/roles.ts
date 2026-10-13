@@ -9,18 +9,22 @@ export const ROLE_LABEL: Record<Role, string> = {
   bfa_admin: 'الاتحاد',
 }
 
-/* Roles that have a screen of their own today. club_admin and bfa_admin exist in the database for the next
-   phase but have no room yet, so the demo login does not offer them. */
-export const DEMO_ROLES: readonly Role[] = ['fan', 'medical']
+/* Roles with a screen of their own, in the order the demo login lists them: clubs and the federation come first. */
+export const DEMO_ROLES: readonly Role[] = ['club_admin', 'bfa_admin', 'medical', 'fan']
 
-export type Area = 'fan' | 'medical'
+export type Area = 'fan' | 'medical' | 'club' | 'federation'
 
 /* UI gate only. The real firewall is RLS in supabase/migrations: a hidden link is not security. */
 const ACCESS: Record<Area, readonly Role[]> = {
   fan: ROLES,
   medical: ['medical', 'club_admin'],
+  club: ['club_admin'],
+  federation: ['bfa_admin'],
 }
 
 export const canAccess = (role: Role, area: Area) => ACCESS[area].includes(role)
 
 export const isRole = (v: unknown): v is Role => typeof v === 'string' && (ROLES as readonly string[]).includes(v)
+
+/* Where each role lands after signing in: staff go to their own room, the public zone is a tab for them. */
+export const homePath = (role: Role) => (role === 'club_admin' ? '/club' : role === 'bfa_admin' ? '/federation' : '/')

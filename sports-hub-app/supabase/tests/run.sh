@@ -14,4 +14,5 @@ run() { psql -qX -v ON_ERROR_STOP=1 -d "$DB" -f "$1" 2>&1 | sed -n 's/.*NOTICE: 
 run tests/rls.test.sql
 psql -qX -v ON_ERROR_STOP=1 -d "$DB" -f seed_demo.sql
 run tests/fan_zone.test.sql
+run tests/club_federation.test.sql
 echo "RLS: all checks passed"

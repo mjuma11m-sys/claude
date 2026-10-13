@@ -51,3 +51,30 @@ export const SQUAD_LOADS = [
   { num: 10, name: 'اللاعب 10', pos: 'صانع ألعاب', loads: wave(450, 1.6) },
   { num: 9, name: 'اللاعب 9', pos: 'مهاجم', loads: wave(440, 0.6) },
 ]
+
+/* ---------- Club and federation workspaces ----------
+   Every club below is fictional on purpose: pay and finance are never attached to a real club, even as demo data. */
+import type { PlayerStatus } from '../lib/squad'
+
+export const DEMO_CLUB = 'نادي تجريبي 01'
+export const FFP_LIMIT_DEMO = 0.7 // a demo value, not an official rule
+
+const inDays = (n: number) => new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10)
+const sq = (num: number, pos: string, days: number, wage: number, status: PlayerStatus, note: string | null = null) =>
+  ({ id: `demo-${num}`, num, name: `اللاعب ${num}`, pos, endsOn: inDays(days), wage, status, note })
+
+export const DEMO_SQUAD = [
+  sq(1, 'حارس مرمى', 420, 1800, 'fit'), sq(22, 'حارس مرمى', 150, 900, 'fit'), sq(2, 'ظهير أيمن', 640, 1500, 'fit'),
+  sq(3, 'ظهير أيسر', 95, 1400, 'doubtful', 'إجهاد بسيط'), sq(4, 'قلب دفاع', 880, 2100, 'fit'), sq(5, 'قلب دفاع', 300, 1700, 'injured', 'إصابة عضلية'),
+  sq(6, 'وسط ارتكاز', 1100, 2400, 'fit'), sq(8, 'وسط', 170, 1600, 'fit'), sq(10, 'صانع ألعاب', 520, 3200, 'fit'),
+  sq(14, 'وسط', 40, 1100, 'suspended', 'إيقاف مباراتين'), sq(7, 'جناح', 730, 2000, 'fit'), sq(11, 'جناح', 200, 1900, 'fit'),
+  sq(9, 'مهاجم', 960, 3500, 'fit'), sq(17, 'مهاجم', 340, 1300, 'fit'), sq(19, 'مهاجم', 130, 1000, 'injured', 'شد بالفخذ'), sq(21, 'وسط', 560, 600, 'fit'),
+]
+
+/* [club, revenue BHD, wages BHD] for the season; null = has not filed. */
+const fin = (n: number, revenue: number | null, wages: number | null) => ({ club: `نادي تجريبي ${String(n).padStart(2, '0')}`, revenue, wages })
+export const DEMO_FINANCE = [
+  fin(1, 520000, 360000), fin(2, 880000, 470000), fin(3, 410000, 340000), fin(4, 760000, 500000), fin(5, 1200000, 640000), fin(6, 330000, 215000),
+  fin(7, 590000, 300000), fin(8, 450000, 335000), fin(9, 980000, 520000), fin(10, 270000, 150000), fin(11, null, null), fin(12, null, null),
+]
+export const DEMO_SEASON = '2026/27'

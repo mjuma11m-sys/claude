@@ -2,7 +2,10 @@ import { createBrowserRouter } from 'react-router'
 import { RequireArea, RequireAuth } from './auth/RequireAuth'
 import { Layout } from './components/Layout'
 import { RouteError } from './components/RouteError'
+import { Club } from './pages/Club'
+import { Federation } from './pages/Federation'
 import { Home } from './pages/Home'
+import { Landing } from './pages/Landing'
 import { Login } from './pages/Login'
 import { Privacy, Terms } from './pages/Legal'
 import { Medical } from './pages/Medical'
@@ -20,7 +23,10 @@ export const router = createBrowserRouter([
   {
     element: <RequireAuth><Layout /></RequireAuth>,
     children: [
-      { index: true, handle: { title: 'الرئيسية' }, element: <Home /> },
+      { index: true, handle: { title: 'الرئيسية' }, element: <Landing /> },
+      { path: 'zone', handle: { title: 'الجمهور' }, element: <Home /> },
+      { path: 'club', handle: { title: 'غرفة النادي' }, element: <RequireArea area="club"><Club /></RequireArea> },
+      { path: 'federation', handle: { title: 'غرفة الاتحاد' }, element: <RequireArea area="federation"><Federation /></RequireArea> },
       { path: 'standings', handle: { title: 'الترتيب' }, element: <Standings /> },
       { path: 'vote', handle: { title: 'رجل المباراة' }, element: <Vote /> },
       { path: 'pass', handle: { title: 'تذكرتي' }, element: <Pass /> },

@@ -3,10 +3,10 @@ import { expect, test } from '@playwright/test'
 /* Fingers are ~44px wide (Apple HIG) and WCAG 2.2 asks for at least 24px: anything you tap on a phone should clear 44. */
 test('every tap target on a phone is at least 44px', async ({ page }, info) => {
   test.skip(info.project.name !== 'phone', 'touch sizing matters on the phone layout')
-  await page.goto('/login')
-  await page.getByRole('button', { name: 'الطاقم الطبي' }).click()
   const small: string[] = []
-  for (const path of ['/', '/standings', '/vote', '/pass', '/medical', '/settings']) {
+  await page.goto('/login')
+  for (const [path, role] of [['/zone', 'medical'], ['/standings', 'medical'], ['/vote', 'medical'], ['/pass', 'medical'], ['/medical', 'medical'], ['/settings', 'medical'], ['/club', 'club_admin'], ['/federation', 'bfa_admin']]) {
+    await page.evaluate((k) => localStorage.setItem('sh.demoRole', k), role)
     await page.goto(path)
     await page.waitForTimeout(600)
     const found = await page.evaluate(() =>
