@@ -525,6 +525,26 @@
     const n = daysBetween(new Date(), d);
     return n === 0 ? 'اليوم' : n === 1 ? 'بكرة' : 'بعد ' + nDays(n);
   }
+  // 📊 «صدّر مصاريفك»: CSV للـ Excel (حق نقل البيانات). بدون نص رسالة البنك، ومحمي من حقن الصيغ
+  function csvCell(v) {
+    let s = String(v == null ? '' : v);
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;   // =HYPERLINK(...) ما تشتغل كصيغة
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  function expensesCSV() {
+    const list = st.transactions.slice().sort((a, b) => new Date(a.occurred_at) - new Date(b.occurred_at));
+    if (!list.length) return '';
+    const rows = [['التاريخ', 'الوقت', 'النوع', 'المبلغ (د.ب)', 'المحل', 'الفئة', 'ملاحظة']];
+    for (const t of list) {
+      const d = new Date(t.occurred_at);
+      rows.push([
+        d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()), pad(d.getHours()) + ':' + pad(d.getMinutes()),
+        t.kind === 'income' ? 'دخل' : 'صرف', (Number(t.amount) || 0).toFixed(3), t.merchant || '', t.category || '', t.note || '',
+      ]);
+    }
+    // BOM عشان Excel يقرأ العربي، و CRLF مثل ما يتوقع
+    return '\uFEFF' + rows.map((r, ri) => r.map((c, i) => (ri && i === 3 ? c : csvCell(c))).join(',')).join('\r\n') + '\r\n';   // المبلغ رقم بدون تنصيص عشان Excel يجمعه
+  }
   function monthlyCost(sub) { return sub.cycle === 'yearly' ? (Number(sub.amount) || 0) / 12 : Number(sub.amount) || 0; }
 
   // يسجّل الاشتراكات المستحقة كمصاريف (مرة وحدة لكل فترة)
@@ -1746,6 +1766,7 @@
     body += '<div class="group-title">' + I('settings') + 'عام</div><div class="menu">' +
       '<button data-set="budget"><div class="ico" style="' + tint('#1A8A8F') + '">' + I('target') + '</div><div style="flex:1"><b>الميزانية الشهرية</b><small>' + (st.settings.budget ? fmt(st.settings.budget) + ' د.ب' : 'غير محددة') + '</small></div>' + I('chevL') + '</button>' +
       '<button data-set="export"><div class="ico" style="' + tint('#0d9488') + '">' + I('download') + '</div><div style="flex:1"><b>نسخة احتياطية</b><small>تصدير كل بياناتك كملف</small></div>' + I('chevL') + '</button>' +
+      '<button data-set="export-csv"><div class="ico" style="' + tint('#16a34a') + '">' + I('download') + '</div><div style="flex:1"><b>صدّر مصاريفك (Excel)</b><small>كل العمليات بملف ينفتح بـ Excel وNumbers</small></div>' + I('chevL') + '</button>' +
       '<label style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:16px;border:1px solid var(--border);background:var(--surface);cursor:pointer"><div class="ico" style="' + tint('#f59e0b') + '">' + I('upload') + '</div><div style="flex:1"><b style="display:block">استيراد نسخة</b><small class="muted">من ملف نسخة احتياطية</small></div><input type="file" accept="application/json,.json" data-set="import" hidden></label>' +
       '</div>';
 
@@ -1817,6 +1838,10 @@
         budgetForm();
       } else if (act === 'export') {
         await saveFile('hayati-backup-' + new Date().toISOString().slice(0, 10) + '.json', S.exportJSON(), 'application/json');
+      } else if (act === 'export-csv') {
+        const csv = expensesCSV();
+        if (!csv) toast('ما فيه عمليات للتصدير');
+        else await saveFile('hayati-expenses-' + new Date().toISOString().slice(0, 10) + '.csv', csv, 'text/csv');
       }
     } catch (err) {
       toast(err.message || 'صار خطأ');
@@ -1952,7 +1977,7 @@
     S, st, I, ui, h, fmt, money, tint, catMeta, catIcon, pad, monthKey, sameDay, startOfDay, daysBetween, time12, timeOf, minutesOf,
     nowMinutes, toLocalInput, dayLabel, nDays, toast, ask, courseById, lectures, lecturesOn, agendaOn, empty, secHead, ring, openSheet,
     closeSheet, val, parseAmount, segPick, render, go, txInMonth, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, courseForm, taskForm,
-    notify, has, nextRenewal, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
+    notify, has, nextRenewal, expensesCSV, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
   };
   setInterval(timerTickUI, 1000);
   timerCheck();

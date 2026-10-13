@@ -819,3 +819,50 @@ test('iPhone: «حضرت X؟» after each lecture, answered from the alert on th
   const off = await store(page, () => HayatiNative.upcoming(new Date(), Object.assign(HayatiNative.prefs(), { attend: false })).some((x) => x.title.startsWith('حضرت')));
   expect(off).toBe(false);
 });
+
+// جلسة الديوانية مع المحامي: شروط الاستخدام + تصدير المصاريف CSV
+test('terms of use page loads and is linked from settings, welcome card and the privacy policy', async ({ page }) => {
+  await page.goto('/terms.html');
+  await expect(page.locator('h1')).toHaveText('شروط الاستخدام');
+  await expect(page.locator('body')).toContainText('مو نصيحة مالية ولا طبية');
+  await expect(page.locator('body')).toContainText('Governed by the laws of the Kingdom of Bahrain');
+  await page.goto('/privacy.html');
+  await expect(page.locator('a[href="terms.html"]').first()).toBeVisible();
+  await expect(page.locator('body')).toContainText('تنجدول على جوالك نفسه');
+  await expect(page.locator('body')).toContainText('تحت 13 سنة');
+  await open(page);
+  await page.click('#settingsBtn');
+  await expect(page.locator('#sheetBody a[href="terms.html"]')).toBeVisible();
+});
+
+test('first-run welcome card mentions the terms with a link', async ({ page }) => {
+  await page.addInitScript(() => localStorage.clear());
+  await page.goto('/');
+  await expect(page.locator('#obCard .ob-terms a[href="terms.html"]')).toBeVisible();
+});
+
+test('«صدّر مصاريفك»: Excel-ready CSV with BOM, numbers as numbers, no bank text, formulas neutralised', async ({ page }) => {
+  await open(page);
+  expect(await store(page, () => App.expensesCSV())).toBe('');
+  await store(page, () => {
+    App.S.upsert('transactions', { id: 'c1', kind: 'expense', amount: 3.5, merchant: 'Costa Coffee', category: 'قهوة', note: 'مع "الربع"، سطر\nثاني', raw: 'سري XX4821', occurred_at: new Date(2026, 9, 11, 8, 5).toISOString() });
+    App.S.upsert('transactions', { id: 'c2', kind: 'income', amount: 250, merchant: '=HYPERLINK("http://x")', category: 'راتب', occurred_at: new Date(2026, 9, 1, 9, 0).toISOString() });
+  });
+  const csv = await store(page, () => App.expensesCSV());
+  expect(csv.charCodeAt(0)).toBe(0xFEFF);
+  const lines = csv.slice(1).split('\r\n');
+  expect(lines[0]).toBe('"التاريخ","الوقت","النوع","المبلغ (د.ب)","المحل","الفئة","ملاحظة"');
+  expect(lines[1]).toBe('"2026-10-01","09:00","دخل",250.000,"\'=HYPERLINK(""http://x"")","راتب",""');   // الأقدم أول، والصيغة ما تشتغل
+  expect(lines[2].startsWith('"2026-10-11","08:05","صرف",3.500,"Costa Coffee","قهوة","مع ""الربع""، سطر')).toBe(true);
+  expect(csv).not.toContain('XX4821');
+  expect(csv).not.toContain('سري');
+  // الزر بالإعدادات يرسل الملف
+  await store(page, () => { window.__saved = null; });
+  await page.evaluate(() => { window.HayatiNative = { saveFile: async (name, text, mime) => { window.__saved = { name, mime, len: text.length }; return true; } }; });
+  await page.click('#settingsBtn');
+  await page.click('[data-set="export-csv"]');
+  await page.waitForFunction(() => window.__saved, null, { timeout: 3000 });
+  const saved = await store(page, () => window.__saved);
+  expect(saved.name).toMatch(/^hayati-expenses-\d{4}-\d{2}-\d{2}\.csv$/);
+  expect(saved.mime).toBe('text/csv');
+});

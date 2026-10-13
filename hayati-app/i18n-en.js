@@ -1231,5 +1231,12 @@ window.HAYATI_EN = {
 "وقت ملخص الصباح": "Morning brief time",
 "شغّالة": "on",
 "🎓 سؤال الحضور": "🎓 Attendance check",
-"بعد كل محاضرة: حضرت ولا غبت، من التنبيه نفسه": "After each class: attended or absent, right from the alert"
+"بعد كل محاضرة: حضرت ولا غبت، من التنبيه نفسه": "After each class: attended or absent, right from the alert",
+"شروط الاستخدام": "Terms of use",
+"التقديرات، ومسؤولية كل واحد": "Estimates, and who is responsible for what",
+"صدّر مصاريفك (Excel)": "Export expenses (Excel)",
+"كل العمليات بملف ينفتح بـ Excel وNumbers": "All transactions in a file for Excel and Numbers",
+"ما فيه عمليات للتصدير": "No transactions to export",
+"باستخدامك «حياتي» توافق على": "By using Hayati you agree to the",
+"الأرقام كلها تقدير، وبياناتك على جهازك.": "All numbers are estimates, and your data stays on your device."
 };

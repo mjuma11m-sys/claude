@@ -120,6 +120,7 @@ Expenses, studies, prayer times and tasks in one place. A Bahraini app (beta).
 | Does your app collect or share user data? | **No** (البيانات تنحفظ على الجهاز) |
 | لو فعّلت المزامنة (Supabase) بعدين | تتغير الإجابة: Financial info + Personal info, **collected, not shared**, encrypted in transit, user can request deletion |
 | Privacy policy URL | `https://<رابط-Production>/privacy.html` |
+| Terms of use / EULA URL | `https://<رابط-Production>/terms.html` (بـ App Store Connect: App Information ← License Agreement ← Custom، أو خلّه Standard Apple EULA) |
 | Account deletion URL | نفس الرابط (فيه شرح «احذف كل بياناتي») |
 
 ### Google Play: باقي App content
@@ -141,6 +142,7 @@ Expenses, studies, prayer times and tasks in one place. A Bahraini app (beta).
 - [ ] حماية Vercel منطفية للـ Production
 - [ ] PR #10 مدموج
 - [ ] `privacy.html` يفتح من الرابط العام
+- [ ] `terms.html` يفتح من الرابط العام، ومحامي مرخّص بالبحرين راجع الشروط والسياسة
 - [ ] ملف `.aab` من PWABuilder + المفتاح محفوظ بمكانين
 - [ ] `assetlinks.json` منشور (أرسله لي)
 - [ ] 12 مختبر جاهزين

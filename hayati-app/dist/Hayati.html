@@ -1918,7 +1918,14 @@ window.HAYATI_EN = {
 "وقت ملخص الصباح": "Morning brief time",
 "شغّالة": "on",
 "🎓 سؤال الحضور": "🎓 Attendance check",
-"بعد كل محاضرة: حضرت ولا غبت، من التنبيه نفسه": "After each class: attended or absent, right from the alert"
+"بعد كل محاضرة: حضرت ولا غبت، من التنبيه نفسه": "After each class: attended or absent, right from the alert",
+"شروط الاستخدام": "Terms of use",
+"التقديرات، ومسؤولية كل واحد": "Estimates, and who is responsible for what",
+"صدّر مصاريفك (Excel)": "Export expenses (Excel)",
+"كل العمليات بملف ينفتح بـ Excel وNumbers": "All transactions in a file for Excel and Numbers",
+"ما فيه عمليات للتصدير": "No transactions to export",
+"باستخدامك «حياتي» توافق على": "By using Hayati you agree to the",
+"الأرقام كلها تقدير، وبياناتك على جهازك.": "All numbers are estimates, and your data stays on your device."
 };
 
 </script>
@@ -3579,6 +3586,26 @@ window.HAYATI_CONFIG = {
     const n = daysBetween(new Date(), d);
     return n === 0 ? 'اليوم' : n === 1 ? 'بكرة' : 'بعد ' + nDays(n);
   }
+  // 📊 «صدّر مصاريفك»: CSV للـ Excel (حق نقل البيانات). بدون نص رسالة البنك، ومحمي من حقن الصيغ
+  function csvCell(v) {
+    let s = String(v == null ? '' : v);
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;   // =HYPERLINK(...) ما تشتغل كصيغة
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  function expensesCSV() {
+    const list = st.transactions.slice().sort((a, b) => new Date(a.occurred_at) - new Date(b.occurred_at));
+    if (!list.length) return '';
+    const rows = [['التاريخ', 'الوقت', 'النوع', 'المبلغ (د.ب)', 'المحل', 'الفئة', 'ملاحظة']];
+    for (const t of list) {
+      const d = new Date(t.occurred_at);
+      rows.push([
+        d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()), pad(d.getHours()) + ':' + pad(d.getMinutes()),
+        t.kind === 'income' ? 'دخل' : 'صرف', (Number(t.amount) || 0).toFixed(3), t.merchant || '', t.category || '', t.note || '',
+      ]);
+    }
+    // BOM عشان Excel يقرأ العربي، و CRLF مثل ما يتوقع
+    return '\uFEFF' + rows.map((r, ri) => r.map((c, i) => (ri && i === 3 ? c : csvCell(c))).join(',')).join('\r\n') + '\r\n';   // المبلغ رقم بدون تنصيص عشان Excel يجمعه
+  }
   function monthlyCost(sub) { return sub.cycle === 'yearly' ? (Number(sub.amount) || 0) / 12 : Number(sub.amount) || 0; }
 
   // يسجّل الاشتراكات المستحقة كمصاريف (مرة وحدة لكل فترة)
@@ -4800,6 +4827,7 @@ window.HAYATI_CONFIG = {
     body += '<div class="group-title">' + I('settings') + 'عام</div><div class="menu">' +
       '<button data-set="budget"><div class="ico" style="' + tint('#1A8A8F') + '">' + I('target') + '</div><div style="flex:1"><b>الميزانية الشهرية</b><small>' + (st.settings.budget ? fmt(st.settings.budget) + ' د.ب' : 'غير محددة') + '</small></div>' + I('chevL') + '</button>' +
       '<button data-set="export"><div class="ico" style="' + tint('#0d9488') + '">' + I('download') + '</div><div style="flex:1"><b>نسخة احتياطية</b><small>تصدير كل بياناتك كملف</small></div>' + I('chevL') + '</button>' +
+      '<button data-set="export-csv"><div class="ico" style="' + tint('#16a34a') + '">' + I('download') + '</div><div style="flex:1"><b>صدّر مصاريفك (Excel)</b><small>كل العمليات بملف ينفتح بـ Excel وNumbers</small></div>' + I('chevL') + '</button>' +
       '<label style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:16px;border:1px solid var(--border);background:var(--surface);cursor:pointer"><div class="ico" style="' + tint('#f59e0b') + '">' + I('upload') + '</div><div style="flex:1"><b style="display:block">استيراد نسخة</b><small class="muted">من ملف نسخة احتياطية</small></div><input type="file" accept="application/json,.json" data-set="import" hidden></label>' +
       '</div>';
 
@@ -4871,6 +4899,10 @@ window.HAYATI_CONFIG = {
         budgetForm();
       } else if (act === 'export') {
         await saveFile('hayati-backup-' + new Date().toISOString().slice(0, 10) + '.json', S.exportJSON(), 'application/json');
+      } else if (act === 'export-csv') {
+        const csv = expensesCSV();
+        if (!csv) toast('ما فيه عمليات للتصدير');
+        else await saveFile('hayati-expenses-' + new Date().toISOString().slice(0, 10) + '.csv', csv, 'text/csv');
       }
     } catch (err) {
       toast(err.message || 'صار خطأ');
@@ -5006,7 +5038,7 @@ window.HAYATI_CONFIG = {
     S, st, I, ui, h, fmt, money, tint, catMeta, catIcon, pad, monthKey, sameDay, startOfDay, daysBetween, time12, timeOf, minutesOf,
     nowMinutes, toLocalInput, dayLabel, nDays, toast, ask, courseById, lectures, lecturesOn, agendaOn, empty, secHead, ring, openSheet,
     closeSheet, val, parseAmount, segPick, render, go, txInMonth, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, courseForm, taskForm,
-    notify, has, nextRenewal, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
+    notify, has, nextRenewal, expensesCSV, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
   };
   setInterval(timerTickUI, 1000);
   timerCheck();
@@ -7978,7 +8010,8 @@ window.HAYATI_CONFIG = {
       // حساب خاص (يحفظ بياناتك بين أجهزتك): يطلع بس لو المزامنة مركّبة، وإلا ملفك يكون على هالجهاز
       (S.getConfig && S.getConfig() ? '<button type="button" class="btn ghost block" style="margin-bottom:10px" data-action="ob-account">🔐 أنشئ حساب (بياناتك على كل أجهزتك)</button>' :
         '<p class="small muted" style="margin:0 0 10px">🔒 ملفك محفوظ على هالجهاز. الحسابات والمزامنة بين الأجهزة لسه قيد التطوير.</p>') +
-      '<div class="btn-row"><button class="btn primary" data-action="ob-save">يلا نبدأ</button><button class="btn ghost" data-action="ob-skip">بعدين</button></div></div>';
+      '<div class="btn-row"><button class="btn primary" data-action="ob-save">يلا نبدأ</button><button class="btn ghost" data-action="ob-skip">بعدين</button></div>' +
+      '<p class="small muted ob-terms" style="margin:10px 2px 0">باستخدامك «حياتي» توافق على <a href="terms.html" target="_blank" rel="noopener">شروط الاستخدام</a> و<a href="privacy.html" target="_blank" rel="noopener">سياسة الخصوصية</a>. الأرقام كلها تقدير، وبياناتك على جهازك.</p></div>';
   }
   wrap('todayTop', (prev) => welcomeCard() + prev());
   wrap('action', (prev, name, el, e) => {
@@ -8096,6 +8129,7 @@ window.HAYATI_CONFIG = {
     return (prevExtra ? prevExtra.apply(this, arguments) : '') +
       '<div class="group-title">' + I('key') + 'الخصوصية</div><div class="menu">' +
       '<a class="menu-link" href="privacy.html" target="_blank" rel="noopener"><div class="ico" style="' + A.tint('#13636B') + '">' + I('key') + '</div><div style="flex:1;min-width:0"><b>سياسة الخصوصية</b><small>وين بياناتك، ومين يشوفها</small></div>' + I('chevL') + '</a>' +
+      '<a class="menu-link" href="terms.html" target="_blank" rel="noopener"><div class="ico" style="' + A.tint('#13636B') + '">' + I('tasks') + '</div><div style="flex:1;min-width:0"><b>شروط الاستخدام</b><small>التقديرات، ومسؤولية كل واحد</small></div>' + I('chevL') + '</a>' +
       '<button data-set="wipe"><div class="ico" style="' + A.tint('#D63A3A') + '">' + I('trash') + '</div><div style="flex:1;min-width:0"><b style="color:var(--expense)">احذف كل بياناتي</b><small>من الجهاز والمزامنة، وما ترجع</small></div>' + I('chevL') + '</button></div>';
   };
   const prevSet = E.settingsAction;

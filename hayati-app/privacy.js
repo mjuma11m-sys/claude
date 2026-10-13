@@ -26,6 +26,7 @@
     return (prevExtra ? prevExtra.apply(this, arguments) : '') +
       '<div class="group-title">' + I('key') + 'الخصوصية</div><div class="menu">' +
       '<a class="menu-link" href="privacy.html" target="_blank" rel="noopener"><div class="ico" style="' + A.tint('#13636B') + '">' + I('key') + '</div><div style="flex:1;min-width:0"><b>سياسة الخصوصية</b><small>وين بياناتك، ومين يشوفها</small></div>' + I('chevL') + '</a>' +
+      '<a class="menu-link" href="terms.html" target="_blank" rel="noopener"><div class="ico" style="' + A.tint('#13636B') + '">' + I('tasks') + '</div><div style="flex:1;min-width:0"><b>شروط الاستخدام</b><small>التقديرات، ومسؤولية كل واحد</small></div>' + I('chevL') + '</a>' +
       '<button data-set="wipe"><div class="ico" style="' + A.tint('#D63A3A') + '">' + I('trash') + '</div><div style="flex:1;min-width:0"><b style="color:var(--expense)">احذف كل بياناتي</b><small>من الجهاز والمزامنة، وما ترجع</small></div>' + I('chevL') + '</button></div>';
   };
   const prevSet = E.settingsAction;
