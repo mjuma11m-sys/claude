@@ -615,3 +615,78 @@ test('iPhone build: «جرّب التنبيه» asks permission, schedules a tes
   await page.waitForFunction(() => window.__bridge.some((c) => c.method === 'schedule' && c.opts.notifications.some((n) => n.title.includes('مادة'))), null, { timeout: 5000 });
   expect(await store(page, () => window.__bridge.filter((c) => c.method === 'cancel').flatMap((c) => c.opts.notifications.map((n) => n.id)))).not.toContain(990001);
 });
+
+// تذكيرات ذكية (جلسة الديوانية 25): بكرة اختبار/تسليم/تجديد 8 الليل، قبل الاختبار بساعتين، ملخص صباح اختياري، ومفتاح لكل نوع
+test('iPhone: smart reminders for exams, homework and renewals, morning brief opt-in, a switch per type @webkit', async ({ page }) => {
+  await page.addInitScript(() => {
+    const log = window.__cap = { scheduled: [] };
+    window.Capacitor = {
+      isNativePlatform: () => true,
+      Plugins: {
+        LocalNotifications: {
+          checkPermissions: async () => ({ display: 'granted' }),
+          requestPermissions: async () => ({ display: 'granted' }),
+          getPending: async () => ({ notifications: log.scheduled.map((n) => ({ id: n.id })) }),
+          cancel: async () => { log.scheduled = []; },
+          schedule: async ({ notifications }) => { log.scheduled = notifications; },
+        },
+      },
+    };
+  });
+  await open(page);
+  const r = await store(page, () => {
+    const now = new Date(); now.setHours(12, 0, 0, 0);
+    const day = (n, h, m) => new Date(now.getFullYear(), now.getMonth(), now.getDate() + n, h || 0, m || 0);
+    App.st.tasks = [
+      { id: 'e1', kind: 'exam', title: 'محاسبة', due_at: day(3, 12).toISOString() },
+      { id: 'e2', kind: 'exam', title: 'إحصاء', due_at: day(4, 8).toISOString() },
+      { id: 'h1', kind: 'homework', title: 'تقرير', due_at: day(2, 23, 59).toISOString() },
+      { id: 'h2', kind: 'homework', title: 'خلصته', due_at: day(2, 23).toISOString(), done: true },
+    ];
+    const ren = day(5, 9);
+    App.st.subscriptions = [
+      { id: 's1', name: 'Netflix', amount: 3.5, cycle: 'monthly', day: ren.getDate(), remind_days: 1, active: true },
+      { id: 's2', name: 'موقوف', amount: 1, cycle: 'monthly', day: ren.getDate(), remind_days: 1, active: false },
+    ];
+    const hm = (d) => d.toDateString() + ' ' + d.getHours() + ':' + d.getMinutes();
+    const pick = (list) => list.filter((x) => !/دقايق|الحين/.test(x.title)).map((x) => ({ t: x.title, b: x.body, at: hm(x.schedule.at) }));
+    const all = pick(HayatiNative.upcoming(now, { lectures: true, exams: true, homework: true, subs: true, brief: false }));
+    const off = pick(HayatiNative.upcoming(now, { lectures: true, exams: false, homework: true, subs: false, brief: false }));
+    App.S.upsert('courses', { id: 'c1', name: 'تسويق', type: 'lecture', days: [day(3).getDay()], start_time: '10:00', end_time: '11:00' });
+    const brief = pick(HayatiNative.upcoming(now, { lectures: false, exams: true, homework: true, subs: true, brief: true, briefAt: '07:00' })).filter((x) => x.t.startsWith('صباح'));
+    return { all, off, brief, exp: { eve: hm(day(2, 20)), two: hm(day(3, 10)), early: hm(day(4, 7, 30)), hw: hm(day(1, 20)), sub: hm(day(4, 20)), b3: hm(day(3, 7)) } };
+  });
+  const find = (list, t) => list.find((x) => x.t === t);
+  expect(find(r.all, 'بكرة اختبار: محاسبة').at).toBe(r.exp.eve);
+  expect(find(r.all, 'بعد ساعتين: اختبار محاسبة').at).toBe(r.exp.two);
+  expect(find(r.all, 'اليوم: اختبار إحصاء').at).toBe(r.exp.early);           // اختبار 8 الصبح ← تذكير 7:30
+  expect(find(r.all, 'بكرة تسليم: تقرير').at).toBe(r.exp.hw);
+  expect(r.all.some((x) => x.t.includes('خلصته'))).toBe(false);              // المنجز ما ينبّه
+  const sub = find(r.all, 'بكرة يتجدد: Netflix');
+  expect(sub.at).toBe(r.exp.sub);
+  expect(sub.b).toBe('3.500 د.ب');
+  expect(r.all.some((x) => x.t.includes('موقوف'))).toBe(false);
+  // المفاتيح: الاختبارات والاشتراكات مسكّرة
+  expect(r.off.some((x) => x.t.includes('اختبار') || x.t.includes('يتجدد'))).toBe(false);
+  expect(r.off.some((x) => x.t === 'بكرة تسليم: تقرير')).toBe(true);
+  // ملخص الصباح: بس الأيام اللي فيها شي
+  const b3 = r.brief.find((x) => x.at === r.exp.b3);
+  expect(b3.b).toContain('أولها 10:00');
+  expect(b3.b).toContain('اختبار محاسبة');
+  expect(r.brief.every((x) => x.b.length > 0)).toBe(true);
+
+  // شاشة الإعدادات: نسكّر الاختبارات ونحفظ ← تنحفظ وتنعاد الجدولة
+  await page.click('#settingsBtn');
+  await page.click('[data-set="notif-prefs"]');
+  await expect(page.locator('[data-np="brief"]')).not.toBeChecked();
+  await expect(page.locator('#briefAtF')).toBeHidden();
+  await page.locator('[data-np="brief"]').check();
+  await expect(page.locator('#briefAtF')).toBeVisible();
+  await page.locator('[data-np="exams"]').uncheck();
+  await page.click('#sheetSave');
+  await expect(page.locator('.toast')).toContainText('انحفظ');
+  const saved = await store(page, () => JSON.parse(localStorage.getItem('hayati-notif-prefs')));
+  expect(saved.exams).toBe(false);
+  expect(saved.brief).toBe(true);
+  expect(saved.briefAt).toBe('07:00');
+});

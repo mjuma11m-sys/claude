@@ -1904,7 +1904,19 @@ window.HAYATI_EN = {
 "ما قدرت أشارك الملف": "Couldn't share the file",
 "جرّب التنبيه": "Test notification",
 "يوصلك تنبيه تجربة بعد 10 ثواني": "A test notification arrives in 10 seconds",
-"حالة التنبيهات": "Notification status"
+"حالة التنبيهات": "Notification status",
+"📅 الجدول والصلاة": "📅 Schedule & prayer",
+"قبل المحاضرة بـ 10 دقايق، والصلاة بوقتها": "10 minutes before each class, prayers on time",
+"📝 الاختبارات": "📝 Exams",
+"الليلة اللي قبلها، وقبل الاختبار بساعتين": "The evening before, and 2 hours before the exam",
+"📚 الواجبات": "📚 Homework",
+"الليلة اللي قبل التسليم": "The evening before it's due",
+"💳 تجديد الاشتراكات": "💳 Subscription renewals",
+"قبل التجديد بالأيام اللي تحددها بالاشتراك": "Before renewal, by the days set on each subscription",
+"☀️ ملخص الصباح": "☀️ Morning brief",
+"جدولك واختباراتك اليوم، والأيام الفاضية ما فيها": "Today's schedule and exams; skipped on empty days",
+"وقت ملخص الصباح": "Morning brief time",
+"شغّالة": "on"
 };
 
 </script>
@@ -4992,7 +5004,7 @@ window.HAYATI_CONFIG = {
     S, st, I, ui, h, fmt, money, tint, catMeta, catIcon, pad, monthKey, sameDay, startOfDay, daysBetween, time12, timeOf, minutesOf,
     nowMinutes, toLocalInput, dayLabel, nDays, toast, ask, courseById, lectures, lecturesOn, agendaOn, empty, secHead, ring, openSheet,
     closeSheet, val, parseAmount, segPick, render, go, txInMonth, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, courseForm, taskForm,
-    notify, has, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
+    notify, has, nextRenewal, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
   };
   setInterval(timerTickUI, 1000);
   timerCheck();
@@ -8131,6 +8143,15 @@ window.HAYATI_CONFIG = {
   const BEFORE = 10;   // دقايق قبل المحاضرة/التمرين/الموعد
   const ASKED = 'hayati-notif-asked';
   const TEST_ID = 990001;
+  // ⚙️ التنبيهات: كل نوع له مفتاح، وملخص الصباح مقفل افتراضياً (ما نزعج)
+  const PREFS = 'hayati-notif-prefs';
+  const DEF = { lectures: true, exams: true, homework: true, subs: true, brief: false, briefAt: '07:00' };
+  function prefs() {
+    try { return Object.assign({}, DEF, JSON.parse(localStorage.getItem(PREFS) || '{}')); } catch (e) { return Object.assign({}, DEF); }
+  }
+  function savePrefs(p) { try { localStorage.setItem(PREFS, JSON.stringify(p)); } catch (e) { /* تجاهل */ } }
+  const EVENING = 20 * 60;          // تذكير «بكرة…» الساعة 8 الليل
+  const TASK_DAYS = 14, SUB_DAYS = 30;
 
   // رقم ثابت لكل تنبيه (iOS يبي int)
   function nid(key) {
@@ -8139,25 +8160,81 @@ window.HAYATI_CONFIG = {
     return Math.abs(h) % 2000000000 + 1;
   }
 
-  // التنبيهات الجاية: كل اللي بـ agendaOn (محاضرات، تمرين، مواعيد، وصلاة لو مفعّلة)
-  function upcoming(now) {
+  const at = (day, minutes) => new Date(day.getFullYear(), day.getMonth(), day.getDate(), 0, minutes);
+  const midnight = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const dayWord = (n) => (n === 0 ? 'اليوم' : n === 1 ? 'بكرة' : n === 2 ? 'بعد يومين' : 'بعد ' + n + ' أيام');
+
+  // التنبيهات الجاية: الجدول والصلاة، الاختبارات والواجبات، تجديد الاشتراكات، وملخص الصباح
+  function upcoming(now, p) {
+    p = p || prefs();
     const out = [];
-    for (let d = 0; d < DAYS; d++) {
-      const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + d);
-      for (const it of A.agendaOn(day)) {
-        const prayer = it.type === 'prayer';
-        const lead = prayer ? 0 : BEFORE;
-        const at = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 0, it.start - lead);
-        if (at <= now) continue;
-        const t = A.ACT_TYPES[it.type] || A.ACT_TYPES.activity;
-        out.push({
-          id: nid(it.src + ':' + it.id + ':' + day.toDateString()),
-          title: prayer ? t.now + ' ' + it.name : 'بعد ' + BEFORE + ' دقايق: ' + it.name,
-          body: prayer ? '' : [t.label, it.room].filter(Boolean).join(' · '),
-          schedule: { at, allowWhileIdle: true },
-        });
+    const add = (key, when, title, body) => { if (when > now) out.push({ id: nid(key), title, body: body || '', schedule: { at: when, allowWhileIdle: true } }); };
+    const today = midnight(now);
+
+    // 📅 الجدول (محاضرات، تمرين، مواعيد) والصلاة لو مفعّلة
+    if (p.lectures) {
+      for (let d = 0; d < DAYS; d++) {
+        const day = new Date(today.getFullYear(), today.getMonth(), today.getDate() + d);
+        for (const it of A.agendaOn(day)) {
+          const prayer = it.type === 'prayer';
+          const t = A.ACT_TYPES[it.type] || A.ACT_TYPES.activity;
+          add(it.src + ':' + it.id + ':' + day.toDateString(), at(day, it.start - (prayer ? 0 : BEFORE)),
+            prayer ? t.now + ' ' + it.name : 'بعد ' + BEFORE + ' دقايق: ' + it.name,
+            prayer ? '' : [t.label, it.room].filter(Boolean).join(' · '));
+        }
       }
     }
+
+    // 📝 الاختبارات والواجبات: الليلة اللي قبلها، والاختبار كمان قبله بساعتين
+    const horizon = new Date(today.getFullYear(), today.getMonth(), today.getDate() + TASK_DAYS + 1);
+    for (const tk of (A.st.tasks || [])) {
+      if (tk.done || !tk.due_at) continue;
+      const due = new Date(tk.due_at);
+      if (!(due > now) || due > horizon) continue;
+      const exam = tk.kind === 'exam', hw = tk.kind === 'homework';
+      if ((exam && !p.exams) || (hw && !p.homework) || (!exam && !hw)) continue;
+      const dueDay = midnight(due);
+      const eve = new Date(dueDay.getFullYear(), dueDay.getMonth(), dueDay.getDate() - 1);
+      add('task-eve:' + tk.id, at(eve, EVENING), (exam ? 'بكرة اختبار: ' : 'بكرة تسليم: ') + tk.title, exam ? 'راجع وارتاح زين 🤍' : '');
+      if (exam) {
+        const mins = due.getHours() * 60 + due.getMinutes();
+        // اختبار قبل 9:30 الصبح: التذكير 7:30، مو بنص الليل
+        const when = mins < 9 * 60 + 30 ? at(dueDay, 7 * 60 + 30) : new Date(due.getTime() - 2 * 3600e3);
+        add('task-day:' + tk.id, when, (mins < 9 * 60 + 30 ? 'اليوم' : 'بعد ساعتين') + ': اختبار ' + tk.title, tk.place || '');
+      }
+    }
+
+    // 💳 تجديد الاشتراكات: قبلها بـ remind_days (افتراضي يوم) الساعة 8 الليل
+    if (p.subs && A.nextRenewal) {
+      const subHorizon = new Date(today.getFullYear(), today.getMonth(), today.getDate() + SUB_DAYS);
+      for (const sub of (A.st.subscriptions || [])) {
+        if (sub.active === false) continue;
+        const ren = A.nextRenewal(sub, now);
+        if (!ren || ren > subHorizon) continue;
+        const rd0 = sub.remind_days === '' || sub.remind_days == null ? 2 : Number(sub.remind_days);
+        const before = Math.max(0, Math.min(7, isNaN(rd0) ? 2 : rd0));
+        const rd = midnight(ren);
+        const day = new Date(rd.getFullYear(), rd.getMonth(), rd.getDate() - before);
+        add('sub:' + sub.id + ':' + rd.toDateString(), at(day, before === 0 ? 9 * 60 : EVENING),
+          dayWord(before) + ' يتجدد: ' + sub.name, A.fmt(sub.amount) + ' د.ب');
+      }
+    }
+
+    // ☀️ ملخص الصباح (اختياري): محاضرات اليوم واختباراته وتسليماته
+    if (p.brief) {
+      const [bh, bm] = String(p.briefAt || '07:00').split(':').map(Number);
+      for (let d = 0; d < DAYS; d++) {
+        const day = new Date(today.getFullYear(), today.getMonth(), today.getDate() + d);
+        const items = A.agendaOn(day).filter((it) => it.type !== 'prayer');
+        const dueToday = (A.st.tasks || []).filter((tk) => !tk.done && tk.due_at && midnight(new Date(tk.due_at)).getTime() === day.getTime() && (tk.kind === 'exam' || tk.kind === 'homework'));
+        if (!items.length && !dueToday.length) continue;   // يوم فاضي = ما نزعج
+        const parts = [];
+        if (items.length) parts.push((items.length === 1 ? 'شي واحد بجدولك' : items.length === 2 ? 'شيئين بجدولك' : items.length + ' أشياء بجدولك') + '، أولها ' + A.time12(A.hhmm(items[0].start)));
+        for (const tk of dueToday) parts.push((tk.kind === 'exam' ? 'اختبار ' : 'تسليم ') + tk.title);
+        add('brief:' + day.toDateString(), at(day, (bh || 0) * 60 + (bm || 0)), 'صباح الخير ☀️ هذا يومك', parts.join(' · '));
+      }
+    }
+
     return out.sort((a, b) => a.schedule.at - b.schedule.at).slice(0, MAX);
   }
 
@@ -8240,16 +8317,49 @@ window.HAYATI_CONFIG = {
     return rows;
   }
 
-  // زر بالإعدادات (نسخة الآيفون بس)
+  // ⚙️ الإعدادات ← التنبيهات (نسخة الآيفون بس)
+  const TYPES = [['lectures', '📅 الجدول والصلاة', 'قبل المحاضرة بـ 10 دقايق، والصلاة بوقتها'], ['exams', '📝 الاختبارات', 'الليلة اللي قبلها، وقبل الاختبار بساعتين'],
+    ['homework', '📚 الواجبات', 'الليلة اللي قبل التسليم'], ['subs', '💳 تجديد الاشتراكات', 'قبل التجديد بالأيام اللي تحددها بالاشتراك'], ['brief', '☀️ ملخص الصباح', 'جدولك واختباراتك اليوم، والأيام الفاضية ما فيها']];
+  function prefsSheet() {
+    const p = prefs();
+    A.openSheet({
+      title: 'التنبيهات',
+      body: '<div class="card flush"><ul class="list notif-prefs">' + TYPES.map(([k, l, sub]) =>
+        '<li class="row" style="cursor:default"><label style="display:flex;align-items:center;gap:12px;width:100%;cursor:pointer"><div class="main"><div class="title"><span class="t">' + l + '</span></div><div class="sub">' + sub + '</div></div>' +
+        '<input type="checkbox" data-np="' + k + '"' + (p[k] ? ' checked' : '') + ' style="width:22px;height:22px;accent-color:var(--brand)"></label></li>').join('') + '</ul></div>' +
+        '<div class="field" id="briefAtF"' + (p.brief ? '' : ' hidden') + '><label>وقت ملخص الصباح</label><input type="time" name="briefAt" value="' + A.h(p.briefAt) + '"></div>' +
+        '<button class="btn block" type="button" id="npTest">' + A.I('bell') + 'جرّب التنبيه</button>',
+      mount(root) {
+        root.querySelector('[data-np="brief"]').onchange = (e) => { root.querySelector('#briefAtF').hidden = !e.target.checked; };
+        root.querySelector('#npTest').onclick = async () => {
+          A.closeSheet();
+          const rows = await testNotification();
+          setTimeout(() => A.openSheet({ title: 'حالة التنبيهات', cancelLabel: 'تم', body: '<ul class="notif-test" style="margin:0;padding:0 4px;list-style:none;line-height:2">' + rows.map((r) => '<li>' + A.h(r) + '</li>').join('') + '</ul>' }), 280);
+        };
+      },
+      async onSave(root) {
+        const np = Object.assign({}, prefs());
+        root.querySelectorAll('[data-np]').forEach((c) => { np[c.dataset.np] = c.checked; });
+        np.briefAt = (root.querySelector('[name=briefAt]') || {}).value || DEF.briefAt;
+        savePrefs(np);
+        await reschedule();
+        A.toast('انحفظ ✓');
+      },
+    });
+  }
   const E = window.Extras;
   if (E) {
     const prevExtra = E.settingsExtra;
     E.settingsExtra = function () {
-      return '<div class="group-title">' + A.I('bell') + 'التنبيهات</div><div class="menu"><button data-set="test-notif"><div class="ico" style="' + A.tint('#13636B') + '">' + A.I('bell') + '</div><div style="flex:1;min-width:0"><b>جرّب التنبيه</b><small>يوصلك تنبيه تجربة بعد 10 ثواني</small></div>' + A.I('chevL') + '</button></div>' +
+      const p = prefs(), on = TYPES.filter(([k]) => p[k]).length;
+      return '<div class="group-title">' + A.I('bell') + 'التنبيهات</div><div class="menu">' +
+        '<button data-set="notif-prefs"><div class="ico" style="' + A.tint('#13636B') + '">' + A.I('bell') + '</div><div style="flex:1;min-width:0"><b>التنبيهات</b><small>' + on + ' من ' + TYPES.length + ' شغّالة</small></div>' + A.I('chevL') + '</button>' +
+        '<button data-set="test-notif"><div class="ico" style="' + A.tint('#13636B') + '">' + A.I('bell') + '</div><div style="flex:1;min-width:0"><b>جرّب التنبيه</b><small>يوصلك تنبيه تجربة بعد 10 ثواني</small></div>' + A.I('chevL') + '</button></div>' +
         (prevExtra ? prevExtra.apply(this, arguments) : '');
     };
     const prevSet = E.settingsAction;
     E.settingsAction = async function (act) {
+      if (act === 'notif-prefs') { A.closeSheet(); setTimeout(prefsSheet, 280); return true; }
       if (act === 'test-notif') {
         A.closeSheet();
         const rows = await testNotification();
@@ -8260,7 +8370,7 @@ window.HAYATI_CONFIG = {
     };
   }
 
-  window.HayatiNative = { saveFile, shareText, reschedule, upcoming, testNotification };
+  window.HayatiNative = { saveFile, shareText, reschedule, upcoming, testNotification, prefs, savePrefs };
 })();
 
 </script>

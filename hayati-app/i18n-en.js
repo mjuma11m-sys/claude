@@ -1217,5 +1217,17 @@ window.HAYATI_EN = {
 "ما قدرت أشارك الملف": "Couldn't share the file",
 "جرّب التنبيه": "Test notification",
 "يوصلك تنبيه تجربة بعد 10 ثواني": "A test notification arrives in 10 seconds",
-"حالة التنبيهات": "Notification status"
+"حالة التنبيهات": "Notification status",
+"📅 الجدول والصلاة": "📅 Schedule & prayer",
+"قبل المحاضرة بـ 10 دقايق، والصلاة بوقتها": "10 minutes before each class, prayers on time",
+"📝 الاختبارات": "📝 Exams",
+"الليلة اللي قبلها، وقبل الاختبار بساعتين": "The evening before, and 2 hours before the exam",
+"📚 الواجبات": "📚 Homework",
+"الليلة اللي قبل التسليم": "The evening before it's due",
+"💳 تجديد الاشتراكات": "💳 Subscription renewals",
+"قبل التجديد بالأيام اللي تحددها بالاشتراك": "Before renewal, by the days set on each subscription",
+"☀️ ملخص الصباح": "☀️ Morning brief",
+"جدولك واختباراتك اليوم، والأيام الفاضية ما فيها": "Today's schedule and exams; skipped on empty days",
+"وقت ملخص الصباح": "Morning brief time",
+"شغّالة": "on"
 };
