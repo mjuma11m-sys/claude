@@ -8,7 +8,7 @@ const enter = async (page: Page, role: 'مشجع' | 'الطاقم الطبي') =
 const noHorizontalScroll = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)
 
 test.describe('every screen', () => {
-  const pages: [string, string][] = [['/', 'الرئيسية'], ['/standings', 'الترتيب'], ['/vote', 'رجل المباراة'], ['/pass', 'تذكرتي'], ['/settings', 'الإعدادات'], ['/medical', 'الأحمال']]
+  const pages: [string, string][] = [['/', 'الرئيسية'], ['/standings', 'الترتيب'], ['/vote', 'رجل المباراة'], ['/pass', 'تذكرتي'], ['/settings', 'الإعدادات'], ['/medical', 'الأحمال'], ['/development', 'غرفة التطوير']]
 
   test('has a title, fits the width, and calls no third party', async ({ page }) => {
     const external = new Set<string>()

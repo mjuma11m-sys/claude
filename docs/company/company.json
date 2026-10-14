@@ -138,6 +138,14 @@
       "status": "review",
       "opened": "2026-10-14",
       "updated": "2026-10-14"
+    },
+    "DW-018": {
+      "title": "Sports Hub: غرفة تطوير اللاعبين والحراس (تقييم، أهداف، خطة أسبوع، حمل)",
+      "owner": "CEO",
+      "priority": "P1",
+      "status": "review",
+      "opened": "2026-10-14",
+      "updated": "2026-10-14"
     }
   }
 }

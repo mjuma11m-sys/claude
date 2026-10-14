@@ -223,3 +223,102 @@ test.describe('ease of use', () => {
     await ctx.close()
   })
 })
+
+test.describe('development room', () => {
+  test.beforeEach(async ({ page }) => { await as(page, 'إدارة النادي'); await page.goto('/development') })
+
+  test('goalkeepers come first, with ratings, priorities, goals and a match-day plan', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: 'غرفة التطوير' })).toBeVisible()
+    await expect(page.getByText('التقييم رأي المدرب مو قياس')).toBeVisible()
+    await expect(page.getByRole('button', { name: /اللاعب 1/, pressed: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'مهارات الحارس' })).toBeVisible()
+    await expect(page.getByText('أولوية')).toHaveCount(2) // the two lowest-rated skills, from the latest rating only
+    await expect(page.getByRole('heading', { name: /^الأهداف/ })).toContainText('2/3')
+    for (const l of ['MD-4', 'MD-3', 'MD-2', 'MD-1', 'MD+1']) await expect(page.getByRole('button', { name: new RegExp(l.replace('+', '\\+')) })).toBeVisible()
+    await expect(page.getByRole('img', { name: /مؤشر الحمل/ })).toBeVisible()
+  })
+
+  test('rating a skill saves, and the change shows as a trend', async ({ page }) => {
+    await page.getByRole('button', { name: 'قيّم الآن' }).click()
+    await page.getByRole('radio', { name: 'التوزيع 5: ممتاز' }).click()
+    await page.getByRole('button', { name: 'احفظ التقييم' }).click()
+    await expect(page.getByRole('button', { name: 'قيّم الآن' })).toBeVisible()
+    const row = page.getByRole('listitem').filter({ hasText: 'التوزيع' })
+    await expect(row).toContainText('تحسّن')
+    await expect(row.getByRole('img', { name: '5 من 5' })).toBeVisible()
+  })
+
+  test('at most three open goals, and finishing one frees a slot', async ({ page }) => {
+    await page.locator('#goalSkill').selectOption('diving')
+    await page.locator('#goalDue').fill('2999-01-01')
+    await page.getByRole('button', { name: 'أضف هدف' }).click()
+    await expect(page.getByRole('heading', { name: /^الأهداف/ })).toContainText('3/3')
+    await expect(page.getByRole('button', { name: 'أضف هدف' })).toHaveCount(0)
+    await page.getByRole('button', { name: 'أنهِه' }).first().click()
+    await expect(page.getByRole('heading', { name: /^الأهداف/ })).toContainText('2/3')
+  })
+
+  test('a goal in the past is refused', async ({ page }) => {
+    await page.locator('#goalDue').fill('2020-01-01')
+    await page.getByRole('button', { name: 'أضف هدف' }).click()
+    await expect(page.getByRole('alert')).toContainText('مستقبلي')
+  })
+
+  test('a day of the plan opens to its drills, and the dive count only exists for goalkeepers', async ({ page }) => {
+    await page.getByRole('button', { name: /^MD-3/ }).click()
+    await expect(page.getByText(/ارتماءات\s*30–40/)).toBeVisible()
+    await expect(page.getByText('Box jumps')).toBeVisible()
+    await page.getByRole('button', { name: /اللاعب 8/ }).click()
+    await page.getByRole('button', { name: /^MD-3/ }).click()
+    await expect(page.getByText(/ارتماءات/)).toHaveCount(0)
+  })
+
+  test('an injured player gets no training plan, only a pointer to the medical staff', async ({ page }) => {
+    await page.getByRole('button', { name: /اللاعب 5/ }).click() // injured in the demo squad
+    await expect(page.getByRole('status').filter({ hasText: 'مصاب' })).toContainText('الطاقم الطبي')
+    await expect(page.getByRole('button', { name: /^MD-3/ })).toHaveCount(0)
+  })
+
+  test('logging a session is validated, then listed', async ({ page }) => {
+    await page.locator('#logMin').fill('500')
+    await page.getByRole('button', { name: 'سجّل الجلسة' }).click()
+    await expect(page.getByRole('alert')).toContainText('1–300')
+    await page.locator('#logMin').fill('45'); await page.locator('#logRpe').fill('8')
+    await page.getByRole('button', { name: 'سجّل الجلسة' }).click()
+    await expect(page.getByText('= 360')).toBeVisible()
+  })
+
+  test('a player with no history says how many days are missing, and does not invent a ratio', async ({ page }) => {
+    await page.getByRole('button', { name: /اللاعب 8/ }).click()
+    await expect(page.getByText('مؤشر الحمل يحتاج 28 يوم سجل جلسات')).toBeVisible()
+    await expect(page.getByRole('img', { name: /مؤشر الحمل/ })).toHaveCount(0)
+  })
+
+  test('medical staff can read the room but cannot rate', async ({ page }) => {
+    await page.evaluate(() => localStorage.setItem('sh.demoRole', 'medical'))
+    await page.goto('/development')
+    await expect(page.getByRole('heading', { name: 'مهارات الحارس' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'قيّم الآن' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'أضف هدف' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'سجّل الجلسة' })).toBeVisible() // medical may log load
+  })
+
+  test('the federation cannot open it', async ({ page }) => {
+    await page.evaluate(() => localStorage.setItem('sh.demoRole', 'bfa_admin'))
+    await page.goto('/development')
+    await expect(page).toHaveURL('/federation')
+  })
+})
+
+test.describe('layout', () => {
+  test('no screen of the club or the federation scrolls sideways', async ({ page }) => {
+    for (const [role, paths] of [['إدارة النادي', ['/club', '/data', '/development']], ['الاتحاد', ['/federation']]] as const) {
+      await as(page, role)
+      for (const path of paths) {
+        await page.goto(path); await page.waitForTimeout(400)
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${path} overflows`).toBe(true)
+      }
+      await page.evaluate(() => localStorage.clear())
+    }
+  })
+})
