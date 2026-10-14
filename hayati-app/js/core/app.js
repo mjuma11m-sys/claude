@@ -1131,6 +1131,8 @@
   // نأجلها كلها لرسمة وحدة بعد ما تخلص الملفات (DOMContentLoaded)
   let bootHold = document.readyState === 'loading';
   if (bootHold) document.addEventListener('DOMContentLoaded', () => { bootHold = false; render(); }, { once: true });
+  // اللي يفتح نافذة وقت الفتح (مشاركة رسالة بنك) يستنى هالرسمة الأولى
+  const firstRender = bootHold ? new Promise((done) => document.addEventListener('DOMContentLoaded', () => done(), { once: true })) : Promise.resolve();
   function render() {
     if (bootHold) return;
     const tabInfo = tabOf(TABS.find((t) => t[0] === ui.tab));
@@ -1316,7 +1318,7 @@
   function sharedSms(text) {
     const t = String(text == null ? '' : text).trim();
     if (!t) return Promise.resolve(null);
-    return (booted || Promise.resolve()).catch(() => {}).then(whenUnlocked).then(() => {
+    return (booted || Promise.resolve()).catch(() => {}).then(() => firstRender).then(whenUnlocked).then(() => {
       if (document.querySelector('#sheet[open]')) closeSheet();
       return new Promise((done) => setTimeout(() => {
         const kind = st.settings.sms_consent_at ? 'form' : 'consent';
