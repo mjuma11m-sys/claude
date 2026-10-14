@@ -16,5 +16,6 @@ psql -qX -v ON_ERROR_STOP=1 -d "$DB" -f seed_demo.sql
 run tests/fan_zone.test.sql
 run tests/club_federation.test.sql
 run tests/data_center.test.sql
+run tests/lineup.test.sql
 run tests/development.test.sql
 echo "RLS: all checks passed"

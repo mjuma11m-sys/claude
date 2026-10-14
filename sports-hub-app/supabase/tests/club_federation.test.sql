@@ -1,7 +1,7 @@
 -- Attacks the club/federation wall. Runs after seed_demo.sql; ON_ERROR_STOP makes any FAIL stop the run.
 \set ON_ERROR_STOP on
 create function pg_temp.check(ok boolean, what text) returns void language plpgsql as
-  $$ begin if not ok then raise exception 'FAIL: %', what; end if; raise notice 'ok  %', what; end $$;
+  $$ begin if ok is distinct from true then raise exception 'FAIL: %', what; end if; raise notice 'ok  %', what; end $$;
 create function pg_temp.denied(sql text, what text) returns void language plpgsql as
   $$ begin execute sql; raise exception 'FAIL: %', what;
      exception when insufficient_privilege or check_violation or foreign_key_violation or unique_violation then raise notice 'ok  %', what; end $$;

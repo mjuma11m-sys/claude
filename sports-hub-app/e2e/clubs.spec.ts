@@ -312,13 +312,138 @@ test.describe('development room', () => {
 
 test.describe('layout', () => {
   test('no screen of the club or the federation scrolls sideways', async ({ page }) => {
-    for (const [role, paths] of [['إدارة النادي', ['/club', '/data', '/development']], ['الاتحاد', ['/federation']]] as const) {
+    for (const [role, paths] of [['إدارة النادي', ['/club', '/data', '/development', '/lineup']], ['الاتحاد', ['/federation']]] as const) {
       await as(page, role)
       for (const path of paths) {
         await page.goto(path); await page.waitForTimeout(400)
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${path} overflows`).toBe(true)
       }
       await page.evaluate(() => localStorage.clear())
+    }
+  })
+})
+
+test.describe('match lineup', () => {
+  test.beforeEach(async ({ page }) => { await as(page, 'إدارة النادي'); await page.goto('/lineup') })
+  const pitch = (page: Page) => page.getByRole('group', { name: 'الملعب' })
+  const filled = (page: Page) => pitch(page).locator('button:not([aria-label$=": فاضي"])')
+
+  test('an empty lineup says what is missing and cannot be saved', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: 'تشكيلة المباراة' })).toBeVisible()
+    await expect(page.getByText('الأساسيون 0 من 11')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'احفظ التشكيلة' })).toBeDisabled()
+    await expect(pitch(page).getByRole('button')).toHaveCount(11)
+  })
+
+  test('the suggestion fills eleven fit players with the goalkeeper in goal, and explains itself', async ({ page }) => {
+    await page.getByRole('button', { name: 'اقترح التشكيلة' }).click()
+    await expect(filled(page)).toHaveCount(11)
+    await expect(pitch(page).getByRole('button', { name: 'حارس: اللاعب 1' })).toBeVisible()
+    for (const n of [5, 14, 19]) await expect(pitch(page).getByRole('button', { name: new RegExp(`: اللاعب ${n}$`) })).toHaveCount(0) // injured or suspended
+    await expect(page.getByRole('heading', { name: 'ليش هالاقتراح' })).toBeVisible()
+    await expect(page.getByText('مركزه الأصلي').first()).toBeVisible()
+    await expect(page.getByRole('button', { name: 'احفظ التشكيلة' })).toBeEnabled()
+    await expect(page.getByRole('heading', { name: /^البدلاء/ })).toContainText('2/9') // the demo squad has 13 available: 11 start, 2 sit
+  })
+
+  test('an injured player cannot be picked, and the picker lists the natural position first', async ({ page }) => {
+    await pitch(page).getByRole('button', { name: /^حارس: / }).click()
+    const dialog = page.getByRole('article', { name: 'اختيار لاعب' })
+    await expect(dialog.getByRole('button', { name: /اللاعب 1 / })).toBeEnabled()
+    await expect(dialog.getByRole('button', { name: /اللاعب 8 / })).toBeDisabled() // an outfield player in goal
+    await dialog.getByRole('button', { name: 'إغلاق' }).click()
+    await pitch(page).getByRole('button', { name: /^مهاجم: / }).first().click()
+    await expect(page.getByRole('article', { name: 'اختيار لاعب' }).getByRole('button', { name: /اللاعب 19 / })).toBeDisabled() // injured
+    await expect(page.getByRole('article', { name: 'اختيار لاعب' }).getByRole('button', { name: /اللاعب 9 / })).toBeEnabled()
+  })
+
+  test('picking a player by hand fills the slot, and clearing a slot empties it', async ({ page }) => {
+    await pitch(page).getByRole('button', { name: /^حارس: / }).click()
+    await page.getByRole('button', { name: /اللاعب 22 / }).click()
+    await expect(pitch(page).getByRole('button', { name: 'حارس: اللاعب 22' })).toBeVisible()
+    await expect(filled(page)).toHaveCount(1)
+    await pitch(page).getByRole('button', { name: /^حارس: / }).click()
+    await page.getByRole('button', { name: 'أزل اللاعب من الخانة' }).click()
+    await expect(filled(page)).toHaveCount(0)
+  })
+
+  test('changing the formation keeps the eleven and the goalkeeper', async ({ page }) => {
+    await page.getByRole('button', { name: 'اقترح التشكيلة' }).click()
+    await page.getByRole('tab', { name: '3-5-2' }).click()
+    await expect(filled(page)).toHaveCount(11)
+    await expect(pitch(page).getByRole('button', { name: 'حارس: اللاعب 1' })).toBeVisible()
+    await expect(page.getByText('الأساسيون 11 من 11')).toHaveCount(0)
+  })
+
+  test('a doubtful player is a warning, not a block', async ({ page }) => {
+    await page.getByRole('button', { name: 'اقترح التشكيلة' }).click() // the demo squad is short of defenders: the doubtful left back is used
+    await expect(page.getByRole('status', { name: 'ملاحظات التشكيلة' })).toContainText('اللاعب 3 مشكوك بجاهزيته')
+    await expect(page.getByRole('button', { name: 'احفظ التشكيلة' })).toBeEnabled()
+  })
+
+  test('saving needs an opponent, then it is listed, survives a reload, opens, and deletes', async ({ page }) => {
+    await page.getByRole('button', { name: 'اقترح التشكيلة' }).click()
+    await page.getByRole('button', { name: 'احفظ التشكيلة' }).click()
+    await expect(page.getByRole('status').filter({ hasText: 'اسم الخصم' })).toBeVisible()
+    await page.locator('#opponent').fill('نادي الخصم')
+    await page.getByRole('button', { name: 'احفظ التشكيلة' }).click()
+    await expect(page.getByRole('status').filter({ hasText: 'انحفظت التشكيلة' })).toBeVisible()
+    await expect(page.getByText('ضد نادي الخصم')).toBeVisible()
+    await page.reload()
+    await expect(page.getByText('ضد نادي الخصم')).toBeVisible()
+    await page.getByRole('button', { name: 'امسح' }).click()
+    await expect(filled(page)).toHaveCount(0)
+    await page.getByRole('button', { name: 'افتح' }).click()
+    await expect(filled(page)).toHaveCount(11)
+    await expect(page.locator('#opponent')).toHaveValue('نادي الخصم')
+    await page.getByRole('button', { name: 'احذف' }).click()
+    await expect(page.getByText('ما فيه تشكيلات محفوظة')).toBeVisible()
+  })
+
+  test('the bench takes available players only, and each can be removed and re-added', async ({ page }) => {
+    await page.getByRole('button', { name: 'اقترح التشكيلة' }).click()
+    await page.getByRole('button', { name: /أزل .* من البدلاء/ }).first().click()
+    await expect(page.getByRole('heading', { name: /^البدلاء/ })).toContainText('1/9')
+    await page.getByRole('button', { name: 'أضف بديل' }).click()
+    const list = page.getByRole('article', { name: 'اختيار لاعب' })
+    await expect(list.getByRole('button', { name: /اللاعب 5 / })).toBeDisabled() // injured
+    await expect(list.getByRole('button', { name: /اللاعب 14 / })).toBeDisabled() // suspended
+    await list.getByRole('button').filter({ hasText: /جاهز/ }).first().click()
+    await expect(page.getByRole('heading', { name: /^البدلاء/ })).toContainText('2/9')
+  })
+
+  test('the copied text lists the starters in slot order and the bench', async ({ page }) => {
+    await page.evaluate(() => { (window as unknown as { __copied: string }).__copied = ''; Object.defineProperty(navigator, 'clipboard', { value: { writeText: async (t: string) => { (window as unknown as { __copied: string }).__copied = t } }, configurable: true }) })
+    await page.getByRole('button', { name: 'اقترح التشكيلة' }).click()
+    await page.locator('#opponent').fill('الخصم')
+    await page.getByRole('button', { name: 'انسخ كنص' }).click()
+    const text = await page.evaluate(() => (window as unknown as { __copied: string }).__copied)
+    expect(text).toContain('تشكيلة المباراة ضد الخصم')
+    expect(text).toContain('التشكيل: 4-3-3')
+    expect(text).toContain('1 · اللاعب 1')
+    expect(text.match(/ · اللاعب /g)!.length).toBe(13) // 11 starters + 2 on the bench
+    expect(text).not.toMatch(/اللاعب (5|14|19)\b/)
+  })
+
+  test('medical staff and the federation cannot open it', async ({ page }) => {
+    for (const role of ['medical', 'bfa_admin']) {
+      await page.evaluate((r) => localStorage.setItem('sh.demoRole', r), role)
+      await page.goto('/lineup')
+      await expect(page).not.toHaveURL(/lineup/)
+    }
+  })
+
+  test('on a phone the eleven slots do not overlap and nothing scrolls sideways', async ({ page }) => {
+    await page.getByRole('button', { name: 'اقترح التشكيلة' }).click()
+    for (const f of ['4-3-3', '4-4-2', '4-2-3-1', '3-5-2']) {
+      await page.getByRole('tab', { name: f }).click(); await page.waitForTimeout(700)
+      const boxes = await pitch(page).getByRole('button').evaluateAll((els) => els.map((e) => { const c = e.querySelector('span')!.getBoundingClientRect(); return [c.x, c.y, c.width, c.height] }))
+      for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+        const [a, b] = [boxes[i], boxes[j]]
+        const overlap = a[0] < b[0] + b[2] && b[0] < a[0] + a[2] && a[1] < b[1] + b[3] && b[1] < a[1] + a[3]
+        expect(overlap, `${f}: slots ${i + 1} and ${j + 1} overlap`).toBe(false)
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     }
   })
 })

@@ -1,7 +1,7 @@
 -- Attacks the fan/staff firewall. Any failed check raises and stops the run (ON_ERROR_STOP).
 \set ON_ERROR_STOP on
 create function pg_temp.check(ok boolean, what text) returns void language plpgsql as
-  $$ begin if not ok then raise exception 'FAIL: %', what; end if; raise notice 'ok  %', what; end $$;
+  $$ begin if ok is distinct from true then raise exception 'FAIL: %', what; end if; raise notice 'ok  %', what; end $$;
 
 -- Seed as superuser
 insert into public.clubs (id, name) values

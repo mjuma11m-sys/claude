@@ -146,6 +146,14 @@
       "status": "review",
       "opened": "2026-10-14",
       "updated": "2026-10-14"
+    },
+    "DW-019": {
+      "title": "Sports Hub: تشكيلة المباراة (ملعب، اقتراح، تحقق، حفظ، نسخ)",
+      "owner": "CEO",
+      "priority": "P1",
+      "status": "review",
+      "opened": "2026-10-14",
+      "updated": "2026-10-14"
     }
   }
 }
