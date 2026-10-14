@@ -266,3 +266,52 @@ a.icon-btn { color: var(--brand); }
   .empty-state img { animation: none; }
   .nav-ind { transition: none; }
 }
+
+/* DW-016: سهولة الاستخدام + تأثيرات */
+/* حجم الخط: يكبّر كل التطبيق بنسبة ثابتة (التخطيط يتكيّف) */
+html[data-size="large"] body { zoom: 1.12; }
+html[data-size="xl"] body { zoom: 1.25; }
+
+/* أزرار سريعة */
+.quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.quick-btn { display: grid; justify-items: center; gap: 6px; padding: 12px 4px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text); }
+.quick-ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--surface-2); color: var(--brand); transition: transform 200ms var(--ease-out); }
+@media (hover: hover) { .quick-btn:hover .quick-ic { transform: translateY(-2px); } }
+@media (min-width: 1200px) { .home-grid { grid-template-areas: "hero att" "quick att" "tiles con" "note note" !important; } .area-quick { grid-area: quick; } }
+
+/* «استلمت» على سطر المتأخر */
+.att-row { display: flex !important; padding: 0 !important; align-items: stretch; }
+.att-row .row-btn { flex: 1; min-width: 0; }
+.got-btn { flex: none; display: grid; place-items: center; gap: 0; min-width: 64px; padding: 6px 10px; border: 0; border-inline-start: 1px solid var(--line); background: var(--paid-soft); color: var(--paid); font-size: 11px; font-weight: 700; cursor: pointer; }
+.got-btn svg { width: 18px; height: 18px; }
+@media (hover: hover) { .got-btn:hover { background: var(--paid); color: #fff; } }
+@media (max-width: 400px) { .att-row .row-btn .pill { display: none; } }
+
+/* بحث */
+.hdr-btn { width: 40px; height: 40px; display: grid; place-items: center; border: 0; border-radius: 12px; background: rgb(255 255 255 / .08); color: inherit; cursor: pointer; }
+@media (min-width: 768px) { .hdr-btn { background: var(--surface-2); } }
+.search-box { display: flex; align-items: center; gap: 10px; padding: 0 14px; min-height: 52px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--surface-2); color: var(--muted); }
+.search-box input { flex: 1; min-width: 0; border: 0; background: transparent; font-size: 17px; outline: none; color: var(--text); }
+.search-box:focus-within { border-color: var(--brand); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent); }
+
+/* هيدر زجاجي لما تمرّر */
+.shell-header { transition: box-shadow 220ms var(--ease-out), background-color 220ms var(--ease-out); }
+.shell-header[data-scrolled="true"] { background: color-mix(in srgb, var(--night) 82%, transparent); -webkit-backdrop-filter: saturate(160%) blur(14px); backdrop-filter: saturate(160%) blur(14px); box-shadow: 0 6px 24px rgb(10 17 32 / .18); }
+@media (min-width: 768px) { .shell-header[data-scrolled="true"] { background: color-mix(in srgb, var(--bg) 78%, transparent); border-bottom-color: transparent; } }
+
+/* توهّج ذهبي هادئ ببطاقة التحصيل */
+.hero-card { isolation: isolate; }
+.hero-card::before { content: ""; position: absolute; z-index: -1; width: 70%; aspect-ratio: 1; inset-inline-end: -20%; top: -45%; border-radius: 50%; background: radial-gradient(circle, rgb(201 150 58 / .22), transparent 65%); animation: glow 14s ease-in-out infinite alternate; pointer-events: none; }
+@keyframes glow { 50% { transform: translate(-30%, 25%) scale(1.15); } 100% { transform: translate(-60%, 55%) scale(.95); } }
+
+/* زر الدفعة يصير ✓ */
+.btn-done { background: var(--paid) !important; color: #fff !important; display: inline-flex; align-items: center; justify-content: center; gap: 6px; animation: pop 260ms var(--ease-out); }
+
+.set-row { display: grid; gap: 6px; font-size: 14px; }
+
+@media (prefers-reduced-motion: reduce) { .hero-card::before { animation: none; } }
+/* الخط الكبير: المبلغ ما ينكسر، والحلقة أصغر */
+.hero-amount .money { white-space: nowrap; }
+html[data-size="large"] .hero-amount, html[data-size="xl"] .hero-amount { font-size: 30px; }
+html[data-size="xl"] .ring { width: 80px; height: 80px; } html[data-size="xl"] .ring svg { width: 80px; height: 80px; }
+html[data-size="xl"] .hero-owed { flex-wrap: wrap; }

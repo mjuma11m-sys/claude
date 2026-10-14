@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
 import { isData, useStore } from "../data/store";
 import { isoDay } from "../data/logic";
-import { useToast } from "../ui/kit";
+import { Chips, useToast } from "../ui/kit";
+import { loadPrefs, savePrefs, type Prefs, type TextSize, type Theme } from "../data/prefs";
 
 /** نسخة احتياطية، استرجاع، وحذف كل البيانات (حق المحو — PDPL) */
 export function Settings() {
@@ -10,6 +11,8 @@ export function Settings() {
   const file = useRef<HTMLInputElement>(null);
   const [confirmErase, setConfirmErase] = useState(false);
   const [error, setError] = useState("");
+  const [prefs, setPrefs] = useState<Prefs>(loadPrefs);
+  const update = (p: Partial<Prefs>) => { const n = { ...prefs, ...p }; setPrefs(n); savePrefs(n); };
 
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -36,6 +39,17 @@ export function Settings() {
 
   return (
     <div className="stack-lg">
+      <section className="card stack">
+        <h2 className="set-title">العرض</h2>
+        <div className="set-row"><span>حجم الخط</span>
+          <Chips<TextSize> label="حجم الخط" value={prefs.size} onChange={(size) => update({ size })} options={[{ id: "normal", label: "عادي" }, { id: "large", label: "كبير" }, { id: "xl", label: "أكبر" }]} />
+        </div>
+        <div className="set-row"><span>المظهر</span>
+          <Chips<Theme> label="المظهر" value={prefs.theme} onChange={(theme) => update({ theme })} options={[{ id: "auto", label: "تلقائي" }, { id: "light", label: "فاتح" }, { id: "dark", label: "داكن" }]} />
+        </div>
+        <p className="muted small" style={{ margin: 0 }}>«تلقائي» يمشي على إعداد الجوال.</p>
+      </section>
+
       <section className="card stack">
         <h2 className="set-title">النسخة الاحتياطية</h2>
         <p className="muted small" style={{ margin: 0 }}>البيانات الحين محفوظة على هالجهاز بس. خذ نسخة كل أسبوع لين ينربط التطبيق بالسحابة.</p>

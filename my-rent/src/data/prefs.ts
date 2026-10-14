@@ -1,0 +1,36 @@
+// تفضيلات الجهاز: حجم الخط والمظهر (DW-016). تنحفظ محلياً وتنطبق قبل أول رسم.
+export type TextSize = "normal" | "large" | "xl";
+export type Theme = "auto" | "light" | "dark";
+export type Prefs = { size: TextSize; theme: Theme };
+
+const KEY = "idarati:prefs";
+export const ZOOM: Record<TextSize, number> = { normal: 1, large: 1.12, xl: 1.25 };
+
+export function loadPrefs(): Prefs {
+  try {
+    const p = JSON.parse(localStorage.getItem(KEY) || "{}");
+    return { size: p.size in ZOOM ? p.size : "normal", theme: ["auto", "light", "dark"].includes(p.theme) ? p.theme : "auto" };
+  } catch {
+    return { size: "normal", theme: "auto" };
+  }
+}
+
+export function applyPrefs(p: Prefs) {
+  const html = document.documentElement;
+  html.dataset.size = p.size;
+  if (p.theme === "auto") delete html.dataset.theme;
+  else html.dataset.theme = p.theme;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", p.theme === "dark" ? "#0A1120" : "#14213A");
+}
+
+export function savePrefs(p: Prefs) {
+  applyPrefs(p);
+  try { localStorage.setItem(KEY, JSON.stringify(p)); } catch { /* ignore */ }
+}
+
+/** يوحّد النص للبحث: أرقام عربية ← غربية، بدون مسافات وتشكيل، والهمزات ← ا */
+export const normalize = (s: string) =>
+  s.replace(/[٠-٩]/g, (c) => String("٠١٢٣٤٥٦٧٨٩".indexOf(c)))
+    .replace(/[ً-ْ]/g, "")
+    .replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي")
+    .replace(/\s+/g, "").toLowerCase();

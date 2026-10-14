@@ -26,6 +26,7 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit }: { unit: Unit | nu
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState<Method>("BenefitPay");
   const [error, setError] = useState("");
+  const [done, setDone] = useState(false);
 
   const owed = shown ? owedMonths(data, shown) : [];
 
@@ -38,6 +39,7 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit }: { unit: Unit | nu
     setAmount(first ? fmt(first.left) : "");
     setMethod("BenefitPay");
     setError("");
+    setDone(false);
     setConfirmVacate(false);
   }, [unit]);
 
@@ -57,7 +59,8 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit }: { unit: Unit | nu
     const fils = parseBHD(amount);
     if (fils === null) { setError("اكتب المبلغ بالدينار، مثل 180 أو 180.500"); return; }
     const p = pay(u.id, month, fils, method);
-    onClose();
+    setDone(true); // الزر يصير ✓ لحظة قبل ما تنسكّر النافذة
+    window.setTimeout(onClose, 260);
     toast({ text: `انسجلت دفعة ${u.name} · ${monthName(month)} · ${fmt(fils)} د.ب`, undo: () => unpay(p.id), stamp: true });
   };
 
@@ -101,7 +104,7 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit }: { unit: Unit | nu
               </div>
               {error && <div id="pay-err" className="field-error">{error}</div>}
               <Chips label="طريقة الدفع" value={method} onChange={setMethod} options={METHODS.map((m) => ({ id: m, label: m }))} />
-              <button type="submit" className="btn btn-block press">سجّل الدفعة</button>
+              <button type="submit" className={`btn btn-block press${done ? " btn-done" : ""}`} disabled={done}>{done ? <>{Icon.check} انسجلت</> : "سجّل الدفعة"}</button>
             </form>
           )}
 

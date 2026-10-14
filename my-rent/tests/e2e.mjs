@@ -167,6 +167,33 @@ try {
   ok(await p.getByRole("dialog").count() === 1, "سحب قصير يرجّعها مكانها");
   await p.keyboard.press("Escape"); await p.waitForTimeout(300);
 
+  // 13) DW-016: استلمت بضغطة + بحث + حجم الخط والمظهر + هيدر زجاجي
+  await p.goto(URL + "#home"); await p.evaluate(() => localStorage.clear()); await p.reload(); await p.waitForTimeout(900);
+  const rows0 = await p.locator(".att-row").count();
+  const amt0 = await p.locator(".hero-amount").innerText();
+  await p.locator(".att-row").last().locator(".got-btn").click(); await p.waitForTimeout(900);
+  ok((await p.locator(".toast").innerText()).includes("استلمت"), "«استلمت» تسجّل الدفعة بضغطة", (await p.locator(".toast").innerText()).split("\n")[0]);
+  const changed = (await p.locator(".att-row").count()) !== rows0 || (await p.locator(".hero-amount").innerText()) !== amt0;
+  ok(changed, "الرئيسية تتحدّث بعد «استلمت»");
+  await p.getByRole("button", { name: "تراجع" }).click(); await p.waitForTimeout(900);
+  ok((await p.locator(".att-row").count()) === rows0 && (await p.locator(".hero-amount").innerText()) === amt0, "«تراجع» يرجّع كل شي");
+  await p.locator(".quick-btn", { hasText: "بحث" }).click(); await p.waitForTimeout(400);
+  await p.fill("#search-q", "١١٠٣"); await p.waitForTimeout(150);
+  ok((await p.locator(".dlg .row-btn").count()) === 1 && (await p.locator(".dlg .row-btn").innerText()).includes("شقة 3"), "البحث بالأرقام العربية يلقى شقة 3");
+  await p.fill("#search-q", "سلمان"); await p.locator(".dlg .row-btn").first().click(); await p.waitForTimeout(450);
+  ok((await p.locator(".dlg-head h2").innerText()).includes("شقة 3"), "نتيجة البحث تفتح الوحدة");
+  await p.keyboard.press("Escape"); await p.waitForTimeout(300);
+  await p.evaluate(() => scrollTo(0, 400)); await p.waitForTimeout(150);
+  ok(await p.locator(".shell-header").getAttribute("data-scrolled") === "true", "الهيدر يصير زجاجي لما تمرّر");
+  await p.goto(URL + "#settings"); await p.waitForTimeout(500);
+  await p.getByRole("radio", { name: "أكبر" }).click(); await p.getByRole("radio", { name: "داكن" }).click();
+  await p.reload(); await p.waitForTimeout(600);
+  ok(await p.evaluate(() => document.documentElement.dataset.size === "xl" && document.documentElement.dataset.theme === "dark"), "حجم الخط والمظهر ينحفظون بعد إعادة الفتح");
+  let over = [];
+  for (const id of pages) { await p.goto(URL + "#" + id); await p.waitForTimeout(500); if (await p.evaluate(() => document.documentElement.scrollWidth > innerWidth)) over.push(id); }
+  ok(over.length === 0, "الخط «أكبر»: ولا شاشة فيها scroll أفقي", over.join(","));
+  await p.evaluate(() => localStorage.removeItem("idarati:prefs"));
+
   // 11) تقليل الحركة: الرقم يطلع على طول
   const r = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
   await r.goto(URL + "#home"); await r.waitForTimeout(600);

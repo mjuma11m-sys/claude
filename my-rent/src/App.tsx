@@ -15,6 +15,7 @@ import { Settings } from "./pages/Settings";
 import { ReceiptSheet, type ReceiptRef } from "./pages/Receipt";
 import { UnitForm } from "./pages/UnitForm";
 import { Reports } from "./pages/Reports";
+import { SearchSheet } from "./pages/Search";
 import { PaySheet, PickUnitSheet } from "./pages/PaySheet";
 import "./app.css";
 import symbolUrl from "../brand/symbol.svg";
@@ -39,6 +40,7 @@ function Idarati() {
   const [expense, setExpense] = useState(false);
   const [receipt, setReceipt] = useState<ReceiptRef>(null);
   const [editing, setEditing] = useState<{ unit: Unit | null } | null>(null);
+  const [searching, setSearching] = useState(false);
 
   useEffect(() => {
     const onHash = () => setPage(fromHash());
@@ -69,6 +71,7 @@ function Idarati() {
   const closeExpense = useCallback(() => setExpense(false), []);
   const closeReceipt = useCallback(() => setReceipt(null), []);
   const closeEditing = useCallback(() => setEditing(null), []);
+  const closeSearch = useCallback(() => setSearching(false), []);
 
   return (
     <AppShell
@@ -77,8 +80,16 @@ function Idarati() {
       onNavigate={go}
       title={page === "home" ? <span className="brand-title"><img src={symbolUrl} alt="" width={28} height={28} />إداراتي</span> : TITLES[page]}
       onAdd={onAdd}
+      actions={<button className="hdr-btn press" onClick={() => setSearching(true)} aria-label="بحث">{Icon.search}</button>}
     >
-      {page === "home" && <Home onOpenUnit={setUnit} go={go} />}
+      {page === "home" && (
+        <Home onOpenUnit={setUnit} go={go} onQuick={(a) => {
+          if (a === "pay") setPicking(true);
+          else if (a === "expense") setExpense(true);
+          else if (a === "unit") setEditing({ unit: null });
+          else setSearching(true);
+        }} />
+      )}
       {page === "tenants" && <Tenants onOpenUnit={setUnit} />}
       {page === "budget" && <Budget />}
       {page === "bank" && <Bank />}
@@ -88,6 +99,7 @@ function Idarati() {
       {page === "settings" && <Settings />}
 
       <PaySheet unit={unit} onClose={closeUnit} onReceipt={(payment, u) => { setUnit(null); setReceipt({ payment, unit: u }); }} onEdit={(u) => { setUnit(null); setEditing({ unit: u }); }} />
+      <SearchSheet open={searching} onClose={closeSearch} onPick={(u) => { setSearching(false); setUnit(u); }} />
       <UnitForm open={!!editing} unit={editing?.unit ?? null} onClose={closeEditing} />
       <ReceiptSheet value={receipt} onClose={closeReceipt} />
       <PickUnitSheet open={picking} onClose={closePick} onPick={(u) => { setPicking(false); setUnit(u); }} />

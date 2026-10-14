@@ -2,7 +2,7 @@
 import { createContext, useContext, useEffect, useReducer, useState, type ReactNode } from "react";
 import type { Data, Expense, Method, Payment, Unit } from "./types";
 import { demoData, emptyData } from "./demo";
-import { isoDay } from "./logic";
+import { isoDay, owedMonths } from "./logic";
 
 const KEY = "idarati:v2";
 
@@ -59,6 +59,7 @@ type Store = {
   data: Data;
   loading: boolean;
   pay: (unitId: string, month: string, amount: number, method: Method) => Payment;
+  quickPay: (unitId: string) => Payment | null;
   unpay: (id: string) => void;
   addExpense: (catId: string, label: string, amount: number) => Expense;
   unexpense: (id: string) => void;
@@ -96,6 +97,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return payment;
     },
     unpay: (id) => dispatch({ type: "unpay", id }),
+    // ضغطة وحدة: أقدم شهر ما اندفع، بالمبلغ الباقي، وبآخر طريقة دفع استخدمها نفس المستأجر
+    quickPay: (unitId) => {
+      const unit = data.units.find((u) => u.id === unitId);
+      if (!unit) return null;
+      const first = owedMonths(data, unit)[0];
+      if (!first) return null;
+      const last = [...data.payments].filter((p) => p.unitId === unitId).sort((a, b) => b.date.localeCompare(a.date))[0];
+      const payment = { id: uid(), unitId, month: first.month, amount: first.left, method: last?.method ?? "BenefitPay", date: isoDay(new Date()) } as Payment;
+      dispatch({ type: "pay", payment });
+      return payment;
+    },
     addExpense: (catId, label, amount) => {
       const expense = { id: uid(), catId, label, amount, date: isoDay(new Date()) };
       dispatch({ type: "expense", expense });

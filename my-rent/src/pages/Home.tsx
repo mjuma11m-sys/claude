@@ -1,9 +1,9 @@
 import { useStore } from "../data/store";
-import { arrears, balances, budget, collection, contractAlerts, monthName, unitStatus } from "../data/logic";
+import { arrears, balances, budget, collection, contractAlerts, fmt, monthName, unitStatus } from "../data/logic";
 import type { Unit } from "../data/types";
 import { Money, StatusPill } from "../theme/AppShell";
 import { useStagger } from "../theme/motion";
-import { Bar, DemoNote, EmptyState, SectionHead, SkeletonCards } from "../ui/kit";
+import { Bar, DemoNote, EmptyState, SectionHead, SkeletonCards, useToast } from "../ui/kit";
 import { Icon } from "../ui/icons";
 
 /** حلقة التحصيل: تنرسم لما تتغيّر النسبة (stroke-dashoffset) */
@@ -20,8 +20,15 @@ function Ring({ value, label }: { value: number; label: string }) {
   );
 }
 
-export function Home({ onOpenUnit, go }: { onOpenUnit: (u: Unit) => void; go: (id: string) => void }) {
-  const { data, loading } = useStore();
+export type QuickAction = "pay" | "expense" | "unit" | "search";
+
+export function Home({ onOpenUnit, go, onQuick }: { onOpenUnit: (u: Unit) => void; go: (id: string) => void; onQuick: (a: QuickAction) => void }) {
+  const { data, loading, quickPay, unpay } = useStore();
+  const toast = useToast();
+  const received = (u: Unit) => {
+    const p = quickPay(u.id);
+    if (p) toast({ text: `استلمت ${u.name} · ${monthName(p.month)} · ${fmt(p.amount)} د.ب`, undo: () => unpay(p.id), stamp: true });
+  };
   const stagger = useStagger(loading);
   const c = collection(data);
   const b = budget(data);
@@ -54,6 +61,13 @@ export function Home({ onOpenUnit, go }: { onOpenUnit: (u: Unit) => void; go: (i
         )}
       </div>
 
+      <div className="quick area-quick" role="toolbar" aria-label="أوامر سريعة">
+        <button className="quick-btn press" onClick={() => onQuick("pay")}><span className="quick-ic">{Icon.check}</span>دفعة</button>
+        <button className="quick-btn press" onClick={() => onQuick("expense")}><span className="quick-ic">{Icon.budget}</span>مصروف</button>
+        <button className="quick-btn press" onClick={() => onQuick("unit")}><span className="quick-ic">{Icon.tenants}</span>وحدة</button>
+        <button className="quick-btn press" onClick={() => onQuick("search")}><span className="quick-ic">{Icon.search}</span>بحث</button>
+      </div>
+
       <section className="area-att">
         <SectionHead title="يحتاج انتباهك" action={<button className="link press" onClick={() => go("tenants")}>كل المستأجرين</button>} />
         {loading ? <SkeletonCards n={2} /> : attention.length === 0 ? (
@@ -63,11 +77,12 @@ export function Home({ onOpenUnit, go }: { onOpenUnit: (u: Unit) => void; go: (i
             {attention.map((u, i) => {
               const s = stagger(i);
               return (
-                <li key={u.id} className={s.className} style={s.style}>
+                <li key={u.id} className={`att-row ${s.className}`} style={s.style}>
                   <button className="row-btn press" onClick={() => onOpenUnit(u)}>
                     <span><span className="strong">{u.name}</span> <span className="muted small">· {u.tenant?.name}</span></span>
                     <span style={{ display: "flex", gap: 10, alignItems: "center" }}><Money fils={arrears(data, u).amount || u.rent} /><StatusPill status={unitStatus(data, u)} /></span>
                   </button>
+                  <button className="got-btn press" onClick={() => received(u)} aria-label={`استلمت إيجار ${u.name}`}>{Icon.check}<span>استلمت</span></button>
                 </li>
               );
             })}

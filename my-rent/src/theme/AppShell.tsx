@@ -51,6 +51,13 @@ export function AppShell({ items, active, onNavigate, title, actions, onAdd, chi
   const overflowActive = overflow.some((i) => i.id === active);
   const sheet = usePresence(moreOpen);
   const mainRef = useReplayClass<HTMLElement>(active, "page-enter");
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const on = () => setScrolled(window.scrollY > 8);
+    on();
+    window.addEventListener("scroll", on, { passive: true });
+    return () => window.removeEventListener("scroll", on);
+  }, []);
   const sideNav = useRef<HTMLElement>(null), sideInd = useRef<HTMLSpanElement>(null);
   const botNav = useRef<HTMLElement>(null), botInd = useRef<HTMLSpanElement>(null);
   useIndicator(sideNav, sideInd, active);
@@ -94,7 +101,7 @@ export function AppShell({ items, active, onNavigate, title, actions, onAdd, chi
       </aside>
 
       <div className="shell-main">
-        <header className="shell-header">
+        <header className="shell-header" data-scrolled={scrolled}>
           <h1>{title}</h1>
           <div className="shell-actions">{actions}</div>
         </header>
