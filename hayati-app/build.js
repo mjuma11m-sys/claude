@@ -7,6 +7,7 @@ const b64 = (f, mime) => 'data:' + mime + ';base64,' + read(f).toString('base64'
 html = html.replace('<link rel="manifest" href="manifest.webmanifest">', '');
 html = html.replace('href="icons/apple-touch-icon.png"', () => 'href="' + b64('icons/apple-touch-icon.png', 'image/png') + '"');
 html = html.replace('href="icons/icon-192.png"', () => 'href="' + b64('icons/icon-192.png', 'image/png') + '"');
+html = html.replace(/\s*<link rel="preload" href="vendor\/fonts\/[^"]+"[^>]*>/g, '');   // dist: الخطوط inline
 // الخطوط داخل الملف (base64) عشان dist يشتغل بدون نت
 html = html.replace('<link rel="stylesheet" href="vendor/fonts/fonts.css">', () => '<style>' + read('vendor/fonts/fonts.css').toString('utf8')
   .replace(/url\((plex-[a-z]+-\d+\.woff2)\)/g, (m, f) => 'url(' + b64('vendor/fonts/' + f, 'font/woff2') + ')') + '</style>');
