@@ -55,6 +55,13 @@ test('Play versionCode follows APP_VERSION, so every update uploads with a new n
   assert.match(g, new RegExp('versionName "0\\.' + v + '"'));
 });
 
+test('iOS build number follows APP_VERSION too (App Store rejects a reused build)', () => {
+  const v = /const APP_VERSION = 'v(\d+)'/.exec(fs.readFileSync(path.join(W, 'js/core/app.js'), 'utf8'))[1];
+  const x = fs.readFileSync(path.join(W, 'ios/App/App.xcodeproj/project.pbxproj'), 'utf8');
+  assert.equal((x.match(/CURRENT_PROJECT_VERSION = (\d+);/g) || []).filter((l) => !l.includes(' ' + v + ';')).length, 0);
+  assert.equal((x.match(/MARKETING_VERSION = ([\d.]+);/g) || []).filter((l) => !l.includes('0.' + v + ';')).length, 0);
+});
+
 test('the store build reaches no outside server: fonts and libraries are local', () => {
   const files = ['index.html', 'privacy.html', 'terms.html', 'sw.js', 'vendor/fonts/fonts.css'];
   for (const d of ['js/core', 'js/features', 'js/i18n', 'js/native']) for (const f of fs.readdirSync(path.join(W, d))) files.push(d + '/' + f);

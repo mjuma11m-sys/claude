@@ -76,13 +76,19 @@ Google تطلب 12 شخص يجربونه 14 يوم قبل ما ينزل للكل
 
 ---
 
-## 🍎 iOS (المرحلة الجاية)
-- Apple ترفض «موقع داخل غلاف» (الإرشاد **4.2**). قبل ما نرفع، نضيف بـ **Capacitor**:
-  - **تنبيهات محلية**: «الحين وقت المحاضرة / الصلاة» بدون التقويم.
-  - **اهتزاز** عند الحفظ والحذف.
-- يحتاج Xcode = ماك. أو ماك سحابي.
-- أول شي **TestFlight** (اختبار، لين 10,000 مختبر)، بعدين المتجر.
-- الصور جاهزة: `store/out/ios-01…07_*.png` (1290×2796) و`icon-ios-1024.png`.
+## 🍎 iOS
+- مشروع Capacitor iOS جاهز (`ios/`) بنفس كود الأندرويد: التنبيهات المحلية والاهتزاز موجودين (يغطي الإرشاد **4.2**).
+- رقم النسخة: `CURRENT_PROJECT_VERSION` = رقم `APP_VERSION` و`MARKETING_VERSION` = `0.xx` (فيه اختبار يمنع يختلفون).
+- **يحتاج:** ماك + **Xcode** (من App Store) + **Apple Developer Program 99$ بالسنة** (≈ 37.3 د.ب).
+- الخطوات:
+  1. `cd ~/Desktop/claude/hayati-app && git pull && npm install`
+  2. `npm run cap:sync` ← `npm run cap:open` (يفتح Xcode).
+  3. Xcode ← **App** ← **Signing & Capabilities** ← Team = حسابك ← Bundle ID `bh.hayati.app`.
+  4. جرّبه: اختار iPhone Simulator ← ▶️.
+  5. فوق اختار **Any iOS Device (arm64)** ← **Product ← Archive** ← **Distribute App ← App Store Connect ← Upload**.
+  6. **appstoreconnect.apple.com** ← My Apps ← ➕ ← الاسم `حياتي - Hayati` ← Bundle ID `bh.hayati.app` ← SKU `hayati-ios`.
+  7. **TestFlight** أول (لين 10,000 مختبر، بدون شرط 12×14 يوم)، بعدين المراجعة للمتجر.
+- الصور: `store/out/ios-01…07_*.png` (1290×2796، مقاس 6.9") و`icon-ios-1024.png`.
 
 ---
 
