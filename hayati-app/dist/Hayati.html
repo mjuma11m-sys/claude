@@ -3235,7 +3235,7 @@ window.HAYATI_CONFIG = {
   const S = window.Store;
   const st = S.state;
   const I = window.icon;
-  const APP_VERSION = 'v17';   // نفس رقم sw.js (فيه اختبار يتأكد)
+  const APP_VERSION = 'v18';   // نفس رقم sw.js (فيه اختبار يتأكد)
 
   // ---------- ثوابت ----------
   const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
@@ -5349,7 +5349,7 @@ window.HAYATI_CONFIG = {
   window.App = {
     S, st, I, ui, h, fmt, money, tint, catMeta, catIcon, pad, monthKey, shiftKey, monthRange, monthLabel, payday, sameDay, startOfDay, daysBetween, time12, timeOf, minutesOf,
     nowMinutes, toLocalInput, dayLabel, nDays, toast, ask, courseById, lectures, lecturesOn, agendaOn, empty, secHead, ring, openSheet,
-    closeSheet, val, parseAmount, segPick, render, go, txInMonth, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, courseForm, taskForm,
+    closeSheet, val, parseAmount, segPick, render, go, txForm, txInMonth, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, courseForm, taskForm,
     notify, has, nextRenewal, sharedSms, expensesCSV, lastBackup, markBackup, backupNow, APP_VERSION, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
   };
   setInterval(timerTickUI, 1000);
@@ -8731,7 +8731,7 @@ window.HAYATI_CONFIG = {
   const TEST_ID = 990001;
   // ⚙️ التنبيهات: كل نوع له مفتاح، وملخص الصباح مقفل افتراضياً (ما نزعج)
   const PREFS = 'hayati-notif-prefs';
-  const DEF = { lectures: true, attend: true, exams: true, homework: true, subs: true, brief: false, briefAt: '07:00' };
+  const DEF = { lectures: true, attend: true, exams: true, homework: true, subs: true, brief: false, briefAt: '07:00', checkin: false, checkinAt: '21:30' };
   function prefs() {
     try { return Object.assign({}, DEF, JSON.parse(localStorage.getItem(PREFS) || '{}')); } catch (e) { return Object.assign({}, DEF); }
   }
@@ -8853,6 +8853,17 @@ window.HAYATI_CONFIG = {
       }
     }
 
+    // 🌙 «سكّر يومك» (اختياري، DW-013): بس لو ما سجلت ولا عملية ذاك اليوم. الأيام الجاية تنعاد جدولتها كل ما تفتح التطبيق
+    if (p.checkin) {
+      const [ch, cm] = String(p.checkinAt || '21:30').split(':').map(Number);
+      const logged = (day) => (A.st.transactions || []).some((t) => t.occurred_at && midnight(new Date(t.occurred_at)).getTime() === day.getTime());
+      for (let d = 0; d < DAYS; d++) {
+        const day = new Date(today.getFullYear(), today.getMonth(), today.getDate() + d);
+        if (logged(day)) continue;
+        add('checkin:' + day.toDateString(), at(day, (ch || 0) * 60 + (cm || 0)), 'سكّر يومك 🌙', 'صرفت شي اليوم؟ سجّله بدقيقة عشان شهرك يطلع صح', { kind: 'checkin' });
+      }
+    }
+
     // ⏰ «ذكّرني بعد ساعة»: محفوظة لين يجي وقتها، عشان إعادة الجدولة ما تمسحها
     for (const z of snoozes()) {
       const t = (z.extra && z.extra.kind === 'task') ? (A.st.tasks || []).find((x) => x.id === z.extra.id) : null;
@@ -8902,6 +8913,7 @@ window.HAYATI_CONFIG = {
     const t = extra.kind === 'task' && (A.st.tasks || []).find((x) => x.id === extra.id);
     if (extra.kind === 'task') { A.go('tasks'); if (t) setTimeout(() => A.taskForm(t), 50); else A.toast('ما لقيت المهمة، يمكن انحذفت'); return; }
     if (extra.kind === 'sub') { A.ui.moneySeg = 'subs'; A.go('money'); return; }
+    if (extra.kind === 'checkin') { A.ui.moneySeg = 'tx'; A.go('money'); setTimeout(() => A.txForm(), 50); return; }
     A.go('today');
   }
   function onAction(ev) {
@@ -8993,7 +9005,8 @@ window.HAYATI_CONFIG = {
 
   // ⚙️ الإعدادات ← التنبيهات (نسخة الآيفون بس)
   const TYPES = [['lectures', '📅 الجدول والصلاة', 'قبل المحاضرة بـ 10 دقايق، والصلاة بوقتها'], ['attend', '🎓 سؤال الحضور', 'بعد كل محاضرة: حضرت ولا غبت، من التنبيه نفسه'], ['exams', '📝 الاختبارات', 'الليلة اللي قبلها، وقبل الاختبار بساعتين'],
-    ['homework', '📚 الواجبات', 'الليلة اللي قبل التسليم'], ['subs', '💳 تجديد الاشتراكات', 'قبل التجديد بالأيام اللي تحددها بالاشتراك'], ['brief', '☀️ ملخص الصباح', 'جدولك واختباراتك اليوم، والأيام الفاضية ما فيها']];
+    ['homework', '📚 الواجبات', 'الليلة اللي قبل التسليم'], ['subs', '💳 تجديد الاشتراكات', 'قبل التجديد بالأيام اللي تحددها بالاشتراك'], ['brief', '☀️ ملخص الصباح', 'جدولك واختباراتك اليوم، والأيام الفاضية ما فيها'],
+    ['checkin', '🌙 سكّر يومك', 'بالليل، بس لو ما سجلت ولا مصروف بيومك']];
   function prefsSheet() {
     const p = prefs();
     A.openSheet({
@@ -9002,9 +9015,11 @@ window.HAYATI_CONFIG = {
         '<li class="row" style="cursor:default"><label style="display:flex;align-items:center;gap:12px;width:100%;cursor:pointer"><div class="main"><div class="title"><span class="t">' + l + '</span></div><div class="sub">' + sub + '</div></div>' +
         '<input type="checkbox" data-np="' + k + '"' + (p[k] ? ' checked' : '') + ' style="width:22px;height:22px;accent-color:var(--brand)"></label></li>').join('') + '</ul></div>' +
         '<div class="field" id="briefAtF"' + (p.brief ? '' : ' hidden') + '><label>وقت ملخص الصباح</label><input type="time" name="briefAt" value="' + A.h(p.briefAt) + '"></div>' +
+        '<div class="field" id="checkinAtF"' + (p.checkin ? '' : ' hidden') + '><label>وقت «سكّر يومك»</label><input type="time" name="checkinAt" value="' + A.h(p.checkinAt) + '"></div>' +
         '<button class="btn block" type="button" id="npTest">' + A.I('bell') + 'جرّب التنبيه</button>',
       mount(root) {
         root.querySelector('[data-np="brief"]').onchange = (e) => { root.querySelector('#briefAtF').hidden = !e.target.checked; };
+        root.querySelector('[data-np="checkin"]').onchange = (e) => { root.querySelector('#checkinAtF').hidden = !e.target.checked; };
         root.querySelector('#npTest').onclick = async () => {
           A.closeSheet();
           const rows = await testNotification();
@@ -9015,6 +9030,7 @@ window.HAYATI_CONFIG = {
         const np = Object.assign({}, prefs());
         root.querySelectorAll('[data-np]').forEach((c) => { np[c.dataset.np] = c.checked; });
         np.briefAt = (root.querySelector('[name=briefAt]') || {}).value || DEF.briefAt;
+        np.checkinAt = (root.querySelector('[name=checkinAt]') || {}).value || DEF.checkinAt;
         savePrefs(np);
         await reschedule();
         A.toast('انحفظ ✓');
@@ -9043,6 +9059,34 @@ window.HAYATI_CONFIG = {
       return prevSet ? prevSet.apply(this, arguments) : false;
     };
   }
+
+  // 🔁 الحلقة اليومية (DW-013): بطاقة وحدة باليوم من ثاني يوم استخدام، تشغّل ملخص الصبح + «سكّر يومك» بضغطة.
+  //   «لا شكراً» تخفيها للأبد، وما تطلع لو واحد منهم شغّال أصلاً. ما فيه أي ضغط ولا عدّاد يعاقب
+  const LOOP = 'hayati-loop-ask', FIRST = 'hayati-first-day';
+  const lsg = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const lss = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* تجاهل */ } };
+  if (!lsg(FIRST)) lss(FIRST, midnight(new Date()).toISOString());
+  function loopCard() {
+    const p = prefs();
+    if (!LN || p.brief || p.checkin || lsg(LOOP)) return '';
+    if (!(midnight(new Date()) > new Date(lsg(FIRST) || Date.now()))) return '';
+    return '<div class="card loop-card"><b>خل «حياتي» يرتب يومك 🔁</b>' +
+      '<div class="small muted" style="margin:6px 0 10px">☀️ الصبح: ملخص جدولك واختباراتك<br>🌙 الليل: «سكّر يومك» بس لو نسيت تسجّل مصاريفك</div>' +
+      '<div style="display:flex;gap:8px"><button class="btn primary" style="flex:1" data-action="loop-on">شغّلها</button><button class="btn ghost" data-action="loop-no">لا شكراً</button></div>' +
+      '<div class="small muted" style="margin-top:8px">تقدر تغيّر الأوقات أو تطفيها من الإعدادات ← التنبيهات</div></div>';
+  }
+  if (E) {
+    const prevTop = E.todayTop;
+    E.todayTop = function () { return loopCard() + (prevTop ? prevTop.apply(this, arguments) : ''); };
+    const prevAct = E.action;
+    E.action = function (name) {
+      if (name === 'loop-on') { lss(LOOP, 'yes'); savePrefs(Object.assign({}, prefs(), { brief: true, checkin: true })); reschedule(); A.toast('تمام ✓ الصبح 7:00 والليل 9:30'); A.render(); return; }
+      if (name === 'loop-no') { lss(LOOP, 'no'); A.render(); return; }
+      return prevAct ? prevAct.apply(this, arguments) : undefined;
+    };
+  }
+  // اليوم ممكن انرسم قبل ما يتحمّل هالملف (آخر سكربت)، فنعيد رسمه مرة عشان البطاقة تبين
+  if (loopCard() && A.ui.tab === 'today' && !document.querySelector('#sheet[open]')) A.render();
 
   // 🍎 / G الدخول السريع: Google يمنع الدخول من داخل WebView، فنفتح متصفح النظام،
   //   والمزود يرجّعنا بـ bh.hayati.app://auth?code=… (CFBundleURLTypes بـ Info.plist) ونبدّل الكود بجلسة (PKCE)

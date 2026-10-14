@@ -1320,3 +1320,47 @@ test('payday, school and khums settings ride along in the backup file and come b
   });
   expect(back).toEqual([25, 'jafari', 40, '2026-03-01']);
 });
+
+// DW-013: الحلقة اليومية (نسخة الجوال)
+const fakeCap = () => {
+  const log = window.__cap = { scheduled: [] };
+  window.Capacitor = { isNativePlatform: () => true, Plugins: {
+    LocalNotifications: { checkPermissions: async () => ({ display: 'granted' }), requestPermissions: async () => ({ display: 'granted' }),
+      getPending: async () => ({ notifications: log.scheduled.map((n) => ({ id: n.id })) }), cancel: async () => { log.scheduled = []; }, schedule: async ({ notifications }) => { log.scheduled = notifications; } },
+    Haptics: { impact: async () => {} } } };
+  // ثاني يوم استخدام
+  const y = new Date(); y.setDate(y.getDate() - 1); y.setHours(0, 0, 0, 0);
+  if (!localStorage.getItem('hayati-first-day')) localStorage.setItem('hayati-first-day', y.toISOString());
+};
+
+test('daily loop: one card from day two turns on the morning brief and «سكّر يومك»; the evening nudge skips days you already logged', async ({ page }) => {
+  await page.addInitScript(fakeCap);
+  await open(page);
+  await expect(page.locator('.loop-card')).toBeVisible();
+  await page.click('[data-action="loop-on"]');
+  await expect(page.locator('.loop-card')).toHaveCount(0);
+  expect(await store(page, () => { const p = JSON.parse(localStorage.getItem('hayati-notif-prefs')); return [p.brief, p.checkin, p.checkinAt]; })).toEqual([true, true, '21:30']);
+  const checkins = () => store(page, () => window.__cap.scheduled.filter((n) => n.title === 'سكّر يومك 🌙').map((n) => [new Date(n.schedule.at).toDateString(), n.schedule.at.getHours ? n.schedule.at.getHours() : new Date(n.schedule.at).getHours(), n.extra.kind]));
+  await page.waitForFunction(() => window.__cap.scheduled.some((n) => n.title === 'سكّر يومك 🌙'), null, { timeout: 5000 });
+  const before = await checkins();
+  expect(before.every(([, h, k]) => h === 21 && k === 'checkin')).toBe(true);
+  expect(before.length).toBeLessThanOrEqual(7);
+  // سجّل مصروف بكرة الساعة 12 ← تذكير بكرة ينشال، والباقي يظل
+  const tomorrow = await store(page, () => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(12, 0, 0, 0); App.S.upsert('transactions', { id: 'lp1', kind: 'expense', amount: 2, merchant: 'Cafe', category: 'قهوة', occurred_at: d.toISOString() }); return d.toDateString(); });
+  await page.waitForFunction((day) => !window.__cap.scheduled.some((n) => n.title === 'سكّر يومك 🌙' && new Date(n.schedule.at).toDateString() === day), tomorrow, { timeout: 5000 });
+  expect((await checkins()).length).toBeGreaterThan(0);
+});
+
+test('daily loop: «لا شكراً» hides the card for good, and it never shows on the first day or on the web', async ({ page }) => {
+  await page.addInitScript(fakeCap);
+  await open(page);
+  await page.click('[data-action="loop-no"]');
+  await page.reload(); await page.waitForFunction(() => window.App && App.st);
+  await expect(page.locator('.loop-card')).toHaveCount(0);
+  expect(await store(page, () => JSON.parse(localStorage.getItem('hayati-notif-prefs') || '{}').checkin)).toBeFalsy();
+});
+
+test('daily loop: no card on the web version (no notifications there)', async ({ page }) => {
+  await open(page);
+  await expect(page.locator('.loop-card')).toHaveCount(0);
+});
