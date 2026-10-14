@@ -9,9 +9,9 @@ const css = (w, h) => `@font-face{font-family:P;src:url(${U('../IBMPlexSansArabi
 .chip{position:absolute;left:0;right:0;text-align:center}.chip span{display:inline-block;padding:12px 34px;border-radius:999px;background:rgba(232,220,196,.12);border:2px solid rgba(232,220,196,.25);font:400 32px P}
 .brand{position:absolute;left:0;right:0;text-align:center;font:700 40px P;color:#FF6B4A}`;
 const V = {
-  'frame-story.png': [1080, 1920, `<div class="hd" style="top:200px"><div class="k">بين المحاضرات</div><h1>أشتغل على تطبيق <b>«حياتي»</b></h1></div>
-<div class="card" style="top:480px"><img src="${U('bg.jpg')}" style="width:820px;height:1080px;object-position:50% 75%"></div>
-<div class="chip" style="top:1650px"><span>قيد التطوير · نسخة تجريبية</span></div>`],
+  'frame-story.png': [1080, 1920, `<div class="hd" style="top:270px"><div class="k">بين المحاضرات</div><h1>أشتغل على تطبيق <b>«حياتي»</b></h1></div>
+<div class="card" style="top:480px"><img src="${U('bg.jpg')}" style="width:720px;height:940px;object-position:50% 75%"></div>
+<div class="chip" style="top:1490px"><span>قيد التطوير · نسخة تجريبية</span></div>`],
   'frame-post.png': [1080, 1350, `<div class="hd" style="top:70px"><div class="k">بين المحاضرات</div><h1>أشتغل على تطبيق <b>«حياتي»</b></h1></div>
 <div class="card" style="top:300px"><img src="${U('bg.jpg')}" style="width:760px;height:860px;object-position:50% 78%"></div>
 <div class="chip" style="top:1225px"><span>قيد التطوير · نسخة تجريبية</span></div>`],
