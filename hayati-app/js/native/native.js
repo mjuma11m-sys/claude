@@ -435,5 +435,5 @@
 
   // رابط خارجي (زر «اقرأ»): متصفح النظام
   async function openLink(url) { if (!/^https:\/\//.test(url)) return; if (Browser) await Browser.open({ url }); else window.open(url, '_blank', 'noopener'); }
-  window.HayatiNative = { openLink, saveFile, shareText, reschedule, upcoming, testNotification, prefs, savePrefs, oauth, onAuthUrl, onBack, onShared };
+  window.HayatiNative = { haptic: () => tap('LIGHT'), openLink, saveFile, shareText, reschedule, upcoming, testNotification, prefs, savePrefs, oauth, onAuthUrl, onBack, onShared };
 })();

@@ -1426,3 +1426,58 @@ test('adhkar reminder (phone app): off by default; when on, 30 min after Fajr an
     expect(r).toEqual([['وقت أذكار الصباح ☀️', '', 30], ['وقت أذكار المساء 🌙', '', 30]]);
   }
 });
+
+// DW-015: «عبادتي» + المسبحة + الهجري + المناسبات
+test('tasbih: Tasbih al-Zahra counts 34 · 33 · 33 in order, then finishes; the after-prayer preset is 33 · 33 · 34', async ({ page }) => {
+  await open(page);
+  const r = await store(page, () => {
+    const I = Extras.Ibada; I.start('zahra');
+    const marks = []; let last;
+    for (let i = 0; i < 100; i++) { last = I.press(); if (i === 33 || i === 66) marks.push([last.step, last.count]); }
+    return { marks, last, words: I.PRESETS.zahra.steps.map((s) => s.join(':')), after: I.PRESETS.after.steps.map((s) => s[1]), today: App.st.settings.tasbih.n };
+  });
+  expect(r.marks).toEqual([[1, 0], [2, 0]]);   // بعد 34 تكبيرة ← التحميد، وبعد 33 ← التسبيح
+  expect(r.last.done).toBe(true);
+  expect(r.words).toEqual(['الله أكبر:34', 'الحمد لله:33', 'سبحان الله:33']);
+  expect(r.after).toEqual([33, 33, 34]);
+  expect(r.today).toBe(100);
+  // من الواجهة: + ← المسبحة ← ضغطة
+  await page.click('#addBtn'); await page.click('[data-pick="tasbih"]');
+  await page.click('#tsbBtn');
+  await expect(page.locator('#tsbN')).toHaveText('1 / 34');
+  await expect(page.locator('#tsbWord')).toHaveText('الله أكبر');
+});
+
+test('Hijri date and occasions: Umm al-Qura on the device, ±2 day sighting offset, Eid and Gergaoon land on the right Hijri day', async ({ page }) => {
+  await open(page);
+  const r = await store(page, () => {
+    const I = Extras.Ibada, d = new Date(2026, 9, 14);
+    const base = I.hijri(d);
+    App.S.setSettings({ hijri_offset: 1 }); const plus = I.hijri(d);
+    App.S.setSettings({ hijri_offset: 9 }); const capped = I.hijri(d);
+    App.S.setSettings({ hijri_offset: 0 });
+    const fitr = I.nextDate(['عيد الفطر', 10, 1], d), ger = I.nextDate(['القرقاعون', 9, 15], d), nat = I.nextDate(['اليوم الوطني', null, 12, 16], d);
+    return { base, plus: plus.day - base.day, capped: capped.day - base.day, fitr: I.hijri(fitr), ger: I.hijri(ger), nat: [nat.getMonth() + 1, nat.getDate()], next: I.upcoming(3, d).map((o) => o.name), ger2fitr: Math.round((fitr - ger) / 864e5) };
+  });
+  expect(r.base).toEqual({ day: 3, month: 5, year: 1448 });   // 14 أكتوبر 2026 = 3 جمادى الأولى 1448 (أم القرى)
+  expect(r.plus).toBe(1);
+  expect(r.capped).toBe(2);
+  expect([r.fitr.month, r.fitr.day]).toEqual([10, 1]);
+  expect([r.ger.month, r.ger.day]).toEqual([9, 15]);
+  expect(r.ger2fitr).toBeGreaterThanOrEqual(14);
+  expect(r.nat).toEqual([12, 16]);
+  expect(r.next[0]).toBe('🇧🇭 اليوم الوطني');
+});
+
+test('«عبادتي»: one row on Today opens the page with the Hijri date, next prayer, tasbih and upcoming occasions', async ({ page }) => {
+  await open(page);
+  await store(page, () => { App.S.setSettings({ prayer_method: 'jafari', prayer_on: true }); App.go('today'); });
+  await page.click('[data-action="ibada"]');
+  await expect(page.locator('#sheetTitle')).toHaveText('🕌 عبادتي');
+  await expect(page.locator('#hijriNow')).toContainText('هـ');
+  await expect(page.locator('#sheetBody')).toContainText('المناسبات الجاية');
+  await page.click('[data-ho="1"]');
+  await expect(page.locator('#hoVal')).toHaveText('+1');
+  await page.click('#ibTsb');
+  await expect(page.locator('#sheetTitle')).toHaveText('المسبحة');
+});
