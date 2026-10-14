@@ -40,6 +40,9 @@
 
 > ℹ️ ما تحتاج `assetlinks.json` ولا PWABuilder بعد: كان لنسخة الويب الملفوفة.
 
+> 🔢 **رقم النسخة (DW-011):** `versionCode` بـ `android/app/build.gradle` = رقم `APP_VERSION` بـ `js/core/app.js` (مثلاً `v16` ← `16` و`0.16`)، وفيه اختبار يمنع يختلفون. Google Play ترفض أي رفع برقم استخدمته قبل، فكل تحديث: `git pull` ← `npm run cap:sync:android` ← Generate Signed Bundle بنفس المفتاح.
+> 📴 **بدون نت:** الخط وقارئ PDF ومكتبة Supabase داخل التطبيق (`vendor/`)، فنسخة المتجر ما تتصل بأي جهة خارجية (فيه اختبار يمنع أي رابط برّا يرجع).
+
 ### 3) Google Play Console
 1. **play.google.com/console** ← سجّل (حساب شخصي) ← ادفع 25$ ← تحقق من الهوية (البطاقة الذكية).
 2. **Create app**: الاسم `حياتي - Hayati` · اللغة الافتراضية: العربية · App · Free.
@@ -163,4 +166,8 @@ Expenses, studies, prayer times and tasks in one place. A Bahraini app (beta).
 - [ ] `privacy.html` يفتح من الرابط العام
 - [ ] `terms.html` يفتح من الرابط العام، ومحامي مرخّص بالبحرين راجع الشروط والسياسة
 - [ ] `app-release.aab` من Android Studio + مفتاح الرفع (`.jks`) محفوظ بمكانين + Play App Signing مفعّل
-- [ ] 12 مختبر جاهزين
+- [x] نسخة المتجر ما تتصل بأي جهة خارجية: الخط والمكتبات محلية (DW-011)
+- [x] `versionCode` مربوط بـ `APP_VERSION` (DW-011)
+- [ ] جرّبته على المحاكي أو جوالك: أضف مصروف، الصق رسالة بنك، جرّب التنبيه، سكّر التطبيق وافتحه بدون نت
+- [ ] لقطات المتجر من `store/out` + الأيقونة 512 + الصورة المميزة 1024×500
+- [ ] 12 مختبر جاهزين (هدفنا 15)

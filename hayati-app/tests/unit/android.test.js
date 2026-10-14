@@ -45,3 +45,26 @@ test('share to Hayati (DW-009): plain text only, registered, capped, and no perm
   const web = JSON.parse(fs.readFileSync(path.join(__dirname, '../../manifest.webmanifest'), 'utf8'));
   assert.equal(web.share_target.params.text, 'share_text');
 });
+
+// DW-011: جاهزية المتجر
+const W = path.join(__dirname, '../..');
+test('Play versionCode follows APP_VERSION, so every update uploads with a new number', () => {
+  const v = /const APP_VERSION = 'v(\d+)'/.exec(fs.readFileSync(path.join(W, 'js/core/app.js'), 'utf8'))[1];
+  const g = read('app/build.gradle');
+  assert.match(g, new RegExp('versionCode ' + v + '\\b'));
+  assert.match(g, new RegExp('versionName "0\\.' + v + '"'));
+});
+
+test('the store build reaches no outside server: fonts and libraries are local', () => {
+  const files = ['index.html', 'privacy.html', 'terms.html', 'sw.js', 'vendor/fonts/fonts.css'];
+  for (const d of ['js/core', 'js/features', 'js/i18n', 'js/native']) for (const f of fs.readdirSync(path.join(W, d))) files.push(d + '/' + f);
+  for (const f of files) {
+    const src = fs.readFileSync(path.join(W, f), 'utf8');
+    assert.doesNotMatch(src, /fonts\.googleapis|fonts\.gstatic|cdn\.jsdelivr/, f);
+    // pdf.js من الـ CDN مسموح بس لملف dist الواحد (file://)
+    if (/cdnjs\.cloudflare/.test(src)) assert.match(src, /location\.protocol === 'file:' \? 'https:\/\/cdnjs/, f);
+  }
+  for (const f of ['vendor/supabase/supabase.min.js', 'vendor/pdfjs/pdf.min.js', 'vendor/pdfjs/pdf.worker.min.js', 'vendor/fonts/plex-arabic-400.woff2', 'vendor/fonts/OFL.txt'])
+    assert.ok(fs.existsSync(path.join(W, f)), f);
+  assert.match(fs.readFileSync(path.join(W, 'scripts/cap-www.js'), 'utf8'), /cpSync\(path\.join\(D, 'vendor'\)/);
+});

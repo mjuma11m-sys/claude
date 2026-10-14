@@ -158,7 +158,7 @@ test('offline single-file build is up to date and works', async ({ page }) => {
   const root = path.resolve(__dirname, '..');
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   const bundle = fs.readFileSync(path.join(root, 'dist/Hayati.html'), 'utf8');
-  const scripts = [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map((m) => m[1]).filter((s) => !s.startsWith('http'));
+  const scripts = [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map((m) => m[1]).filter((s) => !s.startsWith('http') && !s.startsWith('vendor/'));
   for (const s of scripts) {
     const src = fs.readFileSync(path.join(root, s), 'utf8').replace(/<\/script/g, '<\\/script');
     expect(bundle.includes(src), `dist/Hayati.html is stale for ${s} — run: npm run build`).toBe(true);
@@ -971,6 +971,11 @@ test('brand: app colours match brand/tokens.css, and text colours pass 4.5:1 con
 
 // 🔐 الحسابات (جلسة الديوانية «الحسابات»): كل مستخدم بياناته بروحه، والدخول بـ Apple وGoogle
 //   Supabase وهمي: «سيرفر» فيه بيانات كل مستخدم لحاله، مثل RLS
+// الـ fake لازم يظل: نمنع المكتبة المحلية الحقيقية تكتب فوقه
+const useFakeSupabase = async (page) => {
+  await page.route('**/vendor/supabase/supabase.min.js', (r) => r.fulfill({ contentType: 'text/javascript', body: '' }));
+  await page.addInitScript(fakeSupabase);
+};
 const fakeSupabase = () => {
   const srv = window.__srv = { data: {}, calls: [], session: null, cb: null };
   const rows = (uid, t) => ((srv.data[uid] = srv.data[uid] || {})[t] = srv.data[uid][t] || []);
@@ -1011,7 +1016,7 @@ const fakeSupabase = () => {
 const txs = (page) => store(page, () => App.st.transactions.map((t) => t.merchant).sort());
 
 test('accounts: guest data is offered to the first account, sign-out wipes the device, a second user never sees the first one\'s data', async ({ page }) => {
-  await page.addInitScript(fakeSupabase);
+  await useFakeSupabase(page);
   await open(page);
   // بدون حساب: التطبيق يشتغل عادي
   await store(page, () => App.S.upsert('transactions', { id: 'g1', kind: 'expense', amount: 1, merchant: 'Guest Cafe', category: 'قهوة', occurred_at: new Date().toISOString() }));
@@ -1047,7 +1052,7 @@ test('accounts: guest data is offered to the first account, sign-out wipes the d
 });
 
 test('accounts: «لا، ابدأ من حسابي» drops guest data; sign-out with unsynced edits warns first', async ({ page, context }) => {
-  await page.addInitScript(fakeSupabase);
+  await useFakeSupabase(page);
   await open(page);
   await store(page, () => App.S.upsert('transactions', { id: 'g1', kind: 'expense', amount: 1, merchant: 'Not Mine', category: 'قهوة', occurred_at: new Date().toISOString() }));
   await store(page, () => window.__signInAs('u-mo', 'mo@x.bh'));
@@ -1068,7 +1073,7 @@ test('accounts: «لا، ابدأ من حسابي» drops guest data; sign-out w
 });
 
 test('accounts: Apple/Google buttons only when enabled, web OAuth returns to the app, password reset, account screen', async ({ page }) => {
-  await page.addInitScript(fakeSupabase);
+  await useFakeSupabase(page);
   await open(page);
   await page.click('#settingsBtn');
   await expect(page.locator('.account-card')).toContainText('بدون حساب؟ التطبيق يشتغل عادي');
@@ -1094,7 +1099,7 @@ test('accounts: Apple/Google buttons only when enabled, web OAuth returns to the
 });
 
 test('accounts on iPhone: Apple opens the system browser, the bh.hayati.app://auth link signs in @webkit', async ({ page }) => {
-  await page.addInitScript(fakeSupabase);
+  await useFakeSupabase(page);
   await page.addInitScript(() => {
     const log = window.__nat = { opened: [], closed: 0, urlCb: null };
     window.Capacitor = { isNativePlatform: () => true, Plugins: {
@@ -1190,4 +1195,16 @@ test('Android share: replaces an open sheet, waits for the PIN lock, and caps th
   await store(page, () => document.body.classList.remove('locked'));
   expect(await kind).toBe('form');
   expect(await store(page, () => document.querySelector('#sheetBody [name=sms]').value.length)).toBe(2000);
+});
+
+test('store readiness (DW-011): no request leaves the app, and the Arabic font loads locally', async ({ page, baseURL }) => {
+  const outside = [];
+  page.on('request', (r) => { if (!r.url().startsWith(baseURL) && !r.url().startsWith('data:')) outside.push(r.url()); });
+  await open(page);
+  for (const tab of ['money', 'schedule', 'tasks', 'today']) await page.click(`button.tab[data-tab="${tab}"]`);
+  // التحميل ينجح بس لو الملف محلي (أي اتصال برّا ممنوع بالاختبار)
+  expect(await page.evaluate(async () => (await document.fonts.load('700 16px "IBM Plex Sans Arabic"', 'حياتي')).length)).toBeGreaterThan(0);
+  expect(await page.evaluate(() => [...document.fonts].some((f) => f.family.includes('IBM Plex Sans Arabic') && f.status === 'loaded'))).toBe(true);
+  expect(await page.evaluate(() => typeof window.supabase)).toBe('object');
+  expect(outside).toEqual([]);
 });
