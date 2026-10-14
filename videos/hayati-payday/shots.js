@@ -31,7 +31,7 @@ const APP = 'file://' + path.join(__dirname, '../../hayati-app/dist/Hayati.html'
   await p.evaluate(() => { App.S.setSettings({ madhhab: 'sunni' }); App.go('money'); });
   await p.click('[data-action="zakat"]');
   await p.fill('[name=zk_cash]', '5000'); await p.fill('[name=zk_gold]', '40'); await p.dispatchEvent('[name=zk_gold]', 'input'); await shot('5-zakat');
-  await p.click('#mdh [data-m="jafari"]');
+  await p.click('#zkTool [data-t="khums"]'); await p.click('#mdh [data-m="jafari"]');
   await p.fill('[name=kh_inc]', '7800'); await p.fill('[name=kh_exp]', '6200'); await p.dispatchEvent('[name=kh_exp]', 'input'); await shot('6-khums');
   console.log(errs.length ? errs : 'ok');
   await b.close();

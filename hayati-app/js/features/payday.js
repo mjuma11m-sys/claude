@@ -80,12 +80,13 @@
 
   // ================= الزكاة والخُمس =================
   // أداة حساب تقديرية، مو فتوى. ما ناخذ أسعار ولا أحكام من النت: المستخدم يدخل الأرقام ويقدر يعدّلها
-  const NISAB_GRAMS = 85;
+  // النصاب بالغرام: 85 غرام عند السنة، و15 مثقال صيرفي (≈ 69.6 غرام) عند الشيعة
+  const NISAB = { sunni: 85, jafari: 69.6 };
   function defaultMadhhab() { return (st.settings.prayer_method || 'jafari') === 'jafari' ? 'jafari' : 'sunni'; }
-  function zakatOf(cash, goldPrice, heldYear) {
-    const nisab = NISAB_GRAMS * goldPrice;
+  function zakatOf(cash, goldPrice, heldYear, madhhab) {
+    const nisab = (NISAB[madhhab] || NISAB.sunni) * goldPrice;
     if (!(goldPrice > 0)) return { nisab: 0, due: null };
-    return { nisab, due: cash >= nisab && heldYear ? r3(cash * 0.025) : 0 };
+    return { nisab: r3(nisab), due: cash >= nisab && heldYear ? r3(cash * 0.025) : 0 };
   }
   function khumsOf(income, expenses, extra) { const surplus = Math.max(0, income - expenses) + Math.max(0, extra || 0); return { surplus: r3(surplus), due: r3(surplus * 0.2) }; }
   function since(startKey) {
@@ -96,31 +97,32 @@
   function savedInGoals() { return r3((st.goals || []).reduce((a, g) => a + (Number(g.saved) || 0), 0)); }
   function lastYear() { const d = new Date(); d.setFullYear(d.getFullYear() - 1); return d.toISOString().slice(0, 10); }
 
-  function zakatSheet(madhhab) {
-    const m = madhhab || st.settings.madhhab || defaultMadhhab();
-    const seg = '<div class="seg" id="mdh" style="margin-bottom:12px">' + [['sunni', 'المذاهب الأربعة'], ['jafari', 'الجعفري']].map(([k, l]) => '<button type="button" data-m="' + k + '" class="' + (k === m ? 'on' : '') + '">' + l + '</button>').join('') + '</div>';
-    const note = '<p class="small muted" style="margin:12px 6px 0;text-align:center">⚠️ <b>تقدير</b> يساعدك تحسب، مو فتوى. راجع مرجعك أو عالِم قبل ما تدفع.</p>';
-    let body = seg;
-    if (m === 'sunni') {
-      body += '<p class="small muted" style="margin:0 4px 10px">الزكاة <b>2.5%</b> من النقد والمدخرات إذا وصلت <b>النصاب</b> (قيمة ' + NISAB_GRAMS + ' غرام ذهب) ومر عليها <b>سنة هجرية</b>.</p>' +
-        '<div class="field"><label>نقدك ومدخراتك (د.ب)</label><input name="zk_cash" inputmode="decimal" placeholder="0.000" value="' + (savedInGoals() || '') + '"></div>' +
+  // الأداتين (الزكاة والخُمس) مفتوحة للكل بنفس الشكل؛ المذهب يغيّر النصاب والملاحظات بس
+  function zakatSheet(tool, madhhab) {
+    const k = tool || 'zakat', m = madhhab || st.settings.madhhab || defaultMadhhab();
+    const segOf = (id, items, cur, attr) => '<div class="seg" id="' + id + '" style="margin-bottom:10px">' + items.map(([v, l]) => '<button type="button" data-' + attr + '="' + v + '" class="' + (v === cur ? 'on' : '') + '">' + l + '</button>').join('') + '</div>';
+    let body = segOf('zkTool', [['zakat', 'الزكاة'], ['khums', 'الخُمس']], k, 't') +
+      '<div class="small muted" style="margin:0 4px 6px">مذهبك:</div>' + segOf('mdh', [['sunni', 'سني'], ['jafari', 'شيعي']], m, 'm');
+    if (k === 'zakat') {
+      body += '<p class="small muted" style="margin:0 4px 10px">الزكاة <b>2.5%</b> إذا وصل المال <b>النصاب</b> (قيمة ' + NISAB[m] + ' غرام ذهب' + (m === 'jafari' ? '، 15 مثقال صيرفي' : '') + ') ومر عليه <b>سنة</b>.</p>' +
+        '<div class="field"><label>' + (m === 'jafari' ? 'قيمة الذهب والفضة المسكوكين (د.ب)' : 'نقدك ومدخراتك (د.ب)') + '</label><input name="zk_cash" inputmode="decimal" placeholder="0.000" value="' + (m === 'jafari' ? '' : savedInGoals() || '') + '"></div>' +
         '<div class="field"><label>سعر غرام الذهب اليوم (د.ب)</label><input name="zk_gold" inputmode="decimal" placeholder="مثلاً 40.000" value="' + (st.settings.gold_price || '') + '"></div>' +
-        '<label style="display:flex;gap:8px;align-items:center;margin:6px 4px"><input type="checkbox" name="zk_year" checked> مر عليها سنة هجرية وهي فوق النصاب</label>' +
+        '<label style="display:flex;gap:8px;align-items:center;margin:6px 4px"><input type="checkbox" name="zk_year" checked> مرت عليه سنة وهو فوق النصاب</label>' +
         '<div class="hero" id="zkOut" style="margin-top:12px"></div>' +
-        '<p class="small muted" style="margin:10px 6px 0">الخُمس عند المذاهب الأربعة يكون بالركاز (الكنز والمعادن) والغنائم، مو على الراتب، فما ينحسب هني.</p>';
+        '<p class="small muted" style="margin:10px 6px 0">' + (m === 'jafari' ? 'عند أغلب مراجع الشيعة الزكاة على الذهب والفضة المسكوكين (وغيرها مثل الأنعام والغلات)، والنقد والمدخرات عليها الخُمس.' : 'عند السنة الزكاة على النقد والمدخرات والذهب والفضة وعروض التجارة.') + '</p>';
     } else {
       const start = st.settings.khums_start || lastYear();
       const s = since(start);
-      body += '<p class="small muted" style="margin:0 4px 10px">الخُمس <b>20%</b> من اللي يتبقى من أرباح السنة بعد مؤونتها (مصاريفك)، من <b>رأس سنتك الخمسية</b>.</p>' +
-        '<div class="field"><label>رأس السنة الخمسية</label><input name="kh_start" type="date" value="' + start + '"></div>' +
+      body += '<p class="small muted" style="margin:0 4px 10px">الخُمس <b>20%</b> من اللي يتبقى من أرباح السنة بعد مصاريفها، من <b>رأس سنتك</b>.</p>' +
+        '<div class="field"><label>رأس السنة</label><input name="kh_start" type="date" value="' + start + '"></div>' +
         '<div class="field"><label>الدخل من ذاك اليوم (د.ب)</label><input name="kh_inc" inputmode="decimal" value="' + r3(s.inc) + '"></div>' +
-        '<div class="field"><label>المصاريف (المؤونة) من ذاك اليوم (د.ب)</label><input name="kh_exp" inputmode="decimal" value="' + r3(s.exp) + '"></div>' +
+        '<div class="field"><label>المصاريف من ذاك اليوم (د.ب)</label><input name="kh_exp" inputmode="decimal" value="' + r3(s.exp) + '"></div>' +
         '<div class="field"><label>مدخرات ثانية ما خمّستها (اختياري)</label><input name="kh_extra" inputmode="decimal" placeholder="0.000"></div>' +
         '<p class="small muted" style="margin:0 4px">الدخل والمصاريف من اللي مسجله بالتطبيق، وتقدر تعدّلهم.</p>' +
         '<div class="hero" id="zkOut" style="margin-top:12px"></div>' +
-        '<p class="small muted" style="margin:10px 6px 0">زكاة النقد الورقي: عند أغلب مراجع الجعفرية ما تجب عليه (الزكاة على الذهب والفضة المسكوكين وغيرها)، فما تنحسب هني.</p>';
+        '<p class="small muted" style="margin:10px 6px 0">' + (m === 'jafari' ? 'عند الشيعة الخُمس واجب على فائض أرباح السنة.' : 'عند السنة الخُمس يكون بالركاز (الكنز والمعادن) والغنائم، والحاسبة موجودة لو حبيت تستخدمها.') + '</p>';
     }
-    body += note;
+    body += '<p class="small muted" style="margin:12px 6px 0;text-align:center">⚠️ <b>تقدير</b> يساعدك تحسب، مو فتوى. راجع مرجعك أو عالِم قبل ما تدفع.</p>';
     A.openSheet({
       title: 'الزكاة والخُمس',
       cancelLabel: 'تم',
@@ -129,33 +131,34 @@
         const out = root.querySelector('#zkOut');
         const num = (n) => { const v = A.parseAmount(A.val(root, n)); return v > 0 ? v : 0; };
         const calc = () => {
-          if (m === 'sunni') {
+          if (k === 'zakat') {
             const gold = num('zk_gold');
             if (gold) S.setSettings({ gold_price: r3(gold) });
-            const z = zakatOf(num('zk_cash'), gold, root.querySelector('[name=zk_year]').checked);
+            const z = zakatOf(num('zk_cash'), gold, root.querySelector('[name=zk_year]').checked, m);
             out.innerHTML = z.due == null ? '<span class="eyebrow">اكتب سعر غرام الذهب عشان نحسب النصاب</span>' :
               '<span class="eyebrow">' + I('target') + 'النصاب ≈ ' + fmt(z.nisab) + ' د.ب</span><div class="amount-big">' + money(z.due) + '</div>' +
-              '<div class="meta"><span>' + (z.due ? 'الزكاة التقديرية (2.5%)' : num('zk_cash') < z.nisab ? 'تحت النصاب: ما عليك زكاة' : 'ما مر عليها سنة') + '</span></div>';
+              '<div class="meta"><span>' + (z.due ? 'الزكاة التقديرية (2.5%)' : num('zk_cash') < z.nisab ? 'تحت النصاب: ما عليك زكاة' : 'ما مرت عليه سنة') + '</span></div>';
           } else {
             const startV = A.val(root, 'kh_start');
             if (startV) S.setSettings({ khums_start: startV });
-            const k = khumsOf(num('kh_inc'), num('kh_exp'), num('kh_extra'));
-            out.innerHTML = '<span class="eyebrow">' + I('target') + 'الفائض ' + fmt(k.surplus) + ' د.ب</span><div class="amount-big">' + money(k.due) + '</div>' +
-              '<div class="meta"><span>' + (k.due ? 'الخُمس التقديري (20%)' : 'ما فيه فائض: ما عليك خُمس من هالأرقام') + '</span></div>';
+            const x = khumsOf(num('kh_inc'), num('kh_exp'), num('kh_extra'));
+            out.innerHTML = '<span class="eyebrow">' + I('target') + 'الفائض ' + fmt(x.surplus) + ' د.ب</span><div class="amount-big">' + money(x.due) + '</div>' +
+              '<div class="meta"><span>' + (x.due ? 'الخُمس التقديري (20%)' : 'ما فيه فائض: ما عليك خُمس من هالأرقام') + '</span></div>';
           }
         };
         root.oninput = calc;
         root.onchange = (e) => {
           if (e.target.name === 'kh_start' && e.target.value) {
-            const s = since(e.target.value);
-            root.querySelector('[name=kh_inc]').value = r3(s.inc); root.querySelector('[name=kh_exp]').value = r3(s.exp);
+            const x = since(e.target.value);
+            root.querySelector('[name=kh_inc]').value = r3(x.inc); root.querySelector('[name=kh_exp]').value = r3(x.exp);
           }
           calc();
         };
+        root.querySelector('#zkTool').onclick = (e) => { const b = e.target.closest('[data-t]'); if (b && b.dataset.t !== k) zakatSheet(b.dataset.t, m); };
         root.querySelector('#mdh').onclick = (e) => {
           const b = e.target.closest('[data-m]'); if (!b || b.dataset.m === m) return;
           S.setSettings({ madhhab: b.dataset.m });
-          zakatSheet(b.dataset.m);
+          zakatSheet(k, b.dataset.m);
         };
         calc();
       },
@@ -177,5 +180,5 @@
     }
   });
   // للاختبارات
-  E.Payday = { zakatOf, khumsOf, NISAB_GRAMS };
+  E.Payday = { zakatOf, khumsOf, NISAB };
 })();

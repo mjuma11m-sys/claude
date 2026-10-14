@@ -1267,32 +1267,42 @@ test('payday summary card: shows in the first days after payday, opens the summa
   await expect(card).toHaveCount(0);
 });
 
-test('zakat (four schools) and khums (Jafari): known numbers, nisab, and the estimate warning', async ({ page }) => {
+test('zakat and khums for everyone: both tools open the same for Sunni and Shia, only the nisab and notes change', async ({ page }) => {
   await open(page);
   const r = await store(page, () => {
     const P = Extras.Payday;
     return {
-      nisab: P.zakatOf(5000, 40, true),       // 85 × 40 = 3400 ← فوقه
-      under: P.zakatOf(3000, 40, true).due,   // تحت النصاب
-      noYear: P.zakatOf(5000, 40, false).due, // ما مر حول
-      noGold: P.zakatOf(5000, 0, true).due,   // بدون سعر ذهب ما نحسب
-      khums: P.khumsOf(12000, 9000, 500),     // (12000-9000) + 500 = 3500 × 20%
+      sunni: P.zakatOf(5000, 40, true, 'sunni'),   // 85 × 40 = 3400
+      shia: P.zakatOf(3000, 40, true, 'jafari'),   // 69.6 × 40 = 2784 ← 3000 فوقه
+      under: P.zakatOf(3000, 40, true, 'sunni').due,
+      noYear: P.zakatOf(5000, 40, false, 'sunni').due,
+      noGold: P.zakatOf(5000, 0, true, 'jafari').due,
+      khums: P.khumsOf(12000, 9000, 500),          // (12000-9000) + 500 = 3500 × 20%
       loss: P.khumsOf(5000, 6000, 0).due,
     };
   });
-  expect(r).toEqual({ nisab: { nisab: 3400, due: 125 }, under: 0, noYear: 0, noGold: null, khums: { surplus: 3500, due: 700 }, loss: 0 });
+  expect(r).toEqual({ sunni: { nisab: 3400, due: 125 }, shia: { nisab: 2784, due: 75 }, under: 0, noYear: 0, noGold: null, khums: { surplus: 3500, due: 700 }, loss: 0 });
 
-  // الجعفري افتراضي من طريقة الصلاة، والنتيجة «تقدير»
+  // الشيعي افتراضي من طريقة الصلاة، والزكاة مفتوحة له مثل السني
   await store(page, () => App.S.setSettings({ prayer_method: 'jafari', madhhab: null }));
   await page.click('button.tab[data-tab="money"]');
   await page.click('[data-action="zakat"]');
-  await expect(page.locator('#mdh .on')).toHaveText('الجعفري');
+  await expect(page.locator('#mdh .on')).toHaveText('شيعي');
+  await expect(page.locator('#zkTool .on')).toHaveText('الزكاة');
+  await page.fill('[name=zk_cash]', '3000');
+  await page.fill('[name=zk_gold]', '40');
+  await expect(page.locator('#zkOut .amount-big')).toContainText('75');
+  await expect(page.locator('#sheetBody')).toContainText('تقدير');
+  // الخُمس للكل
+  await page.click('#zkTool [data-t="khums"]');
   await page.fill('[name=kh_inc]', '1000');
   await page.fill('[name=kh_exp]', '400');
   await expect(page.locator('#zkOut .amount-big')).toContainText('120');
-  await expect(page.locator('#sheetBody')).toContainText('تقدير');
-  // المذاهب الأربعة: الزكاة بسعر الذهب اللي يدخله المستخدم
   await page.click('#mdh [data-m="sunni"]');
+  await expect(page.locator('#zkTool .on')).toHaveText('الخُمس');
+  await expect(page.locator('#zkOut')).toBeVisible();
+  // السني: الزكاة بنصاب 85 غرام
+  await page.click('#zkTool [data-t="zakat"]');
   await page.fill('[name=zk_cash]', '5000');
   await page.fill('[name=zk_gold]', '40');
   await expect(page.locator('#zkOut .amount-big')).toContainText('125');
