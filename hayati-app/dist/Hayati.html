@@ -4364,7 +4364,12 @@ window.HAYATI_CONFIG = {
   }
 
   let lastTab = null;
+  // وقت الفتح: كل ملف ميزة ينادي render() بعد ما يركّب نفسه (8 رسمات ورا بعض).
+  // نأجلها كلها لرسمة وحدة بعد ما تخلص الملفات (DOMContentLoaded)
+  let bootHold = document.readyState === 'loading';
+  if (bootHold) document.addEventListener('DOMContentLoaded', () => { bootHold = false; render(); }, { once: true });
   function render() {
+    if (bootHold) return;
     const tabInfo = tabOf(TABS.find((t) => t[0] === ui.tab));
     document.getElementById('title').textContent = tabInfo[1];
     document.getElementById('subtitle').textContent = subtitle();
