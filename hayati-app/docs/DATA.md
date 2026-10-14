@@ -46,6 +46,8 @@
 | `hayati-last-backup`، `hayati-backup-snooze` | آخر نسخة احتياطية، و«بعدين» |
 | `hayati-notif-prefs`، `hayati-snoozes`، `hayati-notif-asked` | تنبيهات الآيفون: المفاتيح، «بعد ساعة»، وهل طلبنا الإذن |
 | `hayati-timer`، `hayati-morning`، `hayati-weekly-seen`، `hayati-budget-alert`، `hayati-badge`، `hayati-cal`، `hayati-gpa-target`، `hayati-open` | حالة بطاقات وأدوات صغيرة |
+| `hayati-payday-seen` | آخر شهر راتب انفتح ملخصه «راتبك وين راح؟» (DW-012) |
+| `settings.payday`، `settings.madhhab`، `settings.gold_price`، `settings.khums_start` | يوم الراتب، المذهب، سعر غرام الذهب، ورأس السنة الخمسية: **على الجهاز بس**، ما تنرفع لجدول `settings` بالسيرفر (DW-012) |
 | `hayati-sync`، `hayati-supabase` | إعداد المزامنة |
 
 ## التصدير والحذف

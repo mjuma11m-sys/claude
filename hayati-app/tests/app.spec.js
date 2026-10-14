@@ -1208,3 +1208,105 @@ test('store readiness (DW-011): no request leaves the app, and the Arabic font l
   expect(await page.evaluate(() => typeof window.supabase)).toBe('object');
   expect(outside).toEqual([]);
 });
+
+// DW-012: شهر الراتب + «راتبك وين راح؟» + الزكاة والخُمس
+test('payday month: day 25 makes the month run 25 → 24, and budget, report and navigation follow it', async ({ page }) => {
+  await open(page);
+  const r = await store(page, () => {
+    App.S.setSettings({ payday: 25 });
+    const k = (y, m, d) => App.monthKey(new Date(y, m - 1, d));
+    return {
+      before: k(2026, 10, 24), on: k(2026, 10, 25), after: k(2026, 11, 3), jan: k(2027, 1, 10),
+      label: App.monthLabel('2026-10'), prev: App.shiftKey('2027-01', -1),
+      range: [App.monthRange('2026-10').start.getDate(), App.monthRange('2026-10').end.getMonth() + 1],
+    };
+  });
+  expect(r).toEqual({ before: '2026-09', on: '2026-10', after: '2026-10', jan: '2026-12', label: '25 أكتوبر – 24 نوفمبر', prev: '2026-12', range: [25, 11] });
+  // بدون يوم راتب = الشهر الميلادي مثل قبل
+  expect(await store(page, () => { App.S.setSettings({ payday: null }); return [App.monthKey(new Date(2026, 9, 24)), App.monthLabel('2026-10')]; })).toEqual(['2026-10', 'أكتوبر 2026']);
+});
+
+test('payday month from the UI: pick 25, the money tab shows the payday range and counts by it', async ({ page }) => {
+  await open(page);
+  await page.click('button.tab[data-tab="money"]');
+  await page.click('[data-action="payday"]');
+  await page.click('#pdDays [data-d="25"]');
+  await page.click('#sheetSave');
+  const exp = await store(page, () => {
+    const now = new Date(), start = App.monthRange(App.monthKey(now)).start;
+    const inside = new Date(start.getTime() + 3600e3), outside = new Date(start.getTime() - 86400e3);
+    App.S.upsert('transactions', { id: 'in1', kind: 'expense', amount: 7, merchant: 'Inside', category: 'قهوة', occurred_at: inside.toISOString() });
+    App.S.upsert('transactions', { id: 'out1', kind: 'expense', amount: 100, merchant: 'Before payday', category: 'قهوة', occurred_at: outside.toISOString() });
+    return App.sums(App.txInMonth(App.monthKey(now))).exp;
+  });
+  expect(exp).toBe(7);
+  await expect(page.locator('.month-nav b')).toContainText('25 ');
+  await expect(page.locator('[data-action="payday"]')).toContainText('الراتب يوم 25');
+});
+
+test('payday summary card: shows in the first days after payday, opens the summary once, then hides', async ({ page }) => {
+  await open(page);
+  await store(page, () => {
+    const now = new Date(), p = now.getDate() === 1 ? 1 : Math.min(28, now.getDate());   // اليوم دايماً بأول أيام الدورة
+    App.S.setSettings({ payday: p });
+    localStorage.removeItem('hayati-payday-seen');
+    const prev = App.monthRange(App.shiftKey(App.monthKey(now), -1)).start;
+    const at = (d) => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() + d, 12).toISOString();
+    App.S.upsert('transactions', { id: 'p1', kind: 'expense', amount: 30, merchant: 'Lulu', category: 'بقالة وتسوق', occurred_at: at(1) });
+    App.S.upsert('transactions', { id: 'p2', kind: 'expense', amount: 12.5, merchant: 'Costa', category: 'قهوة', occurred_at: at(2) });
+    App.S.upsert('transactions', { id: 'p3', kind: 'income', amount: 500, merchant: 'Salary', category: 'راتب', occurred_at: at(0) });
+    App.go('today');
+  });
+  const card = page.locator('[data-action="payday-summary"]');
+  await expect(card).toContainText('42.5');
+  await card.click();
+  await expect(page.locator('#sheetTitle')).toHaveText('راتبك وين راح؟');
+  await expect(page.locator('#sheetBody')).toContainText('بقالة وتسوق');
+  await expect(page.locator('#sheetBody')).toContainText('قهوة');
+  await page.click('#sheetCancel');
+  await expect(card).toHaveCount(0);
+});
+
+test('zakat (four schools) and khums (Jafari): known numbers, nisab, and the estimate warning', async ({ page }) => {
+  await open(page);
+  const r = await store(page, () => {
+    const P = Extras.Payday;
+    return {
+      nisab: P.zakatOf(5000, 40, true),       // 85 × 40 = 3400 ← فوقه
+      under: P.zakatOf(3000, 40, true).due,   // تحت النصاب
+      noYear: P.zakatOf(5000, 40, false).due, // ما مر حول
+      noGold: P.zakatOf(5000, 0, true).due,   // بدون سعر ذهب ما نحسب
+      khums: P.khumsOf(12000, 9000, 500),     // (12000-9000) + 500 = 3500 × 20%
+      loss: P.khumsOf(5000, 6000, 0).due,
+    };
+  });
+  expect(r).toEqual({ nisab: { nisab: 3400, due: 125 }, under: 0, noYear: 0, noGold: null, khums: { surplus: 3500, due: 700 }, loss: 0 });
+
+  // الجعفري افتراضي من طريقة الصلاة، والنتيجة «تقدير»
+  await store(page, () => App.S.setSettings({ prayer_method: 'jafari', madhhab: null }));
+  await page.click('button.tab[data-tab="money"]');
+  await page.click('[data-action="zakat"]');
+  await expect(page.locator('#mdh .on')).toHaveText('الجعفري');
+  await page.fill('[name=kh_inc]', '1000');
+  await page.fill('[name=kh_exp]', '400');
+  await expect(page.locator('#zkOut .amount-big')).toContainText('120');
+  await expect(page.locator('#sheetBody')).toContainText('تقدير');
+  // المذاهب الأربعة: الزكاة بسعر الذهب اللي يدخله المستخدم
+  await page.click('#mdh [data-m="sunni"]');
+  await page.fill('[name=zk_cash]', '5000');
+  await page.fill('[name=zk_gold]', '40');
+  await expect(page.locator('#zkOut .amount-big')).toContainText('125');
+  expect(await store(page, () => [App.st.settings.madhhab, App.st.settings.gold_price])).toEqual(['sunni', 40]);
+});
+
+test('payday, school and khums settings ride along in the backup file and come back on restore', async ({ page }) => {
+  await open(page);
+  const back = await store(page, () => {
+    App.S.setSettings({ payday: 25, madhhab: 'jafari', gold_price: 40, khums_start: '2026-03-01' });
+    const json = App.S.exportJSON();
+    App.S.setSettings({ payday: null, madhhab: null, gold_price: null, khums_start: null });
+    App.S.importJSON(json);
+    const s = App.st.settings; return [s.payday, s.madhhab, s.gold_price, s.khums_start];
+  });
+  expect(back).toEqual([25, 'jafari', 40, '2026-03-01']);
+});

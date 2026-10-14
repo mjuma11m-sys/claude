@@ -150,8 +150,8 @@
     const budget = Number(set().budget) || 0;
     if (!budget) return null;
     const now = new Date();
-    const exp = A.sums(A.txInMonth(A.monthKey(now))).exp;
-    const daysLeft = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate() + 1;
+    const mk = A.monthKey(now), exp = A.sums(A.txInMonth(mk)).exp;
+    const daysLeft = Math.max(1, A.daysBetween(now, A.monthRange(mk).end));   // لين يوم الراتب الجاي (أو آخر الشهر)
     return (budget - exp) / daysLeft;
   }
   function budgetBanner() {

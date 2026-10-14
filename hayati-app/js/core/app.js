@@ -5,7 +5,7 @@
   const S = window.Store;
   const st = S.state;
   const I = window.icon;
-  const APP_VERSION = 'v16';   // نفس رقم sw.js (فيه اختبار يتأكد)
+  const APP_VERSION = 'v17';   // نفس رقم sw.js (فيه اختبار يتأكد)
 
   // ---------- ثوابت ----------
   const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
@@ -154,7 +154,20 @@
   function catIcon(c, kind) { const [ic, col] = catMeta(c, kind); return '<div class="ico" style="' + tint(col) + '">' + I(ic) + '</div>'; }
 
   function pad(n) { return String(n).padStart(2, '0'); }
-  function monthKey(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1); }
+  // «شهر الراتب» (DW-012): لو المستخدم حدد يوم الراتب (2–28)، الشهر يبدأ منه لين اليوم اللي قبله بالشهر الجاي،
+  // ومفتاحه شهر البداية (25 أكتوبر – 24 نوفمبر = 2026-10). بدونه = الشهر الميلادي
+  function payday() { const p = Math.round(Number(st.settings && st.settings.payday) || 1); return p >= 2 && p <= 28 ? p : 1; }
+  function monthKey(d) {
+    const x = d.getDate() < payday() ? new Date(d.getFullYear(), d.getMonth() - 1, 1) : d;
+    return x.getFullYear() + '-' + pad(x.getMonth() + 1);
+  }
+  function shiftKey(key, n) { const [y, m] = key.split('-').map(Number); const d = new Date(y, m - 1 + n, 1); return d.getFullYear() + '-' + pad(d.getMonth() + 1); }
+  // من بداية الدورة لين بداية اللي بعدها (end ما ينحسب)
+  function monthRange(key) { const [y, m] = key.split('-').map(Number), p = payday(); return { start: new Date(y, m - 1, p), end: new Date(y, m, p) }; }
+  function monthLabel(key) {
+    const [y, m] = key.split('-').map(Number), p = payday();
+    return p === 1 ? MONTHS[m - 1] + ' ' + y : p + ' ' + MONTHS[m - 1] + ' – ' + (p - 1) + ' ' + MONTHS[m % 12];
+  }
   function sameDay(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
   function startOfDay(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
   function daysBetween(a, b) { return Math.round((startOfDay(b) - startOfDay(a)) / 86400000); }
@@ -422,7 +435,7 @@
     const isThisMonth = ui.month === monthKey(new Date());
 
     let out = '<div class="month-nav"><button class="icon-btn" data-action="month" data-d="-1" aria-label="الشهر السابق">' + I('chevR') + '</button>' +
-      '<b>' + MONTHS[m - 1] + ' ' + y + '</b>' +
+      '<b>' + monthLabel(ui.month) + '</b>' +
       '<button class="icon-btn" data-action="month" data-d="1" aria-label="الشهر الجاي"' + (isThisMonth ? ' disabled' : '') + '>' + I('chevL') + '</button></div>';
 
     // البطاقة الرئيسية
@@ -986,24 +999,24 @@
   // ================= تقرير الشهر =================
   function reportSheet() {
     const [y, m] = ui.month.split('-').map(Number);
-    const prevKey = monthKey(new Date(y, m - 2, 1));
+    const prevKey = shiftKey(ui.month, -1), rg = monthRange(ui.month);
     const cur = txInMonth(ui.month), prev = txInMonth(prevKey);
     const a = sums(cur), b = sums(prev);
     const diff = b.exp ? ((a.exp - b.exp) / b.exp) * 100 : null;
     const isNow = ui.month === monthKey(new Date());
-    const daysCount = isNow ? new Date().getDate() : new Date(y, m, 0).getDate();
+    const daysCount = Math.max(1, daysBetween(rg.start, isNow ? new Date() : new Date(rg.end - 1)) + 1);
     const exps = cur.filter((t) => t.kind === 'expense');
     // «COSTA SEEF» و «Costa Coffee» = محل واحد
     const topM = window.SmsParser.groupByBrand(exps).slice(0, 3).map((g) => [g.label, g]);
     const biggest = exps.slice().sort((p, q) => q.amount - p.amount)[0];
     let noSpend = 0;
-    for (let d = 1; d <= daysCount; d++) if (!exps.some((t) => new Date(t.occurred_at).getDate() === d)) noSpend++;
+    for (let i = 0; i < daysCount; i++) { const d = new Date(rg.start.getFullYear(), rg.start.getMonth(), rg.start.getDate() + i); if (!exps.some((t) => sameDay(new Date(t.occurred_at), d))) noSpend++; }
     const catOf = (list) => { const o = {}; for (const t of list) if (t.kind === 'expense') o[t.category || 'أخرى'] = (o[t.category || 'أخرى'] || 0) + Number(t.amount); return o; };
     const ca = catOf(cur), cb = catOf(prev);
     const cats = Object.keys(Object.assign({}, ca, cb)).sort((p, q) => (ca[q] || 0) - (ca[p] || 0)).slice(0, 7);
     const subsTotal = cur.filter((t) => t.source === 'subscription').reduce((s2, t) => s2 + Number(t.amount), 0);
 
-    let body = '<div class="hero dark" style="margin-top:4px"><span class="eyebrow">' + I('chart') + MONTHS[m - 1] + ' ' + y + '</span>' +
+    let body = '<div class="hero dark" style="margin-top:4px"><span class="eyebrow">' + I('chart') + monthLabel(ui.month) + '</span>' +
       '<div class="amount-big">' + money(a.exp) + '</div><div class="meta"><span>' +
       (diff == null ? 'ما فيه بيانات للشهر اللي قبله' : (diff > 0 ? '▲ أكثر بـ ' : '▼ أقل بـ ') + Math.abs(Math.round(diff)) + '% من ' + MONTHS[(m + 10) % 12] + ' (' + fmt(b.exp) + ')') + '</span></div>' +
       '<div class="split"><div><small>متوسط اليوم</small><b>' + money(a.exp / daysCount) + '</b></div><div><small>أيام بدون صرف</small><b class="num">' + noSpend + ' / ' + daysCount + '</b></div></div></div>';
@@ -1033,7 +1046,7 @@
       title: 'تقرير الشهر', cancelLabel: 'تم', body,
       mount(root) {
         const b = root.querySelector('#shareReport');
-        if (b) b.onclick = () => share('تقرير ' + MONTHS[m - 1] + ' ' + y + ' · «حياتي»\n' +
+        if (b) b.onclick = () => share('تقرير ' + monthLabel(ui.month) + ' · «حياتي»\n' +
           'الصرف: ' + fmt(a.exp) + ' د.ب\nالدخل: ' + fmt(a.inc) + ' د.ب\n' +
           (topM.length ? 'أكثر مكان: ' + topM.map(([k, v]) => k + ' (' + fmt(v.sum) + ')').join('، ') + '\n' : '') +
           'أيام بدون صرف: ' + noSpend + ' / ' + daysCount);
@@ -2018,9 +2031,8 @@
       }
       case 'calendar': calendarForm(); break;
       case 'month': {
-        const [y, m] = ui.month.split('-').map(Number);
-        const d = new Date(y, m - 1 + Number(el.dataset.d), 1);
-        if (d <= new Date()) { ui.month = monthKey(d); render(); }
+        const k = shiftKey(ui.month, Number(el.dataset.d));
+        if (k <= monthKey(new Date())) { ui.month = k; render(); }
         break;
       }
       case 'day': ui.day = Number(el.dataset.d); render(); break;
@@ -2105,7 +2117,7 @@
   }
   // واجهة للإضافات
   window.App = {
-    S, st, I, ui, h, fmt, money, tint, catMeta, catIcon, pad, monthKey, sameDay, startOfDay, daysBetween, time12, timeOf, minutesOf,
+    S, st, I, ui, h, fmt, money, tint, catMeta, catIcon, pad, monthKey, shiftKey, monthRange, monthLabel, payday, sameDay, startOfDay, daysBetween, time12, timeOf, minutesOf,
     nowMinutes, toLocalInput, dayLabel, nDays, toast, ask, courseById, lectures, lecturesOn, agendaOn, empty, secHead, ring, openSheet,
     closeSheet, val, parseAmount, segPick, render, go, txInMonth, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, courseForm, taskForm,
     notify, has, nextRenewal, sharedSms, expensesCSV, lastBackup, markBackup, backupNow, APP_VERSION, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
@@ -2115,6 +2127,7 @@
   postSubscriptions();
   render();
   booted = S.init().then(async () => {
+    ui.month = monthKey(new Date());   // يوم الراتب ما كان محمّل لما انحسب أول مرة
     postSubscriptions();
     render();
     ui.seed = await S.getSeed();

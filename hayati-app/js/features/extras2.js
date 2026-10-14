@@ -471,7 +471,7 @@
     const monthTx = A.txInMonth(mk);
     const byCat = {}, byMer = {};
     for (const t of monthTx) if (t.kind === 'expense') { byCat[t.category] = +((byCat[t.category] || 0) + Number(t.amount)).toFixed(3); const k = t.merchant || t.category; byMer[k] = +((byMer[k] || 0) + Number(t.amount)).toFixed(3); }
-    const months = []; for (let i = 0; i < 4; i++) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); const s = A.sums(A.txInMonth(A.monthKey(d))); months.push({ month: A.monthKey(d), spent: +s.exp.toFixed(3), income: +s.inc.toFixed(3) }); }
+    const months = []; for (let i = 0; i < 4; i++) { const k = A.shiftKey(mk, -i); const s = A.sums(A.txInMonth(k)); months.push({ month: k, spent: +s.exp.toFixed(3), income: +s.inc.toFixed(3) }); }
     const cum = A.cumulative();
     return {
       today: dateKey() + ' ' + A.DAYS[now.getDay()] + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()),
