@@ -1364,3 +1364,65 @@ test('daily loop: no card on the web version (no notifications there)', async ({
   await open(page);
   await expect(page.locator('.loop-card')).toHaveCount(0);
 });
+
+// DW-014: ورد القرآن + «اقرأ» + تذكير الأذكار — بدون أي نص ديني بالتطبيق
+test('Quran wird: set up from +, log pages, khatma progress and estimate, and «اقرأ» opens the chosen https link', async ({ page }) => {
+  await open(page);
+  await expect(page.locator('.wird-card')).toHaveCount(0);   // ما يطلع لأحد ما شغّله
+  await page.click('#addBtn');
+  await page.click('[data-pick="wird"]');
+  await page.check('[name=w_on]');
+  await page.fill('[name=w_goal]', '5');
+  await page.fill('[name=w_pos]', '594');
+  await page.click('#sheetSave');
+  await store(page, () => App.go('today'));
+  const card = page.locator('.wird-card');
+  await expect(card).toContainText('اليوم 0 من 5 صفحات');
+  await expect(card).toContainText('تختم بعد 2 يوم');
+  await card.locator('[data-action="wird-add"][data-n="1"]').click();
+  await expect(card).toContainText('اليوم 1 من 5');
+  await card.locator('[data-action="wird-add"]', { hasText: 'خلّصت وردي' }).click();
+  await expect(card).toContainText('اليوم 5 من 5 صفحات ✓');
+  // 594 + 5 = 599 من 604
+  expect(await store(page, () => [App.st.settings.wird.pos, App.st.settings.wird.khatmat || 0])).toEqual([599, 0]);
+  // الختمة تخلص وتبدأ من جديد
+  expect(await store(page, () => { const done = Extras.Wird.addPages(10); return [done, App.st.settings.wird.pos, App.st.settings.wird.khatmat]; })).toEqual([true, 5, 1]);
+  // «اقرأ» يفتح الرابط بس، وما فيه أي نص قرآني بالبطاقة
+  await store(page, () => { window.__opened = []; window.open = (u) => { window.__opened.push(u); return null; }; });
+  await card.locator('[data-action="wird-read"]').click();
+  expect(await store(page, () => window.__opened)).toEqual(['https://quran.com']);
+  // الأجزاء: الجزء = 20 صفحة
+  expect(await store(page, () => Extras.Wird.goalPages({ unit: 'juz', goal: 1 }))).toBe(20);
+});
+
+test('wird setup refuses a non-https link and a goal of zero', async ({ page }) => {
+  await open(page);
+  await page.click('#addBtn'); await page.click('[data-pick="wird"]');
+  await page.check('[name=w_on]');
+  await page.fill('[name=w_link]', 'http://example.com');
+  await page.click('#sheetSave');
+  await expect(page.locator('#sheet')).toHaveAttribute('open', '');
+  await page.fill('[name=w_link]', 'https://quran.com');
+  await page.fill('[name=w_goal]', '0');
+  await page.click('#sheetSave');
+  await expect(page.locator('#sheet')).toHaveAttribute('open', '');
+  expect(await store(page, () => !!(App.st.settings.wird && App.st.settings.wird.on))).toBe(false);
+});
+
+test('adhkar reminder (phone app): off by default; when on, 30 min after Fajr and Asr for either prayer method, title only', async ({ page }) => {
+  await page.addInitScript(fakeCap);
+  await open(page);
+  await page.waitForTimeout(1200);
+  expect(await store(page, () => window.__cap.scheduled.filter((n) => /أذكار/.test(n.title)).length)).toBe(0);
+  for (const pm of ['jafari', 'gulf']) {
+    const r = await store(page, (m) => {
+      App.S.setSettings({ prayer_method: m, prayer_on: true });
+      HayatiNative.savePrefs(Object.assign({}, HayatiNative.prefs(), { adhkar: true }));
+      const d = new Date(); d.setDate(d.getDate() + 1);
+      const list = HayatiNative.upcoming(new Date()).filter((n) => /أذكار/.test(n.title) && new Date(n.schedule.at).toDateString() === d.toDateString());
+      const t = Extras.prayerTimes(d, m), mins = (n) => { const x = new Date(n.schedule.at); return x.getHours() * 60 + x.getMinutes(); };
+      return list.map((n) => [n.title, n.body, mins(n) - (n.title.includes('الصباح') ? t.fajr : t.asr)]);
+    }, pm);
+    expect(r).toEqual([['وقت أذكار الصباح ☀️', '', 30], ['وقت أذكار المساء 🌙', '', 30]]);
+  }
+});

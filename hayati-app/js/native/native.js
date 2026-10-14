@@ -19,7 +19,7 @@
   const TEST_ID = 990001;
   // ⚙️ التنبيهات: كل نوع له مفتاح، وملخص الصباح مقفل افتراضياً (ما نزعج)
   const PREFS = 'hayati-notif-prefs';
-  const DEF = { lectures: true, attend: true, exams: true, homework: true, subs: true, brief: false, briefAt: '07:00', checkin: false, checkinAt: '21:30' };
+  const DEF = { lectures: true, attend: true, exams: true, homework: true, subs: true, brief: false, briefAt: '07:00', checkin: false, checkinAt: '21:30', adhkar: false };
   function prefs() {
     try { return Object.assign({}, DEF, JSON.parse(localStorage.getItem(PREFS) || '{}')); } catch (e) { return Object.assign({}, DEF); }
   }
@@ -149,6 +149,17 @@
         const day = new Date(today.getFullYear(), today.getMonth(), today.getDate() + d);
         if (logged(day)) continue;
         add('checkin:' + day.toDateString(), at(day, (ch || 0) * 60 + (cm || 0)), 'سكّر يومك 🌙', 'صرفت شي اليوم؟ سجّله بدقيقة عشان شهرك يطلع صح', { kind: 'checkin' });
+      }
+    }
+
+    // 📿 تذكير الأذكار (اختياري، DW-014): بعد الفجر والعصر بنص ساعة، من أوقات الصلاة نفسها. بدون أي نص أذكار
+    if (p.adhkar && window.Extras && window.Extras.prayerTimes) {
+      const pm = (A.st.settings && A.st.settings.prayer_method) || 'jafari';
+      for (let d = 0; d < DAYS; d++) {
+        const day = new Date(today.getFullYear(), today.getMonth(), today.getDate() + d);
+        const t = window.Extras.prayerTimes(day, pm);
+        add('adhkar-am:' + day.toDateString(), at(day, t.fajr + 30), 'وقت أذكار الصباح ☀️', '', { kind: 'today' });
+        add('adhkar-pm:' + day.toDateString(), at(day, t.asr + 30), 'وقت أذكار المساء 🌙', '', { kind: 'today' });
       }
     }
 
@@ -294,7 +305,7 @@
   // ⚙️ الإعدادات ← التنبيهات (نسخة الآيفون بس)
   const TYPES = [['lectures', '📅 الجدول والصلاة', 'قبل المحاضرة بـ 10 دقايق، والصلاة بوقتها'], ['attend', '🎓 سؤال الحضور', 'بعد كل محاضرة: حضرت ولا غبت، من التنبيه نفسه'], ['exams', '📝 الاختبارات', 'الليلة اللي قبلها، وقبل الاختبار بساعتين'],
     ['homework', '📚 الواجبات', 'الليلة اللي قبل التسليم'], ['subs', '💳 تجديد الاشتراكات', 'قبل التجديد بالأيام اللي تحددها بالاشتراك'], ['brief', '☀️ ملخص الصباح', 'جدولك واختباراتك اليوم، والأيام الفاضية ما فيها'],
-    ['checkin', '🌙 سكّر يومك', 'بالليل، بس لو ما سجلت ولا مصروف بيومك']];
+    ['checkin', '🌙 سكّر يومك', 'بالليل، بس لو ما سجلت ولا مصروف بيومك'], ['adhkar', '📿 تذكير الأذكار', 'بعد الفجر والعصر بنص ساعة']];
   function prefsSheet() {
     const p = prefs();
     A.openSheet({
@@ -422,5 +433,7 @@
     Promise.resolve().then(() => ShareIn.take()).then((r) => onShared(r && r.text)).catch(() => {});
   }
 
-  window.HayatiNative = { saveFile, shareText, reschedule, upcoming, testNotification, prefs, savePrefs, oauth, onAuthUrl, onBack, onShared };
+  // رابط خارجي (زر «اقرأ»): متصفح النظام
+  async function openLink(url) { if (!/^https:\/\//.test(url)) return; if (Browser) await Browser.open({ url }); else window.open(url, '_blank', 'noopener'); }
+  window.HayatiNative = { openLink, saveFile, shareText, reschedule, upcoming, testNotification, prefs, savePrefs, oauth, onAuthUrl, onBack, onShared };
 })();
