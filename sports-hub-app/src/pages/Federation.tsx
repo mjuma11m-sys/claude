@@ -5,7 +5,9 @@ import { DemoNote } from '../components/DemoNote'
 import { Icon } from '../components/Icon'
 import { PageTitle } from '../components/PageTitle'
 import { RatioBar, StatusChip } from '../components/RatioBar'
+import { Segmented } from '../components/Segmented'
 import { StatTile } from '../components/StatTile'
+import { TodayStrip } from '../components/TodayStrip'
 import { Failed, Loading } from '../components/States'
 import { DIVISION_LABEL, DIVISIONS, type DivisionId } from '../data/demo'
 import { getFederationRoom } from '../data/source'
@@ -13,6 +15,7 @@ import { useLoad } from '../data/useLoad'
 import { vars } from '../lib/css'
 import { byRisk, ffpStatus, wageRatio, type FfpStatus } from '../lib/ffp'
 import { fmtDate, fmtMoney } from '../lib/format'
+import { federationToday } from '../lib/today'
 
 type Filter = 'all' | FfpStatus
 type Division = 'all' | DivisionId
@@ -47,6 +50,8 @@ export function Federation() {
         <span>تشوف هنا تقارير الموسم اللي ترفعها الأندية بنفسها. <b>رواتب اللاعبين وحالاتهم الصحية ما توصل الاتحاد أبداً</b>، هذا مفروض بقاعدة البيانات مو بالواجهة.</span>
       </p>
 
+      <TodayStrip items={federationToday(all)} onAct={(a) => { setFilter(a as Filter); document.getElementById('compliance')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }} />
+
       <div className="rise grid grid-cols-2 gap-2 md:grid-cols-4" style={vars({ '--i': 2 })}>
         <StatTile label="أندية رفعت التقرير" value={`${filed}/${all.length}`} tone="text-safe" />
         <StatTile label="تجاوزوا الحد" value={count('over')} tone={count('over') ? 'text-crimson-ink' : 'text-safe'} />
@@ -54,23 +59,11 @@ export function Federation() {
         <StatTile label="حد الأجور (تجريبي)" value={division === 'all' ? `${Math.round(room.limits.premier * 100)}% · ${Math.round(room.limits.second * 100)}%` : `${Math.round(room.limits[division] * 100)}%`} hint={division === 'all' ? 'الممتاز · الثانية' : 'من الإيرادات'} />
       </div>
 
-      <article className="glass rise p-3 md:p-5" style={vars({ '--i': 3 })}>
-        <div role="tablist" aria-label="الدرجة" className="mb-3 flex flex-wrap gap-1 rounded-2xl border border-white/10 p-1">
-          {(['all', ...DIVISIONS] as const).map((d) => (
-            <button key={d} role="tab" aria-selected={division === d} onClick={() => setDivision(d)} className={`min-h-11 flex-1 rounded-xl px-3 text-sm transition-colors ${division === d ? 'bg-pulse/15 text-pulse' : 'text-mute hover:text-ink'}`}>
-              {d === 'all' ? 'الدرجتين' : DIVISION_LABEL[d]} <span className="num text-xs">{inDivision(d).length}</span>
-            </button>
-          ))}
-        </div>
+      <article id="compliance" className="glass rise scroll-mt-20 p-3 md:p-5" style={vars({ '--i': 3 })}>
+        <Segmented className="mb-3" label="الدرجة" value={division} onChange={setDivision} options={(['all', ...DIVISIONS] as const).map((d) => ({ key: d, label: d === 'all' ? 'الدرجتين' : DIVISION_LABEL[d], count: inDivision(d).length }))} />
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3 px-1">
           <h2 className="font-display text-2xl">امتثال الأندية <span className="num text-lg text-mute">· {room.season}</span></h2>
-          <div role="tablist" aria-label="تصفية الأندية" className="flex flex-wrap gap-1 rounded-2xl border border-white/10 p-1">
-            {TABS.map((t) => (
-              <button key={t.key} role="tab" aria-selected={filter === t.key} onClick={() => setFilter(t.key)} className={`min-h-11 rounded-xl px-3 text-sm transition-colors ${filter === t.key ? 'bg-pulse/15 text-pulse' : 'text-mute hover:text-ink'}`}>
-                {t.label} <span className="num text-xs">{t.key === 'all' ? all.length : count(t.key)}</span>
-              </button>
-            ))}
-          </div>
+          <Segmented label="تصفية الأندية" value={filter} onChange={setFilter} options={TABS.map((t) => ({ key: t.key, label: t.label, count: t.key === 'all' ? all.length : count(t.key) }))} />
         </div>
         {shown.length === 0 ? <p className="p-4 text-sm text-mute">ما فيه أندية بهالتصنيف.</p> : (
           <ul className="divide-y divide-white/10">

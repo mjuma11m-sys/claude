@@ -130,6 +130,14 @@
       "status": "review",
       "opened": "2026-10-13",
       "updated": "2026-10-13"
+    },
+    "DW-017": {
+      "title": "Sports Hub: مركز البيانات (اتفاقية، موافقات، استيراد CSV)، إعداد Supabase، وتطوير الواجهة والحركة",
+      "owner": "CEO",
+      "priority": "P1",
+      "status": "review",
+      "opened": "2026-10-14",
+      "updated": "2026-10-14"
     }
   }
 }

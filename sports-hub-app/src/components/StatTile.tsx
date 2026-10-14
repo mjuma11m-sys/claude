@@ -5,7 +5,7 @@ export function StatTile({ label, value, tone = '', animate = false, hint }: { l
   const n = typeof value === 'number' ? value : 0
   const shown = useCountUp(n, animate && typeof value === 'number')
   return (
-    <div className="glass h-full px-2 py-3 text-center">
+    <div className="glass lift h-full px-2 py-3 text-center">
       <p className={`font-display text-4xl leading-none md:text-5xl ${tone}`} dir="ltr">
         <span className="sr-only">{value}</span>
         <span aria-hidden>{typeof value === 'number' ? shown : value}</span>

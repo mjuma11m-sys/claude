@@ -5,7 +5,9 @@ import { ClubBadge } from '../components/ClubBadge'
 import { DemoNote } from '../components/DemoNote'
 import { PageTitle } from '../components/PageTitle'
 import { RatioBar, StatusChip } from '../components/RatioBar'
+import { Ring } from '../components/Ring'
 import { StatTile } from '../components/StatTile'
+import { TodayStrip } from '../components/TodayStrip'
 import { Failed, Loading } from '../components/States'
 import { getClubRoom, submitFinance, type SquadRow } from '../data/source'
 import { useLoad } from '../data/useLoad'
@@ -14,6 +16,7 @@ import { vars } from '../lib/css'
 import { ffpStatus, wageRatio } from '../lib/ffp'
 import { fmtDate, fmtDateTime, fmtMoney } from '../lib/format'
 import { readiness, STATUS } from '../lib/squad'
+import { clubToday } from '../lib/today'
 import { DIVISION_LABEL } from '../data/demo'
 
 type SortKey = 'num' | 'end' | 'wage'
@@ -109,8 +112,13 @@ export function Club() {
         </span>
       </div>
 
-      <div className="rise grid grid-cols-2 gap-2 md:grid-cols-4" style={vars({ '--i': 1 })}>
-        <StatTile label="جاهزين من الفريق" value={`${ready.fit}/${ready.total}`} tone="text-safe" />
+      <TodayStrip items={clubToday({ squad, ratio, limit: room.limit, imported: room.imported, today })} />
+
+      <div className="rise grid grid-cols-2 gap-2 md:grid-cols-4" style={vars({ '--i': 2 })}>
+        <div className="glass lift flex h-full items-center justify-center gap-2 px-2 py-3">
+          <Ring value={ready.fit} total={ready.total} tone="text-safe" size="size-16" text="text-lg" label={`جاهزين ${ready.fit} من ${ready.total}`} />
+          <p className="text-start text-xs text-mute"><span className="sr-only">{ready.fit}/{ready.total}</span>جاهزين من الفريق</p>
+        </div>
         <StatTile label="عقود تنتهي خلال 6 أشهر" value={expiring.length} tone={expiring.length ? 'text-warn' : 'text-safe'} />
         <Link to="/medical" className="block rounded-2xl transition hover:ring-1 hover:ring-white/25" aria-label={`أحمال تحتاج انتباه: ${room.loadAlerts ?? 'افتح الأحمال'}`}>
           <StatTile label="أحمال تحتاج انتباه ←" value={room.loadAlerts ?? '—'} tone={room.loadAlerts ? 'text-warn' : 'text-mute'} />
@@ -119,7 +127,7 @@ export function Club() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-5">
-        <article className="glass rise space-y-4 p-4 md:p-5 lg:col-span-3" style={vars({ '--i': 2 })}>
+        <article id="report" className="glass rise scroll-mt-20 space-y-4 p-4 md:p-5 lg:col-span-3" style={vars({ '--i': 3 })}>
           <div className="flex items-start justify-between gap-3">
             <div>
               <h2 className="font-display text-2xl">تقرير الموسم للاتحاد</h2>
@@ -140,7 +148,7 @@ export function Club() {
           <ReportForm userId={user!.id} season={room.finance?.season ?? '2026/27'} current={room.finance} onDone={load.reload} />
         </article>
 
-        <article className="glass rise p-4 md:p-5 lg:col-span-2" style={vars({ '--i': 3 })}>
+        <article id="contracts" className="glass rise scroll-mt-20 p-4 md:p-5 lg:col-span-2" style={vars({ '--i': 4 })}>
           <h2 className="mb-3 font-display text-2xl">عقود تنتهي قريباً</h2>
           {expiring.length === 0 ? <p className="text-sm text-mute">ما فيه عقود تنتهي خلال 6 أشهر.</p> : (
             <ul className="divide-y divide-white/10">
@@ -156,7 +164,7 @@ export function Club() {
         </article>
       </div>
 
-      <article className="glass rise p-4 md:p-5" style={vars({ '--i': 4 })}>
+      <article id="squad" className="glass rise scroll-mt-20 p-4 md:p-5" style={vars({ '--i': 5 })}>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-display text-2xl">الفريق <span className="num text-lg text-mute">({squad.length})</span></h2>
           <div role="group" aria-label="ترتيب الفريق حسب" className="flex gap-1 rounded-2xl border border-white/10 p-1">
@@ -165,7 +173,7 @@ export function Club() {
             ))}
           </div>
         </div>
-        {rows.length === 0 && <p className="py-4 text-sm text-mute">ما فيه لاعبين مسجّلين بناديك للحين. التسجيل يتم باستيراد ملف من مسؤول المنصة.</p>}
+        {rows.length === 0 && <p className="py-4 text-sm text-mute">ما فيه لاعبين مسجّلين بناديك للحين. استوردهم من <Link to="/data" className="underline underline-offset-4">مركز البيانات</Link>.</p>}
         <ul className="divide-y divide-white/10">
           {rows.map((p) => (
             <li key={p.id} className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-0.5 py-2.5">

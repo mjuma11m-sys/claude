@@ -89,3 +89,137 @@ test.describe('divisions', () => {
     expect(flipped).toEqual([])
   })
 })
+
+const GOOD = 'num,name,pos,status,ends_on,monthly_wage_bhd,consent_ref\n1,حارس تجريبي,حارس مرمى,جاهز,2027-06-30,1500,FORM-001\n9,مهاجم تجريبي,مهاجم,مصاب,2026-12-31,2200,FORM-002\n10,صانع تجريبي,صانع ألعاب,جاهز,2028-01-31,3100,FORM-003\n'
+const csv = (page: Page, body: string, name = 'squad.csv') => page.setInputFiles('#csv', { name, mimeType: 'text/csv', buffer: Buffer.from(body) })
+const signAgreement = async (page: Page) => {
+  await page.locator('#signatory').fill('فلان الفلاني')
+  await page.locator('#title').fill('المدير التنفيذي')
+  await page.locator('#reference').fill('DPA-2026-001')
+  await page.locator('#ack').check()
+  await page.getByRole('button', { name: 'سجّل الاتفاقية' }).click()
+}
+
+test.describe('data center', () => {
+  test.beforeEach(async ({ page }) => { await as(page, 'إدارة النادي'); await page.goto('/data') })
+
+  test('three steps, and the import is locked until the agreement is on record', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: 'مركز البيانات' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /اتفاقية معالجة البيانات/ })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /موافقات اللاعبين/ })).toBeVisible()
+    await expect(page.getByText('سجّل الاتفاقية بالخطوة 1 أول.')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'اختر ملف CSV' })).toHaveCount(0)
+    await expect(page.locator('[aria-current="step"]')).toHaveCount(1)
+    await expect(page.getByText('تجربة داخل متصفحك').first()).toBeVisible()
+  })
+
+  test('the agreement form asks for what is missing', async ({ page }) => {
+    await page.getByRole('button', { name: 'سجّل الاتفاقية' }).click()
+    await expect(page.getByRole('alert')).toContainText('اسم الموقّع')
+    await page.locator('#signatory').fill('فلان'); await page.locator('#title').fill('مدير'); await page.locator('#reference').fill('DPA-1')
+    await page.getByRole('button', { name: 'سجّل الاتفاقية' }).click()
+    await expect(page.getByRole('alert')).toContainText('تقرّ')
+    await page.locator('#signedOn').fill('2999-01-01'); await page.locator('#ack').check()
+    await page.getByRole('button', { name: 'سجّل الاتفاقية' }).click()
+    await expect(page.getByRole('alert')).toContainText('بالمستقبل')
+  })
+
+  test('a bad file is rejected with line numbers and changes nothing; a good one replaces the squad', async ({ page }) => {
+    await signAgreement(page)
+    await expect(page.getByText('DPA-2026-001')).toBeVisible()
+    await csv(page, 'num,name,pos,status,ends_on,monthly_wage_bhd,consent_ref\n1,حارس,حارس مرمى,جاهز,2027-06-30,1500,\n9,مهاجم,مهاجم,كسر,2026-12-31,2200,F-2\n')
+    const alert = page.getByRole('alert').filter({ hasText: 'ما انقبل الملف' })
+    await expect(alert).toContainText('سطر 2')
+    await expect(alert).toContainText('مرجع الموافقة')
+    await expect(alert).toContainText('الحالة لازم')
+    await expect(page.getByRole('button', { name: 'استورد واستبدل التشكيلة' })).toHaveCount(0)
+    await page.goto('/club')
+    await expect(page.getByRole('heading', { name: /^الفريق/ })).toContainText('16') // untouched sample squad
+
+    await page.goto('/data')
+    await csv(page, GOOD)
+    await expect(page.getByText(/3\s*لاعب جاهزين للاستيراد/)).toBeVisible()
+    await expect(page.getByRole('cell', { name: 'FORM-002' })).toBeVisible()
+    await page.getByRole('button', { name: 'استورد واستبدل التشكيلة' }).click()
+    await expect(page.getByText('يستبدل')).toBeVisible()
+    await page.getByRole('button', { name: 'أكّد الاستيراد' }).click()
+    await expect(page.getByRole('status').filter({ hasText: 'انستوردوا' })).toBeVisible()
+    await page.getByRole('link', { name: 'افتح غرفة النادي' }).click()
+    await expect(page.getByRole('heading', { name: /^الفريق/ })).toContainText('3')
+    await expect(page.locator('.sr-only', { hasText: '2/3' })).toHaveCount(1) // ring: 2 of 3 fit (one injured)
+    await expect(page.getByText('البيانات تجريبية. ابدأ باستيراد بيانات ناديك')).toHaveCount(0)
+    await expect(page.getByText('لاعبون غير متاحين (إصابة أو إيقاف): 1')).toBeVisible()
+  })
+
+  test('a health-notes column is refused outright', async ({ page }) => {
+    await signAgreement(page)
+    await csv(page, GOOD.replace('consent_ref', 'consent_ref,ملاحظات').replace(/\n(\d)/g, ',x\n$1'))
+    await expect(page.getByRole('alert').filter({ hasText: 'ما انقبل الملف' })).toContainText('ما نقبل ملاحظات صحية')
+  })
+
+  test('withdrawing a player\'s consent deletes the player; revoking the agreement closes the door', async ({ page }) => {
+    await signAgreement(page)
+    await csv(page, GOOD)
+    await page.getByRole('button', { name: 'استورد واستبدل التشكيلة' }).click()
+    await page.getByRole('button', { name: 'أكّد الاستيراد' }).click()
+    await expect(page.getByRole('status').filter({ hasText: 'انستوردوا' })).toBeVisible()
+    await page.locator('#withdraw').selectOption({ label: '9 · مهاجم تجريبي' })
+    await page.getByRole('button', { name: 'اسحب موافقته' }).click()
+    await page.getByRole('button', { name: 'احذف بياناته' }).click()
+    await expect(page.locator('#withdraw option')).toHaveCount(3) // placeholder + 2 left
+    await page.goto('/club')
+    await expect(page.getByRole('heading', { name: /^الفريق/ })).toContainText('2')
+    await expect(page.getByText('مهاجم تجريبي')).toHaveCount(0)
+    await page.goto('/data')
+    await page.getByRole('button', { name: 'اسحب الاتفاقية' }).click()
+    await page.getByRole('button', { name: 'اسحب الاتفاقية' }).last().click()
+    await expect(page.getByText('سجّل الاتفاقية بالخطوة 1 أول.')).toBeVisible()
+  })
+
+  test('the template and the draft agreement download', async ({ page }) => {
+    const t = page.waitForEvent('download')
+    await page.getByRole('button', { name: 'حمّل المسودة (للمراجعة القانونية)' }).click()
+    expect((await t).suggestedFilename()).toBe('dpa-draft.txt')
+    await signAgreement(page)
+    const c = page.waitForEvent('download')
+    await page.getByRole('button', { name: 'حمّل القالب' }).click()
+    expect((await c).suggestedFilename()).toBe('squad-template.csv')
+  })
+})
+
+test.describe('ease of use', () => {
+  test('the club room opens with "today": items link to the place that fixes them', async ({ page }) => {
+    await as(page, 'إدارة النادي')
+    const strip = page.getByRole('region', { name: 'اليوم' })
+    await expect(strip).toBeVisible()
+    await expect(strip.getByRole('link', { name: /عقود تنتهي خلال 6 أشهر: 5/ })).toBeVisible()
+    await expect(strip.getByRole('link', { name: /لاعبون غير متاحين/ })).toBeVisible()
+    await strip.getByRole('link', { name: /عقود تنتهي/ }).click()
+    await expect(page).toHaveURL(/#contracts$/)
+    await expect(strip.getByRole('link', { name: /ابدأ باستيراد بيانات ناديك/ })).toHaveAttribute('href', '/data')
+  })
+  test('the federation "today" strip jumps to the matching filter', async ({ page }) => {
+    await as(page, 'الاتحاد')
+    await page.getByRole('region', { name: 'اليوم' }).getByRole('button', { name: /أندية ما رفعت تقرير الموسم: 4/ }).click()
+    await expect(page.getByRole('tab', { name: /^لم يرفعوا/ })).toHaveAttribute('aria-selected', 'true')
+  })
+  test('the sliding pill ends exactly under the selected tab', async ({ page }) => {
+    await as(page, 'الاتحاد')
+    const tab = page.getByRole('tab', { name: /^الدرجة الثانية/ })
+    await tab.click()
+    await page.waitForTimeout(500)
+    const pill = page.locator('[role=tablist][aria-label="الدرجة"] .seg-pill')
+    const [a, b] = await Promise.all([pill.boundingBox(), tab.boundingBox()])
+    expect(Math.abs(a!.x - b!.x)).toBeLessThan(1.5)
+    expect(Math.abs(a!.width - b!.width)).toBeLessThan(1.5)
+  })
+  test('the readiness ring and the pulse respect reduced motion', async ({ browser }) => {
+    const ctx = await browser.newContext({ baseURL: 'http://localhost:4174', reducedMotion: 'reduce' })
+    const page = await ctx.newPage()
+    await as(page, 'إدارة النادي')
+    await expect(page.locator('.urgent-ping').first()).toBeHidden().catch(() => {})
+    const anim = await page.locator('.gauge-arc').first().evaluate((el) => getComputedStyle(el).animationName)
+    expect(anim).toBe('none')
+    await ctx.close()
+  })
+})

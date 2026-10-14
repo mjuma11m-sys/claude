@@ -4,6 +4,7 @@ import { Layout } from './components/Layout'
 import { RouteError } from './components/RouteError'
 import { FAN_ZONE } from './lib/features'
 import { Club } from './pages/Club'
+import { DataCenter } from './pages/DataCenter'
 import { Federation } from './pages/Federation'
 import { Home } from './pages/Home'
 import { Landing } from './pages/Landing'
@@ -27,6 +28,7 @@ export const router = createBrowserRouter([
       { index: true, handle: { title: 'الرئيسية' }, element: <Landing /> },
       ...(FAN_ZONE ? [{ path: 'zone', handle: { title: 'الجمهور' }, element: <Home /> }] : []),
       { path: 'club', handle: { title: 'غرفة النادي' }, element: <RequireArea area="club"><Club /></RequireArea> },
+      { path: 'data', handle: { title: 'مركز البيانات' }, element: <RequireArea area="club"><DataCenter /></RequireArea> },
       { path: 'federation', handle: { title: 'غرفة الاتحاد' }, element: <RequireArea area="federation"><Federation /></RequireArea> },
       { path: 'standings', handle: { title: 'الترتيب' }, element: <Standings /> },
       ...(FAN_ZONE
