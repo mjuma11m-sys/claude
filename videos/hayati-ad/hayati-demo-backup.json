@@ -1,0 +1,611 @@
+{
+  "exported_at": "2026-10-14T14:43:57.600Z",
+  "settings": {
+    "budget": 380,
+    "prior_gpa": null,
+    "prior_credits": null,
+    "focus_minutes": 25,
+    "prayer_method": "gulf",
+    "sleep_goal": 8,
+    "name": "سارة",
+    "roles": [
+      "student"
+    ],
+    "onboarded": true,
+    "payday": 25
+  },
+  "transactions": [
+    {
+      "id": "3c628bfc-fc04-4ead-86ac-d39ba10d0413",
+      "kind": "income",
+      "amount": 485.75,
+      "merchant": "الراتب",
+      "category": "راتب",
+      "occurred_at": "2026-09-25T06:05:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.342Z"
+    },
+    {
+      "id": "e6ce0501-2a7d-4958-a6f9-9d86ef04b2b8",
+      "kind": "income",
+      "amount": 485.75,
+      "merchant": "الراتب",
+      "category": "راتب",
+      "occurred_at": "2026-08-25T06:05:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.345Z"
+    },
+    {
+      "id": "23477a0e-e6e8-4b90-b3e7-468798b3372c",
+      "kind": "expense",
+      "amount": 2.3,
+      "merchant": "Costa Coffee",
+      "category": "قهوة",
+      "occurred_at": "2026-10-14T05:20:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.349Z"
+    },
+    {
+      "id": "5dcc37b9-e02e-499e-8083-fd8c34cdd30a",
+      "kind": "expense",
+      "amount": 3.15,
+      "merchant": "Careem",
+      "category": "مواصلات وبنزين",
+      "occurred_at": "2026-10-14T06:07:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.352Z"
+    },
+    {
+      "id": "786b89a0-8b76-4a87-a9f4-10c80730dda5",
+      "kind": "expense",
+      "amount": 4.875,
+      "merchant": "Jawad",
+      "category": "بقالة وتسوق",
+      "occurred_at": "2026-10-13T07:14:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.355Z"
+    },
+    {
+      "id": "b344b71c-f969-4ac4-80c5-00062c52f5b2",
+      "kind": "expense",
+      "amount": 6.95,
+      "merchant": "Talabat",
+      "category": "أكل ومطاعم",
+      "occurred_at": "2026-10-13T08:21:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.359Z"
+    },
+    {
+      "id": "d0dbef27-b67c-4de8-9e12-fe138a5e4b14",
+      "kind": "expense",
+      "amount": 2.6,
+      "merchant": "Caribou Coffee",
+      "category": "قهوة",
+      "occurred_at": "2026-10-12T09:28:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.362Z"
+    },
+    {
+      "id": "a5462353-d1ee-4598-b466-a7e8864709bd",
+      "kind": "expense",
+      "amount": 7,
+      "merchant": "Bapco Seef",
+      "category": "مواصلات وبنزين",
+      "occurred_at": "2026-10-11T10:35:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.366Z"
+    },
+    {
+      "id": "df1849ca-b87f-4100-bd7b-676af4494e0b",
+      "kind": "expense",
+      "amount": 18.64,
+      "merchant": "LuLu Hypermarket",
+      "category": "بقالة وتسوق",
+      "occurred_at": "2026-10-10T11:42:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.369Z"
+    },
+    {
+      "id": "93542a8d-0552-437c-9459-b4b93c74092e",
+      "kind": "expense",
+      "amount": 2.3,
+      "merchant": "Costa Coffee",
+      "category": "قهوة",
+      "occurred_at": "2026-10-10T12:49:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.373Z"
+    },
+    {
+      "id": "ce90e00d-c997-4217-b4e5-0545ce738b1c",
+      "kind": "expense",
+      "amount": 6.45,
+      "merchant": "Shake Shack",
+      "category": "أكل ومطاعم",
+      "occurred_at": "2026-10-09T13:56:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.376Z"
+    },
+    {
+      "id": "4d4d08f0-a599-4738-80c3-1edeec8128b9",
+      "kind": "expense",
+      "amount": 15.75,
+      "merchant": "Batelco",
+      "category": "فواتير واتصالات",
+      "occurred_at": "2026-10-08T14:03:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.380Z"
+    },
+    {
+      "id": "4802d39e-b903-46cf-a8b9-3ee8ef5ea8ca",
+      "kind": "expense",
+      "amount": 11.2,
+      "merchant": "Talabat",
+      "category": "أكل ومطاعم",
+      "occurred_at": "2026-10-07T15:10:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.386Z"
+    },
+    {
+      "id": "b7da4ff3-b980-4510-a8e4-aca87e4b85ab",
+      "kind": "expense",
+      "amount": 9.315,
+      "merchant": "Al Osra",
+      "category": "بقالة وتسوق",
+      "occurred_at": "2026-10-06T16:17:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.390Z"
+    },
+    {
+      "id": "b29aab62-52e3-4db8-aafd-f25e6c820864",
+      "kind": "expense",
+      "amount": 1.9,
+      "merchant": "Caribou Coffee",
+      "category": "قهوة",
+      "occurred_at": "2026-10-05T05:24:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.395Z"
+    },
+    {
+      "id": "c79b64af-2a29-4c6a-ae72-8f361849fe2c",
+      "kind": "expense",
+      "amount": 6.5,
+      "merchant": "Bapco Juffair",
+      "category": "مواصلات وبنزين",
+      "occurred_at": "2026-10-04T06:31:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.399Z"
+    },
+    {
+      "id": "06dff5d8-aff8-4025-adc2-25fec2d2521a",
+      "kind": "expense",
+      "amount": 13.9,
+      "merchant": "Max Fashion",
+      "category": "ملابس",
+      "occurred_at": "2026-10-03T07:38:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.403Z"
+    },
+    {
+      "id": "4ce2e95e-d60b-410b-9473-4633eaaa823f",
+      "kind": "expense",
+      "amount": 5.4,
+      "merchant": "Talabat",
+      "category": "أكل ومطاعم",
+      "occurred_at": "2026-10-02T08:45:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.408Z"
+    },
+    {
+      "id": "9a5becf7-e80b-46ac-8e57-c6c485950ebe",
+      "kind": "expense",
+      "amount": 2.3,
+      "merchant": "Costa Coffee",
+      "category": "قهوة",
+      "occurred_at": "2026-10-01T09:52:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.413Z"
+    },
+    {
+      "id": "dd111a4a-ef72-4fcf-8ced-5d24cf712134",
+      "kind": "expense",
+      "amount": 25,
+      "merchant": "Fitness Time",
+      "category": "صحة ورياضة",
+      "occurred_at": "2026-09-30T10:59:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.417Z"
+    },
+    {
+      "id": "cd790c9f-54a6-4e17-a9e7-8a9ed12dbaba",
+      "kind": "expense",
+      "amount": 22.48,
+      "merchant": "LuLu Hypermarket",
+      "category": "بقالة وتسوق",
+      "occurred_at": "2026-09-29T11:06:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.422Z"
+    },
+    {
+      "id": "82d749d0-79ac-4817-9aeb-07ffbe498a00",
+      "kind": "expense",
+      "amount": 2.85,
+      "merchant": "Careem",
+      "category": "مواصلات وبنزين",
+      "occurred_at": "2026-09-28T12:13:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.428Z"
+    },
+    {
+      "id": "b676babd-f89d-4773-a4af-023f836aaafb",
+      "kind": "expense",
+      "amount": 3.5,
+      "merchant": "Haji Gahwa",
+      "category": "قهوة",
+      "occurred_at": "2026-09-27T13:20:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.432Z"
+    },
+    {
+      "id": "44c26730-f8fe-4e35-be5a-790afca4b61b",
+      "kind": "expense",
+      "amount": 3.9,
+      "merchant": "Netflix",
+      "category": "اشتراكات",
+      "occurred_at": "2026-09-26T14:27:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.436Z"
+    },
+    {
+      "id": "57c76c09-5ad1-49ba-9ffa-8824bcff5de9",
+      "kind": "expense",
+      "amount": 8.65,
+      "merchant": "Talabat",
+      "category": "أكل ومطاعم",
+      "occurred_at": "2026-09-23T15:34:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.440Z"
+    },
+    {
+      "id": "af4d9877-bb72-4bf8-825e-97e0a8858971",
+      "kind": "expense",
+      "amount": 27.33,
+      "merchant": "LuLu Hypermarket",
+      "category": "بقالة وتسوق",
+      "occurred_at": "2026-09-21T16:41:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.444Z"
+    },
+    {
+      "id": "08fa6b53-54a9-490c-acc0-863ddc7d3185",
+      "kind": "expense",
+      "amount": 7,
+      "merchant": "Bapco Seef",
+      "category": "مواصلات وبنزين",
+      "occurred_at": "2026-09-20T05:48:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.448Z"
+    },
+    {
+      "id": "87e3731e-2012-4109-8803-c4ff524c7417",
+      "kind": "expense",
+      "amount": 2.3,
+      "merchant": "Costa Coffee",
+      "category": "قهوة",
+      "occurred_at": "2026-09-19T06:55:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.451Z"
+    },
+    {
+      "id": "5fa5cd85-28e5-432d-818c-e69ae0112770",
+      "kind": "expense",
+      "amount": 15.75,
+      "merchant": "Batelco",
+      "category": "فواتير واتصالات",
+      "occurred_at": "2026-09-08T07:02:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.455Z"
+    },
+    {
+      "id": "ee6ffe18-1435-4300-a77f-d0dbdff9247d",
+      "kind": "expense",
+      "amount": 7.9,
+      "merchant": "Shake Shack",
+      "category": "أكل ومطاعم",
+      "occurred_at": "2026-09-17T08:09:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.460Z"
+    },
+    {
+      "id": "971f14a2-6d33-4c1b-af9c-9692a2c90ca6",
+      "kind": "expense",
+      "amount": 6.12,
+      "merchant": "Jawad",
+      "category": "بقالة وتسوق",
+      "occurred_at": "2026-09-16T09:16:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.464Z"
+    },
+    {
+      "id": "b9fde37c-e94a-4d88-8d1a-fb7d8a71d137",
+      "kind": "expense",
+      "amount": 25,
+      "merchant": "Fitness Time",
+      "category": "صحة ورياضة",
+      "occurred_at": "2026-08-31T10:23:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.468Z"
+    },
+    {
+      "id": "3aa5aa25-b1cb-4156-8a66-ea99e8a0fbd3",
+      "kind": "expense",
+      "amount": 12.3,
+      "merchant": "Talabat",
+      "category": "أكل ومطاعم",
+      "occurred_at": "2026-09-14T11:30:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.472Z"
+    },
+    {
+      "id": "1172be36-d254-4314-a25d-4527af82d742",
+      "kind": "expense",
+      "amount": 2.6,
+      "merchant": "Caribou Coffee",
+      "category": "قهوة",
+      "occurred_at": "2026-09-13T12:37:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.476Z"
+    },
+    {
+      "id": "823bcc0d-4f57-450c-8f85-35d430d5e1f5",
+      "kind": "expense",
+      "amount": 6.5,
+      "merchant": "Bapco Juffair",
+      "category": "مواصلات وبنزين",
+      "occurred_at": "2026-09-11T13:44:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.480Z"
+    },
+    {
+      "id": "8667bfe5-902b-4bdc-bc56-fda463c60e21",
+      "kind": "expense",
+      "amount": 21.5,
+      "merchant": "City Centre",
+      "category": "ملابس",
+      "occurred_at": "2026-09-09T14:51:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.484Z"
+    },
+    {
+      "id": "cd652eda-e3f6-41e3-b462-66a10ccbd945",
+      "kind": "expense",
+      "amount": 9.85,
+      "merchant": "Talabat",
+      "category": "أكل ومطاعم",
+      "occurred_at": "2026-09-07T15:58:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.487Z"
+    },
+    {
+      "id": "7fc0e711-ea6e-45a6-b435-b43e9617f377",
+      "kind": "expense",
+      "amount": 14.205,
+      "merchant": "Al Osra",
+      "category": "بقالة وتسوق",
+      "occurred_at": "2026-09-06T16:05:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.491Z"
+    },
+    {
+      "id": "16a72f43-0df1-46cc-843d-073ea5c0e089",
+      "kind": "expense",
+      "amount": 2.3,
+      "merchant": "Costa Coffee",
+      "category": "قهوة",
+      "occurred_at": "2026-09-04T05:12:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.494Z"
+    },
+    {
+      "id": "9b6f0412-f633-43c6-a57e-aacf5343200a",
+      "kind": "expense",
+      "amount": 4.1,
+      "merchant": "Careem",
+      "category": "مواصلات وبنزين",
+      "occurred_at": "2026-09-03T06:19:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.498Z"
+    },
+    {
+      "id": "521c9b04-acd0-48be-aeb5-573896ef55d9",
+      "kind": "expense",
+      "amount": 3.9,
+      "merchant": "Netflix",
+      "category": "اشتراكات",
+      "occurred_at": "2026-08-27T07:26:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.501Z"
+    },
+    {
+      "id": "81b34eff-7877-40db-ad1b-a9ede0ff46de",
+      "kind": "expense",
+      "amount": 19.76,
+      "merchant": "LuLu Hypermarket",
+      "category": "بقالة وتسوق",
+      "occurred_at": "2026-09-02T08:33:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.505Z"
+    },
+    {
+      "id": "cd93f1d8-799c-430b-a977-704f0044d79f",
+      "kind": "expense",
+      "amount": 10.45,
+      "merchant": "Talabat",
+      "category": "أكل ومطاعم",
+      "occurred_at": "2026-08-29T09:40:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.508Z"
+    },
+    {
+      "id": "54930115-bba8-43d3-b217-4d568911c4f7",
+      "kind": "expense",
+      "amount": 24.91,
+      "merchant": "LuLu Hypermarket",
+      "category": "بقالة وتسوق",
+      "occurred_at": "2026-08-25T10:47:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.512Z"
+    },
+    {
+      "id": "13fc537d-50bf-48d1-b9d2-75883222db36",
+      "kind": "expense",
+      "amount": 7,
+      "merchant": "Bapco Seef",
+      "category": "مواصلات وبنزين",
+      "occurred_at": "2026-08-23T11:54:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.515Z"
+    },
+    {
+      "id": "18c513dc-2a1c-4160-8baa-787352e33b10",
+      "kind": "expense",
+      "amount": 2.3,
+      "merchant": "Costa Coffee",
+      "category": "قهوة",
+      "occurred_at": "2026-08-22T12:01:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.519Z"
+    },
+    {
+      "id": "ecdaef98-f8c7-4a58-81d9-2d5552d30086",
+      "kind": "expense",
+      "amount": 8.735,
+      "merchant": "Jawad",
+      "category": "بقالة وتسوق",
+      "occurred_at": "2026-08-20T13:08:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.523Z"
+    },
+    {
+      "id": "46396dde-51ea-484d-b798-afe02bfde78b",
+      "kind": "expense",
+      "amount": 6.45,
+      "merchant": "Shake Shack",
+      "category": "أكل ومطاعم",
+      "occurred_at": "2026-08-19T14:15:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.526Z"
+    },
+    {
+      "id": "b68fcb33-74de-4d42-8d8b-2160880d5b64",
+      "kind": "expense",
+      "amount": 7.6,
+      "merchant": "Talabat",
+      "category": "أكل ومطاعم",
+      "occurred_at": "2026-08-18T15:22:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.530Z"
+    },
+    {
+      "id": "4f407964-2566-4710-afeb-9c2bfc20ffc7",
+      "kind": "expense",
+      "amount": 11.84,
+      "merchant": "Al Osra",
+      "category": "بقالة وتسوق",
+      "occurred_at": "2026-08-17T16:29:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.533Z"
+    },
+    {
+      "id": "e2608c2f-8f66-48c6-8013-5f6da0465511",
+      "kind": "expense",
+      "amount": 2.6,
+      "merchant": "Caribou Coffee",
+      "category": "قهوة",
+      "occurred_at": "2026-08-16T05:36:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.537Z"
+    },
+    {
+      "id": "aaad2aa9-f353-4e37-bcd4-810c13fae322",
+      "kind": "expense",
+      "amount": 3.4,
+      "merchant": "Careem",
+      "category": "مواصلات وبنزين",
+      "occurred_at": "2026-08-15T06:43:00.000Z",
+      "updated_at": "2026-10-14T14:43:57.540Z"
+    }
+  ],
+  "courses": [
+    {
+      "id": "2ddd30f7-61cf-4f95-8197-7d136d232aa3",
+      "name": "محاسبة إدارية",
+      "type": "lecture",
+      "days": [
+        3,
+        5
+      ],
+      "start_time": "17:00",
+      "end_time": "18:15",
+      "room": "S40-2050",
+      "color": "#1A8A8F",
+      "updated_at": "2026-10-14T14:43:57.544Z"
+    },
+    {
+      "id": "d95d8923-f0b6-49d9-9ff0-4d2c2083c08c",
+      "name": "تسويق دولي",
+      "type": "lecture",
+      "days": [
+        3,
+        5
+      ],
+      "start_time": "18:30",
+      "end_time": "19:45",
+      "room": "S20-1043",
+      "color": "#8b5cf6",
+      "updated_at": "2026-10-14T14:43:57.548Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "eadd451c-0af8-4141-a67c-e384d6bd819f",
+      "title": "تقرير التسويق الدولي",
+      "kind": "homework",
+      "due_at": "2026-10-16T14:43:57.552Z",
+      "updated_at": "2026-10-14T14:43:57.552Z"
+    },
+    {
+      "id": "a8cb6f70-ccff-4cef-8e89-943c88b4561b",
+      "title": "اختبار المحاسبة",
+      "kind": "exam",
+      "due_at": "2026-10-20T14:43:57.557Z",
+      "updated_at": "2026-10-14T14:43:57.557Z"
+    }
+  ],
+  "subscriptions": [],
+  "goals": [],
+  "grades": [],
+  "study_sessions": [],
+  "debts": [],
+  "habits": [],
+  "daily": [
+    {
+      "id": "27af6e1f-3f06-4db0-ac87-cdcc8e67d1a9",
+      "date": "2026-10-13",
+      "watch": true,
+      "sleep": 7.2,
+      "hrv": 54,
+      "rhr": 61,
+      "updated_at": "2026-10-14T14:43:57.561Z"
+    },
+    {
+      "id": "1188f30d-4007-47e3-9f82-59743882f659",
+      "date": "2026-10-12",
+      "watch": true,
+      "sleep": 6.8,
+      "hrv": 51,
+      "rhr": 61,
+      "updated_at": "2026-10-14T14:43:57.568Z"
+    },
+    {
+      "id": "689d62c2-3a9a-4576-add6-930f413bb72d",
+      "date": "2026-10-11",
+      "watch": true,
+      "sleep": 7.5,
+      "hrv": 58,
+      "rhr": 61,
+      "updated_at": "2026-10-14T14:43:57.574Z"
+    },
+    {
+      "id": "e8554f12-29ca-4f0b-867d-82108b43ef33",
+      "date": "2026-10-10",
+      "watch": true,
+      "sleep": 7.1,
+      "hrv": 55,
+      "rhr": 61,
+      "updated_at": "2026-10-14T14:43:57.578Z"
+    },
+    {
+      "id": "218915a4-cac4-48c0-8834-36ce44cf4262",
+      "date": "2026-10-09",
+      "watch": true,
+      "sleep": 6.9,
+      "hrv": 50,
+      "rhr": 61,
+      "updated_at": "2026-10-14T14:43:57.581Z"
+    },
+    {
+      "id": "9b517cae-1233-4a19-a9bc-1e17bc331b4f",
+      "date": "2026-10-08",
+      "watch": true,
+      "sleep": 7.8,
+      "hrv": 60,
+      "rhr": 61,
+      "updated_at": "2026-10-14T14:43:57.586Z"
+    },
+    {
+      "id": "0f07919f-0082-4ace-84c1-41be2604d8c1",
+      "date": "2026-10-07",
+      "watch": true,
+      "sleep": 7.3,
+      "hrv": 56,
+      "rhr": 61,
+      "updated_at": "2026-10-14T14:43:57.590Z"
+    }
+  ],
+  "lifts": [],
+  "body": [],
+  "cards": [],
+  "events": [],
+  "shopping": [],
+  "journal": [],
+  "matches": []
+}
