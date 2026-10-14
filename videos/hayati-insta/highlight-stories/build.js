@@ -13,6 +13,8 @@ const S = [
   ['04-الميزات-2', 'الميزات ✨', 'مصاريفك <b>وميزانيتك</b>', '«تقدير» لوين بتوصل آخر الشهر', RAW + '02_money.png'],
   ['05-الميزات-3', 'الميزات ✨', 'كم صرفت <b>على كوستا؟</b>', 'اكتب اسم المحل، ويطلع لك المجموع', RAW + '03_search.png'],
   ['06-الميزات-4', 'الميزات ✨', 'جدولك <b>الأسبوعي</b>', 'محاضرة، تمرين، أو دوام', RAW + '04_schedule.png'],
+  ['09-جرّبه-1', 'جرّبه 📲', 'تبي تجربه <b>قبل الكل؟</b>', 'نجمع 15 مختبر لنسخة أندرويد. تحتاج جوال أندرويد وحساب Google، وتفتحه مرة باليوم لمدة 14 يوم', null, 'join'],
+  ['10-جرّبه-2', 'جرّبه 📲', 'أرسل لنا <b>«حياتي»</b> 📩', 'بالرسايل الخاصة، ونرسل لك رابط الانضمام أول ما ينفتح 👀', null, 'dm'],
   ['07-الجديد-1', 'الجديد 🆕', 'شارك رسالة البنك <b>لحياتي</b>', 'اضغط مطوّل ← مشاركة ← حياتي ← «إضافة»', SH + 'shared.png', null, 'على أندرويد · نسخة أندرويد قيد التجربة'],
   ['08-الجديد-2', 'الجديد 🆕', '<b>انضافت</b> ✓', 'وما نقرا رسايلك: أنت اللي تشارك', SH + 'added.png'],
 ];
@@ -32,7 +34,7 @@ p{position:absolute;top:580px;left:90px;right:90px;margin:0;text-align:center;fo
 .logo{position:absolute;left:465px;top:1450px;width:150px;height:150px;border-radius:36px;overflow:hidden}.logo svg{width:100%;height:100%}`;
 const page = ([, hl, h, sub, img, sticker, tag]) => `<!doctype html><html dir="rtl"><head><meta charset="utf-8"><style>${css}</style></head><body><div class="bg"></div>
 <div class="chip"><span>${hl}</span></div><h1>${h}</h1><p>${sub}</p>
-${img ? `<div class="ph"><img src="${U(img)}"></div><div class="fade"></div>` : `<div class="box">${sticker === 'poll' ? 'ملصق التصويت هني 👆' : 'ملصق «اسألني» هني 👆'}</div><div class="logo">${ICON}</div>`}
+${img ? `<div class="ph"><img src="${U(img)}"></div><div class="fade"></div>` : `<div class="box">${({ poll: 'ملصق التصويت هني 👆', join: '✅ جوال أندرويد<br>✅ حساب Google<br>✅ 14 يوم، مرة باليوم', dm: 'ملصق «رابط» أو «رسالة» هني 👆' })[sticker] || 'ملصق «اسألني» هني 👆'}</div><div class="logo">${ICON}</div>`}
 ${tag ? `<div class="tag"><span>${tag}</span></div>` : ''}
 ${img ? '<div class="demo">* لقطات ببيانات تجريبية · قيد التطوير</div>' : '<div class="demo">قيد التطوير · نسخة تجريبية</div>'}<div class="h">@hayati.bh</div></body></html>`;
 (async () => {
