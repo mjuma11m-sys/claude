@@ -154,6 +154,14 @@
       "status": "review",
       "opened": "2026-10-14",
       "updated": "2026-10-14"
+    },
+    "DW-020": {
+      "title": "Sports Hub: تسجيل حضور وغياب اللاعبين",
+      "owner": "CEO",
+      "priority": "P1",
+      "status": "review",
+      "opened": "2026-10-14",
+      "updated": "2026-10-14"
     }
   }
 }

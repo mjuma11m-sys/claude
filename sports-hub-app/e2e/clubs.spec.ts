@@ -312,7 +312,7 @@ test.describe('development room', () => {
 
 test.describe('layout', () => {
   test('no screen of the club or the federation scrolls sideways', async ({ page }) => {
-    for (const [role, paths] of [['إدارة النادي', ['/club', '/data', '/development', '/lineup']], ['الاتحاد', ['/federation']]] as const) {
+    for (const [role, paths] of [['إدارة النادي', ['/club', '/data', '/development', '/lineup', '/attendance']], ['الاتحاد', ['/federation']]] as const) {
       await as(page, role)
       for (const path of paths) {
         await page.goto(path); await page.waitForTimeout(400)
@@ -445,5 +445,99 @@ test.describe('match lineup', () => {
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     }
+  })
+})
+
+test.describe('attendance', () => {
+  test.beforeEach(async ({ page }) => { await as(page, 'إدارة النادي'); await page.goto('/attendance') })
+  const sheet = (page: Page) => page.getByRole('article').filter({ has: page.getByRole('heading', { name: 'تسجيل جلسة' }) })
+  const row = (page: Page, n: number) => sheet(page).getByRole('listitem').filter({ has: page.getByRole('radiogroup', { name: new RegExp(`حضور اللاعب ${n}$`) }) })
+  const mark = (page: Page, n: number, s: string) => page.getByRole('radiogroup', { name: new RegExp(`حضور اللاعب ${n}$`) }).getByRole('radio', { name: s, exact: true }).click()
+
+  test('everyone starts present, the injured one as an excused medical absence, with live counts', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: 'الحضور والغياب' })).toBeVisible()
+    const summary = page.getByRole('status', { name: 'ملخص التسجيل' })
+    await expect(summary).toContainText('حاضر 14')
+    await expect(summary).toContainText('غائب بعذر 2') // 5 and 19 are listed as injured
+    await expect(page.getByRole('combobox', { name: 'سبب غياب اللاعب 5' })).toHaveValue('medical')
+    await expect(page.getByRole('radiogroup', { name: 'حضور اللاعب 9' }).getByRole('radio', { name: 'حاضر' })).toHaveAttribute('aria-checked', 'true')
+  })
+
+  test('marking exceptions updates the counts, and the excuse list only appears for an excused absence', async ({ page }) => {
+    await mark(page, 3, 'متأخر'); await mark(page, 11, 'غائب'); await mark(page, 9, 'غائب بعذر')
+    const summary = page.getByRole('status', { name: 'ملخص التسجيل' })
+    await expect(summary).toContainText('متأخر 1'); await expect(summary).toContainText('غائب 1'); await expect(summary).toContainText('غائب بعذر 3')
+    await expect(page.getByRole('combobox', { name: 'سبب غياب اللاعب 9' })).toBeVisible()
+    await expect(page.getByRole('combobox', { name: 'سبب غياب اللاعب 11' })).toHaveCount(0)
+    await page.getByRole('combobox', { name: 'سبب غياب اللاعب 9' }).selectOption('travel')
+    await page.getByRole('button', { name: 'الكل حاضر' }).click()
+    await expect(summary).toContainText('حاضر 14')
+  })
+
+  test('saving a session lists it and replaces it when saved again', async ({ page }) => {
+    await mark(page, 11, 'غائب')
+    await page.getByRole('button', { name: 'احفظ التسجيل' }).click()
+    await expect(page.getByRole('status').filter({ hasText: 'انحفظ التسجيل' })).toBeVisible()
+    await expect(page.getByText('هالجلسة مسجّلة من قبل')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'احفظ التعديل' })).toBeVisible()
+    await page.reload()
+    await expect(page.getByText('هالجلسة مسجّلة من قبل')).toBeVisible()
+    await expect(page.getByRole('radiogroup', { name: 'حضور اللاعب 11' }).getByRole('radio', { name: 'غائب', exact: true })).toHaveAttribute('aria-checked', 'true') // the saved mark is reloaded
+  })
+
+  test('a future day and a day older than 90 days cannot be chosen', async ({ page }) => {
+    await page.locator('#attDay').fill('2999-01-01')
+    await expect(page.getByRole('alert')).toContainText('آخر 90 يوم')
+    await expect(page.getByRole('button', { name: /احفظ/ })).toHaveCount(0)
+    await page.locator('#attDay').fill('2020-01-01')
+    await expect(page.getByRole('alert')).toBeVisible()
+  })
+
+  test('the figures: repeated absence is flagged with its definition, excused absences are not counted against, too little data says so', async ({ page }) => {
+    const stats = page.getByRole('article').filter({ has: page.getByRole('heading', { name: /الالتزام آخر 30 يوم/ }) })
+    const p11 = stats.locator('[data-player="11"]')
+    await expect(p11).toContainText('غياب متكرر')
+    await expect(stats.getByRole('listitem').first()).toHaveAttribute('data-player', '11') // worst first
+    await expect(stats.locator('[data-player="5"]')).toContainText('بعذر') // the injured, excused every time
+    await expect(stats.locator('[data-player="5"]')).toContainText('بيانات قليلة') // 0 counted sessions
+    await expect(page.getByText('الغياب بعذر ما يحسب ضد اللاعب')).toBeVisible()
+    const p3 = stats.locator('[data-player="3"]') // often late: still counts as attended
+    await expect(p3.getByRole('img', { name: /نسبة الحضور 100%/ })).toBeVisible()
+  })
+
+  test('the club room "today" strip mentions repeated absence and links here', async ({ page }) => {
+    await page.goto('/club')
+    const link = page.getByRole('region', { name: 'اليوم' }).getByRole('link', { name: /غياب متكرر.*: 1/ })
+    await expect(link).toBeVisible()
+    await link.click()
+    await expect(page).toHaveURL(/attendance/)
+  })
+
+  test('opening a past session loads its marks, and it can be deleted', async ({ page }) => {
+    await page.getByRole('button', { name: 'افتح' }).first().click()
+    await expect(page.getByText('هالجلسة مسجّلة من قبل')).toBeVisible()
+    const n = await page.getByRole('button', { name: 'احذف' }).count()
+    await page.getByRole('button', { name: 'احذف' }).first().click()
+    await expect(page.getByRole('button', { name: 'احذف' })).toHaveCount(n - 1)
+  })
+
+  test('medical staff can read the figures but not record', async ({ page }) => {
+    await page.evaluate(() => localStorage.setItem('sh.demoRole', 'medical'))
+    await page.goto('/attendance')
+    await expect(page.getByRole('heading', { name: /الالتزام آخر 30 يوم/ })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'تسجيل جلسة' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'احذف' })).toHaveCount(0)
+  })
+
+  test('the federation cannot open it', async ({ page }) => {
+    await page.evaluate(() => localStorage.setItem('sh.demoRole', 'bfa_admin'))
+    await page.goto('/attendance')
+    await expect(page).not.toHaveURL(/attendance/)
+  })
+
+  test('on a phone each row fits its four buttons and nothing scrolls sideways', async ({ page }) => {
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    const small = await page.getByRole('radiogroup').first().getByRole('radio').evaluateAll((els) => els.map((e) => { const r = e.getBoundingClientRect(); return [r.width, r.height] }))
+    for (const [w, h] of small) { expect(w).toBeGreaterThanOrEqual(44); expect(h).toBeGreaterThanOrEqual(44) }
   })
 })

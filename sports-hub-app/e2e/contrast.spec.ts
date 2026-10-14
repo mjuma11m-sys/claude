@@ -57,7 +57,7 @@ async function measure(page: Page) {
   }, { items, png })
 }
 
-const SCREENS: [string, string][] = [['/zone', 'الطاقم الطبي'], ['/standings', 'الطاقم الطبي'], ['/vote', 'الطاقم الطبي'], ['/pass', 'الطاقم الطبي'], ['/medical', 'الطاقم الطبي'], ['/settings', 'الطاقم الطبي'], ['/club', 'إدارة النادي'], ['/data', 'إدارة النادي'], ['/development', 'إدارة النادي'], ['/lineup', 'إدارة النادي'], ['/federation', 'الاتحاد'], ['/privacy', 'الطاقم الطبي'], ['/terms', 'الطاقم الطبي']]
+const SCREENS: [string, string][] = [['/zone', 'الطاقم الطبي'], ['/standings', 'الطاقم الطبي'], ['/vote', 'الطاقم الطبي'], ['/pass', 'الطاقم الطبي'], ['/medical', 'الطاقم الطبي'], ['/settings', 'الطاقم الطبي'], ['/club', 'إدارة النادي'], ['/data', 'إدارة النادي'], ['/development', 'إدارة النادي'], ['/lineup', 'إدارة النادي'], ['/attendance', 'إدارة النادي'], ['/federation', 'الاتحاد'], ['/privacy', 'الطاقم الطبي'], ['/terms', 'الطاقم الطبي']]
 for (const [path, role] of SCREENS) {
   test(`contrast: ${path}`, async ({ page }) => {
     await page.goto('/login')

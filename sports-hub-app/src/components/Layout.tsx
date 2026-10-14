@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { Suspense, useEffect, useRef } from 'react'
 import { NavLink, Outlet, useLocation, useMatches } from 'react-router'
 import { useAuth } from '../auth/AuthProvider'
 import { navFor } from '../lib/nav'
@@ -8,6 +8,7 @@ import { useMyClub } from '../data/MyClub'
 import { ClubBadge } from './ClubBadge'
 import { Logo, Wordmark } from './Logo'
 import { OfflineBanner } from './OfflineBanner'
+import { Loading } from './States'
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors ${
@@ -79,7 +80,7 @@ export function Layout() {
         </header>
 
         <main id="main" ref={main} tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 pb-28 pt-5 outline-none md:px-8 md:pb-10 md:pt-8">
-          <div key={pathname} className="page"><Outlet /></div>
+          <div key={pathname} className="page"><Suspense fallback={<Loading variant="home" />}><Outlet /></Suspense></div>
         </main>
 
         {/* Phone: bottom tab bar in thumb reach, above the home indicator */}

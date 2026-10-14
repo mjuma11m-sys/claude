@@ -17,6 +17,8 @@ import { ffpStatus, wageRatio } from '../lib/ffp'
 import { fmtDate, fmtDateTime, fmtMoney } from '../lib/format'
 import { readiness, STATUS } from '../lib/squad'
 import { clubToday } from '../lib/today'
+import { getAttendance } from '../data/attendance'
+import { attendanceStats } from '../lib/attendance'
 import { DIVISION_LABEL } from '../data/demo'
 
 type SortKey = 'num' | 'end' | 'wage'
@@ -78,6 +80,7 @@ function ReportForm({ userId, season, current, onDone }: { userId: string; seaso
 export function Club() {
   const { user } = useAuth()
   const load = useLoad(() => getClubRoom(user!.id), [user?.id])
+  const att = useLoad(() => getAttendance(user!.id).catch(() => []), [user?.id])
   const [sort, setSort] = useState<SortKey>('num')
 
   if (load.loading && !load.data) return <Loading variant="home" />
@@ -109,10 +112,11 @@ export function Club() {
         <span className="flex flex-wrap items-center gap-2">
           <span className="flex items-center gap-2 rounded-full bg-white/5 py-1 pe-3 ps-1"><ClubBadge name={room.clubName} size="sm" /> <span className="text-sm">{room.clubName}</span></span>
           <span className="rounded-full bg-pulse/15 px-3 py-1 text-xs text-pulse">{room.league ? DIVISION_LABEL[room.league] : 'الدرجة غير محددة'}</span>
+          <Link to="/standings" className="grid min-h-11 place-items-center rounded-full px-3 text-xs text-mute underline underline-offset-4 hover:text-ink">ترتيب الدوري</Link>
         </span>
       </div>
 
-      <TodayStrip items={clubToday({ squad, ratio, limit: room.limit, imported: room.imported, today })} />
+      <TodayStrip items={clubToday({ squad, ratio, limit: room.limit, imported: room.imported, repeatAbsent: attendanceStats(att.data ?? [], room.squad.map((p) => p.id)).filter((s) => s.repeated).length, today })} />
 
       <div className="rise grid grid-cols-2 gap-2 md:grid-cols-4" style={vars({ '--i': 2 })}>
         <div className="glass lift flex h-full items-center justify-center gap-2 px-2 py-3">

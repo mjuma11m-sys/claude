@@ -14,6 +14,7 @@ export function clubToday(i: {
   ratio: number | null
   limit: number
   imported: boolean
+  repeatAbsent?: number
   today?: Date
 }): TodayItem[] {
   const out: TodayItem[] = []
@@ -26,11 +27,12 @@ export function clubToday(i: {
   const soon = i.squad.filter((p) => { const d = daysLeft(p.endsOn, now); return d >= 0 && d <= 183 }).length
   if (ended) out.push({ key: 'ended', tone: 'urgent', text: `عقود منتهية وما انجددت: ${ended}`, to: '#contracts' })
   if (soon) out.push({ key: 'soon', tone: 'warn', text: `عقود تنتهي خلال 6 أشهر: ${soon}`, to: '#contracts' })
+  if (!i.imported) out.push({ key: 'data', tone: 'info', text: 'البيانات تجريبية. ابدأ باستيراد بيانات ناديك', to: '/data' }) // before the softer health items: it is the way to real data
   const out_ = i.squad.filter((p) => p.status === 'injured' || p.status === 'suspended').length
   if (out_) out.push({ key: 'out', tone: 'info', text: `لاعبون غير متاحين (إصابة أو إيقاف): ${out_}`, to: '#squad' })
   const maybe = i.squad.filter((p) => p.status === 'doubtful').length
   if (maybe) out.push({ key: 'maybe', tone: 'info', text: `لاعبون مشكوك بجاهزيتهم: ${maybe}`, to: '#squad' })
-  if (!i.imported) out.push({ key: 'data', tone: 'info', text: 'البيانات تجريبية. ابدأ باستيراد بيانات ناديك', to: '/data' })
+  if (i.repeatAbsent) out.push({ key: 'absent', tone: 'warn', text: `غياب متكرر (3 بلا عذر متتالية): ${i.repeatAbsent}`, to: '/attendance' })
   return finish(out)
 }
 
