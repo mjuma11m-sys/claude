@@ -4,7 +4,7 @@ const path = require('path'), fs = require('fs');
 const R = (p) => 'file://' + path.resolve(__dirname, '..', p);
 const F = R('IBMPlexSansArabic-Bold.ttf'), F2 = R('IBMPlexSansArabic-Regular.ttf');
 const bio = fs.readFileSync(path.join(__dirname, 'bio.txt'), 'utf8').trim().split('\n');
-const HL = [['الجديد', 'out/highlight-updates.png'], ['الميزات', 'out/highlight-features.png'], ['جرّبه', 'out/highlight-try.png'], ['اقتراحاتكم', 'out/highlight-ideas.png'], ['الحارس', 'out/highlight-keeper.png']];
+const HL = [['الجديد', 'out/highlight-updates.png'], ['الميزات', 'out/highlight-features.png'], ['جرّبه', 'out/highlight-try.png'], ['اقتراحاتكم', 'out/highlight-ideas.png']];
 // الأحدث أول (الترتيب اللي يبين بالشبكة)، 📌 = مثبّت
 const NOW = [['out/post-1-intro.jpg', 1], ['out/week1/a1-five-cover.jpg', 1], ['out/post-3-ideas.jpg', 1], ['out/week1/b1-remind-cover.jpg'], ['out/post-5-honesty.jpg'], ['out/post-2-features.jpg']];
 const LATER = [['../insta-reels/04-share/cover.jpg', 1, 1], ['../insta-reels/01-hayati-motion/cover.jpg', 1, 1], ['out/post-1-intro.jpg', 1], ['../insta-reels/03-bank-sms/cover.jpg', 0, 1], ['../insta-reels/02-hayati-promo/cover.jpg', 0, 1], ['out/post-3-ideas.jpg'], ['out/week1/b1-remind-cover.jpg'], ['out/week1/a1-five-cover.jpg'], ['out/post-5-honesty.jpg']];

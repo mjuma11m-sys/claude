@@ -23,7 +23,7 @@ const FIVE = [
   ['hayati-promo-v2/shots/02_money.png', 'بتكمّل الشهر', 'بالميزانية؟', '«تقدير» لآخر الشهر من صرفك لين اليوم'],
   ['hayati-promo-v2/shots/01_today.png', 'وش عندك', 'اليوم؟', 'محاضراتك وأوقات الصلاة بشاشة وحدة'],
   ['hayati-dev-shots/s_goals.png', 'جاهز', 'للاختبار؟', '«تقدير» جاهزيتك من المواضيع اللي خلصتها'],
-  ['hayati-dev-shots/gk.png', 'حارس', 'مرمى؟', 'مبارياتك، الكلين شيت، ونسبة التصدي'],
+  ['hayati-share/shots/added.png', 'وصلتك رسالة', 'البنك؟', 'الصقها أو شاركها لحياتي، وراجعها قبل «إضافة»'],
 ];
 PAGES['a1-five-cover.jpg'] = [W, H, BASE(W, H) + `<div class="sea"></div>
 ${[[-250, 640, 10, 0], [250, 640, -10, 2], [0, 600, 0, 4]].map(([x, y, r, i]) => `<div class="phone" style="left:50%;top:${y}px;width:420px;height:910px;margin-left:${-210 + x}px;transform:rotate(${r}deg);padding:12px;border-radius:66px"><img style="border-radius:54px" src="${shot(FIVE[i][0])}"></div>`).join('')}
@@ -137,7 +137,7 @@ PAGES['s3-story-tests.jpg'] = [W, SH, BASE(W, SH) + `<div class="sea"></div>
   const block = (h) => { const i = cap.indexOf(h); return cap.slice(cap.indexOf('```', i) + 4, cap.indexOf('```', cap.indexOf('```', i) + 3)).trim(); };
   const GROUPS = [
     ['1-الخميس15-ستوري-تصويت', ['s1-story-poll.jpg'], 'ستوري (بدون كابشن)\n\nحط ملصق «تصويت» بالمربع المنقط:\nالسؤال: وش تنساه أكثر؟\nالخيارات: الاختبارات 📝 / الاشتراكات 💳'],
-    ['2-الجمعة16-كاروسيل-5-أشياء', ['a1-five-cover.jpg', 'a2-five-1.jpg', 'a3-five-2.jpg', 'a4-five-3.jpg', 'a5-five-4.jpg', 'a6-five-5.jpg', 'a7-five-cta.jpg'], block('## كاروسيل «5 أشياء»') + '\n\n---\nAlt text:\nلقطات من تطبيق حياتي: البحث عن المصاريف، توقع الميزانية، جدول اليوم والصلاة، جاهزية الاختبار، وإحصائيات حارس المرمى.'],
+    ['2-الجمعة16-كاروسيل-5-أشياء', ['a1-five-cover.jpg', 'a2-five-1.jpg', 'a3-five-2.jpg', 'a4-five-3.jpg', 'a5-five-4.jpg', 'a6-five-5.jpg', 'a7-five-cta.jpg'], block('## كاروسيل «5 أشياء»') + '\n\n---\nAlt text:\nلقطات من تطبيق حياتي: البحث عن المصاريف، توقع الميزانية، جدول اليوم والصلاة، جاهزية الاختبار، ورسالة البنك المشاركة.'],
     ['3-السبت17-ستوري-أسئلة', ['s2-story-ask.jpg'], 'ستوري (بدون كابشن)\n\nحط ملصق «أسئلة» بالمربع المنقط:\nاكتب الميزة 👇'],
     ['4-الاثنين19-ستوري-كواليس', ['s3-story-tests.jpg'], 'ستوري (بدون كابشن)\n\nبدون ملصق، أو ملصق «رابط» لو اشتغل رابط التطبيق.'],
     ['5-الجمعة23-كاروسيل-التذكيرات', ['b1-remind-cover.jpg', 'b2-remind-evening.jpg', 'b3-remind-examday.jpg', 'b4-remind-subs.jpg', 'b5-remind-control.jpg'], block('## كاروسيل «التذكيرات الذكية»')],
