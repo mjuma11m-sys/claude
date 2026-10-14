@@ -572,7 +572,7 @@
   window.Extras = {
     agenda: (date) => prayersOn(date),
     todayTop: () => morningCard() + budgetBanner() + incomeCard(),
-    todayMid: () => dailyCard(),
+    todayMid: () => '<section data-tk="health">' + dailyCard() + '</section>',
     allowance: () => { const a = dailyAllowance(); return a != null && a > 0 ? '<div class="meta" style="margin-top:4px"><span>💸 تقدر تصرف ' + fmt(a) + ' باليوم لين آخر الشهر</span></div>' : ''; },
     catBudget, catBudgetsForm, courseSheet, gpaNeed, viewHealth, exExtra, wkMount, wkClick, settingsExtra, settingsAction, action,
     afterTx: (tx) => { if (tx && tx.kind === 'income' && !tx.save_handled && st.goals.some((g) => !g.done)) saveIncomeSheet(tx); },

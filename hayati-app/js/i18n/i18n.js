@@ -54,7 +54,8 @@
       trText(root); return;
     }
     if (root.nodeType !== 1 || SKIP.test(root.tagName) || root.closest('[data-noi18n]')) return;
-    for (const a of ATTRS) { const v = root.getAttribute(a); if (v && hasAr(v)) root.setAttribute(a, tr(v)); }
+    // نكتب بس لو تغيّر: نص عربي بدون ترجمة كان يرجع يطلق المراقب للأبد
+    for (const a of ATTRS) { const v = root.getAttribute(a); if (v && hasAr(v)) { const t = tr(v); if (t !== v) root.setAttribute(a, t); } }
     const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
     let n;
     while ((n = tw.nextNode())) {
@@ -63,7 +64,7 @@
         if (p && (SKIP.test(p.tagName) || p.closest('[data-noi18n]'))) continue;
         trText(n);
       } else if (!SKIP.test(n.tagName)) {
-        for (const a of ATTRS) { const v = n.getAttribute(a); if (v && hasAr(v)) n.setAttribute(a, tr(v)); }
+        for (const a of ATTRS) { const v = n.getAttribute(a); if (v && hasAr(v)) { const t = tr(v); if (t !== v) n.setAttribute(a, t); } }
       }
     }
   }

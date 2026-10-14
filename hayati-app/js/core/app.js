@@ -5,7 +5,7 @@
   const S = window.Store;
   const st = S.state;
   const I = window.icon;
-  const APP_VERSION = 'v20';   // نفس رقم sw.js (فيه اختبار يتأكد)
+  const APP_VERSION = 'v21';   // نفس رقم sw.js (فيه اختبار يتأكد)
 
   // ---------- ثوابت ----------
   const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
@@ -402,28 +402,29 @@
       '<button class="tile" data-action="' + (budget ? 'go' : 'budget') + '" data-tab="money"><div class="ti" style="' + tint('#1A8A8F') + '">' + I('target') + '</div><div class="lbl">' + (budget ? 'باقي بالميزانية' : 'الميزانية') + '</div><div class="val">' + (budget ? money(budget - month.exp) : '<span style="font-size:13px;color:var(--brand)">حدّدها</span>') + '</div></button>' +
       '<button class="tile" data-action="go" data-tab="tasks"><div class="ti" style="' + tint('#0d9488') + '">' + I('tasks') + '</div><div class="lbl">مهام اليوم</div><div class="val num">' + dueToday + '</div></button></div>';
 
-    // جدول اليوم
-    out += secHead('جدول اليوم', '<span class="count">' + today.length + '</span><button class="link" data-action="go" data-tab="schedule">الجدول</button>');
+    // جدول اليوم (كل قسم بـ data-tk عشان «رتّب اليوم» يقدر يخفيه)
+    out += '<section data-tk="schedule">' + secHead('جدول اليوم', '<span class="count">' + today.length + '</span><button class="link" data-action="go" data-tab="schedule">الجدول</button>');
     if (today.length) {
       out += '<div class="timeline">' + today.map((c) => slot(c, nm >= c.end ? 'past' : nm >= c.start ? 'now' : '', ((nm - c.start) / (c.end - c.start)) * 100)).join('') + '</div>';
     } else {
       out += '<div class="card">' + (st.courses.length ? empty('sparkle', 'ما فيه شي بجدولك اليوم', 'استمتع بيومك') :
         empty('calendar', 'رتّب أسبوعك', '<button class="link" data-action="add-course">أضف محاضرة أو تمرين</button> عشان يقولك «الحين وقت…»')) + '</div>';
     }
+    out += '</section>';
 
     out += X('todayMid');
 
     // المهام
     const soon = st.tasks.filter((t) => !t.done && t.due_at && daysBetween(now, new Date(t.due_at)) <= 3)
       .sort((a, b) => new Date(a.due_at) - new Date(b.due_at));
-    out += secHead('مهام قريبة', '<span class="count">' + soon.length + '</span><button class="link" data-action="go" data-tab="tasks">الكل</button>');
-    out += '<div class="card flush">' + (soon.length ? '<ul class="list">' + soon.map(taskRow).join('') + '</ul>' : empty('check', 'ما فيه شي مستعجل', 'لا مهام خلال ٣ أيام')) + '</div>';
+    out += '<section data-tk="tasks">' + secHead('مهام قريبة', '<span class="count">' + soon.length + '</span><button class="link" data-action="go" data-tab="tasks">الكل</button>');
+    out += '<div class="card flush">' + (soon.length ? '<ul class="list">' + soon.map(taskRow).join('') + '</ul>' : empty('check', 'ما فيه شي مستعجل', 'لا مهام خلال ٣ أيام')) + '</div></section>';
 
     // آخر العمليات
     const recent = st.transactions.slice().sort((a, b) => new Date(b.occurred_at) - new Date(a.occurred_at)).slice(0, 4);
     const review = st.transactions.filter((t) => t.needs_review).length;
-    out += secHead('آخر العمليات', (review ? '<span class="tag warn">' + review + ' تحتاج مراجعة</span>' : '') + '<button class="link" data-action="go" data-tab="money">الكل</button>');
-    out += '<div class="card flush">' + (recent.length ? '<ul class="list">' + recent.map(txRow).join('') + '</ul>' : empty('wallet', 'ما فيه عمليات', 'سجّل أول مصروف من زر +')) + '</div>';
+    out += '<section data-tk="recent">' + secHead('آخر العمليات', (review ? '<span class="tag warn">' + review + ' تحتاج مراجعة</span>' : '') + '<button class="link" data-action="go" data-tab="money">الكل</button>');
+    out += '<div class="card flush">' + (recent.length ? '<ul class="list">' + recent.map(txRow).join('') + '</ul>' : empty('wallet', 'ما فيه عمليات', 'سجّل أول مصروف من زر +')) + '</div></section>';
     return out;
   }
 

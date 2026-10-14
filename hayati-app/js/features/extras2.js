@@ -531,8 +531,8 @@
   }
 
   // ================= الربط =================
-  wrap('todayTop', (prev) => prev() + eventsCard());
-  wrap('todayMid', (prev) => prev() + journalCard());
+  wrap('todayTop', (prev) => prev() + '<section data-tk="events">' + eventsCard() + '</section>');
+  wrap('todayMid', (prev) => prev() + '<section data-tk="journal">' + journalCard() + '</section>');
   wrap('viewHealth', (prev) => prev() + moodSection());
   E.goalsTop = goalsTop;
   E.moneyActions = () => '<button class="btn ghost block" style="margin:10px 0 4px" data-action="year">' + I('chart') + 'ملخص السنة</button>';

@@ -99,7 +99,7 @@
   }
 
   // ================= الربط =================
-  wrap('todayMid', (prev) => card() + prev());
+  wrap('todayMid', (prev) => '<section data-tk="wird">' + card() + '</section>' + prev());
   wrap('chooserItems', (prev, item) => prev(item) + item('wird', 'book', '#0d9488', 'ورد القرآن والأذكار', 'هدف يومي، عداد ختمة، وتذكير'));
   wrap('pick', (prev, k) => { if (k === 'wird') { A.closeSheet(); setTimeout(setupSheet, 280); return; } return prev(k); });
   wrap('settingsExtra', (prev) => '<div class="group-title">' + I('book') + 'العبادة</div><div class="menu">' +

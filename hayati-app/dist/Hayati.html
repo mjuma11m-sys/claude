@@ -1712,6 +1712,12 @@ window.HAYATI_EN = {
 "🧤 المباريات": "🧤 Matches",
 "أقدم. زيد كلمة عشان تضيّق": "older. Add a word to narrow it down",
 "بحث": "Search",
+"كل شي بحياتي": "Everything in Hayati",
+"رتّب «اليوم»": "Arrange Today",
+"رتّب شاشة «اليوم»": "Arrange the Today screen",
+"عبادتي": "Worship",
+"المسبحة": "Tasbih",
+"ورد القرآن": "Quran reading",
 "تراجع": "Undo",
 "جرّب: اسم محل، مبلغ، مادة، مهمة، أو خصم": "Try: a shop, amount, course, task or opponent",
 "رجعت ✓": "Restored ✓",
@@ -2031,7 +2037,8 @@ window.HAYATI_EN = {
       trText(root); return;
     }
     if (root.nodeType !== 1 || SKIP.test(root.tagName) || root.closest('[data-noi18n]')) return;
-    for (const a of ATTRS) { const v = root.getAttribute(a); if (v && hasAr(v)) root.setAttribute(a, tr(v)); }
+    // نكتب بس لو تغيّر: نص عربي بدون ترجمة كان يرجع يطلق المراقب للأبد
+    for (const a of ATTRS) { const v = root.getAttribute(a); if (v && hasAr(v)) { const t = tr(v); if (t !== v) root.setAttribute(a, t); } }
     const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
     let n;
     while ((n = tw.nextNode())) {
@@ -2040,7 +2047,7 @@ window.HAYATI_EN = {
         if (p && (SKIP.test(p.tagName) || p.closest('[data-noi18n]'))) continue;
         trText(n);
       } else if (!SKIP.test(n.tagName)) {
-        for (const a of ATTRS) { const v = n.getAttribute(a); if (v && hasAr(v)) n.setAttribute(a, tr(v)); }
+        for (const a of ATTRS) { const v = n.getAttribute(a); if (v && hasAr(v)) { const t = tr(v); if (t !== v) n.setAttribute(a, t); } }
       }
     }
   }
@@ -2349,7 +2356,7 @@ window.HAYATI_CONFIG = {
   const TABLES = ['transactions', 'courses', 'tasks', 'subscriptions', 'goals', 'grades', 'study_sessions', 'debts', 'habits', 'daily', 'lifts', 'body', 'cards', 'events', 'shopping', 'journal', 'matches'];
   const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges', 'name', 'roles', 'onboarded'];
   // على الجهاز بس (ما تروح لجدول settings بالسيرفر) بس تدخل بالنسخة الاحتياطية (DW-012)
-  const LOCAL_SETTINGS = ['payday', 'madhhab', 'gold_price', 'khums_start', 'wird', 'hijri_offset', 'tasbih'];
+  const LOCAL_SETTINGS = ['payday', 'madhhab', 'gold_price', 'khums_start', 'wird', 'hijri_offset', 'tasbih', 'today_hide'];
   const NUMERIC = ['amount', 'target', 'saved', 'credits', 'minutes', 'day', 'month', 'duration', 'remind_days', 'weight', 'waist', 'water', 'sleep', 'absence_limit'];
 
   const listeners = new Set();
@@ -3235,7 +3242,7 @@ window.HAYATI_CONFIG = {
   const S = window.Store;
   const st = S.state;
   const I = window.icon;
-  const APP_VERSION = 'v20';   // نفس رقم sw.js (فيه اختبار يتأكد)
+  const APP_VERSION = 'v21';   // نفس رقم sw.js (فيه اختبار يتأكد)
 
   // ---------- ثوابت ----------
   const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
@@ -3632,28 +3639,29 @@ window.HAYATI_CONFIG = {
       '<button class="tile" data-action="' + (budget ? 'go' : 'budget') + '" data-tab="money"><div class="ti" style="' + tint('#1A8A8F') + '">' + I('target') + '</div><div class="lbl">' + (budget ? 'باقي بالميزانية' : 'الميزانية') + '</div><div class="val">' + (budget ? money(budget - month.exp) : '<span style="font-size:13px;color:var(--brand)">حدّدها</span>') + '</div></button>' +
       '<button class="tile" data-action="go" data-tab="tasks"><div class="ti" style="' + tint('#0d9488') + '">' + I('tasks') + '</div><div class="lbl">مهام اليوم</div><div class="val num">' + dueToday + '</div></button></div>';
 
-    // جدول اليوم
-    out += secHead('جدول اليوم', '<span class="count">' + today.length + '</span><button class="link" data-action="go" data-tab="schedule">الجدول</button>');
+    // جدول اليوم (كل قسم بـ data-tk عشان «رتّب اليوم» يقدر يخفيه)
+    out += '<section data-tk="schedule">' + secHead('جدول اليوم', '<span class="count">' + today.length + '</span><button class="link" data-action="go" data-tab="schedule">الجدول</button>');
     if (today.length) {
       out += '<div class="timeline">' + today.map((c) => slot(c, nm >= c.end ? 'past' : nm >= c.start ? 'now' : '', ((nm - c.start) / (c.end - c.start)) * 100)).join('') + '</div>';
     } else {
       out += '<div class="card">' + (st.courses.length ? empty('sparkle', 'ما فيه شي بجدولك اليوم', 'استمتع بيومك') :
         empty('calendar', 'رتّب أسبوعك', '<button class="link" data-action="add-course">أضف محاضرة أو تمرين</button> عشان يقولك «الحين وقت…»')) + '</div>';
     }
+    out += '</section>';
 
     out += X('todayMid');
 
     // المهام
     const soon = st.tasks.filter((t) => !t.done && t.due_at && daysBetween(now, new Date(t.due_at)) <= 3)
       .sort((a, b) => new Date(a.due_at) - new Date(b.due_at));
-    out += secHead('مهام قريبة', '<span class="count">' + soon.length + '</span><button class="link" data-action="go" data-tab="tasks">الكل</button>');
-    out += '<div class="card flush">' + (soon.length ? '<ul class="list">' + soon.map(taskRow).join('') + '</ul>' : empty('check', 'ما فيه شي مستعجل', 'لا مهام خلال ٣ أيام')) + '</div>';
+    out += '<section data-tk="tasks">' + secHead('مهام قريبة', '<span class="count">' + soon.length + '</span><button class="link" data-action="go" data-tab="tasks">الكل</button>');
+    out += '<div class="card flush">' + (soon.length ? '<ul class="list">' + soon.map(taskRow).join('') + '</ul>' : empty('check', 'ما فيه شي مستعجل', 'لا مهام خلال ٣ أيام')) + '</div></section>';
 
     // آخر العمليات
     const recent = st.transactions.slice().sort((a, b) => new Date(b.occurred_at) - new Date(a.occurred_at)).slice(0, 4);
     const review = st.transactions.filter((t) => t.needs_review).length;
-    out += secHead('آخر العمليات', (review ? '<span class="tag warn">' + review + ' تحتاج مراجعة</span>' : '') + '<button class="link" data-action="go" data-tab="money">الكل</button>');
-    out += '<div class="card flush">' + (recent.length ? '<ul class="list">' + recent.map(txRow).join('') + '</ul>' : empty('wallet', 'ما فيه عمليات', 'سجّل أول مصروف من زر +')) + '</div>';
+    out += '<section data-tk="recent">' + secHead('آخر العمليات', (review ? '<span class="tag warn">' + review + ' تحتاج مراجعة</span>' : '') + '<button class="link" data-action="go" data-tab="money">الكل</button>');
+    out += '<div class="card flush">' + (recent.length ? '<ul class="list">' + recent.map(txRow).join('') + '</ul>' : empty('wallet', 'ما فيه عمليات', 'سجّل أول مصروف من زر +')) + '</div></section>';
     return out;
   }
 
@@ -5942,7 +5950,7 @@ window.HAYATI_CONFIG = {
   window.Extras = {
     agenda: (date) => prayersOn(date),
     todayTop: () => morningCard() + budgetBanner() + incomeCard(),
-    todayMid: () => dailyCard(),
+    todayMid: () => '<section data-tk="health">' + dailyCard() + '</section>',
     allowance: () => { const a = dailyAllowance(); return a != null && a > 0 ? '<div class="meta" style="margin-top:4px"><span>💸 تقدر تصرف ' + fmt(a) + ' باليوم لين آخر الشهر</span></div>' : ''; },
     catBudget, catBudgetsForm, courseSheet, gpaNeed, viewHealth, exExtra, wkMount, wkClick, settingsExtra, settingsAction, action,
     afterTx: (tx) => { if (tx && tx.kind === 'income' && !tx.save_handled && st.goals.some((g) => !g.done)) saveIncomeSheet(tx); },
@@ -6528,8 +6536,8 @@ window.HAYATI_CONFIG = {
   }
 
   // ================= الربط =================
-  wrap('todayTop', (prev) => prev() + eventsCard());
-  wrap('todayMid', (prev) => prev() + journalCard());
+  wrap('todayTop', (prev) => prev() + '<section data-tk="events">' + eventsCard() + '</section>');
+  wrap('todayMid', (prev) => prev() + '<section data-tk="journal">' + journalCard() + '</section>');
   wrap('viewHealth', (prev) => prev() + moodSection());
   E.goalsTop = goalsTop;
   E.moneyActions = () => '<button class="btn ghost block" style="margin:10px 0 4px" data-action="year">' + I('chart') + 'ملخص السنة</button>';
@@ -8434,7 +8442,7 @@ window.HAYATI_CONFIG = {
   }
 
   // ================= الربط =================
-  wrap('todayMid', (prev) => card() + prev());
+  wrap('todayMid', (prev) => '<section data-tk="wird">' + card() + '</section>' + prev());
   wrap('chooserItems', (prev, item) => prev(item) + item('wird', 'book', '#0d9488', 'ورد القرآن والأذكار', 'هدف يومي، عداد ختمة، وتذكير'));
   wrap('pick', (prev, k) => { if (k === 'wird') { A.closeSheet(); setTimeout(setupSheet, 280); return; } return prev(k); });
   wrap('settingsExtra', (prev) => '<div class="group-title">' + I('book') + 'العبادة</div><div class="menu">' +
@@ -8614,7 +8622,7 @@ window.HAYATI_CONFIG = {
   }
 
   // ================= الربط =================
-  wrap('todayMid', (prev) => todayRow() + prev());
+  wrap('todayMid', (prev) => '<section data-tk="ibada">' + todayRow() + '</section>' + prev());
   wrap('chooserItems', (prev, item) => prev(item) + item('tasbih', 'repeat', '#0d9488', 'المسبحة', 'تسبيحة الزهراء (ع)، بعد الصلاة، أو عداد حر'));
   wrap('pick', (prev, k) => { if (k === 'tasbih') { A.closeSheet(); setTimeout(() => tasbihSheet(), 280); return; } return prev(k); });
   wrap('settingsExtra', (prev) => '<div class="menu" style="margin-top:8px"><button data-set="ibada"><div class="ico" style="' + tint('#0d9488') + '">🕌</div><div style="flex:1;min-width:0"><b>عبادتي</b><small>الهجري، الصلاة، المسبحة، والمناسبات</small></div>' + I('chevL') + '</button></div>' + prev());
@@ -8629,6 +8637,126 @@ window.HAYATI_CONFIG = {
     return prev(name, el, e);
   });
   E.Ibada = { hijri, hijriText, nextDate, upcoming, press, PRESETS, OCCASIONS, start: (p) => { tsb = { preset: p || 'zahra', step: 0, count: 0, free: '', target: 33 }; } };
+})();
+
+</script>
+  <script>/* js/features/tools.js */
+// «كل شي بحياتي» (كل الأدوات بمكان واحد) + «رتّب اليوم» (إخفاء البطاقات) — DW-016
+// الإخفاء على الجهاز بس (settings.today_hide) ويدخل بالنسخة الاحتياطية
+(function () {
+  'use strict';
+
+  const A = window.App, E = window.Extras;
+  if (!A || !E) return;
+  const { S, st, I, tint } = A;
+
+  // يشغّل زر data-action موجود بالتطبيق (نفس طريقة البحث)
+  function run(action, data) {
+    const b = document.createElement('button');
+    b.dataset.action = action; b.hidden = true;
+    Object.assign(b.dataset, data || {});
+    document.getElementById('view').appendChild(b); b.click(); b.remove();
+  }
+  const goSeg = (tab, key, val) => { A.ui[key] = val; A.go(tab); };
+
+  // [مفتاح، أيقونة، لون، الاسم، وش يسوي]
+  const GROUPS = [
+    ['💰 الفلوس', [
+      ['payday', 'calendar', '#1A8A8F', 'يوم الراتب', () => run('payday')],
+      ['zakat', 'target', '#b45309', 'الزكاة والخُمس', () => run('zakat')],
+      ['subs', 'repeat', '#f59e0b', 'الاشتراكات', () => goSeg('money', 'moneySeg', 'subs')],
+      ['goals', 'piggy', '#10b981', 'أهداف الادخار', () => goSeg('money', 'moneySeg', 'goals')],
+      ['debts', 'users', '#0891b2', 'لي وعلي', () => goSeg('money', 'moneySeg', 'debts')],
+      ['report', 'chart', '#8b5cf6', 'تقرير الشهر', () => { goSeg('money', 'moneySeg', 'tx'); setTimeout(() => run('report'), 50); }],
+      ['year', 'chart', '#6366f1', 'ملخص السنة', () => run('year')],
+    ]],
+    ['🗓️ يومك', [
+      ['shop', 'cart', '#16a34a', 'المشتريات', () => goSeg('tasks', 'tasksSeg', 'shop')],
+      ['events', 'gift', '#ec4899', 'المناسبات', () => goSeg('tasks', 'tasksSeg', 'events')],
+      ['tasks', 'tasks', '#0d9488', 'المهام', () => goSeg('tasks', 'tasksSeg', 'tasks')],
+      ['weekly', 'chart', '#13636B', 'تقرير الأسبوع', () => run('weekly')],
+      ['notif', 'bell', '#13636B', 'التنبيهات', () => openSetting('notif-prefs')],
+    ]],
+    ['📚 الدراسة والصحة', [
+      ['schedule', 'graduation', '#1A8A8F', 'الجدول', () => goSeg('schedule', 'studySeg', 'schedule')],
+      ['focus', 'timer', '#f97316', 'المذاكرة والتركيز', () => goSeg('schedule', 'studySeg', 'focus')],
+      ['gpa', 'award', '#8b5cf6', 'المعدل', () => goSeg('schedule', 'studySeg', 'gpa')],
+      ['health', 'heart', '#e11d48', 'صحتي', () => goSeg('schedule', 'studySeg', 'health')],
+    ]],
+    ['🕌 العبادة', [
+      ['ibada', 'moon', '#0d9488', 'عبادتي', () => run('ibada')],
+      ['tasbih', 'repeat', '#0d9488', 'المسبحة', () => run('tasbih')],
+      ['wird', 'book', '#0d9488', 'ورد القرآن', () => (E.pick ? E.pick('wird') : null)],
+    ]],
+  ];
+  function openSetting(act) { if (E.settingsAction) E.settingsAction(act); }
+
+  // البطاقات اللي تنخفي من «اليوم» (data-tk)
+  const CARDS = [['ibada', '🕌 عبادتي'], ['wird', '📖 ورد القرآن'], ['schedule', '📅 جدول اليوم'], ['health', '💧 يومك الصحي'],
+    ['events', '🎂 المناسبات'], ['journal', '📝 اليوميات والمزاج'], ['tasks', '✅ مهام قريبة'], ['recent', '💳 آخر العمليات']];
+  const hidden = () => (Array.isArray(st.settings.today_hide) ? st.settings.today_hide : []);
+  function applyHide() {
+    let el = document.getElementById('tkHide');
+    if (!el) { el = document.createElement('style'); el.id = 'tkHide'; document.head.appendChild(el); }
+    const css = hidden().filter((k) => CARDS.some((c) => c[0] === k)).map((k) => '#view section[data-tk="' + k + '"]{display:none}').join('\n');
+    if (el.textContent !== css) el.textContent = css;   // نكتب بس لو تغيّر (الترجمة تراقب الصفحة)
+  }
+
+  function toolsSheet() {
+    const all = GROUPS.flatMap((g) => g[1]);
+    A.openSheet({
+      title: 'كل شي بحياتي',
+      cancelLabel: 'تم',
+      body: GROUPS.map(([g, items]) => '<div class="group-title">' + g + '</div><div class="tools-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">' +
+        items.filter((x) => x[0] !== 'notif' || window.HayatiNative).map(([k, ic, col, l]) => '<button type="button" class="tool" data-tool="' + k + '" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;border-radius:16px;border:1px solid var(--line, #e5e2da);background:var(--card, #fff);font:inherit;cursor:pointer"><div class="ico" style="' + tint(col) + '">' + I(ic) + '</div><span style="font-size:13px;text-align:center">' + l + '</span></button>').join('') + '</div>').join('') +
+        '<button type="button" class="btn ghost block" id="tkOpen" style="margin-top:16px">' + I('settings') + 'رتّب شاشة «اليوم»</button>',
+      mount(root) {
+        root.querySelectorAll('[data-tool]').forEach((b) => { b.onclick = () => {
+          const t = all.find((x) => x[0] === b.dataset.tool);
+          A.closeSheet(); setTimeout(() => t[4](), 280);
+        }; });
+        root.querySelector('#tkOpen').onclick = () => { A.closeSheet(); setTimeout(arrangeSheet, 280); };
+      },
+    });
+  }
+
+  function arrangeSheet() {
+    const hid = hidden();
+    A.openSheet({
+      title: 'رتّب «اليوم»',
+      body: '<p class="small muted" style="margin:0 4px 10px">شغّل اللي تبيه يطلع بشاشة اليوم. اللي تطفيه يظل موجود بـ «كل شي بحياتي».</p><div class="card flush"><ul class="list">' +
+        CARDS.map(([k, l]) => '<li class="row" style="cursor:default"><label style="display:flex;align-items:center;gap:12px;width:100%;cursor:pointer"><div class="main"><div class="title"><span class="t">' + l + '</span></div></div>' +
+          '<input type="checkbox" data-tk-on="' + k + '"' + (hid.includes(k) ? '' : ' checked') + ' style="width:22px;height:22px;accent-color:var(--brand)"></label></li>').join('') + '</ul></div>',
+      onSave(root) {
+        const off = [...root.querySelectorAll('[data-tk-on]')].filter((c) => !c.checked).map((c) => c.dataset.tkOn);
+        S.setSettings({ today_hide: off });
+        applyHide();
+        A.toast('انحفظ ✓');
+      },
+    });
+  }
+
+  // زر بالترويسة جنب البحث
+  const btn = document.createElement('button');
+  btn.className = 'icon-btn'; btn.id = 'toolsBtn'; btn.type = 'button'; btn.setAttribute('aria-label', 'كل شي بحياتي');
+  btn.innerHTML = I('dots');
+  btn.onclick = toolsSheet;
+  const anchor = document.getElementById('findBtn') || document.getElementById('settingsBtn');
+  if (anchor) anchor.parentNode.insertBefore(btn, anchor);
+
+  const prevSet = E.settingsAction;
+  E.settingsAction = async function (act) {
+    if (act === 'arrange-today') { A.closeSheet(); setTimeout(arrangeSheet, 280); return true; }
+    return prevSet ? prevSet.apply(this, arguments) : false;
+  };
+  const prevExtra = E.settingsExtra;
+  E.settingsExtra = function () {
+    return '<div class="menu" style="margin-top:8px"><button data-set="arrange-today"><div class="ico" style="' + tint('#13636B') + '">' + I('settings') + '</div><div style="flex:1;min-width:0"><b>رتّب شاشة «اليوم»</b><small>' + (hidden().length ? 'مخفي ' + hidden().length : 'كل البطاقات ظاهرة') + '</small></div>' + I('chevL') + '</button></div>' +
+      (prevExtra ? prevExtra.apply(this, arguments) : '');
+  };
+  S.subscribe(applyHide);
+  applyHide();
+  E.Tools = { GROUPS, CARDS, toolsSheet, arrangeSheet, applyHide };
 })();
 
 </script>

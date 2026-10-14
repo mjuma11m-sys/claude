@@ -152,7 +152,7 @@
   }
 
   // ================= الربط =================
-  wrap('todayMid', (prev) => todayRow() + prev());
+  wrap('todayMid', (prev) => '<section data-tk="ibada">' + todayRow() + '</section>' + prev());
   wrap('chooserItems', (prev, item) => prev(item) + item('tasbih', 'repeat', '#0d9488', 'المسبحة', 'تسبيحة الزهراء (ع)، بعد الصلاة، أو عداد حر'));
   wrap('pick', (prev, k) => { if (k === 'tasbih') { A.closeSheet(); setTimeout(() => tasbihSheet(), 280); return; } return prev(k); });
   wrap('settingsExtra', (prev) => '<div class="menu" style="margin-top:8px"><button data-set="ibada"><div class="ico" style="' + tint('#0d9488') + '">🕌</div><div style="flex:1;min-width:0"><b>عبادتي</b><small>الهجري، الصلاة، المسبحة، والمناسبات</small></div>' + I('chevL') + '</button></div>' + prev());

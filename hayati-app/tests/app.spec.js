@@ -1481,3 +1481,36 @@ test('«عبادتي»: one row on Today opens the page with the Hijri date, nex
   await page.click('#ibTsb');
   await expect(page.locator('#sheetTitle')).toHaveText('المسبحة');
 });
+
+// DW-016: «كل شي بحياتي» + «رتّب اليوم»
+test('«كل شي بحياتي»: every tool in one sheet, and each tile opens its place', async ({ page }) => {
+  await open(page);
+  await page.click('#toolsBtn');
+  await expect(page.locator('#sheetTitle')).toHaveText('كل شي بحياتي');
+  const n = await page.locator('[data-tool]').count();
+  expect(n).toBeGreaterThanOrEqual(18);   // «التنبيهات» بنسخة الجوال بس
+  await page.click('[data-tool="shop"]');
+  await expect(page.locator('button.tab[data-tab="tasks"]')).toHaveClass(/on/);
+  expect(await store(page, () => App.ui.tasksSeg)).toBe('shop');
+  await page.click('#toolsBtn'); await page.click('[data-tool="zakat"]');
+  await expect(page.locator('#sheetTitle')).toHaveText('الزكاة والخُمس');
+  await page.click('#sheetCancel');
+  await page.click('#toolsBtn'); await page.click('[data-tool="tasbih"]');
+  await expect(page.locator('#sheetTitle')).toHaveText('المسبحة');
+});
+
+test('«رتّب اليوم»: hiding a card hides it on Today, survives a reload and comes back when switched on', async ({ page }) => {
+  await open(page);
+  await store(page, () => App.go('today'));
+  for (const k of ['schedule', 'tasks', 'recent', 'health']) await expect(page.locator(`#view section[data-tk="${k}"]`)).toBeVisible();
+  await page.click('#toolsBtn'); await page.click('#tkOpen');
+  await page.uncheck('[data-tk-on="recent"]'); await page.uncheck('[data-tk-on="health"]');
+  await page.click('#sheetSave');
+  await expect(page.locator('#view section[data-tk="recent"]')).toBeHidden();
+  await expect(page.locator('#view section[data-tk="health"]')).toBeHidden();
+  await expect(page.locator('#view section[data-tk="tasks"]')).toBeVisible();
+  await page.reload(); await page.waitForFunction(() => window.App && App.st);
+  await expect(page.locator('#view section[data-tk="recent"]')).toBeHidden();
+  await store(page, () => App.S.setSettings({ today_hide: [] }));
+  await expect(page.locator('#view section[data-tk="recent"]')).toBeVisible();
+});
