@@ -63,6 +63,23 @@ P['reel-cover-template.jpg'] = [1080, 1920, BASE(1080, 1920) + `<div class="bg">
 P['story-template.jpg'] = [1080, 1920, BASE(1080, 1920) + `<div class="bg"></div><div class="grid"></div>
 <div class="abs" style="left:80px;right:80px;top:560px;text-align:center;font-size:130px;line-height:1.25">نص الستوري<br><span class="lime">هنا</span></div>
 <div class="tag" style="top:1500px">@m_jumajaffar16</div>`];
+// كفر ريلز وستوري فخمة
+P['reel-cover-keeper.jpg'] = [1080, 1920, BASE(1080, 1920) + `<div class="bg"></div><div class="grid"></div>
+<div class="abs" style="left:50%;top:500px;width:560px;height:560px;margin-left:-280px;border-radius:50%;background:radial-gradient(circle,rgba(198,244,50,.18),transparent 70%)"></div>
+<div class="abs" style="left:0;right:0;top:540px;text-align:center;color:var(--lime)">${GLOVE(300)}</div>
+<div class="abs" style="left:0;right:0;top:890px;text-align:center;font-size:190px;line-height:1.05">يوم<br><span class="lime">حارس</span></div>
+<div class="abs" style="left:0;right:0;top:1390px;text-align:center"><span class="pill">تمرين · مباراة · رحلة</span></div>
+<div class="tag" style="top:1520px">@m_jumajaffar16</div>`];
+P['reel-cover-build.jpg'] = [1080, 1920, BASE(1080, 1920) + `<div class="bg"></div><div class="grid"></div>
+<div class="abs" style="left:0;right:0;top:560px;text-align:center;font-size:260px;color:var(--lime);direction:ltr;line-height:1">&lt;/&gt;</div>
+<div class="abs" style="left:0;right:0;top:890px;text-align:center;font-size:190px;line-height:1.05">أبني<br><span class="lime">تطبيق</span></div>
+<div class="abs" style="left:0;right:0;top:1390px;text-align:center"><span class="pill">قيد التطوير · نسخة تجريبية</span></div>
+<div class="tag" style="top:1520px">@m_jumajaffar16</div>`];
+P['story-intro.jpg'] = [1080, 1920, BASE(1080, 1920) + `<div class="bg"></div><div class="grid"></div>
+<div class="abs" style="left:0;right:0;top:520px;text-align:center;color:var(--lime)">${GLOVE(200)}</div>
+<div class="abs" style="left:80px;right:80px;top:780px;text-align:center;font-size:170px;line-height:1.15">أبو جعفر<br><span class="lime">حارس مرمى</span></div>
+<div class="abs" style="left:80px;right:80px;top:1250px;text-align:center;font-size:48px;font-weight:400;opacity:.8">وأبني تطبيقات · البحرين 🇧🇭</div>
+<div class="tag" style="top:1500px">@m_jumajaffar16</div>`];
 (async () => {
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   for (const [name, [w, h, html]] of Object.entries(P)) {
