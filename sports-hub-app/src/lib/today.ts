@@ -15,6 +15,8 @@ export function clubToday(i: {
   limit: number
   imported: boolean
   repeatAbsent?: number
+  lateRequests?: number
+  lateWages?: number
   today?: Date
 }): TodayItem[] {
   const out: TodayItem[] = []
@@ -32,6 +34,8 @@ export function clubToday(i: {
   if (out_) out.push({ key: 'out', tone: 'info', text: `لاعبون غير متاحين (إصابة أو إيقاف): ${out_}`, to: '#squad' })
   const maybe = i.squad.filter((p) => p.status === 'doubtful').length
   if (maybe) out.push({ key: 'maybe', tone: 'info', text: `لاعبون مشكوك بجاهزيتهم: ${maybe}`, to: '#squad' })
+  if (i.lateRequests) out.push({ key: 'requests', tone: 'urgent', text: `طلبات لاعبين تعدّت مهلتها الداخلية: ${i.lateRequests}`, to: '/rights' })
+  if (i.lateWages) out.push({ key: 'wages', tone: 'urgent', text: `رواتب متأخرة حسب سجلك: ${i.lateWages}`, to: '/rights' })
   if (i.repeatAbsent) out.push({ key: 'absent', tone: 'warn', text: `غياب متكرر (3 بلا عذر متتالية): ${i.repeatAbsent}`, to: '/attendance' })
   return finish(out)
 }

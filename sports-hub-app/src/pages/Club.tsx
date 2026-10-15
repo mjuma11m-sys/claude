@@ -18,6 +18,8 @@ import { fmtDate, fmtDateTime, fmtMoney } from '../lib/format'
 import { readiness, STATUS } from '../lib/squad'
 import { clubToday } from '../lib/today'
 import { getAttendance } from '../data/attendance'
+import { getRights } from '../data/rights'
+import { lastMonths, lateCount, urgency } from '../lib/rights'
 import { attendanceStats } from '../lib/attendance'
 import { DIVISION_LABEL } from '../data/demo'
 
@@ -81,6 +83,7 @@ export function Club() {
   const { user } = useAuth()
   const load = useLoad(() => getClubRoom(user!.id), [user?.id])
   const att = useLoad(() => getAttendance(user!.id).catch(() => []), [user?.id])
+  const rights = useLoad(() => getRights(user!.id).catch(() => null), [user?.id])
   const [sort, setSort] = useState<SortKey>('num')
 
   if (load.loading && !load.data) return <Loading variant="home" />
@@ -116,7 +119,7 @@ export function Club() {
         </span>
       </div>
 
-      <TodayStrip items={clubToday({ squad, ratio, limit: room.limit, imported: room.imported, repeatAbsent: attendanceStats(att.data ?? [], room.squad.map((p) => p.id)).filter((s) => s.repeated).length, today })} />
+      <TodayStrip items={clubToday({ squad, ratio, limit: room.limit, imported: room.imported, repeatAbsent: attendanceStats(att.data ?? [], room.squad.map((p) => p.id)).filter((s) => s.repeated).length, lateRequests: (rights.data?.requests ?? []).filter((r) => r.status === 'open' && urgency(r, today).tone === 'late').length, lateWages: rights.data ? lateCount(squad, rights.data.paid, lastMonths(2, today), today, rights.data.graceDays) : 0, today })} />
 
       <div className="rise grid grid-cols-2 gap-2 md:grid-cols-4" style={vars({ '--i': 2 })}>
         <div className="glass lift flex h-full items-center justify-center gap-2 px-2 py-3">

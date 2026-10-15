@@ -312,7 +312,7 @@ test.describe('development room', () => {
 
 test.describe('layout', () => {
   test('no screen of the club or the federation scrolls sideways', async ({ page }) => {
-    for (const [role, paths] of [['إدارة النادي', ['/club', '/data', '/development', '/lineup', '/attendance']], ['الاتحاد', ['/federation']]] as const) {
+    for (const [role, paths] of [['إدارة النادي', ['/club', '/data', '/development', '/lineup', '/attendance', '/rights']], ['الاتحاد', ['/federation']]] as const) {
       await as(page, role)
       for (const path of paths) {
         await page.goto(path); await page.waitForTimeout(400)
@@ -539,5 +539,119 @@ test.describe('attendance', () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     const small = await page.getByRole('radiogroup').first().getByRole('radio').evaluateAll((els) => els.map((e) => { const r = e.getBoundingClientRect(); return [r.width, r.height] }))
     for (const [w, h] of small) { expect(w).toBeGreaterThanOrEqual(44); expect(h).toBeGreaterThanOrEqual(44) }
+  })
+})
+
+test.describe('player rights', () => {
+  const AGREEMENT = { reference: 'REF-1', signatory: 'اسم تجريبي', title: 'مدير', signedOn: '2026-01-01', version: 'dpa-draft-1' }
+  test.beforeEach(async ({ page }) => { await as(page, 'إدارة النادي'); await page.goto('/rights') })
+  const card = (page: Page, text: string) => page.locator('[data-request]').filter({ hasText: text })
+  const log = async (page: Page, player: string, kind: string, day?: string) => {
+    await page.locator('#rqPlayer').selectOption({ label: player }); await page.locator('#rqKind').selectOption({ label: kind })
+    if (day) await page.locator('#rqDay').fill(day)
+    await page.getByRole('button', { name: 'سجّل الطلب' }).click()
+  }
+  const squadLabel = (n: number) => new RegExp(`^${n} · اللاعب ${n}$`)
+
+  test('shows the seeded requests with an internal deadline, and the honest note', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: 'طلبات اللاعبين وحقوقهم' })).toBeVisible()
+    await expect(page.getByText('مو صياغة قانونية')).toBeVisible()
+    await expect(page.locator('[data-request]')).toHaveCount(2)
+    await expect(card(page, 'اللاعب 3')).toHaveAttribute('data-tone', 'soon')
+    await expect(card(page, 'اللاعب 8')).toHaveAttribute('data-tone', 'ok')
+    await expect(page.getByText('* لاعبون وطلبات ورواتب خيالية')).toBeVisible()
+  })
+
+  test('logging a request adds it, a second open one of the same kind is refused, a late one raises the club strip', async ({ page }) => {
+    await log(page, '9 · اللاعب 9', 'اعتراض')
+    await expect(page.getByRole('status').filter({ hasText: 'انسجل الطلب' })).toBeVisible()
+    await expect(card(page, 'اعتراض')).toHaveCount(1)
+    await log(page, '9 · اللاعب 9', 'اعتراض')
+    await expect(page.getByText('فيه طلب مفتوح من هالنوع لنفس اللاعب.')).toBeVisible()
+    const old = await page.evaluate(() => new Date(Date.now() - 40 * 86_400_000).toISOString().slice(0, 10))
+    await log(page, '10 · اللاعب 10', 'تصحيح بيانات', old)
+    await expect(card(page, 'اللاعب 10')).toHaveAttribute('data-tone', 'late')
+    await page.goto('/club')
+    await expect(page.getByText('طلبات لاعبين تعدّت مهلتها الداخلية: 1')).toBeVisible()
+  })
+
+  test('an access request cannot be closed before the export, which warns first and downloads a file', async ({ page }) => {
+    const c = card(page, 'نسخة من بياناته')
+    await expect(c.getByRole('button', { name: 'سكّر الطلب' })).toHaveCount(0)
+    await c.getByRole('button', { name: 'صدّر النسخة' }).click()
+    await expect(c.getByRole('alert')).toContainText('بيانات حساسة')
+    const [dl] = await Promise.all([page.waitForEvent('download'), c.getByRole('button', { name: 'نزّل الملف' }).click()])
+    expect(dl.suggestedFilename()).toMatch(/^player-8-\d{4}-\d{2}-\d{2}\.json$/)
+    const body = JSON.parse(await (await import('node:fs/promises')).readFile((await dl.path())!, 'utf8'))
+    expect(body.player.name).toBe('اللاعب 8')
+    expect(body.attendance.length).toBeGreaterThan(0)
+    await expect(c).toContainText('صُدّرت النسخة')
+    await c.getByRole('button', { name: 'سكّر الطلب' }).click()
+    await expect(c).toContainText('سُكّر')
+    await expect(c.getByRole('button')).toHaveCount(0)
+  })
+
+  test('a correction request closes once handled', async ({ page }) => {
+    const c = card(page, 'تصحيح بيانات')
+    await c.getByRole('button', { name: 'تم التصحيح' }).click()
+    await expect(c).toHaveAttribute('data-tone', 'done')
+  })
+
+  test('a withdrawal asks twice, then the player is gone and the request keeps only the consent reference', async ({ page }) => {
+    await log(page, '17 · اللاعب 17', 'سحب الموافقة وحذف')
+    const c = card(page, 'سحب الموافقة')
+    await c.getByRole('button', { name: 'نفّذ الحذف' }).click()
+    await expect(c.getByRole('alert')).toContainText('ما يرجع')
+    await c.getByRole('button', { name: 'أكّد الحذف' }).click()
+    await expect(c).toContainText('لاعب محذوف')
+    await expect(c).toContainText('DEMO-17')
+    await expect(page.locator('#rqPlayer option', { hasText: 'اللاعب 17' })).toHaveCount(0)
+  })
+
+  test('the pay ledger needs the data agreement, then saves a month and keeps it after reload', async ({ page }) => {
+    await page.getByRole('tab', { name: /الرواتب والعقد/ }).click()
+    await expect(page.getByText('سجل الرواتب يحتاج اتفاقية معالجة بيانات فعّالة')).toBeVisible()
+    await page.evaluate((a) => localStorage.setItem('sh.demoAgreement', JSON.stringify(a)), AGREEMENT)
+    await page.goto('/rights'); await page.getByRole('tab', { name: /الرواتب والعقد/ }).click()
+    await expect(page.getByRole('heading', { name: 'سجل الرواتب' })).toBeVisible()
+    const month = page.getByRole('group', { name: 'الشهر' }).getByRole('button').first()
+    await month.click()
+    const p9 = page.getByRole('button', { name: 'انصرف راتب اللاعب 9' })
+    await expect(p9).toHaveAttribute('aria-pressed', 'false')
+    await p9.click()
+    await expect(p9).toHaveAttribute('aria-pressed', 'true')
+    await page.getByRole('button', { name: 'احفظ الشهر' }).click()
+    await expect(page.getByRole('status').filter({ hasText: 'انحفظ الشهر' })).toBeVisible()
+    await page.reload(); await page.getByRole('tab', { name: /الرواتب والعقد/ }).click()
+    await expect(page.getByRole('button', { name: 'انصرف راتب اللاعب 9' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  test('last month shows player 11 late only once the grace days have passed, and never in a month with no records', async ({ page }) => {
+    await page.evaluate((a) => localStorage.setItem('sh.demoAgreement', JSON.stringify(a)), AGREEMENT)
+    await page.goto('/rights'); await page.getByRole('tab', { name: /الرواتب والعقد/ }).click()
+    const months = page.getByRole('group', { name: 'الشهر' }).getByRole('button')
+    await months.nth(1).click()
+    const expected = await page.evaluate(() => { const n = new Date(); const end = Date.UTC(n.getFullYear(), n.getMonth(), 0); return Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()) - end > 15 * 86_400_000 })
+    await expect(page.locator('[data-pay="11"]')).toHaveAttribute('data-late', String(expected))
+    await expect(page.locator('[data-pay="9"]')).toHaveAttribute('data-late', 'false')
+    await months.nth(0).click()
+    await expect(page.locator('[data-late="true"]')).toHaveCount(0)
+  })
+
+  test('medical staff and the federation cannot open it', async ({ page }) => {
+    await page.evaluate(() => localStorage.setItem('sh.demoRole', 'medical'))
+    await page.goto('/rights'); await expect(page).toHaveURL('/medical')
+    await page.evaluate(() => localStorage.setItem('sh.demoRole', 'bfa_admin'))
+    await page.goto('/rights'); await expect(page).toHaveURL('/federation')
+  })
+
+  test('"احذف كل بياناتي" clears the sandbox', async ({ page }) => {
+    await log(page, '9 · اللاعب 9', 'اعتراض')
+    await expect(card(page, 'اعتراض')).toHaveCount(1)
+    await page.goto('/settings')
+    await page.getByRole('button', { name: 'احذف كل بياناتي' }).click()
+    await page.getByRole('button', { name: 'أكّد الحذف' }).click()
+    await expect(page).toHaveURL(/\/login/)
+    expect(await page.evaluate(() => localStorage.getItem('sh.demoRights'))).toBeNull()
   })
 })
