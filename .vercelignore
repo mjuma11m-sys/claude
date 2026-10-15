@@ -1,6 +1,7 @@
 # Vercel ينشر التطبيق بس — كل شي ثاني بالريبو (الفيديوهات، صوتك، السكلات) ما ينرفع
 /*
 !/hayati-app
+!/idarati-app
 !/vercel.json
 /hayati-app/tests
 /hayati-app/node_modules
