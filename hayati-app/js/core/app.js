@@ -1919,7 +1919,9 @@
         if (imp) imp.onchange = async () => {
           const f = imp.files[0];
           if (!f) return;
-          try { const n = S.importJSON(await f.text()); toast('استوردت ' + n + ' عنصر'); render(); } catch (e) { toast('الملف غير صالح'); }
+          const txt = await f.text();
+          if (window.HayatiBackup && HayatiBackup.isEncrypted(txt)) { imp.value = ''; closeSheet(); setTimeout(() => HayatiBackup.restoreSheet(txt), 280); return; }
+          try { const n = S.importJSON(txt); toast('استوردت ' + n + ' عنصر'); render(); } catch (e) { toast('الملف غير صالح'); }
         };
       },
     });

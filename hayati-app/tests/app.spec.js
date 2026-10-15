@@ -1934,3 +1934,56 @@ test('English: «21 يوم» (11+ days) translates like «3 أيام»', async (
   await open(page);
   expect(await store(page, () => window.HayatiLang.tr('بعد 21 يوم · قبل 12 يوم · باقي 21 يوم'))).toBe('in 21 days · 12 days ago · Left 21 days');
 });
+
+test('encrypted backup (DW-029): one file with account + device data + recordings, no plaintext inside, wrong password refused, restore works', async ({ page }) => {
+  await open(page);
+  await store(page, async () => {
+    App.S.setSettings({ onboarded: true });
+    App.S.upsert('transactions', { id: App.S.uuid(), type: 'expense', amount: 7.25, merchant: 'مطعم سرّي جداً', category: 'food', occurred_at: new Date().toISOString() });
+    localStorage.setItem('hayati-trips', JSON.stringify([{ id: 't1', name: 'رحلة لندن السرية', kind: 'leisure', check: [] }]));
+    localStorage.setItem('hayati-supabase', 'session-token-must-not-leave');
+    await window.Extras.Lectures.putClip('clip-1', new Blob([new Uint8Array([1, 2, 3, 4, 5])], { type: 'audio/webm' }));
+  });
+  // من الإعدادات: كلمة سر قصيرة / غير متطابقة تنرفض، والصحيحة تحفظ الملف
+  await page.evaluate(() => { window.HayatiNative = { saveFile: async (name, text, mime) => { window.__saved = { name, text, mime }; return true; } }; });
+  await page.click('#settingsBtn');
+  await page.click('#sheetBody [data-set="secure-backup"]');
+  await expect(page.locator('#sheetTitle')).toHaveText('🔐 نسخة مشفّرة');
+  await expect(page.locator('#bkSize')).toContainText('1');
+  await page.fill('#bkP1', 'short'); await page.fill('#bkP2', 'short'); await page.click('#sheetSave');
+  await expect(page.locator('#toast')).toContainText('8 حروف');
+  await page.fill('#bkP1', 'Abu-Jafar-2026'); await page.fill('#bkP2', 'Abu-Jafar-2027'); await page.click('#sheetSave');
+  await expect(page.locator('#toast')).toContainText('مو نفس');
+  await page.fill('#bkP2', 'Abu-Jafar-2026'); await page.check('#bkAudio'); await page.click('#sheetSave');
+  await page.waitForFunction(() => window.__saved, null, { timeout: 10000 });
+  const saved = await store(page, () => window.__saved);
+  expect(saved.name).toMatch(/^hayati-secure-\d{4}-\d{2}-\d{2}\.json$/);
+  const file = JSON.parse(saved.text);
+  expect(file).toMatchObject({ app: 'hayati', v: 1, cipher: 'AES-GCM', kdf: { name: 'PBKDF2', hash: 'SHA-256', iter: 250000 } });
+  for (const plain of ['مطعم', 'لندن', 'Abu-Jafar', 'transactions', 'session-token']) expect(saved.text).not.toContain(plain);
+  // كلمة سر غلط ما تفتح، والصح يفتح وما فيه جلسة الدخول
+  const wrong = await store(page, (t) => HayatiBackup.decrypt(t, 'nope-nope').then(() => 'opened', (e) => e.message), saved.text);
+  expect(wrong).toBe('wrong');
+  const inner = await store(page, (t) => HayatiBackup.decrypt(t, 'Abu-Jafar-2026'), saved.text);
+  expect(Object.keys(inner.local)).toContain('hayati-trips');
+  expect(Object.keys(inner.local)).not.toContain('hayati-supabase');
+  expect(inner.clips).toHaveLength(1);
+  // نمسح كل شي ونسترجع من الملف عن طريق «استيراد»
+  await store(page, async () => {
+    App.st.transactions.splice(0); localStorage.removeItem('hayati-trips');
+    await new Promise((ok) => { const r = indexedDB.open('hayati-audio', 1); r.onsuccess = () => { const tx = r.result.transaction('clips', 'readwrite'); tx.objectStore('clips').clear(); tx.oncomplete = () => { r.result.close(); ok(); }; }; });
+  });
+  await page.click('#settingsBtn');
+  await page.setInputFiles('[data-set="import"]', { name: 'hayati-secure.json', mimeType: 'application/json', buffer: Buffer.from(saved.text) });
+  await expect(page.locator('#sheetTitle')).toHaveText('🔐 افتح النسخة');
+  await page.fill('#bkPass', 'wrong-password'); await page.click('#sheetSave');
+  await expect(page.locator('#toast')).toContainText('كلمة السر غلط');
+  await page.fill('#bkPass', 'Abu-Jafar-2026'); await page.click('#sheetSave');
+  await expect(page.locator('#toast')).toContainText('1 تسجيل');
+  const back = await store(page, async () => ({
+    tx: App.st.transactions.map((t) => t.merchant),
+    trip: JSON.parse(localStorage.getItem('hayati-trips'))[0].name,
+    clip: Array.from(new Uint8Array(await (await window.Extras.Lectures.getClip('clip-1')).arrayBuffer())),
+  }));
+  expect(back).toEqual({ tx: ['مطعم سرّي جداً'], trip: 'رحلة لندن السرية', clip: [1, 2, 3, 4, 5] });
+});
