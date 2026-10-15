@@ -45,6 +45,11 @@ html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; font-fa
 .days span.on { background: var(--coral); color: #2A0E07; }
 .scr img { transform-origin: 50% 0; }
 .hl { position:absolute; left:0; top:0; border:6px solid var(--coral); border-radius:26px; box-shadow:0 0 0 9999px rgba(11,35,40,.0); }
+body.dark .step, body.dark #wm { color: var(--pearl); }
+body.dark .sub, body.dark .demo { color: rgba(232,220,196,.85); }
+body.dark .phone { box-shadow: 0 0 140px -10px rgba(255,107,74,.35), 0 60px 100px -46px rgba(0,0,0,.8), inset 0 0 0 3px #2a4a50; }
+body.story .phone { left: 270px; top: 540px; width: 540px; height: 1170px; border-radius: 66px; }
+body.story .scr { border-radius: 54px; }
 </style>
 </head>
 <body>
@@ -91,13 +96,16 @@ const q2w = words(q2, 'خلّ كل محاضرة بملفها 🎓');
 
 const phone = add('<div class="abs phone"><div class="scr"></div></div>');
 const scr = phone.querySelector('.scr');
-const W = 592, H = 1314;
+const V = location.hash.slice(1).split(','), STORY = V.includes('story'), DARK = V.includes('dark');
+document.body.classList.toggle('story', STORY); document.body.classList.toggle('dark', DARK);
+const PX = STORY ? 270 : 230, PY = STORY ? 540 : 470;
+const W = STORY ? 512 : 592, H = STORY ? 1142 : 1314;
 const SH = {}; ['1-list', '2-sheet', '3-notes', '5-quiz'].forEach((n) => { SH[n] = add('<img src="shots/' + n + '.png">', scr); });
 const touch = add('<div class="abs touch"></div>', fx);
-const at = (p) => [230 + 14 + p.x * W, 470 + 14 + p.y * H];
+const at = (p) => [PX + 14 + p.x * W, PY + 14 + p.y * H];
 const hl = add('<div class="hl"></div>', fx);
-const T = (html) => add('<div class="abs step" style="top:200px">' + html + '</div>');
-const SUB = (txt) => add('<div class="abs sub" style="top:320px;font-size:46px">' + txt + '</div>');
+const T = (html) => add('<div class="abs step" style="top:' + (STORY ? 300 : 200) + 'px">' + html + '</div>');
+const SUB = (txt) => add('<div class="abs sub" style="top:' + (STORY ? 410 : 320) + 'px;font-size:46px">' + txt + '</div>');
 const st = [
   [T('ملف لكل <span class="c">محاضرة</span>'), SUB('كل مادة مجلّد · تسجيل · ملاحظات · أسئلة'), 2.8, 5.8],
   [T('سجّل <span class="c">بإذن الدكتور</span>'), SUB('التسجيل يظل على جوالك، ما ينرفع'), 5.9, 9.0],
@@ -119,7 +127,9 @@ const tag = add('<div class="abs sub" style="top:1150px;font-size:54px"></div>')
 const tagw = words(tag, '*المحاضرات* بحياتي 🎓');
 const soon = add('<div class="abs sub" style="top:1250px;font-size:40px">✨ ملخص وأسئلة تلقائية من ملاحظاتك: قريباً 👀</div>');
 const beta = add('<div class="abs" style="left:0;right:0;top:1370px;text-align:center"><span style="display:inline-block;padding:16px 40px;border-radius:999px;background:var(--sea);color:var(--pearl);font:400 40px P">قيد التطوير · نسخة تجريبية</span></div>');
-const demo = add('<div class="abs demo" style="top:1858px">* لقطات ببيانات تجريبية</div>');
+const demo = add('<div class="abs demo" style="top:' + (STORY ? 1735 : 1858) + 'px">* لقطات ببيانات تجريبية</div>');
+const cta = add('<div class="abs" style="left:0;right:0;top:1500px;text-align:center"><span style="display:inline-block;padding:20px 44px;border-radius:999px;background:var(--coral);color:#2A0E07;font-size:44px">ردّ على الستوري بـ«حياتي» 👇</span></div>');
+if (!STORY) cta.remove();
 
 const TINTS = [[2.6, '150,215,190'], [5.9, '240,200,120'], [9.1, '150,200,230'], [12.2, '255,170,150'], [15.5, '232,220,196']];
 function tintAt(t) {
@@ -129,7 +139,8 @@ function tintAt(t) {
   return ca3.map((v, k) => Math.round(lerp(v, cb3[k], i < TINTS.length - 1 ? x : 0))).join(',');
 }
 function setT(t) {
-  set(document.getElementById('dark'), 1 - eio(seg(t, 2.3, 2.8)));
+  set(document.getElementById('dark'), DARK ? 1 : 1 - eio(seg(t, 2.3, 2.8)));
+  if (STORY) set(cta, eo(seg(t, 17.4, 17.7)), `scale(${.9 + .1 * back(seg(t, 17.4, 17.8))})`);
   document.getElementById('tint').style.background = `radial-gradient(90% 60% at 80% 0%, rgba(${tintAt(t)},.45), transparent 70%), radial-gradient(80% 50% at 0% 100%, rgba(${tintAt(t)},.25), transparent 70%)`;
   showWords(q1w, t, .15, .2); showWords(q2w, t, 1.1, .15);
   const o1 = 1 - ei(seg(t, 2.2, 2.6)); set(q1, o1); set(q2, o1);
