@@ -158,6 +158,7 @@ Expenses, studies, prayer times and tasks in one place. A Bahraini app (beta).
 | Data types | **Personal info → Email address** (Account management) · **Financial info → Other financial info** (App functionality) · **Other user-generated content** (App functionality) |
 | Collected / Shared | **Collected, not shared** · مو إجباري (Optional) · ما ينباع. ملاحظات المحاضرة اللي تنرسل لـ Anthropic لما المستخدم يضغط «لخّصها لي ✨» = **service provider** يعالج نيابة عنا، فـ Google ما تعتبرها «Shared» (DW-021) |
 | Photos (DW-034) | **Photos and videos → Photos** · Collected, **processed ephemerally** (تنرسل لـ Anthropic عشان تتحوّل لنص وما تنحفظ) · Optional · App functionality |
+| المساعد الذكي (DW-037) | **Financial info** + **Other user-generated content** (ملخص أرقام، بدون أسماء) · Collected, **processed ephemerally** · Optional · App functionality |
 | ملفات PDF (DW-036) | **Files and docs** · Collected, **processed ephemerally** (تنرسل لـ Anthropic وما تنحفظ) · Optional · App functionality |
 | الرحلات (DW-035) | ضمن **Other user-generated content** (تتزامن مع الحساب). رحلات العمرة على الجهاز بس |
 | Security | **Encrypted in transit: Yes** · **Users can request deletion: Yes** (الإعدادات ← احذف كل بياناتي) |

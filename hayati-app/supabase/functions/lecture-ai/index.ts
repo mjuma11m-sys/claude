@@ -1,6 +1,7 @@
 // DW-021 phase 2 — lecture notes → summary / practice questions.
 // DW-034 — photo of a board or page → notes text (the image is only passed through, never stored).
 // DW-036 — lecture PDF → notes + summary + practice questions in one call (the file is only passed through, never stored).
+// DW-037 — «اسأل حياتي»: a question about the user's own numbers, answered from a snapshot the app sends with it (nothing is stored here).
 // Secrets (Supabase → Edge Functions → Secrets, never in the app or repo):
 //   ANTHROPIC_API_KEY  required
 //   AI_MODEL           optional, default claude-opus-5-5 (claude-haiku-5-5 is ~35× cheaper)
@@ -97,6 +98,14 @@ const TASKS = {
 };
 const MEDIA = ["image/jpeg", "image/png", "image/webp"];
 
+// DW-037: the app sends a compact JSON snapshot of the user's data with each question; the answer may only use it.
+const ASK_SYSTEM =
+  "You are the assistant inside «حياتي» (Hayati), a personal planner app for a university student in Bahrain. " +
+  "Answer in the language of the question; for Arabic use simple Gulf Arabic. Be brief: 3–6 short lines or a few bullet points. " +
+  "Use only the numbers and facts in <data>; never invent amounts, dates or appointments. If the data does not contain the answer, say so plainly. " +
+  "Amounts are Bahraini dinars with three decimals (e.g. 12.500 د.ب). If asked for a plan (study or saving), give a practical plan with days and times that fit the schedule. " +
+  "You give no religious rulings (fatwa) and no financial or medical advice beyond the user's own numbers. Plain text only, no Markdown tables or headings.";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "method" }, 405);
@@ -108,9 +117,15 @@ Deno.serve(async (req) => {
   const { data: { user } } = await db.auth.getUser();
   if (!user) return json({ error: "signin" }, 401);
 
-  let body: { mode?: string; title?: string; notes?: string; image?: string; media?: string };
+  let body: { mode?: string; title?: string; notes?: string; image?: string; media?: string; data?: string; messages?: { role: string; content: string }[] };
   try { body = await req.json(); } catch { return json({ error: "bad" }, 400); }
-  const mode = body.mode === "quiz" ? "quiz" : body.mode === "summary" ? "summary" : body.mode === "photo" ? "photo" : body.mode === "pdf" ? "pdf" : null;
+  const mode = body.mode === "quiz" ? "quiz" : body.mode === "summary" ? "summary" : body.mode === "photo" ? "photo" : body.mode === "pdf" ? "pdf" : body.mode === "ask" ? "ask" : null;
+  // ask: last 8 turns, alternating, ending with the user's question
+  const turns = (Array.isArray(body.messages) ? body.messages : []).slice(-8)
+    .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content.trim())
+    .map((m) => ({ role: m.role, content: m.content.slice(0, 2000) }));
+  while (turns.length && turns[0].role !== "user") turns.shift();
+  const data = String(body.data ?? "").slice(0, 40000);
   const notes = String(body.notes ?? "").slice(0, 20000).trim();
   const title = String(body.title ?? "").slice(0, 120).trim();
   const image = String(body.image ?? ""), media = String(body.media ?? "image/jpeg");
@@ -121,6 +136,8 @@ Deno.serve(async (req) => {
   } else if (mode === "pdf") {
     // ≤ 6 MB file → ≤ 8.4 MB of base64
     if (!image || image.length > 8_400_000 || !image.startsWith("JVBER")) return json({ error: "bad" }, 400);
+  } else if (mode === "ask") {
+    if (!turns.length || turns[turns.length - 1].role !== "user" || !data) return json({ error: "bad" }, 400);
   } else if (notes.length < 200) return json({ error: "bad" }, 400);
 
   const key = Deno.env.get("ANTHROPIC_API_KEY");
@@ -135,6 +152,18 @@ Deno.serve(async (req) => {
   const client = new Anthropic({ apiKey: key });
   const opus5 = model.startsWith("claude-opus-5");
   try {
+    if (mode === "ask") {
+      const r = await client.beta.messages.create({
+        model,
+        max_tokens: 2000,
+        ...(opus5 ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" } : {}),
+        system: ASK_SYSTEM + "\n\n<data>\n" + data + "\n</data>",
+        messages: turns,
+      } as any);
+      if (r.stop_reason === "refusal") return json({ error: "refused" }, 422);
+      const t = r.content.filter((b: { type: string }) => b.type === "text").map((b: { text: string }) => b.text).join("").trim();
+      return t ? json({ text: t }) : json({ error: "empty" }, 502);
+    }
     const response = await client.beta.messages.create({
       model,
       max_tokens: 8000,   // Edge Function wall-clock limit: keep answers short enough to finish in time

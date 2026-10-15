@@ -2262,3 +2262,37 @@ test('lectures PDF (DW-036): one call fills notes, summary and new questions; to
   await expect(page.locator('#toast')).toContainText('الحد 6MB');
   expect(await store(page, () => window.__aiCalls.length)).toBe(1);
 });
+
+test('«اسأل حياتي» (DW-037): signed in, the assistant answers through the server from a data snapshot, without people\'s names', async ({ page }) => {
+  await open(page);
+  await expect(page.locator('#assistBtn')).toBeHidden();                       // بدون حساب: ما يطلع
+  await store(page, () => {
+    App.S.setSettings({ onboarded: true });
+    App.S.upsert('transactions', { id: 'q1', kind: 'expense', amount: 3.5, merchant: 'Costa', category: 'قهوة', occurred_at: new Date().toISOString() });
+    App.S.upsert('debts', { id: 'd1', person: 'خالد', amount: 20, direction: 'lent', settled: false });
+    window.__aiCalls = [];
+    App.S.invokeFn = async (name, body) => { window.__aiCalls.push({ name, body }); return { text: 'صرفت على القهوة 3.500 د.ب هالشهر' }; };
+    App.S.status.signedIn = true; App.S.setSettings({ budget: 100 });            // أي تغيير يحدّث الزر
+  });
+  await expect(page.locator('#assistBtn')).toBeVisible();
+  await page.click('#assistBtn');
+  await expect(page.locator('.sheet, #sheet')).toContainText('بدون أسماء الناس');
+  await page.click('.quick [data-q]:first-child');
+  await expect(page.locator('#chat .msg.assistant').last()).toContainText('3.500 د.ب');
+  const call = await store(page, () => window.__aiCalls[0]);
+  expect(call.name).toBe('lecture-ai');
+  expect(call.body.mode).toBe('ask');
+  expect(call.body.messages).toEqual([{ role: 'user', content: 'كم صرفت على القهوة والأكل هالشهر؟' }]);
+  const data = JSON.parse(call.body.data);
+  expect(data.this_month.by_category['قهوة']).toBe(3.5);
+  expect(data.debts_open).toEqual([{ amount: 20, direction: 'owes me' }]);
+  expect(call.body.data).not.toContain('خالد');
+  // سؤال ثاني: المحادثة تنرسل كاملة
+  await page.fill('#chatForm [name=q]', 'وكم باقي من الميزانية؟'); await page.click('#chatForm [type=submit]');
+  await expect.poll(() => store(page, () => window.__aiCalls.length)).toBe(2);
+  expect(await store(page, () => window.__aiCalls[1].body.messages.map((m) => m.role))).toEqual(['user', 'assistant', 'user']);
+  // خلصت المحاولات
+  await store(page, () => { App.S.invokeFn = async () => { throw new Error('limit'); }; });
+  await page.fill('#chatForm [name=q]', 'سؤال ثالث'); await page.click('#chatForm [type=submit]');
+  await expect(page.locator('#chat .msg.assistant').last()).toContainText('خلصت محاولات اليوم');
+});

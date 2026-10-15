@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 37,
+  "next": 38,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -285,6 +285,14 @@
     },
     "DW-036": {
       "title": "ملف PDF ← ملاحظات + ملخص + أسئلة",
+      "owner": "CEO",
+      "priority": "P2",
+      "status": "done",
+      "opened": "2026-10-15",
+      "updated": "2026-10-15"
+    },
+    "DW-037": {
+      "title": "«اسأل حياتي»: المساعد يشتغل بالتطبيق للمسجّلين",
       "owner": "CEO",
       "priority": "P2",
       "status": "done",
