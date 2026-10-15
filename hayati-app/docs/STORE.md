@@ -153,8 +153,10 @@ Expenses, studies, prayer times and tasks in one place. A Bahraini app (beta).
 ### Google Play: Data safety
 | السؤال | الجواب |
 |---|---|
-| Does your app collect or share user data? | **No** (البيانات تنحفظ على الجهاز). ⚠️ صحيح بس طول ما `config.js` فاضي بنسخة المتجر — أي تفعيل للمزامنة يغيّر الجواب قبل الرفع |
-| لو فعّلت المزامنة (Supabase) بعدين | تتغير الإجابة: Financial info + Personal info, **collected, not shared**, encrypted in transit, user can request deletion |
+| Does your app collect or share user data? | **Yes** (DW-020: الحسابات مفعّلة، Supabase فرانكفورت). الحساب اختياري |
+| Data types | **Personal info → Email address** (Account management) · **Financial info → Other financial info** (App functionality) · **Other user-generated content** (App functionality) |
+| Collected / Shared | **Collected, not shared** · مو إجباري (Optional) · ما ينباع |
+| Security | **Encrypted in transit: Yes** · **Users can request deletion: Yes** (الإعدادات ← احذف كل بياناتي) |
 | Privacy policy URL | `https://<رابط-Production>/privacy.html` |
 | Terms of use / EULA URL | `https://<رابط-Production>/terms.html` (بـ App Store Connect: App Information ← License Agreement ← Custom، أو خلّه Standard Apple EULA) |
 | Account deletion URL | نفس الرابط (فيه شرح «احذف كل بياناتي») |
@@ -169,7 +171,7 @@ Expenses, studies, prayer times and tasks in one place. A Bahraini app (beta).
 | Government app | No |
 
 ### Apple: App Privacy
-- **Data Not Collected** (لين ما تشتغل المزامنة).
+- **Data Linked to You** (اختياري، لو سجّل حساب): Contact Info → Email · Financial Info · User Content. **Not used for tracking.**
 - Age rating: **4+**.
 
 ---
