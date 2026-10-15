@@ -312,7 +312,7 @@ test.describe('development room', () => {
 
 test.describe('layout', () => {
   test('no screen of the club or the federation scrolls sideways', async ({ page }) => {
-    for (const [role, paths] of [['إدارة النادي', ['/club', '/data', '/development', '/lineup', '/attendance', '/rights']], ['الاتحاد', ['/federation']]] as const) {
+    for (const [role, paths] of [['إدارة النادي', ['/club', '/data', '/development', '/lineup', '/attendance', '/rights', '/analysis']], ['الاتحاد', ['/federation']]] as const) {
       await as(page, role)
       for (const path of paths) {
         await page.goto(path); await page.waitForTimeout(400)
@@ -653,5 +653,133 @@ test.describe('player rights', () => {
     await page.getByRole('button', { name: 'أكّد الحذف' }).click()
     await expect(page).toHaveURL(/\/login/)
     expect(await page.evaluate(() => localStorage.getItem('sh.demoRights'))).toBeNull()
+  })
+})
+
+test.describe('match report', () => {
+  test.beforeEach(async ({ page }) => { await as(page, 'إدارة النادي'); await page.goto('/analysis') })
+  const open = async (page: Page) => { await page.locator('[data-report="نادي تجريبي 07"]').click(); await expect(page.locator('[data-replay]')).toBeVisible(); await page.getByRole('button', { name: 'للنهاية' }).click() }
+  const at = async (page: Page, m: number) => { await page.locator('#replayMinute').fill(String(m)) }
+  const score = (page: Page) => page.locator('[data-score]').evaluateAll((els) => els.map((e) => e.textContent!.trim()).join(':'))
+
+  test('lists the seeded match, says what it is and is not, and opens the replay', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: 'تقرير المباراة' })).toBeVisible()
+    await expect(page.getByText('ما فيه فيديو ولا تتبع لاعبين ولا ذكاء اصطناعي')).toBeVisible()
+    await expect(page.getByText('* مباراة وأحداث خيالية')).toBeVisible()
+    await open(page)
+    await expect(page.locator('[data-clock]')).toContainText('94')
+  })
+
+  test('the score follows the scrubber minute by minute, from the goals only', async ({ page }) => {
+    await open(page)
+    for (const [m, s] of [[0, '0:0'], [22, '0:0'], [23, '1:0'], [54, '1:0'], [55, '1:1'], [67, '2:1'], [87, '2:1'], [88, '2:2'], [94, '2:2']] as const) {
+      await at(page, m); expect(await score(page), `minute ${m}`).toBe(s)
+    }
+    await expect(page.locator('[data-replay] .sr-only').first()).toContainText('النتيجة النهائية: نحن 2')
+  })
+
+  test('play advances the clock at the chosen speed, pause holds it, and the end stops it', async ({ page }) => {
+    await open(page)
+    await at(page, 0)
+    await page.getByRole('group', { name: 'السرعة' }).getByRole('button', { name: '4×' }).click()
+    await expect(page.getByRole('group', { name: 'السرعة' }).getByRole('button', { name: '4×' })).toHaveAttribute('aria-pressed', 'true')
+    await page.getByRole('button', { name: 'شغّل' }).click()
+    await expect(page.getByRole('button', { name: 'إيقاف' })).toBeVisible()
+    await page.waitForTimeout(1200)
+    await page.getByRole('button', { name: 'إيقاف' }).click()
+    const held = Number((await page.locator('[data-clock] .num').textContent())!)
+    expect(held).toBeGreaterThanOrEqual(3); expect(held).toBeLessThan(40)
+    await page.waitForTimeout(500)
+    expect(Number((await page.locator('[data-clock] .num').textContent())!)).toBe(held)
+    await page.getByRole('button', { name: 'للنهاية' }).click()
+    await expect(page.getByRole('button', { name: 'أعد العرض' })).toBeVisible()
+  })
+
+  test('the shot map, momentum and events grow with the replay', async ({ page }) => {
+    await open(page)
+    const dots = page.locator('[data-shot]')
+    await at(page, 0); await expect(dots).toHaveCount(0); await expect(page.locator('[data-events] li')).toHaveCount(0)
+    await at(page, 23); await expect(dots).toHaveCount(3); await expect(page.locator('[data-events] li').first()).toContainText('هدف')
+    await at(page, 94); expect(await dots.count()).toBeGreaterThan(10)
+    await expect(page.locator('[data-shot="goal"]')).toHaveCount(4)
+  })
+
+  test('the keeper line and the team notes come from the same numbers, and grade nobody', async ({ page }) => {
+    await open(page)
+    await expect(page.locator('[data-keeper]')).toContainText('تصدّى لـ 5 من 7')
+    await expect(page.locator('[data-keeper]')).toContainText('استقبل 2')
+    await expect(page.locator('[data-keeper]')).toContainText('71%')
+    await expect(page.locator('[data-notes]')).toContainText('استقبلنا هدف بآخر')
+    await expect(page.getByText('مو تقييم للحارس')).toBeVisible()
+    await at(page, 30); await expect(page.locator('[data-keeper]')).toContainText('استقبل 0')
+  })
+
+  test('with reduced motion nothing plays by itself and the final state is shown', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.reload()
+    await page.locator('[data-report="نادي تجريبي 07"]').click()
+    await expect(page.locator('[data-clock]')).toContainText('94')
+    expect(await score(page)).toBe('2:2')
+    await expect(page.getByRole('button', { name: 'أعد العرض' })).toBeVisible()
+  })
+
+  test('a new report: needs an opponent and events, refuses a bad minute, then replays what was typed', async ({ page }) => {
+    await page.getByRole('button', { name: 'تقرير جديد' }).click()
+    const save = page.getByRole('button', { name: 'احفظ التقرير' })
+    await expect(save).toBeDisabled()
+    await page.locator('#anOpp').fill('خصم تجريبي')
+    await page.locator('#evMin').fill('131'); await page.getByRole('button', { name: 'أضف الحدث' }).click()
+    await expect(page.getByText('الدقيقة من 0 إلى 130')).toBeVisible()
+    await page.locator('#evMin').fill('10'); await page.getByRole('group', { name: 'نوع الحدث' }).getByRole('button', { name: 'هدف', exact: true }).click(); await page.getByRole('button', { name: 'أضف الحدث' }).click()
+    await page.locator('#evMin').fill('50'); await page.getByRole('group', { name: 'الفريق' }).getByRole('button', { name: 'الخصم' }).click(); await page.getByRole('button', { name: 'أضف الحدث' }).click()
+    await expect(page.locator('[data-draft] li')).toHaveCount(2)
+    await expect(page.locator('#evPlayer')).toHaveCount(0) // no player on the opponent side
+    await expect(save).toBeEnabled(); await save.click()
+    await expect(page.locator('[data-replay]')).toBeVisible()
+    await page.getByRole('button', { name: 'للنهاية' }).click()
+    expect(await score(page)).toBe('1:1')
+    await expect(page.locator('[data-report="خصم تجريبي"]')).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  test('tapping the small pitch places an approximate position on a shot', async ({ page }) => {
+    await page.getByRole('button', { name: 'تقرير جديد' }).click()
+    await page.locator('#anOpp').fill('خصم تجريبي')
+    await page.getByRole('img', { name: 'حدّد موضع التسديدة' }).click({ position: { x: 100, y: 40 } })
+    await expect(page.getByText('محدد')).toBeVisible()
+    await page.getByRole('button', { name: 'أضف الحدث' }).click()
+    await expect(page.locator('[data-draft] li').first()).toContainText('بموضع')
+  })
+
+  test('a report can be deleted', async ({ page }) => {
+    await open(page)
+    await page.getByRole('button', { name: 'احذف التقرير' }).click()
+    await expect(page.locator('[data-report]')).toHaveCount(0)
+  })
+
+  test('medical staff and the federation cannot open it', async ({ page }) => {
+    await page.evaluate(() => localStorage.setItem('sh.demoRole', 'medical'))
+    await page.goto('/analysis'); await expect(page).toHaveURL('/medical')
+    await page.evaluate(() => localStorage.setItem('sh.demoRole', 'bfa_admin'))
+    await page.goto('/analysis'); await expect(page).toHaveURL('/federation')
+  })
+
+  test('nothing scrolls sideways with a report open', async ({ page }) => {
+    await open(page); await page.waitForTimeout(400)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  })
+})
+
+test.describe('phone tab bar', () => {
+  test('the fifth tab opens the rest of the screens, so none is out of reach', async ({ page, viewport }) => {
+    test.skip((viewport?.width ?? 1000) >= 768, 'the tab bar is phone only')
+    await as(page, 'إدارة النادي')
+    const bar = page.locator('nav.fixed')
+    await expect(bar.getByRole('link')).toHaveCount(4)
+    await bar.getByRole('button', { name: 'المزيد' }).click()
+    await expect(page.locator('#more-menu').getByRole('link', { name: 'حقوق اللاعبين' })).toBeVisible()
+    await page.locator('#more-menu').getByRole('link', { name: 'حقوق اللاعبين' }).click()
+    await expect(page).toHaveURL(/rights/)
+    await expect(page.locator('#more-menu')).toHaveCount(0)
+    await expect(bar.getByRole('button', { name: 'المزيد' })).toBeVisible()
   })
 })

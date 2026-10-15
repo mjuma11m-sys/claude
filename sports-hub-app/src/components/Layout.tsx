@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useRef } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation, useMatches } from 'react-router'
 import { useAuth } from '../auth/AuthProvider'
 import { navFor } from '../lib/nav'
@@ -33,7 +33,13 @@ export function Layout() {
     scrollTo(0, 0)
   }, [pathname, title])
   const items = user ? navFor(user.role) : []
-  const tabs = items.slice(0, 5) // the phone tab bar holds five at most
+  const overflow = items.length > 5 // the phone tab bar holds five: with more, the fifth is «المزيد» and opens the rest
+  const tabs = overflow ? items.slice(0, 4) : items
+  const rest = overflow ? items.slice(4) : []
+  const [more, setMore] = useState(false)
+  useEffect(() => setMore(false), [pathname])
+  useEffect(() => { if (!more) return; const k = (e: KeyboardEvent) => e.key === 'Escape' && setMore(false); addEventListener('keydown', k); return () => removeEventListener('keydown', k) }, [more])
+  const restActive = rest.some((i) => pathname === i.to)
 
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[4.75rem_1fr] lg:grid-cols-[16rem_1fr]">
@@ -98,7 +104,22 @@ export function Layout() {
               <span className="max-w-full truncate px-1">{i.label}</span>
             </NavLink>
           ))}
+          {overflow && (
+            <button type="button" aria-expanded={more} aria-controls="more-menu" onClick={() => setMore(!more)} className={`flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] ${restActive || more ? 'bg-pulse/10 text-pulse' : 'text-mute'}`}>
+              <Icon name="hub" />
+              <span className="max-w-full truncate px-1">المزيد</span>
+            </button>
+          )}
         </nav>
+        {overflow && more && (
+          <div id="more-menu" className="fixed inset-x-3 bottom-[calc(max(0.75rem,env(safe-area-inset-bottom))+4.75rem)] z-30 grid gap-1 rounded-2xl border border-white/10 bg-deep/95 p-2 backdrop-blur-xl md:hidden">
+            {rest.map((i) => (
+              <NavLink key={i.to} to={i.to} end className={({ isActive }) => `flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm ${isActive ? 'bg-pulse/10 text-pulse' : 'text-ink'}`}>
+                <Icon name={i.icon} className="size-5" />{i.label}
+              </NavLink>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
