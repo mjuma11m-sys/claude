@@ -55,5 +55,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- DW-021: تسجيل المحاضرات (المايك يتطلب إذن المستخدم وقت التسجيل) -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- DW-023: القبلة، الموقع التقريبي مرة وحدة لما تضغط «استخدم موقعي»، ما ينحفظ -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 </manifest>

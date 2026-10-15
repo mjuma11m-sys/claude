@@ -1528,7 +1528,7 @@ test('«جديد بحياتي»: an existing user sees what is new once after th
   await store(page, () => localStorage.setItem('hayati-seen-version', 'v21'));   // كان على النسخة اللي قبل
   await open(page);
   await expect(page.locator('#sheetTitle')).toHaveText('جديد بحياتي ✨', { timeout: 5000 });
-  await expect(page.locator('#sheetBody .news-item')).toHaveCount(4);
+  await expect(page.locator('#sheetBody .news-item')).toHaveCount(5);
   await page.click('#sheetCancel');
   expect(await store(page, () => localStorage.getItem('hayati-seen-version'))).toBe(await store(page, () => App.APP_VERSION));
   await open(page);
@@ -1685,4 +1685,46 @@ test('lectures math: the symbol bar types into the field you were in, and a card
   await page.click('#lcAddCard');
   await expect(page.locator('#lcCards sup')).toHaveText('2');
   await expect(page.locator('#lcCards .eq').first()).toHaveAttribute('dir', 'ltr');
+});
+
+// ================= DW-023: القبلة =================
+test('qibla: bearing matches known cities and the guide says which way to turn', async ({ page }) => {
+  await open(page);
+  const r = await store(page, () => { const Q = window.Extras.Qibla; return {
+    manama: Q.bearing(Q.MANAMA), london: Q.bearing({ lat: 51.5074, lng: -0.1278 }), nyc: Q.bearing({ lat: 40.7128, lng: -74.006 }),
+    km: Q.distanceKm(Q.MANAMA), right: Q.guide(Q.turn(250, 230)).text, left: Q.guide(Q.turn(250, 280)).text, ok: Q.guide(Q.turn(10, 6)).ok,
+  }; });
+  expect(r.manama).toBeGreaterThan(245); expect(r.manama).toBeLessThan(248);
+  expect(Math.abs(r.london - 119.0)).toBeLessThan(0.5);
+  expect(Math.abs(r.nyc - 58.5)).toBeLessThan(0.5);
+  expect(r.km).toBeGreaterThan(1150); expect(r.km).toBeLessThan(1300);
+  expect(r.right).toBe('لفّ يمين 20°'); expect(r.left).toBe('لفّ يسار 30°'); expect(r.ok).toBe(true);
+});
+
+test('qibla: opens from the tools sheet and «عبادتي», follows the compass sensor, and «استخدم موقعي» recalculates', async ({ page }) => {
+  await page.context().grantPermissions(['geolocation']);
+  await page.context().setGeolocation({ latitude: 51.5074, longitude: -0.1278 });
+  await open(page);
+  await page.click('#toolsBtn');
+  await page.click('[data-tool="qibla"]');
+  await expect(page.locator('#sheetTitle')).toHaveText('🧭 القبلة');
+  await expect(page.locator('#qInfo')).toContainText('246°');
+  await expect(page.locator('#qInfo')).toContainText('المنامة');
+  // حساس البوصلة: heading = 360 − alpha
+  const fire = (alpha) => page.evaluate((a) => window.dispatchEvent(Object.assign(new Event('deviceorientationabsolute'), { alpha: a, absolute: true })), alpha);
+  await fire(360 - 246);
+  await expect(page.locator('#qGuide')).toHaveText('✓ أنت على القبلة');
+  await fire(360 - 180);
+  await expect(page.locator('#qGuide')).toContainText('لفّ يمين');
+  await page.click('#qLoc');
+  await expect(page.locator('#qInfo')).toContainText('119°');
+  await expect(page.locator('#qInfo')).toContainText('موقعك');
+  expect(await page.evaluate(() => JSON.stringify(localStorage)).then((s) => s.includes('51.50'))).toBe(false);   // الموقع ما ينحفظ
+  await page.click('#sheetCancel');
+  await store(page, () => App.S.setSettings({ onboarded: true }));
+  await page.waitForTimeout(350);
+  await store(page, () => window.Extras.settingsAction('ibada'));
+  await page.waitForTimeout(400);
+  await page.click('#ibQibla');
+  await expect(page.locator('#sheetTitle')).toHaveText('🧭 القبلة');
 });

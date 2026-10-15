@@ -43,6 +43,7 @@
     ]],
     ['🕌 العبادة', [
       ['ibada', 'moon', '#0d9488', 'عبادتي', () => run('ibada')],
+      ['qibla', 'compass', '#0d9488', 'القبلة', () => run('qibla')],
       ['tasbih', 'repeat', '#0d9488', 'المسبحة', () => run('tasbih')],
       ['wird', 'book', '#0d9488', 'ورد القرآن', () => (E.pick ? E.pick('wird') : null)],
     ]],

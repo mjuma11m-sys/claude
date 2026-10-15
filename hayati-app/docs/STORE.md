@@ -154,6 +154,7 @@ Expenses, studies, prayer times and tasks in one place. A Bahraini app (beta).
 | السؤال | الجواب |
 |---|---|
 | Does your app collect or share user data? | **Yes** (DW-020: الحسابات مفعّلة، Supabase فرانكفورت). الحساب اختياري |
+| Location | **لا تختارها**: موقع القبلة (DW-023) يتحسب على الجهاز وما يطلع منه، وGoogle ما تعتبر المعالجة على الجهاز «collected». الإذن بالـ manifest: `ACCESS_COARSE_LOCATION` |
 | Data types | **Personal info → Email address** (Account management) · **Financial info → Other financial info** (App functionality) · **Other user-generated content** (App functionality) |
 | Collected / Shared | **Collected, not shared** · مو إجباري (Optional) · ما ينباع. ملاحظات المحاضرة اللي تنرسل لـ Anthropic لما المستخدم يضغط «لخّصها لي ✨» = **service provider** يعالج نيابة عنا، فـ Google ما تعتبرها «Shared» (DW-021) |
 | Security | **Encrypted in transit: Yes** · **Users can request deletion: Yes** (الإعدادات ← احذف كل بياناتي) |
