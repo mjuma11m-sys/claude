@@ -6,3 +6,5 @@ ios/App/App/config.xml
 ios-smoke/
 test-results/
 playwright-report/
+node_modules/
+android-smoke/

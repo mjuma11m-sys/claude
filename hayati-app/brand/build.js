@@ -24,7 +24,7 @@ const MARKS = {
 for (const [n, s] of Object.entries(MARKS)) fs.writeFileSync(path.join(OUT, n + '.svg'), s);
 
 // الشعار مع الاسم: «حياتي» Bold وتحته «Hayati» SemiBold بمسافة 0.08em
-const FONT = path.join(D, '../../videos/hayati-insta');
+const FONT = path.join(__dirname, 'fonts');
 const page = (w, h, bg, body) => `<!doctype html><html dir="rtl"><head><meta charset="utf-8"><style>
 @font-face{font-family:Plex;src:url(file://${FONT}/IBMPlexSansArabic-Bold.ttf);font-weight:700}
 @font-face{font-family:Plex;src:url(file://${FONT}/IBMPlexSansArabic-Regular.ttf);font-weight:400}

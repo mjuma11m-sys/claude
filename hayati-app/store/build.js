@@ -5,13 +5,13 @@ const { chromium } = require('../node_modules/@playwright/test');
 const fs = require('fs'), path = require('path');
 const D = __dirname, OUT = path.join(D, 'out'), RAW = path.join(D, 'raw');
 const APP = 'file://' + path.join(D, '../dist/Hayati.html');
-const FONT = path.join(D, '../../videos/hayati-insta');
+const FONT = path.join(__dirname, '../brand/fonts');
 const ICON = fs.readFileSync(path.join(D, '../brand/icon-square.svg'), 'utf8');
 const GLYPH = ICON.replace(/<\?xml[^>]*>|<svg[^>]*>|<\/svg>|<rect[^>]*\/>|<!--[^>]*-->/g, '');
 fs.mkdirSync(OUT, { recursive: true }); fs.mkdirSync(RAW, { recursive: true });
 
 // نفس البيانات التجريبية «الطبيعية» حق الإعلان (videos/hayati-ad/seed.js)
-const seed = require('../../videos/hayati-ad/seed.js');
+const seed = require('./seed.js');
 
 const SHOTS = [
   ['01_today', 'يومك كله', 'بشاشة وحدة', 'محاضراتك، مهامك، وأوقات الصلاة'],
