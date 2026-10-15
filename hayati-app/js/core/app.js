@@ -686,7 +686,7 @@
       out += '<div class="card goal" data-action="edit-goal" data-id="' + g.id + '">' +
         '<div class="goal-top"><div class="ico" style="' + tint(col) + (g.emoji ? ';font-size:20px' : '') + '">' + (g.emoji ? h(g.emoji) : I(g.done ? 'award' : 'piggy')) + '</div><div style="flex:1;min-width:0"><b>' + h(g.name) + '</b>' +
         '<div class="small muted">' + (g.done || sv >= t ? '🎉 تحقق الهدف' : 'باقي ' + money(left)) + '</div></div>' +
-        '<div style="text-align:left"><b>' + money(sv) + '</b><div class="small muted num">' + Math.round(pct) + '%</div></div></div>' +
+        '<div style="text-align:left;flex:none;max-width:45%"><b class="fit">' + money(sv) + '</b><div class="small muted num">' + Math.round(pct) + '%</div></div></div>' +
         '<div class="meter" style="height:10px;margin:12px 0 10px"><span style="width:' + pct + '%;background:' + col + '"></span></div>' +
         (hint ? '<div class="small muted" style="margin-bottom:10px">' + hint + '</div>' : '') +
         goalItems(g) +
@@ -714,17 +714,18 @@
   // ================= لي وعلي =================
   function viewDebts() {
     const open = st.debts.filter((d) => !d.settled);
-    const lent = open.filter((d) => d.direction === 'lent').reduce((a, d) => a + Number(d.amount), 0);
-    const borrowed = open.filter((d) => d.direction === 'borrowed').reduce((a, d) => a + Number(d.amount), 0);
+    const lent = open.filter((d) => d.direction === 'lent').reduce((a, d) => a + (Number(d.amount) || 0), 0);
+    const borrowed = open.filter((d) => d.direction !== 'lent').reduce((a, d) => a + (Number(d.amount) || 0), 0);
     let out = '<div class="duo"><div class="tile"><div class="ti" style="' + tint('#059669') + '">' + I('arrowDown') + '</div><div class="lbl">لي (عند الناس)</div><div class="val" style="color:var(--income)">' + money(lent) + '</div></div>' +
       '<div class="tile"><div class="ti" style="' + tint('#e11d48') + '">' + I('arrowUp') + '</div><div class="lbl">علي (للناس)</div><div class="val" style="color:var(--expense)">' + money(borrowed) + '</div></div></div>';
 
     // الصافي لكل شخص
     const people = {};
     for (const d of open) {
-      people[d.person] = people[d.person] || { net: 0, items: [] };
-      people[d.person].net += (d.direction === 'lent' ? 1 : -1) * Number(d.amount);
-      people[d.person].items.push(d);
+      const who = String(d.person || '').trim() || 'بدون اسم';   // بيانات ناقصة (استيراد قديم) ما تطلع «undefined»
+      people[who] = people[who] || { net: 0, items: [] };
+      people[who].net += (d.direction === 'lent' ? 1 : -1) * (Number(d.amount) || 0);
+      people[who].items.push(d);
     }
     const names = Object.keys(people).sort((a, b) => Math.abs(people[b].net) - Math.abs(people[a].net));
     out += secHead('مفتوحة', '<span class="count">' + open.length + '</span><button class="link" data-action="add-debt">إضافة</button>');
@@ -748,8 +749,8 @@
     const lent = d.direction === 'lent';
     return '<li class="row' + (d.settled ? ' done' : '') + '" data-action="edit-debt" data-id="' + d.id + '">' +
       '<button class="check' + (d.settled ? ' on' : '') + '" data-action="toggle-debt" data-id="' + d.id + '" aria-label="تم السداد">' + I('check') + '</button>' +
-      '<div class="main"><div class="title"><span class="t">' + (lent ? 'سلّفت ' : 'استلفت من ') + h(d.person) + '</span></div>' +
-      '<div class="sub">' + dayLabel(new Date(d.occurred_at)) + (d.note ? ' · ' + h(d.note) : '') + '</div></div>' +
+      '<div class="main"><div class="title"><span class="t">' + (lent ? 'سلّفت ' : 'استلفت من ') + h(d.person || 'بدون اسم') + '</span></div>' +
+      '<div class="sub">' + [isNaN(new Date(d.occurred_at)) ? '' : dayLabel(new Date(d.occurred_at)), d.note ? h(d.note) : ''].filter(Boolean).join(' · ') + '</div></div>' +
       '<div class="amount ' + (lent ? 'income' : '') + '" style="' + (lent ? '' : 'color:var(--expense)') + '">' + money(d.amount) + '</div></li>';
   }
 

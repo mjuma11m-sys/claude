@@ -1772,3 +1772,35 @@ test('bug report: the message has the version and device only, never amounts or 
   expect(text).toContain('الجهاز: ');
   expect(text).not.toMatch(/سارة|92|380|لولو/);
 });
+
+// ================= DW-025: أسوأ بيانات (بند 14) =================
+test('worst-case data: huge amounts, long names and missing fields never spill off-screen or show undefined/NaN', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 780 });
+  await open(page);
+  await store(page, () => {
+    const S = App.S, now = Date.now(), iso = (d) => new Date(now - d * 864e5).toISOString();
+    const LONG = 'مؤسسة الخليج العالمية للتجارة والمقاولات والخدمات اللوجستية المحدودة ذ.م.م';
+    S.setSettings({ onboarded: true, name: 'عبدالرحمن بن عبدالله بن محمد', budget: 99999999.999 });
+    S.upsert('transactions', { id: 't1', kind: 'expense', amount: 1234567.891, category: 'shopping', note: LONG, occurred_at: iso(0) });
+    S.upsert('transactions', { id: 't2', kind: 'income', amount: 99999999.999, category: 'salary', occurred_at: iso(1) });
+    S.upsert('subscriptions', { id: 's1', name: LONG, amount: 123456.789, cycle: 'monthly', next_at: iso(-2) });
+    S.upsert('goals', { id: 'g1', name: LONG, target: 99999999, saved: 12345678.9 });
+    S.upsert('debts', { id: 'd1', amount: 7654321.123 });   // ناقص الاسم والتاريخ والاتجاه
+  });
+  const spill = () => page.evaluate(() => {
+    const W = document.documentElement.clientWidth, out = [];
+    if (document.documentElement.scrollWidth > W + 1) out.push('page');
+    document.querySelectorAll('#view *').forEach((e) => { const r = e.getBoundingClientRect(); if (r.width && (r.right > W + 1 || r.left < -1)) out.push(e.tagName + ' ' + (e.textContent || '').trim().slice(0, 30)); });
+    document.querySelectorAll('#view .amount-big, #view .tile .val, #view .hero .split b, #view .fit').forEach((e) => { if (e.querySelector('.cur') && e.scrollWidth > e.clientWidth + 1) out.push('cut ' + e.textContent.trim()); });
+    return out;
+  });
+  await store(page, () => App.go('today'));
+  await expect.poll(spill).toEqual([]);
+  for (const seg of ['tx', 'subs', 'goals', 'debts']) {
+    await store(page, (s) => { App.ui.moneySeg = s; App.go('money'); }, seg);
+    await expect.poll(spill, { message: seg }).toEqual([]);
+  }
+  await expect(page.locator('#view')).not.toContainText('undefined');
+  await expect(page.locator('#view')).not.toContainText('NaN');
+  await expect(page.locator('#view')).toContainText('بدون اسم');
+});
