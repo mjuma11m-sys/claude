@@ -21,6 +21,8 @@ const DataCenter = lazy(() => import('./pages/DataCenter').then((m) => ({ defaul
 const Development = lazy(() => import('./pages/Development').then((m) => ({ default: m.Development })))
 const Lineup = lazy(() => import('./pages/Lineup').then((m) => ({ default: m.Lineup })))
 const Attendance = lazy(() => import('./pages/Attendance').then((m) => ({ default: m.Attendance })))
+const Player = lazy(() => import('./pages/Player').then((m) => ({ default: m.Player })))
+const Report = lazy(() => import('./pages/Report').then((m) => ({ default: m.Report })))
 const Analysis = lazy(() => import('./pages/Analysis').then((m) => ({ default: m.Analysis })))
 const Rights = lazy(() => import('./pages/Rights').then((m) => ({ default: m.Rights })))
 const Medical = lazy(() => import('./pages/Medical').then((m) => ({ default: m.Medical })))
@@ -41,6 +43,8 @@ export const router = createBrowserRouter([
       { path: 'lineup', handle: { title: 'تشكيلة المباراة' }, element: <RequireArea area="lineup"><Lineup /></RequireArea> },
       { path: 'attendance', handle: { title: 'الحضور والغياب' }, element: <RequireArea area="attendance"><Attendance /></RequireArea> },
       { path: 'analysis', handle: { title: 'تقرير المباراة' }, element: <RequireArea area="analysis"><Analysis /></RequireArea> },
+      { path: 'player/:id', handle: { title: 'ملف اللاعب' }, element: <RequireArea area="playerfile"><Player /></RequireArea> },
+      { path: 'report', handle: { title: 'التقرير الشهري' }, element: <RequireArea area="report"><Report /></RequireArea> },
       { path: 'rights', handle: { title: 'حقوق اللاعبين' }, element: <RequireArea area="rights"><Rights /></RequireArea> },
       { path: 'federation', handle: { title: 'غرفة الاتحاد' }, element: <RequireArea area="federation"><Federation /></RequireArea> },
       { path: 'standings', handle: { title: 'الترتيب' }, element: <Standings /> },

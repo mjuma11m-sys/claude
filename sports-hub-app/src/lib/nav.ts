@@ -17,6 +17,7 @@ const LINEUP: NavItem = { to: '/lineup', label: 'التشكيلة', icon: 'pitch
 const ATT: NavItem = { to: '/attendance', label: 'الحضور', icon: 'check' }
 const RIGHTS: NavItem = { to: '/rights', label: 'حقوق اللاعبين', icon: 'user' }
 const ANALYSIS: NavItem = { to: '/analysis', label: 'التحليل', icon: 'pitch' }
+const REPORT: NavItem = { to: '/report', label: 'التقرير الشهري', icon: 'data' }
 const DEV: NavItem = { to: '/development', label: 'التطوير', icon: 'bolt' }
 const LOADS: NavItem = { to: '/medical', label: 'الأحمال', icon: 'pulse' }
 
@@ -24,7 +25,7 @@ const LOADS: NavItem = { to: '/medical', label: 'الأحمال', icon: 'pulse' 
 export function navFor(role: Role, fanZone = FAN_ZONE): NavItem[] {
   const zone = fanZone ? [ZONE] : []
   switch (role) {
-    case 'club_admin': return [{ to: '/club', label: 'غرفة النادي', icon: 'club' }, LINEUP, ANALYSIS, ATT, DEV, DATA, RIGHTS, STANDINGS, LOADS, ...zone]
+    case 'club_admin': return [{ to: '/club', label: 'غرفة النادي', icon: 'club' }, LINEUP, ANALYSIS, ATT, DEV, DATA, RIGHTS, REPORT, STANDINGS, LOADS, ...zone]
     case 'bfa_admin': return [{ to: '/federation', label: 'غرفة الاتحاد', icon: 'hub' }, STANDINGS, ...zone]
     case 'medical': return fanZone ? [LOADS, ATT, DEV, ...FAN] : [LOADS, ATT, DEV, STANDINGS]
     default: return fanZone ? FAN : [STANDINGS]

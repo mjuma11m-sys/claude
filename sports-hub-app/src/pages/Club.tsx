@@ -19,6 +19,9 @@ import { readiness, STATUS } from '../lib/squad'
 import { clubToday } from '../lib/today'
 import { getAttendance } from '../data/attendance'
 import { getRights } from '../data/rights'
+import { getReports } from '../data/analysis'
+import { getDataCenter } from '../data/datacenter'
+import { onboarding } from '../lib/onboarding'
 import { lastMonths, lateCount, urgency } from '../lib/rights'
 import { attendanceStats } from '../lib/attendance'
 import { DIVISION_LABEL } from '../data/demo'
@@ -84,6 +87,8 @@ export function Club() {
   const load = useLoad(() => getClubRoom(user!.id), [user?.id])
   const att = useLoad(() => getAttendance(user!.id).catch(() => []), [user?.id])
   const rights = useLoad(() => getRights(user!.id).catch(() => null), [user?.id])
+  const start = useLoad(() => Promise.all([getDataCenter(user!.id), getReports(user!.id)]).then(([dc, reports]) => ({ dc, reports })).catch(() => null), [user?.id])
+  const [hideStart, setHideStart] = useState(() => { try { return localStorage.getItem('sh.hideStart') === '1' } catch { return false } })
   const [sort, setSort] = useState<SortKey>('num')
 
   if (load.loading && !load.data) return <Loading variant="home" />
@@ -120,6 +125,27 @@ export function Club() {
       </div>
 
       <TodayStrip items={clubToday({ squad, ratio, limit: room.limit, imported: room.imported, repeatAbsent: attendanceStats(att.data ?? [], room.squad.map((p) => p.id)).filter((s) => s.repeated).length, lateRequests: (rights.data?.requests ?? []).filter((r) => r.status === 'open' && urgency(r, today).tone === 'late').length, lateWages: rights.data ? lateCount(squad, rights.data.paid, lastMonths(2, today), today, rights.data.graceDays) : 0, today })} />
+
+      {start.data && att.data && (() => {
+        const p = onboarding({ agreement: !!start.data.dc.agreement, imported: room.imported, attendanceSessions: att.data.length, reports: start.data.reports.length })
+        if (p.complete) return null
+        const toggle = (v: boolean) => { setHideStart(v); try { localStorage.setItem('sh.hideStart', v ? '1' : '0') } catch { /* preference only */ } }
+        if (hideStart) return <button type="button" onClick={() => toggle(false)} className="min-h-11 rounded-xl border border-white/15 px-4 text-sm text-mute">أظهر «ابدأ هنا» (<span className="num">{p.done}/{p.total}</span>)</button>
+        return (
+          <article data-start className="glass rise space-y-3 p-4 md:p-5" style={vars({ '--i': 1 })}>
+            <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-display text-2xl">ابدأ هنا</h2><span className="text-sm text-mute"><span className="num">{p.done}</span> من <span className="num">{p.total}</span></span></div>
+            <div role="progressbar" aria-label="تقدم البداية" aria-valuemin={0} aria-valuemax={p.total} aria-valuenow={p.done} className="h-2 overflow-hidden rounded-full bg-white/10"><div className="grow h-full rounded-full bg-pulse" style={{ width: `${(p.done / p.total) * 100}%` }} /></div>
+            <ol className="grid gap-1.5 sm:grid-cols-2">
+              {p.steps.map((st) => (
+                <li key={st.key} data-step={st.key} data-done={st.done}>
+                  <Link to={st.to} className={`flex min-h-11 items-center gap-3 rounded-xl border px-3 text-sm ${st.done ? 'border-safe/40 text-safe' : 'border-white/15'}`}><span aria-hidden className="grid size-6 shrink-0 place-items-center rounded-full border border-current text-xs">{st.done ? '✓' : ''}</span><span>{st.label}{st.done && <span className="sr-only"> (تم)</span>}</span></Link>
+                </li>
+              ))}
+            </ol>
+            <button type="button" onClick={() => toggle(true)} className="min-h-11 rounded-xl px-3 text-sm text-mute underline underline-offset-4">أخفها</button>
+          </article>
+        )
+      })()}
 
       <div className="rise grid grid-cols-2 gap-2 md:grid-cols-4" style={vars({ '--i': 2 })}>
         <div className="glass lift flex h-full items-center justify-center gap-2 px-2 py-3">
@@ -184,7 +210,7 @@ export function Club() {
         <ul className="divide-y divide-white/10">
           {rows.map((p) => (
             <li key={p.id} className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-0.5 py-2.5">
-              <span className="row-span-2 grid size-11 place-items-center rounded-xl bg-white/5 font-display text-2xl leading-none">{p.num ?? '—'}</span>
+              <Link to={`/player/${p.id}`} aria-label={`ملف ${p.name}`} className="row-span-2 grid size-11 place-items-center rounded-xl bg-white/5 font-display text-2xl leading-none hover:bg-white/10">{p.num ?? '—'}</Link>
               <span className="truncate font-bold">{p.name} <span className="text-xs font-normal text-mute">· {p.pos}</span></span>
               <span className={`justify-self-end whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs ${STATUS[p.status].cls}`}>{STATUS[p.status].label}</span>
               <span className="col-span-2 flex flex-wrap items-center justify-between gap-x-4 text-xs text-mute">

@@ -5,7 +5,7 @@ test('every tap target on a phone is at least 44px', async ({ page }, info) => {
   test.skip(info.project.name !== 'phone', 'touch sizing matters on the phone layout')
   const small: string[] = []
   await page.goto('/login')
-  for (const [path, role] of [['/zone', 'medical'], ['/standings', 'medical'], ['/vote', 'medical'], ['/pass', 'medical'], ['/medical', 'medical'], ['/settings', 'medical'], ['/club', 'club_admin'], ['/data', 'club_admin'], ['/development', 'club_admin'], ['/lineup', 'club_admin'], ['/attendance', 'club_admin'], ['/rights', 'club_admin'], ['/analysis', 'club_admin'], ['/federation', 'bfa_admin']]) {
+  for (const [path, role] of [['/zone', 'medical'], ['/standings', 'medical'], ['/vote', 'medical'], ['/pass', 'medical'], ['/medical', 'medical'], ['/settings', 'medical'], ['/club', 'club_admin'], ['/data', 'club_admin'], ['/development', 'club_admin'], ['/lineup', 'club_admin'], ['/attendance', 'club_admin'], ['/rights', 'club_admin'], ['/analysis', 'club_admin'], ['/report', 'club_admin'], ['/player/demo-9', 'club_admin'], ['/federation', 'bfa_admin']]) {
     await page.evaluate((k) => localStorage.setItem('sh.demoRole', k), role)
     await page.goto(path)
     await page.waitForTimeout(600)

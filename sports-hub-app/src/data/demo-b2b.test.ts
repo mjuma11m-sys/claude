@@ -28,7 +28,7 @@ describe('club and federation demo data', () => {
     expect(statusOf(c17)).toBe('near')
   })
   it('the fan zone is off by default: staff land in their rooms and nobody gets a fan tab', () => {
-    expect(navFor('club_admin', false).map((i) => i.to)).toEqual(['/club', '/lineup', '/analysis', '/attendance', '/development', '/data', '/rights', '/standings', '/medical'])
+    expect(navFor('club_admin', false).map((i) => i.to)).toEqual(['/club', '/lineup', '/analysis', '/attendance', '/development', '/data', '/rights', '/report', '/standings', '/medical'])
     expect(navFor('bfa_admin', false).map((i) => i.to)).toEqual(['/federation', '/standings'])
     expect(navFor('fan', false).map((i) => i.to)).toEqual(['/standings'])
     expect(navFor('fan', true).map((i) => i.to)).toContain('/vote')

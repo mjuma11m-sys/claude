@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 
 /* WCAG 2.1 A/AA automated checks on every screen. Automated rules catch roughly a third of real issues, so this is a floor, not a pass mark. */
-const SCREENS: [string, string | null][] = [['/zone', 'الطاقم الطبي'], ['/standings', 'الطاقم الطبي'], ['/vote', 'الطاقم الطبي'], ['/pass', 'الطاقم الطبي'], ['/medical', 'الطاقم الطبي'], ['/settings', 'الطاقم الطبي'], ['/club', 'إدارة النادي'], ['/data', 'إدارة النادي'], ['/development', 'إدارة النادي'], ['/lineup', 'إدارة النادي'], ['/attendance', 'إدارة النادي'], ['/rights', 'إدارة النادي'], ['/analysis', 'إدارة النادي'], ['/federation', 'الاتحاد'], ['/privacy', null], ['/terms', null], ['/login', null]]
+const SCREENS: [string, string | null][] = [['/zone', 'الطاقم الطبي'], ['/standings', 'الطاقم الطبي'], ['/vote', 'الطاقم الطبي'], ['/pass', 'الطاقم الطبي'], ['/medical', 'الطاقم الطبي'], ['/settings', 'الطاقم الطبي'], ['/club', 'إدارة النادي'], ['/data', 'إدارة النادي'], ['/development', 'إدارة النادي'], ['/lineup', 'إدارة النادي'], ['/attendance', 'إدارة النادي'], ['/rights', 'إدارة النادي'], ['/analysis', 'إدارة النادي'], ['/report', 'إدارة النادي'], ['/player/demo-9', 'إدارة النادي'], ['/federation', 'الاتحاد'], ['/privacy', null], ['/terms', null], ['/login', null]]
 
 for (const [path, role] of SCREENS) {
   test(`axe: ${path}`, async ({ page }) => {

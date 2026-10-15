@@ -5,11 +5,12 @@ import { DemoNote } from '../components/DemoNote'
 import { Icon } from '../components/Icon'
 import { PageTitle } from '../components/PageTitle'
 import { Failed, Loading } from '../components/States'
+import { getAudit, BY_TEXT, ENTITY_TEXT, OP_TEXT } from '../data/audit'
 import { getClubRoom } from '../data/source'
 import { getDataCenter, importSquad, recordAgreement, revokeAgreement, withdrawConsent, type DataCenter as DC } from '../data/datacenter'
 import { useLoad } from '../data/useLoad'
 import { vars } from '../lib/css'
-import { fmtDate, fmtMoney } from '../lib/format'
+import { fmtDate, fmtDateTime, fmtMoney } from '../lib/format'
 import { DPA_TEMPLATE, DPA_VERSION } from '../lib/dpa-template'
 import { ERROR_TEXT, FIELD_TEXT, parseSquadCsv, TEMPLATE_CSV, type CsvError, type ImportRow } from '../lib/squad-csv'
 
@@ -184,6 +185,23 @@ function Withdraw({ userId, onDone }: { userId: string; onDone: () => void }) {
   )
 }
 
+/* Internal trail of what changed, never of what it contained. Collapsed: it is for the day something looks wrong. */
+function AuditPanel({ userId }: { userId: string }) {
+  const load = useLoad(() => getAudit(userId), [userId])
+  return (
+    <details className="glass rise p-4 md:p-5" style={vars({ '--i': 5 })}>
+      <summary className="min-h-11 cursor-pointer font-display text-2xl">سجل العمليات (داخلي)</summary>
+      <div className="space-y-2 pt-2">
+        <p className="text-xs text-mute">يسجّل من غيّر أي جدول ومتى وكم صف، <b>بدون أسماء ولا قيم</b>. سجل داخلي للنادي مو دليل قانوني: احتفظ بنسخ احتياطية.</p>
+        {load.loading && !load.data ? <p className="text-sm text-mute">يحمّل…</p> : !load.data ? <p className="text-sm text-crimson-ink">ما قدرنا نقرأ السجل.</p>
+          : !load.data.enabled ? <p className="text-sm text-mute">السجل يشتغل مع قاعدة البيانات الحقيقية. التجربة داخل متصفحك ما تكتب سجل.</p>
+          : load.data.rows.length === 0 ? <p className="text-sm text-mute">ما فيه عمليات مسجلة.</p>
+          : <ul className="divide-y divide-white/10" data-audit>{load.data.rows.map((r) => <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm"><span>{OP_TEXT[r.op]} · {ENTITY_TEXT[r.entity] ?? r.entity} · <span className="num">{r.n}</span></span><span className="text-xs text-mute">{BY_TEXT[r.by]} · <span className="num">{fmtDateTime(r.at)}</span></span></li>)}</ul>}
+      </div>
+    </details>
+  )
+}
+
 export function DataCenter() {
   const { user } = useAuth()
   const load = useLoad<DC>(() => getDataCenter(user!.id), [user?.id])
@@ -249,6 +267,7 @@ export function DataCenter() {
       </ol>
 
       {dc.agreement && dc.players > 0 && <Withdraw userId={user!.id} onDone={load.reload} />}
+      <AuditPanel userId={user!.id} />
       {demo && <DemoNote text="* تجربة داخل متصفحك فقط: ما ينرفع شي لأي سيرفر، ويتمسح مع «احذف بياناتي». الأندية خيالية." />}
     </section>
   )

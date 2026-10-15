@@ -157,3 +157,13 @@
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes grow { from { transform: scaleX(0); } to { transform: none; } }
 @keyframes bar-in { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* Print: the monthly report prints on white with no navigation, so it can go to the club board as a page. */
+@media print {
+  aside, header, nav, .no-print, a[href="#main"] { display: none !important; }
+  html, body { background: #fff !important; color: #000 !important; }
+  main { padding: 0 !important; max-width: none !important; }
+  .glass { background: none !important; border: 1px solid #999 !important; box-shadow: none !important; backdrop-filter: none !important; }
+  .report * { color: #000 !important; animation: none !important; }
+  .report .text-mute { color: #444 !important; }
+}

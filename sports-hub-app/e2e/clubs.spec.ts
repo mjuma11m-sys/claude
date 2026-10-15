@@ -312,7 +312,7 @@ test.describe('development room', () => {
 
 test.describe('layout', () => {
   test('no screen of the club or the federation scrolls sideways', async ({ page }) => {
-    for (const [role, paths] of [['إدارة النادي', ['/club', '/data', '/development', '/lineup', '/attendance', '/rights', '/analysis']], ['الاتحاد', ['/federation']]] as const) {
+    for (const [role, paths] of [['إدارة النادي', ['/club', '/data', '/development', '/lineup', '/attendance', '/rights', '/analysis', '/report', '/player/demo-9']], ['الاتحاد', ['/federation']]] as const) {
       await as(page, role)
       for (const path of paths) {
         await page.goto(path); await page.waitForTimeout(400)
@@ -781,5 +781,80 @@ test.describe('phone tab bar', () => {
     await expect(page).toHaveURL(/rights/)
     await expect(page.locator('#more-menu')).toHaveCount(0)
     await expect(bar.getByRole('button', { name: 'المزيد' })).toBeVisible()
+  })
+})
+
+test.describe('club toolkit', () => {
+  test.beforeEach(async ({ page }) => { await as(page, 'إدارة النادي') })
+  const IMPORT = [{ num: 1, name: 'لاعب ١', pos: 'حارس مرمى', status: 'fit', ends_on: '2027-06-30', monthly_wage_bhd: 500, consent_ref: 'C-1' }]
+  const AGREEMENT = { reference: 'REF-1', signatory: 'اسم تجريبي', title: 'مدير', signedOn: '2026-01-01', version: 'dpa-draft-1' }
+
+  test('"ابدأ هنا" counts what exists, links each step, hides, and disappears when all four are done', async ({ page }) => {
+    await page.goto('/club')
+    const card = page.locator('[data-start]')
+    await expect(card).toContainText('2 من 4')
+    await expect(card.locator('[data-step="agreement"]')).toHaveAttribute('data-done', 'false')
+    await expect(card.locator('[data-step="attendance"]')).toHaveAttribute('data-done', 'true')
+    await expect(card.getByRole('link', { name: /اتفاقية معالجة/ })).toHaveAttribute('href', '/data')
+    await card.getByRole('button', { name: 'أخفها' }).click()
+    await expect(card).toHaveCount(0)
+    await page.reload(); await expect(page.locator('[data-start]')).toHaveCount(0)
+    await page.getByRole('button', { name: /أظهر «ابدأ هنا»/ }).click(); await expect(page.locator('[data-start]')).toBeVisible()
+    await page.evaluate(([a, i]) => { localStorage.setItem('sh.demoAgreement', JSON.stringify(a)); localStorage.setItem('sh.demoImport', JSON.stringify(i)) }, [AGREEMENT, IMPORT] as const)
+    await page.reload()
+    await expect(page.locator('[data-start]')).toHaveCount(0)
+    await expect(page.getByRole('button', { name: /أظهر «ابدأ هنا»/ })).toHaveCount(0)
+  })
+
+  test('the player file opens from the squad number and shows facts, the coach\'s ratings and counts, never a grade', async ({ page }) => {
+    await page.goto('/club')
+    await page.getByRole('link', { name: 'ملف اللاعب 9' }).click()
+    await expect(page).toHaveURL(/\/player\/demo-9/)
+    await expect(page.getByRole('heading', { name: 'اللاعب 9' })).toBeVisible()
+    await expect(page.locator('[data-att]')).toContainText('نسبة الحضور')
+    await expect(page.locator('[data-recent] li').first()).toBeVisible()
+    await expect(page.locator('[data-match]')).toContainText('أهداف 1')
+    await expect(page.locator('[data-match]')).toContainText('تسديدات 3 (على المرمى 1)')
+    await expect(page.getByText('مو تقييم أداء')).toBeVisible()
+    await page.goto('/player/demo-1')
+    await expect(page.locator('[data-avg]')).toContainText('متوسط')
+    await expect(page.locator('[data-skills] li').first()).toBeVisible()
+    await expect(page.locator('[data-load]')).toBeVisible()
+    await expect(page.locator('[data-match]')).toContainText('ما فيه أحداث')
+    await expect(page.getByText('تقييم المدرب رأي مو قياس')).toBeVisible()
+  })
+
+  test('an unknown player says so, and medical staff and the federation cannot open a file', async ({ page }) => {
+    await page.goto('/player/nobody'); await expect(page.getByRole('alert')).toContainText('ما لقينا هذا اللاعب')
+    await page.evaluate(() => localStorage.setItem('sh.demoRole', 'medical')); await page.goto('/player/demo-9'); await expect(page).toHaveURL('/medical')
+    await page.evaluate(() => localStorage.setItem('sh.demoRole', 'bfa_admin')); await page.goto('/player/demo-9'); await expect(page).toHaveURL('/federation')
+  })
+
+  test('the monthly report holds team counters only, follows the month, prints clean, and is closed to others', async ({ page }) => {
+    await page.goto('/report')
+    await expect(page.getByRole('heading', { name: 'التقرير الشهري' })).toBeVisible()
+    await expect(page.locator('main')).not.toContainText('اللاعب 9')
+    await expect(page.locator('main')).not.toContainText('BHD')
+    const expected = await page.evaluate(() => { const n = new Date(); const d = new Date(Date.now() - 6 * 86_400_000); return d.getMonth() === n.getMonth() ? 1 : 0 })
+    await expect(page.locator('[data-rep="matches"]').getByText('مباريات', { exact: true }).locator('..')).toContainText(String(expected))
+    await page.locator('#rpMonth').selectOption({ index: 5 })
+    await expect(page.locator('[data-rep="attendance"]').getByText('نسبة الحضور').locator('..')).toContainText('—')
+    await page.locator('#rpMonth').selectOption({ index: 0 })
+    await page.evaluate(() => { (window as unknown as { __printed: number }).__printed = 0; window.print = () => { (window as unknown as { __printed: number }).__printed++ } })
+    await page.getByRole('button', { name: 'اطبع أو احفظ PDF' }).click()
+    expect(await page.evaluate(() => (window as unknown as { __printed: number }).__printed)).toBe(1)
+    await page.emulateMedia({ media: 'print' })
+    await expect(page.locator('header').first()).toBeHidden(); await expect(page.locator('.no-print').first()).toBeHidden()
+    await page.emulateMedia({ media: 'screen' })
+    await page.evaluate(() => localStorage.setItem('sh.demoRole', 'bfa_admin')); await page.goto('/report'); await expect(page).toHaveURL('/federation')
+  })
+
+  test('the internal operations log is collapsed, says what it stores, and says plainly it needs the real database', async ({ page }) => {
+    await page.goto('/data')
+    const d = page.locator('details').filter({ hasText: 'سجل العمليات (داخلي)' })
+    await expect(d.getByText('بدون أسماء ولا قيم')).toBeHidden()
+    await d.locator('summary').click()
+    await expect(d.getByText('بدون أسماء ولا قيم')).toBeVisible()
+    await expect(d.getByText('السجل يشتغل مع قاعدة البيانات الحقيقية')).toBeVisible()
   })
 })
