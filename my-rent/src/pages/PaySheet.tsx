@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Method, Payment, Unit } from "../data/types";
 import { useStore } from "../data/store";
-import { arrears, fmt, monthName, owedMonths, parseBHD, unitStatus } from "../data/logic";
+import { arrears, fmt, monthLabel, monthName, nextUnpaid, owedMonths, paidThrough, parseBHD, prepaid, unitStatus } from "../data/logic";
 import { Chips, Sheet, useToast } from "../ui/kit";
 import { Money, StatusPill } from "../theme/AppShell";
 import { Icon } from "../ui/icons";
@@ -18,7 +18,7 @@ function reminderUrl(unit: Unit, months: string[], amount: number) {
 
 /** تفاصيل الوحدة + المتأخرات + تسجيل دفعة + الإيصالات */
 export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onContract }: { unit: Unit | null; onClose: () => void; onReceipt: (p: Payment, u: Unit) => void; onEdit: (u: Unit) => void; onStatement: (u: Unit) => void; onContract: (u: Unit) => void }) {
-  const { data, pay, unpay, vacate, undeposit, deleteUnit, saveUnit } = useStore();
+  const { data, pay, unpay, payAhead, vacate, undeposit, deleteUnit, saveUnit } = useStore();
   const [confirmVacate, setConfirmVacate] = useState(false);
   const toast = useToast();
   const [shown, setShown] = useState<Unit | null>(unit);
@@ -27,6 +27,7 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onCont
   const [method, setMethod] = useState<Method>("BenefitPay");
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
+  const [ahead, setAhead] = useState<"0" | "1" | "3" | "6" | "12">("0");
 
   const owed = shown ? owedMonths(data, shown) : [];
 
@@ -41,6 +42,7 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onCont
     setError("");
     setDone(false);
     setConfirmVacate(false);
+    setAhead("0");
   }, [unit]);
 
   const u = shown;
@@ -73,6 +75,17 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onCont
     window.setTimeout(onClose, 260);
     toast({ text: `انسجلت دفعة ${u.name} · ${monthName(month)} · ${fmt(fils)} د.ب`, undo: () => unpay(p.id), stamp: true });
   };
+
+  // DW-022: دفعة مقدمة — كل شهر بمبلغ الإيجار كامل، والتراجع يمسح الكل
+  const submitAhead = () => {
+    if (!u || ahead === "0") return;
+    const r = payAhead(u.id, Number(ahead), method);
+    if (!r) return;
+    onClose();
+    toast({ text: `انسجلت دفعة مقدمة ${u.name} · ${r.months.length} ${r.months.length > 10 || r.months.length < 3 ? "شهر" : "أشهر"} لين ${monthLabel(r.months[r.months.length - 1])}`, undo: r.undo, stamp: true });
+  };
+  const thru = u ? paidThrough(data, u) : null;
+  const pre = u ? prepaid(data, u) : { months: [], amount: 0 };
 
   return (
     <Sheet open={!!unit} onClose={onClose} title={u ? `${u.name} · ${u.building}` : ""}>
@@ -116,6 +129,17 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onCont
               {error && <div id="pay-err" className="field-error">{error}</div>}
               <Chips label="طريقة الدفع" value={method} onChange={setMethod} options={METHODS.map((m) => ({ id: m, label: m }))} />
               <button type="submit" className={`btn btn-block press${done ? " btn-done" : ""}`} disabled={done}>{done ? <>{Icon.check} انسجلت</> : "سجّل الدفعة"}</button>
+            </form>
+          )}
+
+          {u.tenant && (
+            <form className="pay-form ahead-form" onSubmit={(e) => { e.preventDefault(); submitAhead(); }}>
+              <span className="strong">دفعة مقدمة</span>
+              <span className="muted small">{thru ? <>مدفوع لين <b>{monthLabel(thru)}</b>{pre.months.length > 0 && <> · مقدم <span className="num">{pre.months.length}</span> {pre.months.length > 10 || pre.months.length < 3 ? "شهر" : "أشهر"}</>}</> : "فيه أشهر ما اندفعت — المقدم يسددها أول"}</span>
+              <Chips label="كم شهر" value={ahead} onChange={setAhead} options={[{ id: "1", label: "شهر" }, { id: "3", label: "3 أشهر" }, { id: "6", label: "6 أشهر" }, { id: "12", label: "سنة" }]} />
+              {ahead !== "0" && (() => { const ms = nextUnpaid(data, u, Number(ahead)); return <div className="small ahead-sum">من {monthLabel(ms[0])} لين {monthLabel(ms[ms.length - 1])} · <Money fils={u.rent * ms.length} /></div>; })()}
+              {owed.length === 0 && <Chips label="طريقة الدفع" value={method} onChange={setMethod} options={METHODS.map((m) => ({ id: m, label: m }))} />}
+              <button type="submit" id="ahead-btn" className="btn btn-ghost btn-block press" disabled={ahead === "0"}>احفظ الدفعة المقدمة</button>
             </form>
           )}
 

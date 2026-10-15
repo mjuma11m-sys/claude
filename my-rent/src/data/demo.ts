@@ -19,7 +19,7 @@ export function demoData(now = new Date()): Data {
       { id: "u3", name: "شقة 3", building: "عمارة المالكية", rent: 200000, dueDay: 1, tenant: { name: "عائلة سلمان", phone: "3xxx 1103", since: "2023-09", deposit: 200000 } },
       { id: "u4", name: "شقة 4", building: "عمارة المالكية", rent: 190000, dueDay: 10, tenant: { name: "خالد ناصر", phone: "3xxx 1104", since: "2025-06", until: isoDay(new Date(y + 1, 5, 30)) } },
       { id: "u5", name: "شقة 5", building: "عمارة المالكية", rent: 200000, dueDay: 28, tenant: { name: "مريم حسن", phone: "3xxx 1105", since: m1 } },
-      { id: "u6", name: "محل 1", building: "شارع المالكية", rent: 450000, dueDay: 1, tenant: { name: "مطعم الريف", phone: "17xx 2201", since: "2022-11" } },
+      { id: "u6", name: "محل 1", building: "شارع المالكية", kind: "shop", rent: 450000, dueDay: 1, tenant: { name: "مطعم الريف", phone: "17xx 2201", since: "2022-11" } },
       { id: "u7", name: "محل 2", building: "شارع المالكية", rent: 380000, dueDay: 15 },
     ],
     payments: [
@@ -29,6 +29,8 @@ export function demoData(now = new Date()): Data {
       pay("u1", 1, 180000, "BenefitPay", 1), pay("u4", 1, 190000, "تحويل", 11), pay("u5", 1, 200000, "نقد", 27), pay("u6", 1, 450000, "شيك", 2),
       // هالشهر
       pay("u1", 0, 180000, "BenefitPay", 1), pay("u4", 0, 190000, "تحويل", 3), pay("u6", 0, 450000, "شيك", 2),
+      // DW-022: المحل دافع 3 أشهر مقدم (نفس يوم دفعة هالشهر)
+      ...[-1, -2, -3].map((b) => ({ ...pay("u6", b, 450000, "شيك", 2), date: day(0, 2) })),
     ],
     cats: [
       { id: "c1", name: "صيانة العقار", limit: 250000 },

@@ -1,4 +1,4 @@
-import type { Data, Fils, Status, Unit } from "./types";
+import type { Data, Fils, Kind, Status, Unit } from "./types";
 
 export const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 export const isoDay = (d: Date) => `${monthKey(d)}-${String(d.getDate()).padStart(2, "0")}`;
@@ -213,4 +213,90 @@ export function fillContract(template: string, unit: Unit, owner: string, now = 
     "تاريخ اليوم": isoDay(now),
   };
   return template.replace(/\{([^{}]+)\}/g, (m, k: string) => (k.trim() in v ? v[k.trim()] : m));
+}
+
+// ── DW-022: ملف متابعة حالة الإيجار ─────────────────────
+
+export const KINDS: { id: Kind; label: string }[] = [
+  { id: "flat", label: "شقة" }, { id: "shop", label: "محل تجاري" }, { id: "store", label: "ستور" },
+  { id: "house", label: "بيت" }, { id: "nursery", label: "روضة" },
+];
+export const kindLabel = (k: Kind) => KINDS.find((x) => x.id === k)!.label;
+/** النوع المحفوظ، وإلا من الاسم (محل/ستور/بيت/فيلا/روضة)، وإلا شقة */
+export function kindOf(u: Unit): Kind {
+  if (u.kind) return u.kind;
+  const n = u.name;
+  if (/محل|معرض/.test(n)) return "shop";
+  if (/ستور|مخزن|مستودع/.test(n)) return "store";
+  if (/روض|حضان/.test(n)) return "nursery";
+  if (/بيت|فيلا|منزل/.test(n)) return "house";
+  return "flat";
+}
+
+export const SOON_DAYS = 60;
+export type LeaseState = "active" | "soon" | "ended" | "open" | "vacant";
+export const LEASE_LABEL: Record<LeaseState, string> = { active: "سارية", soon: "قريبة الانتهاء", ended: "منتهية", open: "بدون نهاية", vacant: "شاغرة" };
+export const monthLabel = (key: string) => `${monthName(key)} ${key.slice(0, 4)}`;
+
+/** الأشهر المدفوعة كامل بعد هالشهر (الإيجار المقدم) */
+export function prepaid(data: Data, unit: Unit, now = new Date()) {
+  const cur = monthKey(now);
+  const pays = data.payments.filter((p) => p.unitId === unit.id && p.month > cur);
+  const months = [...new Set(pays.map((p) => p.month))].sort().filter((m) => paidFor(data, unit.id, m) >= unit.rent);
+  return { months, amount: pays.reduce((s, p) => s + p.amount, 0) };
+}
+
+/** آخر شهر متصل مدفوع كامل من بداية الحساب (null = هالشهر وقبله فيه نقص) */
+export function paidThrough(data: Data, unit: Unit, now = new Date()) {
+  if (!unit.tenant) return null;
+  const start = data.trackFrom > unit.tenant.since ? data.trackFrom : unit.tenant.since;
+  const owed = owedMonths(data, unit, now);
+  if (owed.length) {
+    const first = owed[0].month;
+    return first <= start ? null : monthsBetween(start, first).slice(-2)[0];
+  }
+  let m = monthKey(now);
+  for (;;) {
+    const next = monthKey(new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)), 1));
+    if (paidFor(data, unit.id, next) < unit.rent) return m;
+    m = next;
+  }
+}
+
+/** الأشهر الجاية اللي ما اندفعت (للدفعة المقدمة): تبدأ من أول شهر بعد «مدفوع لين» */
+export function nextUnpaid(data: Data, unit: Unit, n: number, now = new Date()) {
+  const owed = owedMonths(data, unit, now).map((x) => x.month);
+  const out = [...owed].slice(0, n);
+  let [y, m] = monthKey(now).split("-").map(Number);
+  while (out.length < n) {
+    m++; if (m > 12) { m = 1; y++; }
+    const k = `${y}-${String(m).padStart(2, "0")}`;
+    if (paidFor(data, unit.id, k) < unit.rent) out.push(k);
+  }
+  return out;
+}
+
+/** صف لكل وحدة: المستحق والمسدد لين هالشهر (من كشف الحساب)، والمقدم منفصل، وحالة العقد */
+export function rentTracker(data: Data, now = new Date()) {
+  const today = isoDay(now);
+  return data.units.map((u) => {
+    const st = statement(data, u, now);
+    const due = st.rows.reduce((s, r) => s + r.rent, 0);
+    const paid = st.rows.reduce((s, r) => s + Math.min(r.paid, r.rent), 0);
+    const pre = prepaid(data, u, now);
+    const until = u.tenant?.until;
+    const daysLeft = until ? Math.round((Date.parse(until) - Date.parse(today)) / 86400000) : null;
+    const lease: LeaseState = !u.tenant ? "vacant" : daysLeft === null ? "open" : daysLeft < 0 ? "ended" : daysLeft <= SOON_DAYS ? "soon" : "active";
+    return {
+      unit: u, kind: kindOf(u), status: u.tenant ? unitStatus(data, u, now) : null,
+      due, paid, left: st.late + st.due, through: paidThrough(data, u, now),
+      ahead: pre.months.length, aheadAmount: pre.amount, daysLeft, lease,
+    };
+  });
+}
+export type TrackRow = ReturnType<typeof rentTracker>[number];
+
+export function trackerTotals(rows: TrackRow[]) {
+  const sum = (k: "due" | "paid" | "left" | "aheadAmount") => rows.reduce((s, r) => s + r[k], 0);
+  return { units: rows.length, rented: rows.filter((r) => r.unit.tenant).length, due: sum("due"), paid: sum("paid"), left: sum("left"), ahead: sum("aheadAmount") };
 }

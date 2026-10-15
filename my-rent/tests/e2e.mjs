@@ -22,7 +22,7 @@ async function waitServer() {
 try {
   await waitServer();
   const browser = await chromium.launch({ executablePath: exe });
-  const pages = ["home", "tenants", "budget", "bank", "reports", "house", "vendors", "settings"];
+  const pages = ["home", "tenants", "budget", "bank", "reports", "track", "house", "vendors", "settings"];
 
   // 1) كل الشاشات بكل الأحجام: بدون scroll أفقي وبدون أخطاء
   for (const [w, h] of [[390, 844], [820, 1180], [1280, 800]]) {
@@ -361,7 +361,7 @@ try {
     const dl = x.waitForEvent("download"); await x.getByRole("button", { name: "تصدير التقارير Excel" }).click();
     const out = path.join(tmp, "export.xlsx"); await (await dl).saveAs(out);
     const sheets = await readXlsxFile(out);
-    ok(sheets.map((s) => s.sheet).join("|") === "التقرير الشهري|الدفعات|المصاريف|الوحدات" && sheets[1].data.length === before.payments.length + 1, "Excel: التصدير 4 صفحات وينقرا", sheets.map((s) => s.sheet + ":" + s.data.length).join(" "));
+    ok(sheets.map((s) => s.sheet).join("|") === "متابعة الإيجار|التقرير الشهري|الدفعات|المصاريف|الوحدات" && sheets[2].data.length === before.payments.length + 1, "Excel: التصدير 5 صفحات وينقرا", sheets.map((s) => s.sheet + ":" + s.data.length).join(" "));
     const dl2 = x.waitForEvent("download"); await x.getByRole("button", { name: "نزّل القالب" }).click();
     const tpl = path.join(tmp, "tpl.xlsx"); await (await dl2).saveAs(tpl);
     ok((await readXlsxFile(tpl)).length === 3, "Excel: القالب 3 صفحات");
@@ -369,6 +369,50 @@ try {
     ok((await x.locator(".field-error").first().innerText()).includes("xlsx"), "Excel: ملف مو xlsx ينرفض");
     ok(xErr.length === 0, "DW-021: بدون أخطاء", xErr.join(" | "));
     await x.close();
+  }
+
+  // 16) DW-022: ملف متابعة حالة الإيجار + الدفعة المقدمة + نوع العقار
+  {
+    const t = await browser.newPage({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
+    const tErr = []; t.on("pageerror", (e) => tErr.push(e.message));
+    await t.goto(URL + "#track"); await t.evaluate(() => localStorage.clear()); await t.reload(); await t.waitForTimeout(1200);
+    ok(await t.locator("#track-tbl tbody tr").count() === 7, "المتابعة: صف لكل وحدة (7)");
+    const ahead = await t.locator("#ahead-tbl").innerText();
+    ok(ahead.includes("محل 1") && ahead.includes("محل تجاري") && /3\s*أشهر/.test(ahead), "المقدم: محل 1 دافع 3 أشهر", ahead.replace(/\s+/g, " ").slice(0, 120));
+    await t.locator(".track-filters").getByRole("radio", { name: /^محل تجاري/ }).click(); await t.waitForTimeout(300);
+    ok(await t.locator("#track-tbl tbody tr").count() === 2, "تصفية النوع: محلين");
+    await t.locator(".track-filters").getByRole("radio", { name: /^الكل/ }).first().click();
+    await t.locator(".track-filters").getByRole("radio", { name: /^متأخر/ }).click(); await t.waitForTimeout(300);
+    const late = await t.locator("#track-tbl tbody").innerText();
+    ok(late.includes("شقة 3") && !late.includes("محل 1"), "تصفية السداد: المتأخرين بس");
+    ok(await t.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "المتابعة: الجدول ينزلق داخل البطاقة بدون scroll للصفحة");
+    const shown = await t.locator("#track-tbl tbody tr").count();
+    const dl = t.waitForEvent("download"); await t.getByRole("button", { name: "تصدير Excel" }).click();
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "idarati-tr-")); const out = path.join(tmp, "t.xlsx"); await (await dl).saveAs(out);
+    const sh = await readXlsxFile(out);
+    ok(sh[0].sheet === "متابعة الإيجار" && sh[0].data.length === shown + 2 && !JSON.stringify(sh).includes("3xxx"), "تصدير المتابعة: الصفوف المصفّاة + المجموع، بدون هواتف", String(sh[0].data.length));
+    // دفعة مقدمة 6 أشهر لشقة 1 + تراجع
+    await t.goto(URL + "#tenants"); await t.waitForTimeout(700);
+    await t.locator(".unit-card", { hasText: "شقة 1" }).first().click(); await t.waitForTimeout(500);
+    await t.locator(".ahead-form").getByRole("radio", { name: "6 أشهر" }).click();
+    ok((await t.locator(".ahead-sum").innerText()).includes("1,080") || (await t.locator(".ahead-sum").innerText()).includes("1080"), "المعاينة: 6 × 180 = 1,080", await t.locator(".ahead-sum").innerText());
+    const n0 = await t.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")).payments.length);
+    await t.locator("#ahead-btn").click(); await t.waitForTimeout(500);
+    const st = await t.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")));
+    ok(st.payments.length === n0 + 6 && st.payments.filter((p) => p.unitId === "u1").every((p) => p.amount === 180000), "دفعة مقدمة: 6 دفعات بالإيجار كامل");
+    await t.getByRole("button", { name: "تراجع" }).click(); await t.waitForTimeout(400);
+    ok(await t.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")).payments.length) === n0, "التراجع يمسح الستة");
+    // نوع العقار بالنموذج + ملف العقد ما ينمسح مع التعديل
+    await t.evaluate(() => { const d = JSON.parse(localStorage.getItem("idarati:v2")); d.units[6].contractFile = { id: "cfx", name: "a.pdf", type: "application/pdf", size: 1, tenant: "", uploadedAt: "2026-10-01" }; localStorage.setItem("idarati:v2", JSON.stringify(d)); });
+    await t.reload(); await t.waitForTimeout(800);
+    await t.locator(".unit-card", { hasText: "محل 2" }).first().click(); await t.waitForTimeout(400);
+    await t.getByRole("button", { name: /^(تعديل|أضف مستأجر)$/ }).first().click(); await t.waitForTimeout(400);
+    await t.locator(".unit-form").getByRole("radio", { name: "ستور" }).click();
+    await t.getByRole("button", { name: "احفظ التعديل" }).click(); await t.waitForTimeout(400);
+    const u7 = await t.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")).units.find((u) => u.id === "u7"));
+    ok(u7.kind === "store" && u7.contractFile?.id === "cfx", "النوع ينحفظ وملف العقد يبقى بعد التعديل");
+    ok(tErr.length === 0, "DW-022: بدون أخطاء", tErr.join(" | "));
+    await t.close();
   }
 
   if (process.env.SHOTS) {

@@ -2,10 +2,14 @@
 export type Fils = number;
 export type Status = "paid" | "due" | "late";
 
+/** نوع العقار (DW-022) */
+export type Kind = "shop" | "flat" | "store" | "house" | "nursery";
+
 export type Unit = {
   id: string;
   name: string;
   building: string;
+  kind?: Kind; // اختياري: البيانات القديمة بدونه ← kindOf يحسبه من الاسم
   rent: Fils;
   dueDay: number; // يوم الاستحقاق بالشهر
   tenant?: { name: string; phone: string; since: string; until?: string; deposit?: Fils };

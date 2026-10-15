@@ -18,15 +18,16 @@ import { ContractSheet } from "./pages/Contract";
 import { UnitForm } from "./pages/UnitForm";
 import { Reports } from "./pages/Reports";
 import { SearchSheet } from "./pages/Search";
+import { Tracker } from "./pages/Tracker";
 import { PaySheet, PickUnitSheet } from "./pages/PaySheet";
 import "./app.css";
 import symbolUrl from "../brand/symbol.svg";
 
-const PAGES = ["home", "tenants", "budget", "bank", "reports", "house", "vendors", "settings"] as const;
+const PAGES = ["home", "tenants", "budget", "bank", "reports", "track", "house", "vendors", "settings"] as const;
 type Page = (typeof PAGES)[number];
 const TITLES: Record<Page, string> = {
   home: "الرئيسية", tenants: "المستأجرين", budget: "الميزانية", bank: "بنك العائلة",
-  reports: "التقارير", house: "الصيانة", vendors: "الموردين", settings: "الإعدادات",
+  reports: "التقارير", track: "متابعة الإيجار", house: "الصيانة", vendors: "الموردين", settings: "الإعدادات",
 };
 
 const fromHash = (): Page => {
@@ -100,6 +101,7 @@ function Idarati() {
       {page === "budget" && <Budget />}
       {page === "bank" && <Bank />}
       {page === "reports" && <Reports />}
+      {page === "track" && <Tracker onOpenUnit={setUnit} />}
       {page === "house" && <Maintenance />}
       {page === "vendors" && <Vendors />}
       {page === "settings" && <Settings />}

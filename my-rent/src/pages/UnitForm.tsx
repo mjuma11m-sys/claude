@@ -1,8 +1,8 @@
 import { useEffect, useState, type ChangeEvent } from "react";
-import type { Unit } from "../data/types";
+import type { Kind, Unit } from "../data/types";
 import { useStore } from "../data/store";
-import { fmt, monthKey, parseBHD } from "../data/logic";
-import { Sheet, useToast } from "../ui/kit";
+import { KINDS, fmt, kindOf, monthKey, parseBHD } from "../data/logic";
+import { Chips, Sheet, useToast } from "../ui/kit";
 
 type Props = { open: boolean; unit: Unit | null; onClose: () => void; onSaved?: (u: Unit) => void };
 
@@ -11,11 +11,13 @@ export function UnitForm({ open, unit, onClose, onSaved }: Props) {
   const { saveUnit } = useStore();
   const toast = useToast();
   const [f, setF] = useState({ name: "", building: "", rent: "", dueDay: "1", tenant: "", phone: "", since: "", until: "", deposit: "" });
+  const [kind, setKind] = useState<Kind>("flat");
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!open) return;
     setError("");
+    setKind(unit ? kindOf(unit) : "flat");
     setF({
       name: unit?.name ?? "",
       building: unit?.building ?? "",
@@ -45,6 +47,8 @@ export function UnitForm({ open, unit, onClose, onSaved }: Props) {
       id: unit?.id,
       name: f.name.trim(),
       building: f.building.trim() || "بدون مبنى",
+      kind,
+      ...(unit?.contractFile ? { contractFile: unit.contractFile } : {}), // التعديل ما يمسح ملف العقد
       rent,
       dueDay: day,
       tenant: f.tenant.trim() ? { name: f.tenant.trim(), phone: f.phone.trim(), since: f.since, until: f.until || undefined, ...(deposit ? { deposit } : {}) } : undefined,
@@ -61,6 +65,7 @@ export function UnitForm({ open, unit, onClose, onSaved }: Props) {
           <label className="field"><span>اسم الوحدة</span><input id="u-name" className="input" value={f.name} onChange={set("name")} placeholder="شقة 6" /></label>
           <label className="field"><span>المبنى</span><input id="u-building" className="input" value={f.building} onChange={set("building")} placeholder="عمارة المالكية" /></label>
         </div>
+        <Chips<Kind> label="نوع العقار" value={kind} onChange={setKind} options={KINDS} />
         <div className="grid-2">
           <label className="field"><span>الإيجار الشهري (د.ب)</span><input id="u-rent" className="input num" inputMode="decimal" dir="ltr" value={f.rent} onChange={set("rent")} placeholder="200.000" /></label>
           <label className="field"><span>يستحق يوم</span><input id="u-day" className="input num" inputMode="numeric" dir="ltr" value={f.dueDay} onChange={set("dueDay")} /></label>

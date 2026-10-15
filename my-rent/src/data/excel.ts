@@ -1,7 +1,7 @@
 // Excel (DW-021): قالب بثلاث صفحات، قراءة ملف المستخدم مع أخطاء لكل صف، وتصدير التقارير.
 // المنطق هني صافي (بدون مكتبات) عشان ينختبر؛ القراءة والكتابة الفعلية بمكتبات تتحمّل وقت الحاجة.
-import type { BudgetCat, Data, Expense, Method, Payment, Unit } from "./types";
-import { isoDay, monthKey, monthName, monthlyReport, parseBHD } from "./logic";
+import type { BudgetCat, Data, Expense, Kind as UnitKind, Method, Payment, Unit } from "./types";
+import { LEASE_LABEL, isoDay, kindLabel, kindOf as unitKind, monthKey, monthLabel, monthName, monthlyReport, parseBHD, rentTracker } from "./logic";
 import { normalize } from "./prefs";
 
 export type Cell = string | number | boolean | Date | null | undefined;
@@ -21,11 +21,12 @@ const METHODS: Method[] = ["BenefitPay", "تحويل", "نقد", "شيك"];
 
 /** عناوين الأعمدة المقبولة (بعد normalize: بلا مسافات وهمزات) */
 const COLS = {
-  units: { name: ["الوحدة", "اسمالوحدة", "الشقة"], building: ["المبنى", "العمارة"], rent: ["الإيجار", "الإيجارالشهري", "الإيجار(دب)"], dueDay: ["يومالاستحقاق", "يستحقيوم"], tenant: ["المستأجر", "اسمالمستأجر"], phone: ["الهاتف", "الجوال", "رقمالهاتف"], since: ["بدايةالعقد", "منشهر"], until: ["نهايةالعقد"], deposit: ["التأمين", "مبلغالتأمين"] },
+  units: { name: ["الوحدة", "اسمالوحدة", "الشقة"], building: ["المبنى", "العمارة"], kind: ["النوع", "نوعالعقار", "نوعالوحدة"], rent: ["الإيجار", "الإيجارالشهري", "الإيجار(دب)"], dueDay: ["يومالاستحقاق", "يستحقيوم"], tenant: ["المستأجر", "اسمالمستأجر"], phone: ["الهاتف", "الجوال", "رقمالهاتف"], since: ["بدايةالعقد", "منشهر"], until: ["نهايةالعقد"], deposit: ["التأمين", "مبلغالتأمين"] },
   payments: { unit: ["الوحدة", "اسمالوحدة"], month: ["الشهر", "عنشهر"], amount: ["المبلغ"], method: ["الطريقة", "طريقةالدفع"], date: ["التاريخ", "تاريخالدفع"] },
   expenses: { label: ["الوصف", "البيان"], amount: ["المبلغ"], cat: ["الفئة", "التصنيف"], date: ["التاريخ"] },
 } as const;
 type Kind = keyof typeof COLS;
+const KIND_ALTS: [UnitKind, string[]][] = [["flat", ["شقة", "شقه"]], ["shop", ["محل تجاري", "محل", "محلات", "معرض"]], ["store", ["ستور", "مخزن", "مستودع"]], ["house", ["بيت", "فيلا", "منزل"]], ["nursery", ["روضة", "روضه", "حضانة"]]];
 const BLOCKED = ["cpr", "الرقمالشخصي", "الرقمالشخصيcpr", "البطاقةالذكية", "رقمالبطاقة"];
 
 const key = (s: unknown) => normalize(String(s ?? ""));
@@ -110,12 +111,16 @@ export function planImport(sheets: Sheet[], data: Data, now = new Date()): Impor
           const depRaw = get(r, "deposit");
           const deposit = text(depRaw) ? money(depRaw) : 0;
           if (deposit === null) return err(row, "التأمين مو رقم صحيح");
+          const kindRaw = normalize(text(get(r, "kind")));
+          const kind: UnitKind | undefined = !kindRaw ? undefined : KIND_ALTS.find(([, alts]) => alts.some((a) => normalize(a) === kindRaw))?.[0];
+          if (kindRaw && !kind) return err(row, "النوع لازم: شقة، محل تجاري، ستور، بيت، أو روضة");
           const existing = unitsByName.get(normalize(name));
           const unit: Unit = {
             ...(existing ?? {}),
             id: existing?.id ?? "u" + uid(),
             name, rent, dueDay: due,
             building: text(get(r, "building")) || existing?.building || "بدون مبنى",
+            ...(kind ? { kind } : {}),
             tenant: tenant ? { name: tenant, phone: text(get(r, "phone")), since: since!, ...(until ? { until } : {}), ...(deposit ? { deposit } : {}) } : undefined,
           };
           unitsByName.set(normalize(name), unit);
@@ -163,7 +168,7 @@ const D = (fils: number) => fils / 1000;
 
 export function templateSheets() {
   return [
-    { sheet: "الوحدات", data: [["الوحدة", "المبنى", "الإيجار", "يوم الاستحقاق", "المستأجر", "الهاتف", "بداية العقد", "نهاية العقد", "التأمين"].map(H), ["شقة 1", "عمارة المالكية", 200, 1, "اسم المستأجر", "3xxxxxxx", "2026-01", "2026-12-31", 200]] },
+    { sheet: "الوحدات", data: [["الوحدة", "النوع", "المبنى", "الإيجار", "يوم الاستحقاق", "المستأجر", "الهاتف", "بداية العقد", "نهاية العقد", "التأمين"].map(H), ["شقة 1", "شقة", "عمارة المالكية", 200, 1, "اسم المستأجر", "3xxxxxxx", "2026-01", "2026-12-31", 200]] },
     { sheet: "الدفعات", data: [["الوحدة", "الشهر", "المبلغ", "الطريقة", "التاريخ"].map(H), ["شقة 1", "2026-10", 200, "BenefitPay", "2026-10-03"]] },
     { sheet: "المصاريف", data: [["الوصف", "المبلغ", "الفئة", "التاريخ"].map(H), ["فاتورة كهرباء", 18.5, "كهرباء وماء", "2026-10-06"]] },
   ];
@@ -174,9 +179,31 @@ export function exportSheets(data: Data, now = new Date()) {
   const catName = (id: string) => data.cats.find((c) => c.id === id)?.name ?? "—";
   const rep = monthlyReport(data, now, 12);
   return [
+    trackerSheet(data, now),
     { sheet: "التقرير الشهري", data: [["الشهر", "الدخل (د.ب)", "المصروف (د.ب)", "الصافي (د.ب)"].map(H), ...rep.rows.map((r) => [`${monthName(r.month)} ${r.month.slice(0, 4)}`, D(r.income), D(r.expense), D(r.net)]), ["المجموع", D(rep.income), D(rep.expense), D(rep.net)].map((v) => ({ value: v, fontWeight: "bold" as const }))] },
     { sheet: "الدفعات", data: [["الوحدة", "الشهر", "المبلغ", "الطريقة", "التاريخ"].map(H), ...[...data.payments].sort((a, b) => b.date.localeCompare(a.date)).map((p) => [unitName(p.unitId), p.month, D(p.amount), p.method, p.date])] },
     { sheet: "المصاريف", data: [["الوصف", "المبلغ", "الفئة", "التاريخ"].map(H), ...[...data.expenses].sort((a, b) => b.date.localeCompare(a.date)).map((e) => [e.label, D(e.amount), catName(e.catId), e.date])] },
-    { sheet: "الوحدات", data: [["الوحدة", "المبنى", "الإيجار", "يوم الاستحقاق", "المستأجر", "الهاتف", "بداية العقد", "نهاية العقد", "التأمين"].map(H), ...data.units.map((u) => [u.name, u.building, D(u.rent), u.dueDay, u.tenant?.name ?? "", u.tenant?.phone ?? "", u.tenant?.since ?? "", u.tenant?.until ?? "", u.tenant?.deposit ? D(u.tenant.deposit) : ""])] },
+    { sheet: "الوحدات", data: [["الوحدة", "النوع", "المبنى", "الإيجار", "يوم الاستحقاق", "المستأجر", "الهاتف", "بداية العقد", "نهاية العقد", "التأمين"].map(H), ...data.units.map((u) => [u.name, kindLabel(unitKind(u)), u.building, D(u.rent), u.dueDay, u.tenant?.name ?? "", u.tenant?.phone ?? "", u.tenant?.since ?? "", u.tenant?.until ?? "", u.tenant?.deposit ? D(u.tenant.deposit) : ""])] },
   ];
+}
+
+// ── DW-022: ملف متابعة حالة الإيجار (بدون هاتف ولا CPR — Legal) ──
+const PAY_LABEL = { paid: "مسدد", due: "مستحق", late: "متأخر" } as const;
+export const TRACK_HEAD = ["الوحدة", "النوع", "المبنى", "المستأجر", "الإيجار", "المستحق", "المسدد", "المتبقي", "حالة السداد", "مدفوع لين", "أشهر مقدمة", "المبلغ المقدم", "نهاية العقد", "الأيام المتبقية", "حالة العقد"];
+export function trackerSheet(data: Data, now = new Date(), rows = rentTracker(data, now)) {
+  const sum = (k: "due" | "paid" | "left" | "aheadAmount") => D(rows.reduce((s, r) => s + r[k], 0));
+  const bold = (v: string | number) => ({ value: v, fontWeight: "bold" as const });
+  return {
+    sheet: "متابعة الإيجار",
+    data: [
+      TRACK_HEAD.map(H),
+      ...rows.map((r) => [
+        r.unit.name, kindLabel(r.kind), r.unit.building, r.unit.tenant?.name ?? "شاغرة", D(r.unit.rent),
+        D(r.due), D(r.paid), D(r.left), r.status ? PAY_LABEL[r.status] : "—",
+        r.through ? monthLabel(r.through) : "—", r.ahead, D(r.aheadAmount),
+        r.unit.tenant?.until ?? "", r.daysLeft ?? "", LEASE_LABEL[r.lease],
+      ]),
+      ["المجموع", "", "", `${rows.length} وحدة`, "", sum("due"), sum("paid"), sum("left"), "", "", "", sum("aheadAmount"), "", "", ""].map(bold),
+    ],
+  };
 }

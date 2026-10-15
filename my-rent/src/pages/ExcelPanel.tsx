@@ -6,7 +6,7 @@ import { useToast } from "../ui/kit";
 
 const XLSX = ".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
-async function save(sheets: { sheet: string; data: unknown[][] }[], fileName: string) {
+export async function save(sheets: { sheet: string; data: unknown[][] }[], fileName: string) {
   const { default: writeXlsxFile } = await import("write-excel-file/browser");
   type Sheets = Parameters<typeof writeXlsxFile>[0];
   const all = sheets.map((s) => ({ ...s, rightToLeft: true, columns: s.data[0].map(() => ({ width: 18 })) }));

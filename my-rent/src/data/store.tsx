@@ -2,7 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { BudgetCat, Data, DepositLog, Expense, Method, Payment, Recurring, Unit } from "./types";
 import { demoData, emptyData } from "./demo";
-import { dueRecurring, isoDay, owedMonths } from "./logic";
+import { dueRecurring, isoDay, nextUnpaid, owedMonths } from "./logic";
 import { SyncEngine, loadSyncConfig, saveSyncConfig, type SyncAction, type SyncConfig, type SyncStatus } from "./sync";
 
 const KEY = "idarati:v2";
@@ -101,6 +101,8 @@ type Store = {
   pay: (unitId: string, month: string, amount: number, method: Method) => Payment;
   quickPay: (unitId: string) => Payment | null;
   unpay: (id: string) => void;
+  /** DW-022: دفعة مقدمة n شهر بمبلغ الإيجار كامل؛ يرجّع دالة التراجع */
+  payAhead: (unitId: string, n: number, method: Method) => { months: string[]; undo: () => void } | null;
   addExpense: (catId: string, label: string, amount: number) => Expense;
   unexpense: (id: string) => void;
   toggleTask: (id: string) => void;
@@ -205,6 +207,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return payment;
     },
     unpay: (id) => dispatch({ type: "unpay", id }),
+    payAhead: (unitId, n, method) => {
+      const unit = data.units.find((u) => u.id === unitId);
+      if (!unit?.tenant || n < 1) return null;
+      const date = isoDay(new Date());
+      const ps = nextUnpaid(data, unit, n).map((month) => ({ id: uid(), unitId, month, amount: unit.rent - data.payments.filter((p) => p.unitId === unitId && p.month === month).reduce((s, p) => s + p.amount, 0), method, date }));
+      ps.forEach((payment) => dispatch({ type: "pay", payment }));
+      return { months: ps.map((p) => p.month), undo: () => ps.forEach((p) => dispatch({ type: "unpay", id: p.id })) };
+    },
     // ضغطة وحدة: أقدم شهر ما اندفع، بالمبلغ الباقي، وبآخر طريقة دفع استخدمها نفس المستأجر
     quickPay: (unitId) => {
       const unit = data.units.find((u) => u.id === unitId);
