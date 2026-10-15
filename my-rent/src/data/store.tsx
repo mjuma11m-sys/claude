@@ -99,7 +99,7 @@ type Store = {
   resetDemo: () => void;
   eraseAll: () => void;
   sync: SyncState | null;          // null = المزامنة مطفية (البيانات بالجهاز بس)
-  connectSync: (cfg: SyncConfig, mode: "create" | "join") => Promise<void>;
+  connectSync: (cfg: SyncConfig, mode: "create" | "fresh" | "join") => Promise<void>;
   disconnectSync: () => void;      // يوقف المزامنة على هالجهاز بس — بيانات السيرفر تبقى
   syncNow: () => void;
 };
@@ -163,9 +163,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => { window.removeEventListener("online", again); window.removeEventListener("focus", again); window.clearInterval(t); engine.current?.stop(); };
   }, [startEngine]);
 
-  const connectSync = useCallback(async (cfg: SyncConfig, mode: "create" | "join") => {
+  const connectSync = useCallback(async (cfg: SyncConfig, mode: "create" | "fresh" | "join") => {
     saveSyncConfig(cfg);
-    await startEngine(cfg, mode === "create" ? data : undefined);
+    await startEngine(cfg, mode === "create" ? data : mode === "fresh" ? emptyData() : undefined);
   }, [data, startEngine]);
 
   const disconnectSync = useCallback(() => {

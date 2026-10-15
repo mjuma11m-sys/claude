@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 19,
+  "next": 20,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -141,6 +141,14 @@
     },
     "DW-018": {
       "title": "إداراتي: مزامنة أجهزة العائلة (Supabase)",
+      "owner": "CEO",
+      "priority": "P1",
+      "status": "done",
+      "opened": "2026-10-15",
+      "updated": "2026-10-15"
+    },
+    "DW-019": {
+      "title": "إداراتي: Supabase مدمج + كل حساب لحاله",
       "owner": "CEO",
       "priority": "P1",
       "status": "done",

@@ -269,28 +269,24 @@ try {
   ok(kErr.length === 0, "DW-017: بدون أخطاء", kErr.join(" | "));
 
   }
-  // 13) DW-018: المزامنة مطفية افتراضياً · المفتاح السري ينرفض · الموافقة إجبارية · ولا طلب لـ Supabase بدون إعداد
+  // 13) DW-018/019: الحساب اختياري · Supabase مدمج (بدون إعداد) · الموافقة إجبارية · ولا طلب للسحابة قبل ما يدخل
   {
     const z = await browser.newPage({ viewport: { width: 390, height: 844 } });
     const zErr = []; z.on("pageerror", (e) => zErr.push(e.message));
     const calls = []; z.on("request", (r) => { if (/supabase\.(co|in)/.test(r.url())) calls.push(r.url()); });
-    await z.goto(URL + "#settings"); await z.evaluate(() => localStorage.clear()); await z.reload(); await z.waitForTimeout(800);
-    ok((await z.locator("#sync-h").count()) === 1 && (await z.locator("#sync-url").count()) === 1, "المزامنة: مطفية وتطلب الإعداد");
-    const jwt = (role) => `x.${Buffer.from(JSON.stringify({ role })).toString("base64url")}.y`;
-    await z.locator("#sync-url").fill("https://abcd.supabase.co");
-    await z.locator("#sync-key").fill(jwt("anon"));
-    ok(await z.getByRole("button", { name: "احفظ وكمّل" }).isDisabled(), "زر الحفظ مقفل بدون الموافقة");
-    await z.locator("#sync-key").fill(jwt("service_role"));
-    await z.locator("#sync-consent").check();
-    await z.getByRole("button", { name: "احفظ وكمّل" }).click(); await z.waitForTimeout(200);
-    ok((await z.locator("#sync-h ~ * .field-error, .field-error").first().innerText()).includes("service_role"), "مفتاح service_role ينرفض بالواجهة");
-    ok(await z.evaluate(() => localStorage.getItem("idarati:syncConfig")) === null, "المفتاح المرفوض ما ينحفظ");
-    await z.locator("#sync-url").fill("https://evil.example.com"); await z.locator("#sync-key").fill(jwt("anon"));
-    await z.getByRole("button", { name: "احفظ وكمّل" }).click(); await z.waitForTimeout(200);
-    ok(await z.evaluate(() => localStorage.getItem("idarati:syncConfig")) === null, "رابط مو Supabase ينرفض");
-    ok(calls.length === 0, "بدون إعداد: ولا طلب لـ Supabase", calls.join(" "));
+    await z.goto(URL + "#settings"); await z.evaluate(() => localStorage.clear()); await z.reload(); await z.waitForTimeout(1200);
+    ok(await z.locator("#sync-url").count() === 0 && await z.locator("#sync-email").isVisible(), "Supabase مدمج: ما يطلب رابط ولا مفتاح، يطلب الإيميل بس");
+    await z.locator("#sync-email").fill("a@b.co"); await z.locator("#sync-pass").fill("12345678");
+    ok(await z.getByRole("button", { name: "دخول", exact: true }).last().isDisabled(), "الدخول مقفل بدون الموافقة");
+    await z.getByRole("radio", { name: "حساب جديد" }).click();
+    ok(await z.getByRole("button", { name: "سوّ الحساب" }).isDisabled(), "الحساب الجديد مقفل بدون الموافقة");
+    await z.locator("#sync-consent").check(); await z.locator("#sync-pass").fill("123");
+    await z.getByRole("button", { name: "سوّ الحساب" }).click(); await z.waitForTimeout(200);
+    ok((await z.locator(".field-error").first().innerText()).includes("8"), "كلمة سر قصيرة تنرفض قبل ما يتصل");
+    ok(calls.length === 0, "بدون دخول: ولا طلب للسحابة", calls.join(" "));
+    ok(await z.evaluate(() => localStorage.getItem("idarati:syncConfig")) === null, "ما ينحفظ شي قبل الدخول");
     ok(await z.getByRole("button", { name: "رجّع البيانات التجريبية" }).isVisible(), "بدون مزامنة: البيانات التجريبية متاحة");
-    ok(zErr.length === 0, "DW-018: بدون أخطاء", zErr.join(" | "));
+    ok(zErr.length === 0, "DW-019: بدون أخطاء", zErr.join(" | "));
     await z.close();
   }
 
