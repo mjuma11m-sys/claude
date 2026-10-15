@@ -14,6 +14,7 @@ import { Vendors } from "./pages/Vendors";
 import { Settings } from "./pages/Settings";
 import { ReceiptSheet, type ReceiptRef } from "./pages/Receipt";
 import { StatementSheet } from "./pages/Statement";
+import { ContractSheet } from "./pages/Contract";
 import { UnitForm } from "./pages/UnitForm";
 import { Reports } from "./pages/Reports";
 import { SearchSheet } from "./pages/Search";
@@ -41,6 +42,7 @@ function Idarati() {
   const [expense, setExpense] = useState(false);
   const [receipt, setReceipt] = useState<ReceiptRef>(null);
   const [stmt, setStmt] = useState<Unit | null>(null);
+  const [contract, setContract] = useState<Unit | null>(null);
   const [editing, setEditing] = useState<{ unit: Unit | null } | null>(null);
   const [searching, setSearching] = useState(false);
 
@@ -73,6 +75,7 @@ function Idarati() {
   const closeExpense = useCallback(() => setExpense(false), []);
   const closeReceipt = useCallback(() => setReceipt(null), []);
   const closeStmt = useCallback(() => setStmt(null), []);
+  const closeContract = useCallback(() => setContract(null), []);
   const closeEditing = useCallback(() => setEditing(null), []);
   const closeSearch = useCallback(() => setSearching(false), []);
 
@@ -101,11 +104,12 @@ function Idarati() {
       {page === "vendors" && <Vendors />}
       {page === "settings" && <Settings />}
 
-      <PaySheet unit={unit} onClose={closeUnit} onReceipt={(payment, u) => { setUnit(null); setReceipt({ payment, unit: u }); }} onEdit={(u) => { setUnit(null); setEditing({ unit: u }); }} onStatement={(u) => { setUnit(null); setStmt(u); }} />
+      <PaySheet unit={unit} onClose={closeUnit} onReceipt={(payment, u) => { setUnit(null); setReceipt({ payment, unit: u }); }} onEdit={(u) => { setUnit(null); setEditing({ unit: u }); }} onStatement={(u) => { setUnit(null); setStmt(u); }} onContract={(u) => { setUnit(null); setContract(u); }} />
       <SearchSheet open={searching} onClose={closeSearch} onPick={(u) => { setSearching(false); setUnit(u); }} />
       <UnitForm open={!!editing} unit={editing?.unit ?? null} onClose={closeEditing} />
       <ReceiptSheet value={receipt} onClose={closeReceipt} />
       <StatementSheet unit={stmt} onClose={closeStmt} />
+      <ContractSheet unit={contract} onClose={closeContract} />
       <PickUnitSheet open={picking} onClose={closePick} onPick={(u) => { setPicking(false); setUnit(u); }} />
       <ExpenseSheet open={expense} onClose={closeExpense} />
     </AppShell>

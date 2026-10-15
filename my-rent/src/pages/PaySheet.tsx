@@ -17,7 +17,7 @@ function reminderUrl(unit: Unit, months: string[], amount: number) {
 }
 
 /** تفاصيل الوحدة + المتأخرات + تسجيل دفعة + الإيصالات */
-export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement }: { unit: Unit | null; onClose: () => void; onReceipt: (p: Payment, u: Unit) => void; onEdit: (u: Unit) => void; onStatement: (u: Unit) => void }) {
+export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onContract }: { unit: Unit | null; onClose: () => void; onReceipt: (p: Payment, u: Unit) => void; onEdit: (u: Unit) => void; onStatement: (u: Unit) => void; onContract: (u: Unit) => void }) {
   const { data, pay, unpay, vacate, undeposit, deleteUnit, saveUnit } = useStore();
   const [confirmVacate, setConfirmVacate] = useState(false);
   const toast = useToast();
@@ -137,6 +137,7 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement }: { un
 
           <div className="unit-actions">
             {u.tenant && <button type="button" className="btn btn-ghost press" onClick={() => onStatement(u)}>كشف حساب</button>}
+            {u.tenant && <button type="button" className="btn btn-ghost press" onClick={() => onContract(u)}>العقد{u.contractFile ? " ✓" : ""}</button>}
             <button type="button" className="btn btn-ghost press" onClick={() => onEdit(u)}>{u.tenant ? "تعديل" : "أضف مستأجر"}</button>
             {u.tenant && !confirmVacate && <button type="button" className="btn btn-ghost press danger-text" onClick={() => setConfirmVacate(true)}>إخلاء الوحدة</button>}
             {!u.tenant && !data.payments.some((p) => p.unitId === u.id) && (

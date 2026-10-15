@@ -8,7 +8,8 @@ export type Unit = {
   building: string;
   rent: Fils;
   dueDay: number; // يوم الاستحقاق بالشهر
-  tenant?: { name: string; phone: string; since: string; until?: string; deposit?: Fils }; // since = YYYY-MM · until = YYYY-MM-DD نهاية العقد · deposit = مبلغ التأمين
+  tenant?: { name: string; phone: string; since: string; until?: string; deposit?: Fils };
+  contractFile?: ContractFile; // DW-020: العقد الموقّع (الملف نفسه بالجهاز أو بالسحابة، هني بس وصفه) // since = YYYY-MM · until = YYYY-MM-DD نهاية العقد · deposit = مبلغ التأمين
 };
 
 export type Payment = { id: string; unitId: string; month: string; amount: Fils; method: Method; date: string };
@@ -22,6 +23,9 @@ export type BankTxn = { id: string; memberId: string; amount: Fils; label: strin
 
 export type Account = { id: string; title: string; sub: string; value: Fils };
 export type Task = { id: string; title: string; sub: string; done: boolean };
+/** ملف العقد الموقّع: الملف نفسه بـ IndexedDB (key = id) وبالسحابة لو فيه حساب (path) */
+export type ContractFile = { id: string; name: string; type: string; size: number; tenant: string; uploadedAt: string; path?: string };
+
 /** مصروف ثابت يتكرر كل شهر (DW-017) */
 export type Recurring = { id: string; catId: string; label: string; amount: Fils };
 /** سجل التأمين وقت الإخلاء: رجع للمستأجر أو انخصم */
@@ -42,4 +46,6 @@ export type Data = {
   vendors: Vendor[];
   recurring?: Recurring[];   // اختياري: النسخ الاحتياطية القديمة ما فيها
   deposits?: DepositLog[];
+  contractTemplate?: string; // DW-020: نموذج العقد بخانات {…}
+  contractOwner?: string;    // اسم المؤجر اللي يطلع بالعقد
 };

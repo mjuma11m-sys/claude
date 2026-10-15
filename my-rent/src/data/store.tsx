@@ -22,7 +22,8 @@ export type Action =
   | { type: "expenses"; items: Expense[] }
   | { type: "unexpenses"; ids: string[] }
   | { type: "deposit"; log: DepositLog }
-  | { type: "undeposit"; id: string };
+  | { type: "undeposit"; id: string }
+  | { type: "contract"; template: string; owner: string };
 
 export function reducer(state: Data, a: Action): Data {
   switch (a.type) {
@@ -45,6 +46,7 @@ export function reducer(state: Data, a: Action): Data {
     case "unexpenses": return { ...state, expenses: state.expenses.filter((e) => !a.ids.includes(e.id)) };
     case "deposit": return { ...state, deposits: [a.log, ...(state.deposits ?? [])] };
     case "undeposit": return { ...state, deposits: (state.deposits ?? []).filter((d) => d.id !== a.id) };
+    case "contract": return { ...state, contractTemplate: a.template, contractOwner: a.owner };
     default: return state; // حدث من نسخة أحدث للتطبيق: نتجاهله بدل ما ننكسر
   }
 }
@@ -94,6 +96,7 @@ type Store = {
   removeRecurring: (id: string) => void;
   logRecurring: () => Expense[];
   unexpenses: (ids: string[]) => void;
+  setContract: (template: string, owner: string) => void;
   deleteUnit: (id: string) => boolean;
   replace: (data: Data) => void;
   resetDemo: () => void;
@@ -234,6 +237,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return items;
     },
     unexpenses: (ids) => dispatch({ type: "unexpenses", ids }),
+    setContract: (template, owner) => dispatch({ type: "contract", template, owner }),
     deleteUnit: (id) => {
       if (data.payments.some((p) => p.unitId === id)) return false;
       dispatch({ type: "delunit", id });

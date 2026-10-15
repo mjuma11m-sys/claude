@@ -290,6 +290,39 @@ try {
     await z.close();
   }
 
+  // 14) DW-020: نموذج العقد يتعبّى + رفع العقد الموقّع (محلي) + رفض الأنواع الغلط
+  {
+    const c = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const cErr = []; c.on("pageerror", (e) => cErr.push(e.message));
+    await c.goto(URL + "#settings"); await c.evaluate(() => localStorage.clear()); await c.reload(); await c.waitForTimeout(900);
+    await c.locator("#ct-owner").fill("أبو جعفر");
+    await c.locator("#ct-text").fill("المؤجر {المالك} يؤجر {الوحدة} لـ {المستأجر} بـ {الإيجار} د.ب، تأمين {التأمين}، نهاية {نهاية العقد}، {خانة غلط}");
+    await c.getByRole("button", { name: "احفظ النموذج" }).click(); await c.waitForTimeout(300);
+    await c.goto(URL + "#tenants"); await c.waitForTimeout(700);
+    await c.locator(".unit-card", { hasText: "شقة 3 " }).click(); await c.waitForTimeout(500);
+    await c.getByRole("button", { name: /^العقد/ }).click(); await c.waitForTimeout(500);
+    const txt = await c.locator(".contract-text").innerText();
+    ok(txt.includes("أبو جعفر") && txt.includes("شقة 3") && txt.includes("عائلة سلمان") && txt.includes("200.000"), "العقد: الخانات تتعبّى من الوحدة", txt.slice(0, 80));
+    ok(txt.includes("نهاية —") && txt.includes("{خانة غلط}"), "العقد: الفاضية «—» والخانة المجهولة تبقى مثل ما هي");
+    await c.locator("#contract-file").setInputFiles({ name: "notes.txt", mimeType: "text/plain", buffer: Buffer.from("x") }); await c.waitForTimeout(300);
+    ok((await c.locator(".contract-file .field-error").innerText()).includes("PDF"), "رفع ملف نصي: ينرفض");
+    await c.locator("#contract-file").setInputFiles({ name: "عقد-شقة3.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4 test") }); await c.waitForTimeout(800);
+    ok((await c.locator(".contract-file").innerText()).includes("عقد-شقة3.pdf"), "رفع PDF: ينحفظ ويطلع اسمه");
+    await c.reload(); await c.waitForTimeout(800);
+    await c.goto(URL + "#tenants"); await c.waitForTimeout(700);
+    await c.locator(".unit-card", { hasText: "شقة 3 " }).click(); await c.waitForTimeout(500);
+    ok((await c.getByRole("button", { name: /^العقد/ }).innerText()).includes("✓"), "بعد إعادة الفتح: زر العقد عليه ✓");
+    await c.getByRole("button", { name: /^العقد/ }).click(); await c.waitForTimeout(500);
+    const size = await c.evaluate(async () => {
+      const id = JSON.parse(localStorage.getItem("idarati:v2")).units.find((u) => u.id === "u3").contractFile.id;
+      const db = await new Promise((r) => { const q = indexedDB.open("idarati-files", 1); q.onsuccess = () => r(q.result); });
+      return await new Promise((r) => { const q = db.transaction("files").objectStore("files").get(id); q.onsuccess = () => r(q.result?.size ?? -1); });
+    });
+    ok(size === 13, "الملف نفسه محفوظ بالجهاز (IndexedDB)", String(size));
+    ok(cErr.length === 0, "DW-020: بدون أخطاء", cErr.join(" | "));
+    await c.close();
+  }
+
   if (process.env.SHOTS) {
     for (const [n, w, h, s] of [["home-phone", 390, 844, "light"], ["home-dark", 390, 844, "dark"], ["home-desk", 1280, 800, "light"], ["tenants-tab", 820, 1180, "light"], ["budget-phone", 390, 844, "light"]]) {
       const q = await browser.newPage({ viewport: { width: w, height: h }, colorScheme: s });

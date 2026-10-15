@@ -3,6 +3,7 @@ import { isData, useStore } from "../data/store";
 import { backupDue, isoDay } from "../data/logic";
 import { Chips, useToast } from "../ui/kit";
 import { SyncPanel } from "./SyncPanel";
+import { ContractTemplateEditor } from "./Contract";
 import { getLastBackup, loadPrefs, savePrefs, setLastBackup, type Prefs, type TextSize, type Theme } from "../data/prefs";
 
 /** نسخة احتياطية، استرجاع، وحذف كل البيانات (حق المحو — PDPL) */
@@ -67,6 +68,8 @@ export function Settings() {
         <input ref={file} type="file" accept="application/json,.json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) importJson(f); e.target.value = ""; }} />
         {error && <div className="field-error">{error}</div>}
       </section>
+
+      <ContractTemplateEditor />
 
       <SyncPanel />
 

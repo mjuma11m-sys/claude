@@ -167,8 +167,8 @@ a.icon-btn { color: var(--brand); }
 
 @media print {
   body * { visibility: hidden !important; }
-  #receipt, #receipt *, #statement, #statement * { visibility: visible !important; }
-  #receipt, #statement { position: absolute; inset: 0 auto auto 0; width: 100%; border: 0; }
+  #receipt, #receipt *, #statement, #statement *, #contract, #contract * { visibility: visible !important; }
+  #receipt, #statement, #contract { position: absolute; inset: 0 auto auto 0; width: 100%; border: 0; }
 }
 
 /* DW-014: نموذج الوحدة، الإخلاء، التقارير */
@@ -345,3 +345,10 @@ html[data-size="xl"] .hero-owed { flex-wrap: wrap; }
 .invite-code { font: 700 28px/1.2 var(--font-display); letter-spacing: .25em; text-align: center; padding: 6px 0; }
 .check-row.consent { align-items: flex-start; font-size: 13px; line-height: 1.6; }
 .check-row.consent input { margin-top: 3px; flex: none; }
+
+/* DW-020: العقود */
+.contract-text { white-space: pre-wrap; font: 14px/1.9 var(--font); margin: 12px 0 0; }
+.ct-area { min-height: 260px; font-size: 14px; line-height: 1.8; resize: vertical; }
+.ct-fields { display: flex; flex-wrap: wrap; gap: 6px; }
+.ct-fields .chip { font-size: 12px; }
+.ct-preview { padding: 12px; border: 1px dashed var(--line); border-radius: var(--radius); background: var(--surface-2); }

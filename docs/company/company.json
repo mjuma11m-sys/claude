@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 20,
+  "next": 21,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -149,6 +149,14 @@
     },
     "DW-019": {
       "title": "إداراتي: Supabase مدمج + كل حساب لحاله",
+      "owner": "CEO",
+      "priority": "P1",
+      "status": "done",
+      "opened": "2026-10-15",
+      "updated": "2026-10-15"
+    },
+    "DW-020": {
+      "title": "إداراتي: عقود الإيجار — نموذج ثابت يتعبّى + رفع ملف العقد",
       "owner": "CEO",
       "priority": "P1",
       "status": "done",
