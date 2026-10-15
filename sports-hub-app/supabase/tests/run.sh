@@ -18,5 +18,6 @@ run tests/club_federation.test.sql
 run tests/data_center.test.sql
 run tests/lineup.test.sql
 run tests/attendance.test.sql
+run tests/match_reports.test.sql
 run tests/development.test.sql
 echo "RLS: all checks passed"
