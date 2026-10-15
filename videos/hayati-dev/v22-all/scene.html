@@ -1,0 +1,177 @@
+<!doctype html>
+<html dir="rtl">
+<head>
+<meta charset="utf-8">
+<!-- فيديو «كل تحديثات v22» 27 ث، 9:16. نفس أسلوب hayati-motion:
+     ورق #F7F4EE، بحري #0E3B43، مرجاني #FF6B4A للكلمة المهمة. شاشات التطبيق لقطات حقيقية (shots.js) ببيانات تجريبية -->
+<style>
+@font-face { font-family: P; src: url(IBMPlexSansArabic-Bold.ttf); font-weight: 700; }
+@font-face { font-family: P; src: url(IBMPlexSansArabic-Regular.ttf); font-weight: 400; }
+:root { --sea: #0E3B43; --pearl: #E8DCC4; --coral: #FF6B4A; --paper: #F7F4EE; --ink: #0B2328; --ink2: #33494D; }
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; font-family: P; font-weight: 700; color: var(--ink); }
+.abs { position: absolute; }
+#bg { inset: 0; background: var(--paper); }
+#tint { inset: 0; }
+#dark { inset: 0; background: radial-gradient(120% 80% at 50% 40%, #134a52 0%, var(--sea) 50%, #071a1e 100%); }
+.w { display: inline-block; will-change: transform, opacity; }
+.c { color: var(--coral); }
+.h { left: 60px; right: 60px; text-align: center; line-height: 1.15; }
+.sub { left: 60px; right: 60px; text-align: center; font: 400 50px/1.45 P; color: var(--ink2); }
+.sms { background: #E9E9EB; color: #111; border-radius: 44px; padding: 30px 38px; font: 400 44px/1.4 P; direction: ltr; text-align: left; }
+.chip { left: 150px; right: 150px; height: 118px; border-radius: 36px; background: #fff; display: flex; align-items: center; gap: 26px; padding: 0 38px; font-size: 54px; box-shadow: 0 14px 30px -18px rgba(11,35,40,.35); }
+.chip .n { width: 68px; height: 68px; border-radius: 50%; background: rgba(14,59,67,.1); display: grid; place-items: center; font-size: 38px; flex: none; }
+.chip .x { position: absolute; left: 30px; right: 30px; top: 57px; height: 7px; border-radius: 4px; background: var(--coral); transform-origin: right center; }
+.phone { left: 230px; top: 470px; width: 620px; height: 1342px; border-radius: 74px; background: #0b1416; padding: 14px; box-shadow: 0 60px 100px -46px rgba(11,35,40,.65), inset 0 0 0 3px #2a4a50; }
+.scr { position: relative; width: 100%; height: 100%; border-radius: 60px; overflow: hidden; background: #fff; }
+.scr > * { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.scr img { object-fit: cover; object-position: top; display: block; }
+.touch { width: 110px; height: 110px; border-radius: 50%; background: rgba(255,107,74,.35); border: 5px solid var(--coral); }
+.tag { padding: 10px 26px; border-radius: 999px; background: rgba(11,35,40,.82); color: var(--pearl); font: 400 30px P; white-space: nowrap; }
+.step { left: 60px; right: 60px; text-align: center; font-size: 72px; line-height: 1.2; }
+.step b { display: inline-grid; place-items: center; width: 92px; height: 92px; border-radius: 50%; background: var(--coral); color: #2A0E07; font-size: 54px; margin-inline-end: 22px; vertical-align: middle; }
+.note { left: 26px; right: 26px; padding: 26px 28px; border-radius: 38px; background: rgba(250,250,250,.97); color: #111; box-shadow: 0 24px 40px -20px rgba(0,0,0,.6); }
+.note .top { display: flex; gap: 14px; align-items: center; font: 400 26px P; color: #555; }
+.note .ic { width: 44px; height: 44px; border-radius: 12px; overflow: hidden; flex: none; }
+.note b { display: block; font-size: 38px; margin-top: 12px; }
+.note small { display: block; font: 400 30px P; color: #444; margin-top: 4px; }
+.note .acts { display: flex; gap: 14px; margin-top: 18px; }
+.note .acts span { flex: 1; text-align: center; padding: 16px; border-radius: 22px; background: rgba(14,59,67,.1); color: var(--sea); font-size: 32px; }
+.demo { left: 0; right: 0; text-align: center; font: 400 30px P; color: var(--ink2); }
+/* بصفحة RTL، العنصر المطلق بدون left يلزق يمين؛ هذي نحرّكها بـ transform من الزاوية */
+#fx > .abs { left: 0; top: 0; }
+.days { left: 90px; right: 90px; display: flex; justify-content: center; gap: 22px; direction: ltr; }
+.days span { width: 112px; height: 112px; border-radius: 50%; display: grid; place-items: center; font-size: 48px; color: var(--pearl); background: rgba(232,220,196,.1); }
+.days span.on { background: var(--coral); color: #2A0E07; }
+.scr img { transform-origin: 50% 0; }
+.hl { position:absolute; left:0; top:0; border:6px solid var(--coral); border-radius:26px; box-shadow:0 0 0 9999px rgba(11,35,40,.0); }
+body.dark .step, body.dark #wm { color: var(--pearl); }
+body.dark .sub, body.dark .demo { color: rgba(232,220,196,.85); }
+body.dark .phone { box-shadow: 0 0 140px -10px rgba(255,107,74,.35), 0 60px 100px -46px rgba(0,0,0,.8), inset 0 0 0 3px #2a4a50; }
+body.story .phone { left: 270px; top: 540px; width: 540px; height: 1170px; border-radius: 66px; }
+body.story .scr { border-radius: 54px; }
+</style>
+</head>
+<body>
+<div id="bg" class="abs"></div>
+<div id="tint" class="abs"></div>
+<div id="dark" class="abs"></div>
+<div id="stage" class="abs" style="inset:0"></div>
+<div id="fx" class="abs" style="inset:0;pointer-events:none"></div>
+<script>
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const eo = (x) => 1 - Math.pow(1 - x, 4);
+const ei = (x) => x * x * x;
+const eio = (x) => (x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+const back = (x) => { const c = 1.6; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const lerp = (a, b, x) => a + (b - a) * x;
+const $ = (h) => { const d = document.createElement('div'); d.innerHTML = h.trim(); return d.firstElementChild; };
+const stage = document.getElementById('stage'), fx = document.getElementById('fx');
+const add = (h, parent) => { const e = $(h); (parent || stage).appendChild(e); return e; };
+const set = (e, o, tf) => { e.style.opacity = o; e.style.transform = tf || ''; e.style.display = o <= 0.001 ? 'none' : ''; };
+// نافذة ظهور: يطلع بين a وb ويختفي بين c وd
+const win = (t, a, b, c, d) => eo(seg(t, a, b)) * (1 - ei(seg(t, c, d)));
+
+const ARC = 'M 383.3 172.7 A 160 160 0 1 1 300 102.2';
+const HA = 'M 304 166 L 196 166 L 264 222 C 204 222 168 254 168 292 C 168 336 206 360 256 360 C 292 360 318 348 338 332';
+const LOGO = (ink) => `<svg viewBox="0 0 512 512" style="width:100%;height:100%;overflow:visible"><path class="arc" d="${ARC}" fill="none" stroke="${ink}" stroke-opacity=".28" stroke-width="22" stroke-linecap="round"/><path class="ha" d="${HA}" fill="none" stroke="${ink}" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/><circle class="dot" cx="352" cy="128" r="30" fill="#FF6B4A"/></svg>`;
+const ICON = `<svg viewBox="0 0 512 512" style="width:100%;height:100%;display:block"><rect width="512" height="512" rx="116" fill="#0E3B43"/><path d="${ARC}" fill="none" stroke="#E8DCC4" stroke-opacity=".28" stroke-width="22" stroke-linecap="round"/><path d="${HA}" fill="none" stroke="#E8DCC4" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/><circle cx="352" cy="128" r="30" fill="#FF6B4A"/></svg>`;
+
+function words(el, text) {   // *كلمة* = مرجاني
+  el.innerHTML = text.split(' ').map((w) => (/^\*.*\*[.؟،]?$/.test(w) ? '<span class="w c">' + w.replace(/\*/g, '') + '</span>' : '<span class="w">' + w + '</span>')).join(' ');
+  return [...el.querySelectorAll('.w')];
+}
+function showWords(ws, t, start, gap, dur) {
+  ws.forEach((w, i) => { const x = eo(seg(t, start + i * gap, start + i * gap + (dur || .45))); w.style.opacity = x; w.style.transform = `translateY(${(1 - x) * 40}px)`; });
+}
+
+
+
+//// ===== 1) الهوك (0–2.6) =====
+const q1 = add('<div class="abs h" style="top:600px;font-size:104px;color:var(--pearl)"></div>');
+const q1w = words(q1, '*حياتي* تطوّرت');
+const q2 = add('<div class="abs sub" style="top:830px;font-size:60px;color:rgba(232,220,196,.85)"></div>');
+const q2w = words(q2, 'وش الجديد؟ 👇');
+
+const phone = add('<div class="abs phone"><div class="scr"></div></div>');
+const scr = phone.querySelector('.scr');
+const V = location.hash.slice(1).split(','), STORY = V.includes('story'), DARK = V.includes('dark');
+document.body.classList.toggle('story', STORY); document.body.classList.toggle('dark', DARK);
+const PX = STORY ? 270 : 230, PY = STORY ? 540 : 470;
+const W = STORY ? 512 : 592, H = STORY ? 1142 : 1314;
+const SH = {}; ['1-today', '2-tools', '3-payday', '4-ibada', '5-qibla', '6-lectures', '7-math', '8-quiz'].forEach((n) => { SH[n] = add('<img src="shots/' + n + '.png">', scr); });
+const touch = add('<div class="abs touch"></div>', fx);
+const at = (p) => [PX + 14 + p.x * W, PY + 14 + p.y * H];
+const hl = add('<div class="hl"></div>', fx);
+const T = (html) => add('<div class="abs step" style="top:' + (STORY ? 300 : 200) + 'px">' + html + '</div>');
+const SUB = (txt) => add('<div class="abs sub" style="top:' + (STORY ? 410 : 320) + 'px;font-size:46px">' + txt + '</div>');
+const st = [
+  [T('كل شي <span class="c">بحياتي</span>'), SUB('كل الأدوات بزر واحد فوق'), 2.8, 5.8],
+  [T('يوم <span class="c">الراتب</span>'), SUB('«راتبك وين راح؟» من راتب لراتب'), 5.9, 8.9],
+  [T('<span class="c">عبادتي</span>'), SUB('الهجري · الصلاة الجاية · المسبحة · المناسبات'), 9.0, 12.0],
+  [T('<span class="c">القبلة</span> 🧭'), SUB('لفّ يمين… «✓ أنت على القبلة»'), 12.1, 15.1],
+  [T('<span class="c">المحاضرات</span>'), SUB('ملف لكل محاضرة · تسجيل · ملاحظات'), 15.2, 18.2],
+  [T('تفهم <span class="c">المعادلات</span>'), SUB('x² و √ و Σ ما تنقلب وسط العربي'), 18.3, 21.3],
+  [T('<span class="c">اختبر</span> نفسك'), SUB('شوف الجواب · عرفتها؟ · نتيجتك تنحفظ'), 21.4, 24.0],
+];
+// [ظهور اللقطة، اختفاء] — اليوم يظل تحت كل الأوراق
+const SHT = { '1-today': [2.5, 15.0], '2-tools': [2.9, 5.9], '3-payday': [5.8, 9.0], '4-ibada': [8.9, 12.1], '5-qibla': [12.0, 15.2], '6-lectures': [15.0, 99], '7-math': [18.1, 21.4], '8-quiz': [21.3, 99] };
+// مستطيلات التمييز: [بداية، نهاية، x، y، w، h] بنسبة الشاشة
+const HL = [[6.6, 8.6, .03, .36, .94, .27], [13.0, 14.9, .1, .72, .8, .07], [19.0, 21.1, .03, .43, .94, .38], [22.0, 23.6, .03, .79, .94, .12]];
+const TAP = [[22.8, { x: .73, y: .943 }]];
+
+const icon = add(`<div class="abs" style="left:390px;top:540px;width:300px;height:300px;border-radius:70px;overflow:hidden;box-shadow:0 40px 70px -30px rgba(11,35,40,.6)">${ICON}</div>`);
+const logo = add(`<div class="abs" style="left:390px;top:540px;width:300px;height:300px">${LOGO('#0E3B43')}</div>`);
+const ha = logo.querySelector('.ha'), arc = logo.querySelector('.arc'), ldot = logo.querySelector('.dot');
+const HAL = ha.getTotalLength(), ARCL = arc.getTotalLength();
+const wm = add('<div class="abs" style="left:0;right:0;top:900px;text-align:center;font-size:170px;line-height:1;padding-bottom:70px;color:var(--sea)">حياتي</div>');
+const tag = add('<div class="abs sub" style="top:1150px;font-size:54px"></div>');
+const tagw = words(tag, 'كل هذا *بحياتي* ✨');
+const soon = add('<div class="abs sub" style="top:1250px;font-size:40px">✨ ملخص وأسئلة تلقائية من ملاحظاتك: قريباً 👀</div>');
+const beta = add('<div class="abs" style="left:0;right:0;top:1370px;text-align:center"><span style="display:inline-block;padding:16px 40px;border-radius:999px;background:var(--sea);color:var(--pearl);font:400 40px P">قيد التطوير · نسخة تجريبية</span></div>');
+const demo = add('<div class="abs demo" style="top:' + (STORY ? 1735 : 1858) + 'px">* لقطات ببيانات تجريبية</div>');
+const cta = add('<div class="abs" style="left:0;right:0;top:1500px;text-align:center"><span style="display:inline-block;padding:20px 44px;border-radius:999px;background:var(--coral);color:#2A0E07;font-size:44px">ردّ على الستوري بـ«حياتي» 👇</span></div>');
+if (!STORY) cta.remove();
+
+const TINTS = [[2.6, '150,215,190'], [5.9, '240,200,120'], [9.0, '150,215,200'], [12.1, '200,190,240'], [15.2, '150,200,230'], [18.3, '255,170,150'], [21.4, '240,200,120'], [24.2, '232,220,196']];
+function tintAt(t) {
+  let i = 0; while (i < TINTS.length - 1 && t >= TINTS[i + 1][0]) i++;
+  const [ta, ca] = TINTS[i], nb = TINTS[Math.min(i + 1, TINTS.length - 1)];
+  const x = eio(seg(t, nb[0] - .8, nb[0])), ca3 = ca.split(',').map(Number), cb3 = nb[1].split(',').map(Number);
+  return ca3.map((v, k) => Math.round(lerp(v, cb3[k], i < TINTS.length - 1 ? x : 0))).join(',');
+}
+function setT(t) {
+  set(document.getElementById('dark'), DARK ? 1 : 1 - eio(seg(t, 2.3, 2.8)));
+  if (STORY) set(cta, eo(seg(t, 17.4, 17.7)), `scale(${.9 + .1 * back(seg(t, 17.4, 17.8))})`);
+  document.getElementById('tint').style.background = `radial-gradient(90% 60% at 80% 0%, rgba(${tintAt(t)},.45), transparent 70%), radial-gradient(80% 50% at 0% 100%, rgba(${tintAt(t)},.25), transparent 70%)`;
+  showWords(q1w, t, .15, .2); showWords(q2w, t, 1.1, .15);
+  const o1 = 1 - ei(seg(t, 2.2, 2.6)); set(q1, o1); set(q2, o1);
+
+  const ph = eo(seg(t, 2.5, 3.1)), phOut = 1 - ei(seg(t, 23.9, 24.3));
+  set(phone, ph * phOut, `translateY(${(1 - ph) * 500}px)`);
+  Object.entries(SHT).forEach(([n, [a, b]]) => { const x = eo(seg(t, a, a + .35)) * (1 - seg(t, b, b + .2)); SH[n].style.opacity = (n === '1-today' || n === '6-lectures') ? (t >= a && t < b + .2 ? 1 : 0) : x; SH[n].style.transform = `translateY(${(1 - eo(seg(t, a, a + .35))) * 40}px)`; });
+  let hv = 0; HL.forEach(([a, b, x, y, w, h]) => { const v = win(t, a, a + .25, b - .2, b); if (v > hv) { hv = v; const [px, py] = at({ x, y }); hl.style.width = W * w + 'px'; hl.style.height = H * h + 'px'; hl.style.left = px + 'px'; hl.style.top = py + 'px'; } });
+  set(hl, hv, `scale(${.97 + .03 * hv})`);
+  let tv = 0, tp = TAP[0][1]; TAP.forEach(([a, p]) => { const v = win(t, a, a + .15, a + .4, a + .55); if (v > tv) { tv = v; tp = p; } });
+  const [x1, y1] = at(tp); set(touch, tv * .9, `translate(${x1 - 55}px,${y1 - 55}px) scale(${.7 + .3 * tv})`);
+  st.forEach(([h, s, a, b]) => { set(h, win(t, a, a + .3, b - .2, b)); set(s, win(t, a + .2, a + .5, b - .2, b)); });
+
+  const ic = back(seg(t, 24.2, 24.7)), icOut = eio(seg(t, 24.9, 25.2));
+  set(icon, clamp(seg(t, 24.2, 24.4)) * (1 - icOut), `scale(${(.5 + .5 * ic) * (1 + .2 * icOut)})`);
+  const dr = eio(seg(t, 25, 25.6));
+  set(logo, seg(t, 24.95, 25.05));
+  ha.style.strokeDasharray = HAL; ha.style.strokeDashoffset = HAL * (1 - dr);
+  arc.style.strokeDasharray = ARCL; arc.style.strokeDashoffset = ARCL * (1 - eio(seg(t, 25.1, 25.7)));
+  ldot.style.opacity = eo(seg(t, 25.5, 25.7)); ldot.style.transformOrigin = '352px 128px'; ldot.style.transform = `scale(${back(seg(t, 25.5, 25.9))})`;
+  const wmx = eo(seg(t, 25.3, 25.7)); set(wm, wmx, `translateY(${(1 - wmx) * 50}px)`);
+  showWords(tagw, t, 25.6, .1); set(tag, t > 25.5 ? 1 : 0);
+  set(soon, eo(seg(t, 25.9, 26.2)));
+  set(beta, eo(seg(t, 26, 26.3)));
+  set(demo, (t > 2.8 && t < 24.2) ? eo(seg(t, 2.8, 3.2)) * phOut : t > 26 ? eo(seg(t, 26, 26.3)) : 0);
+}
+window.setT = setT;
+window.READY = document.fonts.ready.then(() => Promise.all([...document.images].map((i) => i.complete ? 1 : new Promise((r) => (i.onload = r))))).then(() => setT(0));
+</script>
+</body>
+</html>
