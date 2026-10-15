@@ -1779,5 +1779,13 @@ window.HAYATI_EN = {
 "الدخول السريع يحتاج آخر نسخة من التطبيق": "Quick sign-in needs the latest version of the app",
 "ما تم الدخول": "Sign-in didn't complete",
 "بعد ساعتين": "In 2 hours",
-"يتجدد:": "renews:"
+"يتجدد:": "renews:",
+// DW-030: الترجمة الكاملة (الأخبار، الأدوات، أول دقيقة، النسخة المشفّرة، البلاغ، القبلة، عبادتي، الورد، المحاضرات، السفر، يوم الراتب والزكاة)
+"صلاة الفجر": "Fajr prayer",
+"صلاة الظهر": "Dhuhr prayer",
+"صلاة العصر": "Asr prayer",
+"صلاة المغرب": "Maghrib prayer",
+"صلاة العشاء": "Isha prayer",
+"صلاة الظهرين": "Dhuhr & Asr prayers",
+"صلاة العشاءين": "Maghrib & Isha prayers"
 };

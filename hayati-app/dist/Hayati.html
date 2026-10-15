@@ -2488,7 +2488,15 @@ window.HAYATI_EN = {
 "الدخول السريع يحتاج آخر نسخة من التطبيق": "Quick sign-in needs the latest version of the app",
 "ما تم الدخول": "Sign-in didn't complete",
 "بعد ساعتين": "In 2 hours",
-"يتجدد:": "renews:"
+"يتجدد:": "renews:",
+// DW-030: الترجمة الكاملة (الأخبار، الأدوات، أول دقيقة، النسخة المشفّرة، البلاغ، القبلة، عبادتي، الورد، المحاضرات، السفر، يوم الراتب والزكاة)
+"صلاة الفجر": "Fajr prayer",
+"صلاة الظهر": "Dhuhr prayer",
+"صلاة العصر": "Asr prayer",
+"صلاة المغرب": "Maghrib prayer",
+"صلاة العشاء": "Isha prayer",
+"صلاة الظهرين": "Dhuhr & Asr prayers",
+"صلاة العشاءين": "Maghrib & Isha prayers"
 };
 
 </script>
@@ -2516,7 +2524,8 @@ window.HAYATI_EN = {
   const hasAr = (s) => /[؀-ۿ]/.test(s);
   function tr(s) {
     if (!s || !hasAr(s)) return s;
-    return s.replace(RE, (m) => D[m])
+    // «حضرت X؟» سؤال (مو «Attended»)، والاسم يظل مثل ما هو
+    return s.replace(/^حضرت\s+(.+)؟$/, 'Did you attend $1?').replace(RE, (m) => D[m])
       .replace(/(\d)\s*م(?![ء-ٟٮ-ۓ])/g, '$1 pm').replace(/(\d)\s*ص(?![ء-ٟٮ-ۓ])/g, '$1 am')
       .replace(/(^|[\s\d.])من(?=$|[\s\d])/g, '$1of')
       // أرقام بوحدات عربية: «بعد 3 أيام»، «49 دقيقة»، «30 د»، «1.5 س»، «3 مرات»
@@ -7421,7 +7430,7 @@ window.HAYATI_CONFIG = {
     if (!c) return '';
     return '<div class="card" style="border-color:color-mix(in srgb,' + h(c.color || '#1A8A8F') + ' 40%,var(--border))">' +
       '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div class="ico" style="' + tint(c.color || '#1A8A8F') + '">' + I('graduation') + '</div>' +
-      '<div style="flex:1;min-width:0"><b>حضرت <bdi>' + h(c.name) + '</bdi>؟</b><div class="small muted">خلصت ' + h(c.end_time || '') + (c.room ? ' · ' + h(c.room) : '') + '</div></div></div>' +
+      '<div style="flex:1;min-width:0"><b>' + (window.HayatiLang && HayatiLang.lang === 'en' ? 'Did you attend <bdi>' + h(c.name) + '</bdi>?' : 'حضرت <bdi>' + h(c.name) + '</bdi>؟') + '</b><div class="small muted">خلصت ' + h(c.end_time || '') + (c.room ? ' · ' + h(c.room) : '') + '</div></div></div>' +
       '<div class="btn-row"><button class="btn primary" data-action="att-yes" data-id="' + c.id + '">' + I('check') + 'حضرت</button>' +
       '<button class="btn" data-action="att-no" data-id="' + c.id + '">غبت</button>' +
       '<button class="btn ghost" style="flex:0 0 auto" data-action="att-skip" data-id="' + c.id + '" aria-label="تخطّي">' + I('minus') + '</button></div></div>';

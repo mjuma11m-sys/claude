@@ -910,6 +910,7 @@ test('English: user data stays untouched (no «Exam المحاسبة»), units r
   expect(text).not.toMatch(/\d\s*(أيام|دقيقة)/);
   expect(await store(page, () => window.HayatiLang.tr('بعد 3 أيام · 49 دقيقة · 1.5 س · 30 د · 3 مرات · قبل 34 أيام'))).toBe('in 3 days · 49 min · 1.5 h · 30 min · 3 times · 34 days ago');
   expect(await store(page, () => window.HayatiLang.tr('صباح الخير يا محمد'))).toBe('Good morning, محمد');
+  expect(await store(page, () => window.HayatiLang.tr('حضرت محاسبة إدارية؟'))).toBe('Did you attend محاسبة إدارية?');
   expect(await store(page, () => window.HayatiLang.tr('بعد ساعتين و51 دقيقة'))).not.toMatch(/[\u0600-\u06FF]/);
 });
 
@@ -1173,7 +1174,8 @@ test('Android share: replaces an open sheet, waits for the PIN lock, and caps th
     const log = window.__share = { listener: null, taken: 0 };
     window.Capacitor = { isNativePlatform: () => true, Plugins: {
       ShareIn: {
-        take: async () => { log.taken++; return { text }; },
+        // النص يوصل بعد ما الاختبار يسجّل الموافقة، وإلا أحياناً تطلع نافذة الموافقة قبل (سباق بالاختبار نفسه)
+        take: async () => { while (!(window.App && App.st && App.st.settings.sms_consent_at)) await new Promise((r) => setTimeout(r, 20)); log.taken++; return { text }; },
         addListener: (ev, cb) => { if (ev === 'shared') log.listener = cb; return Promise.resolve({ remove() {} }); },
       },
     } };

@@ -34,7 +34,7 @@
     if (!c) return '';
     return '<div class="card" style="border-color:color-mix(in srgb,' + h(c.color || '#1A8A8F') + ' 40%,var(--border))">' +
       '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div class="ico" style="' + tint(c.color || '#1A8A8F') + '">' + I('graduation') + '</div>' +
-      '<div style="flex:1;min-width:0"><b>حضرت <bdi>' + h(c.name) + '</bdi>؟</b><div class="small muted">خلصت ' + h(c.end_time || '') + (c.room ? ' · ' + h(c.room) : '') + '</div></div></div>' +
+      '<div style="flex:1;min-width:0"><b>' + (window.HayatiLang && HayatiLang.lang === 'en' ? 'Did you attend <bdi>' + h(c.name) + '</bdi>?' : 'حضرت <bdi>' + h(c.name) + '</bdi>؟') + '</b><div class="small muted">خلصت ' + h(c.end_time || '') + (c.room ? ' · ' + h(c.room) : '') + '</div></div></div>' +
       '<div class="btn-row"><button class="btn primary" data-action="att-yes" data-id="' + c.id + '">' + I('check') + 'حضرت</button>' +
       '<button class="btn" data-action="att-no" data-id="' + c.id + '">غبت</button>' +
       '<button class="btn ghost" style="flex:0 0 auto" data-action="att-skip" data-id="' + c.id + '" aria-label="تخطّي">' + I('minus') + '</button></div></div>';

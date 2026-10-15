@@ -21,7 +21,8 @@
   const hasAr = (s) => /[؀-ۿ]/.test(s);
   function tr(s) {
     if (!s || !hasAr(s)) return s;
-    return s.replace(RE, (m) => D[m])
+    // «حضرت X؟» سؤال (مو «Attended»)، والاسم يظل مثل ما هو
+    return s.replace(/^حضرت\s+(.+)؟$/, 'Did you attend $1?').replace(RE, (m) => D[m])
       .replace(/(\d)\s*م(?![ء-ٟٮ-ۓ])/g, '$1 pm').replace(/(\d)\s*ص(?![ء-ٟٮ-ۓ])/g, '$1 am')
       .replace(/(^|[\s\d.])من(?=$|[\s\d])/g, '$1of')
       // أرقام بوحدات عربية: «بعد 3 أيام»، «49 دقيقة»، «30 د»، «1.5 س»، «3 مرات»
