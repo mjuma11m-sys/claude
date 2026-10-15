@@ -2,11 +2,12 @@ import { useRef, useState } from "react";
 import { isData, useStore } from "../data/store";
 import { backupDue, isoDay } from "../data/logic";
 import { Chips, useToast } from "../ui/kit";
+import { SyncPanel } from "./SyncPanel";
 import { getLastBackup, loadPrefs, savePrefs, setLastBackup, type Prefs, type TextSize, type Theme } from "../data/prefs";
 
 /** نسخة احتياطية، استرجاع، وحذف كل البيانات (حق المحو — PDPL) */
 export function Settings() {
-  const { data, replace, resetDemo, eraseAll } = useStore();
+  const { data, replace, resetDemo, eraseAll, sync } = useStore();
   const toast = useToast();
   const file = useRef<HTMLInputElement>(null);
   const [confirmErase, setConfirmErase] = useState(false);
@@ -61,20 +62,22 @@ export function Settings() {
         </div>
         <div className="grid-2">
           <button className="btn press" onClick={exportJson}>تنزيل نسخة</button>
-          <button className="btn btn-ghost press" onClick={() => file.current?.click()}>استرجاع من ملف</button>
+          <button className="btn btn-ghost press" onClick={() => file.current?.click()} disabled={!!sync} title={sync ? "وقّف المزامنة أول: الاسترجاع يبدّل بيانات كل العائلة" : undefined}>استرجاع من ملف</button>
         </div>
         <input ref={file} type="file" accept="application/json,.json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) importJson(f); e.target.value = ""; }} />
         {error && <div className="field-error">{error}</div>}
       </section>
 
-      <section className="card stack">
+      <SyncPanel />
+
+      {!sync && <section className="card stack">
         <h2 className="set-title">البيانات التجريبية</h2>
         <button className="btn btn-ghost press" onClick={() => { const before = data; resetDemo(); toast({ text: "رجعت البيانات التجريبية", undo: () => replace(before) }); }}>رجّع البيانات التجريبية</button>
-      </section>
+      </section>}
 
       <section className="card stack danger-zone">
         <h2 className="set-title">حذف كل البيانات</h2>
-        <p className="muted small" style={{ margin: 0 }}>يمسح المستأجرين والدفعات والمصاريف من هالجهاز. ما يرجع إلا من نسخة احتياطية.</p>
+        <p className="muted small" style={{ margin: 0 }}>يمسح المستأجرين والدفعات والمصاريف من هالجهاز. ما يرجع إلا من نسخة احتياطية.{sync && " المزامنة تتوقف على هالجهاز، وبيانات العائلة بالسيرفر ما تنمس."}</p>
         {!confirmErase ? (
           <button className="btn btn-danger press" onClick={() => setConfirmErase(true)}>احذف كل البيانات</button>
         ) : (
@@ -88,8 +91,8 @@ export function Settings() {
       <section className="card stack">
         <h2 className="set-title">الخصوصية</h2>
         <p className="small" style={{ margin: 0 }}>
-          إداراتي أداة للعائلة. نحفظ أسماء المستأجرين وأرقامهم والدفعات والمصاريف عشان إدارة الأملاك بس، على هالجهاز
-          (وبعدين على Supabase لما ينربط). ما نبيع ولا نشارك أي بيانات، وما فيه إعلانات ولا متتبعات. الخطوط من Google Fonts
+          إداراتي أداة للعائلة. نحفظ أسماء المستأجرين وأرقامهم والدفعات والمصاريف عشان إدارة الأملاك بس، على هالجهاز.
+          لو فعّلت المزامنة، تنحفظ كمان على مشروع Supabase حقك (سيرفر برا البحرين) ويشوفها بس أعضاء العائلة اللي دعيتهم. ما نبيع ولا نشارك أي بيانات، وما فيه إعلانات ولا متتبعات. الخطوط من Google Fonts
           (يشوفون عنوان IP بس). أي مستأجر يبي بياناته أو يبي نمسحها يتواصل مع المالك مباشرة.
         </p>
       </section>

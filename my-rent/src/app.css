@@ -335,3 +335,13 @@ html[data-size="xl"] .hero-owed { flex-wrap: wrap; }
 .st-totals > div { display: flex; justify-content: space-between; font-size: 14px; }
 .st-totals .is-late b { color: #B83A2B; }
 .receipt { --paid: #1E7A4C; --paid-soft: #E3F1E8; --due: #965F00; --due-soft: #F7ECD6; --late: #B83A2B; --late-soft: #F8E2DE; --muted: #5B6578; }
+
+/* DW-018: المزامنة */
+.sync-box { padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); }
+.sync-chip { font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 99px; background: var(--surface-2); white-space: nowrap; }
+.sync-synced { background: var(--paid-soft); color: var(--paid); }
+.sync-pending, .sync-offline { background: var(--due-soft); color: var(--due); }
+.sync-error { background: var(--late-soft); color: var(--late); }
+.invite-code { font: 700 28px/1.2 var(--font-display); letter-spacing: .25em; text-align: center; padding: 6px 0; }
+.check-row.consent { align-items: flex-start; font-size: 13px; line-height: 1.6; }
+.check-row.consent input { margin-top: 3px; flex: none; }

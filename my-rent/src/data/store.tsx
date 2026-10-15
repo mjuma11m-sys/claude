@@ -1,12 +1,13 @@
 // مخزن البيانات: useReducer + localStorage. لما ينربط Supabase، يتبدل load/save بس والشاشات ما تتغيّر.
-import { createContext, useContext, useEffect, useReducer, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Data, DepositLog, Expense, Method, Payment, Recurring, Unit } from "./types";
 import { demoData, emptyData } from "./demo";
 import { dueRecurring, isoDay, owedMonths } from "./logic";
+import { SyncEngine, loadSyncConfig, saveSyncConfig, type SyncAction, type SyncConfig, type SyncStatus } from "./sync";
 
 const KEY = "idarati:v2";
 
-type Action =
+export type Action =
   | { type: "pay"; payment: Payment }
   | { type: "unpay"; id: string }
   | { type: "expense"; expense: Expense }
@@ -23,7 +24,7 @@ type Action =
   | { type: "deposit"; log: DepositLog }
   | { type: "undeposit"; id: string };
 
-function reducer(state: Data, a: Action): Data {
+export function reducer(state: Data, a: Action): Data {
   switch (a.type) {
     case "pay": return { ...state, payments: [...state.payments, a.payment] };
     case "unpay": return { ...state, payments: state.payments.filter((p) => p.id !== a.id) };
@@ -44,6 +45,7 @@ function reducer(state: Data, a: Action): Data {
     case "unexpenses": return { ...state, expenses: state.expenses.filter((e) => !a.ids.includes(e.id)) };
     case "deposit": return { ...state, deposits: [a.log, ...(state.deposits ?? [])] };
     case "undeposit": return { ...state, deposits: (state.deposits ?? []).filter((d) => d.id !== a.id) };
+    default: return state; // حدث من نسخة أحدث للتطبيق: نتجاهله بدل ما ننكسر
   }
 }
 
@@ -96,13 +98,28 @@ type Store = {
   replace: (data: Data) => void;
   resetDemo: () => void;
   eraseAll: () => void;
+  sync: SyncState | null;          // null = المزامنة مطفية (البيانات بالجهاز بس)
+  connectSync: (cfg: SyncConfig, mode: "create" | "join") => Promise<void>;
+  disconnectSync: () => void;      // يوقف المزامنة على هالجهاز بس — بيانات السيرفر تبقى
+  syncNow: () => void;
 };
+
+export type SyncState = { status: SyncStatus; queued: number; familyId: string; familyName: string; role: "owner" | "member"; error: string };
 
 const Ctx = createContext<Store | null>(null);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [data, dispatch] = useReducer(reducer, undefined, load);
+  const [data, setData] = useState<Data>(load);
   const [loading, setLoading] = useState(true);
+  const engine = useRef<SyncEngine | null>(null);
+  const [sync, setSync] = useState<SyncState | null>(null);
+
+  // كل تعديل يمر من هني: محلي، أو عن طريق محرّك المزامنة لو مفعّلة
+  const early = useRef<Action[] | null>(loadSyncConfig()?.familyId ? [] : null); // تعديلات قبل ما يجهز المحرّك
+  const dispatch = useCallback((a: Action) => {
+    if (engine.current) engine.current.local(a as SyncAction);
+    else { early.current?.push(a); setData((s) => reducer(s, a)); }
+  }, []);
 
   // تحميل أول مرة (يحاكي Supabase) عشان الـ skeleton والـ stagger يشتغلون بنفس الشكل الحقيقي
   useEffect(() => {
@@ -116,6 +133,49 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   // DW-017: نطلب من المتصفح ما يمسح البيانات (Safari يمسح بيانات المواقع بعد 7 أيام بدون استخدام). مرة وحدة بس.
   useEffect(() => { requestPersist(); }, []);
+
+  // DW-018: تشغيل محرّك المزامنة للعائلة المحفوظة بالإعدادات
+  const startEngine = useCallback(async (cfg: SyncConfig, seed?: Data) => {
+    const { getClient, supabaseRemote } = await import("./supabase");
+    const sb = await getClient(cfg.url, cfg.key);
+    engine.current?.stop();
+    const meta = { familyId: cfg.familyId!, familyName: cfg.familyName ?? "", role: cfg.role ?? "member" };
+    const e = new SyncEngine(supabaseRemote(sb), cfg.familyId!, reducer as (s: Data, a: SyncAction) => Data, emptyData(), (view, status) => {
+      setData(view);
+      setSync({ ...meta, status, queued: e.queued, error: e.lastError });
+    });
+    engine.current = e;
+    if (seed) e.local({ type: "replace", data: seed }); // أول جهاز: بياناته الحالية تصير بداية سجل العائلة
+    for (const a of early.current ?? []) e.local(a as SyncAction); // اللي انسجل وهو يتحمّل ما يضيع
+    early.current = null;
+    setData(e.view);
+    setSync({ ...meta, status: e.status, queued: e.queued, error: "" });
+    await e.start();
+  }, []);
+
+  useEffect(() => {
+    const cfg = loadSyncConfig();
+    if (cfg?.familyId) void startEngine(cfg).catch(() => setSync((s) => s && { ...s, status: "offline" }));
+    const again = () => void engine.current?.sync();
+    window.addEventListener("online", again);
+    window.addEventListener("focus", again);
+    const t = window.setInterval(again, 30_000);
+    return () => { window.removeEventListener("online", again); window.removeEventListener("focus", again); window.clearInterval(t); engine.current?.stop(); };
+  }, [startEngine]);
+
+  const connectSync = useCallback(async (cfg: SyncConfig, mode: "create" | "join") => {
+    saveSyncConfig(cfg);
+    await startEngine(cfg, mode === "create" ? data : undefined);
+  }, [data, startEngine]);
+
+  const disconnectSync = useCallback(() => {
+    engine.current?.stop();
+    engine.current?.clearCache();
+    engine.current = null;
+    early.current = null;
+    saveSyncConfig(null);
+    setSync(null);
+  }, []);
 
   const store: Store = {
     data,
@@ -181,10 +241,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     replace: (d) => dispatch({ type: "replace", data: d }),
     resetDemo: () => dispatch({ type: "replace", data: demoData() }),
+    // يمسح هالجهاز بس: لو المزامنة شغالة تتوقف عليه، وبيانات العائلة بالسيرفر ما تنمس
     eraseAll: () => {
+      disconnectSync();
       try { localStorage.removeItem(KEY); } catch { /* ignore */ }
-      dispatch({ type: "replace", data: emptyData() });
+      setData(emptyData());
     },
+    sync,
+    connectSync,
+    disconnectSync,
+    syncNow: () => void engine.current?.sync(),
   };
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
 }

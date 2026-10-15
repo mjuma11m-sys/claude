@@ -269,6 +269,31 @@ try {
   ok(kErr.length === 0, "DW-017: بدون أخطاء", kErr.join(" | "));
 
   }
+  // 13) DW-018: المزامنة مطفية افتراضياً · المفتاح السري ينرفض · الموافقة إجبارية · ولا طلب لـ Supabase بدون إعداد
+  {
+    const z = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const zErr = []; z.on("pageerror", (e) => zErr.push(e.message));
+    const calls = []; z.on("request", (r) => { if (/supabase\.(co|in)/.test(r.url())) calls.push(r.url()); });
+    await z.goto(URL + "#settings"); await z.evaluate(() => localStorage.clear()); await z.reload(); await z.waitForTimeout(800);
+    ok((await z.locator("#sync-h").count()) === 1 && (await z.locator("#sync-url").count()) === 1, "المزامنة: مطفية وتطلب الإعداد");
+    const jwt = (role) => `x.${Buffer.from(JSON.stringify({ role })).toString("base64url")}.y`;
+    await z.locator("#sync-url").fill("https://abcd.supabase.co");
+    await z.locator("#sync-key").fill(jwt("anon"));
+    ok(await z.getByRole("button", { name: "احفظ وكمّل" }).isDisabled(), "زر الحفظ مقفل بدون الموافقة");
+    await z.locator("#sync-key").fill(jwt("service_role"));
+    await z.locator("#sync-consent").check();
+    await z.getByRole("button", { name: "احفظ وكمّل" }).click(); await z.waitForTimeout(200);
+    ok((await z.locator("#sync-h ~ * .field-error, .field-error").first().innerText()).includes("service_role"), "مفتاح service_role ينرفض بالواجهة");
+    ok(await z.evaluate(() => localStorage.getItem("idarati:syncConfig")) === null, "المفتاح المرفوض ما ينحفظ");
+    await z.locator("#sync-url").fill("https://evil.example.com"); await z.locator("#sync-key").fill(jwt("anon"));
+    await z.getByRole("button", { name: "احفظ وكمّل" }).click(); await z.waitForTimeout(200);
+    ok(await z.evaluate(() => localStorage.getItem("idarati:syncConfig")) === null, "رابط مو Supabase ينرفض");
+    ok(calls.length === 0, "بدون إعداد: ولا طلب لـ Supabase", calls.join(" "));
+    ok(await z.getByRole("button", { name: "رجّع البيانات التجريبية" }).isVisible(), "بدون مزامنة: البيانات التجريبية متاحة");
+    ok(zErr.length === 0, "DW-018: بدون أخطاء", zErr.join(" | "));
+    await z.close();
+  }
+
   if (process.env.SHOTS) {
     for (const [n, w, h, s] of [["home-phone", 390, 844, "light"], ["home-dark", 390, 844, "dark"], ["home-desk", 1280, 800, "light"], ["tenants-tab", 820, 1180, "light"], ["budget-phone", 390, 844, "light"]]) {
       const q = await browser.newPage({ viewport: { width: w, height: h }, colorScheme: s });
