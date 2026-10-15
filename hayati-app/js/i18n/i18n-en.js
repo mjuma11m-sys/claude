@@ -1787,5 +1787,11 @@ window.HAYATI_EN = {
 "صلاة المغرب": "Maghrib prayer",
 "صلاة العشاء": "Isha prayer",
 "صلاة الظهرين": "Dhuhr & Asr prayers",
-"صلاة العشاءين": "Maghrib & Isha prayers"
+"صلاة العشاءين": "Maghrib & Isha prayers",
+// DW-030: الترجمة الكاملة (الأخبار، الأدوات، أول دقيقة، النسخة المشفّرة، البلاغ، القبلة، عبادتي، الورد، المحاضرات، السفر، يوم الراتب والزكاة)
+"📷 صوّر السبورة أو الورقة": "📷 Snap the board or page",
+"نقرا الصورة…": "Reading the photo…",
+"ما قدرنا نقرا الصورة · صوّرها أقرب وبإضاءة أوضح": "Couldn't read the photo · take it closer and in better light",
+"انضاف النص للملاحظات · راجعه واضغط «حفظ»": "Text added to your notes · check it and tap «Save»",
+"يقرأ ملاحظاتك المكتوبة أو الصورة اللي تصوّرها (مو التسجيل). الصورة ما تنحفظ. راجع النتيجة، ممكن يغلط.": "It reads your written notes or the photo you take (not the recording). The photo isn't saved. Check the result, it can make mistakes."
 };

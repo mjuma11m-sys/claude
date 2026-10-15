@@ -20,7 +20,7 @@ const test = base.extend({
 
 const open = async (page, url = '/index.html') => { await page.goto(url); await page.waitForFunction(() => window.App && window.App.st); };
 const store = (page, fn, arg) => page.evaluate(fn, arg);
-const dayKey = (off = 0) => { const d = new Date(); d.setDate(d.getDate() + off); return d.toISOString().slice(0, 10); };
+const dayKey = (off = 0) => new Date(Date.now() + off * 864e5).toLocaleDateString('en-CA', { timeZone: 'Asia/Bahrain' });
 
 test('every tab and section renders @webkit', async ({ page }) => {
   await open(page);
@@ -1854,7 +1854,8 @@ test('accessibility: dark mode keeps text readable (tools sheet tiles and muted 
 });
 
 // ================= DW-027/028: تخطيط السفر (والعمرة نوع رحلة) =================
-const inDays = (n) => { const x = new Date(); x.setDate(x.getDate() + n); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
+// التاريخ بتوقيت البحرين مثل المتصفح بالاختبار (playwright.config timezoneId)، وإلا بين 9 و12 بالليل UTC يطلع يوم ناقص
+const inDays = (n) => new Date(Date.now() + n * 864e5).toLocaleDateString('en-CA', { timeZone: 'Asia/Bahrain' });
 
 test('travel planner: a new trip gets a packing list for its kind, budget vs spent, countdown; all on the device', async ({ page }) => {
   await open(page);
@@ -2153,4 +2154,30 @@ test('English: scheduled notifications are translated too (they leave the page, 
     return HayatiNative.upcoming(now, { trips: true }).filter((x) => x.extra.kind === 'trip').map((x) => x.title + ' | ' + x.body);
   });
   expect(n).toEqual(['🏖️ 3 days to Istanbul | Left 1 item: Passport (valid 6+ months)', '✈️ Travelling tomorrow: Istanbul | Left 1 item: Passport (valid 6+ months)']);
+});
+
+test('lectures photo (DW-034): a board photo is shrunk on the device, sent once, and its text is added to the notes', async ({ page }) => {
+  await open(page);
+  await asStudent(page);
+  await store(page, () => {
+    App.S.status.signedIn = true; window.__aiCalls = []; window.__photoReply = { text: 'Break-even = FC / (P - VC)\nCM ratio = CM / Sales' };
+    App.S.invokeFn = async (name, body) => { const i = new Image(); i.src = 'data:image/jpeg;base64,' + body.image; await i.decode(); window.__aiCalls.push({ name, mode: body.mode, media: body.media, len: (body.image || '').length, head: (body.image || '').slice(0, 4), notes: body.notes, w: i.naturalWidth, h: i.naturalHeight }); return window.__photoReply; };
+    App.ui.studySeg = 'lectures'; App.go('schedule');
+  });
+  await page.click('[data-action="lec-new"]');
+  await page.fill('[name=lc_notes]', 'ملاحظاتي');
+  // صورة كبيرة 3000×2000 تنصغّر لـ 1600 قبل الإرسال
+  const png = await store(page, () => { const c = document.createElement('canvas'); c.width = 3000; c.height = 2000; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, 3000, 2000); g.fillStyle = '#000'; g.font = '200px sans-serif'; g.fillText('x² + y²', 200, 1000); return c.toDataURL('image/png').split(',')[1]; });
+  await page.setInputFiles('#lcPhoto', { name: 'board.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') });
+  await expect(page.locator('[name=lc_notes]')).toHaveValue('ملاحظاتي\n\nBreak-even = FC / (P - VC)\nCM ratio = CM / Sales');
+  const call = await store(page, () => window.__aiCalls[0]);
+  expect(call).toMatchObject({ name: 'lecture-ai', mode: 'photo', media: 'image/jpeg', head: '/9j/' });   // JPEG
+  expect(call.notes).toBeUndefined();                                                                       // الصورة بس، مو الملاحظات
+  expect([call.w, call.h]).toEqual([1600, 1067]);
+  expect(call.len).toBeLessThan(1_000_000);
+  // صورة ما تنقرا: ما يتغيّر شي ويطلع تنبيه
+  await store(page, () => { window.__photoReply = { text: '' }; });
+  await page.setInputFiles('#lcPhoto', { name: 'blur.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') });
+  await expect(page.locator('#toast')).toContainText('ما قدرنا نقرا الصورة');
+  await expect(page.locator('[name=lc_notes]')).toHaveValue(/CM ratio = CM \/ Sales$/);
 });

@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 34,
+  "next": 35,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -263,6 +263,14 @@
       "title": "تذكير قبل السفر: كم غرض باقي",
       "owner": "CEO",
       "priority": "P3",
+      "status": "done",
+      "opened": "2026-10-15",
+      "updated": "2026-10-15"
+    },
+    "DW-034": {
+      "title": "صوّر السبورة أو الورقة ← نص بالملاحظات (Claude vision)",
+      "owner": "CEO",
+      "priority": "P2",
       "status": "done",
       "opened": "2026-10-15",
       "updated": "2026-10-15"

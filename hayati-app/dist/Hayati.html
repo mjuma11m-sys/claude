@@ -2496,7 +2496,13 @@ window.HAYATI_EN = {
 "صلاة المغرب": "Maghrib prayer",
 "صلاة العشاء": "Isha prayer",
 "صلاة الظهرين": "Dhuhr & Asr prayers",
-"صلاة العشاءين": "Maghrib & Isha prayers"
+"صلاة العشاءين": "Maghrib & Isha prayers",
+// DW-030: الترجمة الكاملة (الأخبار، الأدوات، أول دقيقة، النسخة المشفّرة، البلاغ، القبلة، عبادتي، الورد، المحاضرات، السفر، يوم الراتب والزكاة)
+"📷 صوّر السبورة أو الورقة": "📷 Snap the board or page",
+"نقرا الصورة…": "Reading the photo…",
+"ما قدرنا نقرا الصورة · صوّرها أقرب وبإضاءة أوضح": "Couldn't read the photo · take it closer and in better light",
+"انضاف النص للملاحظات · راجعه واضغط «حفظ»": "Text added to your notes · check it and tap «Save»",
+"يقرأ ملاحظاتك المكتوبة أو الصورة اللي تصوّرها (مو التسجيل). الصورة ما تنحفظ. راجع النتيجة، ممكن يغلط.": "It reads your written notes or the photo you take (not the recording). The photo isn't saved. Check the result, it can make mistakes."
 };
 
 </script>
@@ -9887,8 +9893,9 @@ window.HAYATI_CONFIG = {
   const AI_MIN = 200;
   function aiBlock() {
     if (!(S.status && S.status.signedIn && S.invokeFn)) return '<p class="small muted" style="margin:0 4px 12px">✨ التلخيص والأسئلة التلقائية تشتغل لما تسجّل دخول بحسابك.</p>';
-    return '<div class="row-btns" style="display:flex;gap:8px;margin:0 0 6px"><button type="button" class="btn ghost" style="flex:1" data-ai="summary">لخّصها لي ✨</button><button type="button" class="btn ghost" style="flex:1" data-ai="quiz">سوّ لي أسئلة ✨</button></div>' +
-      '<p class="small muted" style="margin:0 4px 12px">يقرأ ملاحظاتك المكتوبة بس (مو التسجيل). راجع النتيجة، ممكن يغلط.</p>';
+    return '<button type="button" class="btn ghost block" data-photo style="margin:0 0 8px">📷 صوّر السبورة أو الورقة</button><input type="file" id="lcPhoto" accept="image/*" capture="environment" hidden>' +
+      '<div class="row-btns" style="display:flex;gap:8px;margin:0 0 6px"><button type="button" class="btn ghost" style="flex:1" data-ai="summary">لخّصها لي ✨</button><button type="button" class="btn ghost" style="flex:1" data-ai="quiz">سوّ لي أسئلة ✨</button></div>' +
+      '<p class="small muted" style="margin:0 4px 12px">يقرأ ملاحظاتك المكتوبة أو الصورة اللي تصوّرها (مو التسجيل). الصورة ما تنحفظ. راجع النتيجة، ممكن يغلط.</p>';
   }
   async function runAi(root, l, mode, redrawCards) {
     const notes = A.val(root, 'lc_notes');
@@ -9911,6 +9918,33 @@ window.HAYATI_CONFIG = {
       const m = String(e && e.message || '');
       A.toast(m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
     } finally { btns.forEach((b) => { b.disabled = false; }); btn.textContent = label; }
+  }
+
+  // DW-034: صورة السبورة أو الورقة ← نص بالملاحظات. نصغّرها بالجهاز (1600px JPEG) والصورة نفسها ما تنحفظ بأي مكان
+  const PHOTO_MAX = 1600;
+  async function shrink(file) {
+    const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = URL.createObjectURL(file); });
+    const k = Math.min(1, PHOTO_MAX / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(img.src);
+    return c.toDataURL('image/jpeg', 0.85).split(',')[1];
+  }
+  async function runPhoto(root, file) {
+    const btn = root.querySelector('[data-photo]'), label = btn.textContent;
+    btn.disabled = true; btn.textContent = 'نقرا الصورة…';
+    try {
+      const image = await shrink(file);
+      const r = await S.invokeFn('lecture-ai', { mode: 'photo', title: A.val(root, 'lc_title'), image, media: 'image/jpeg' });
+      const text = String((r && r.text) || '').trim().slice(0, 8000);
+      if (!text) { A.toast('ما قدرنا نقرا الصورة · صوّرها أقرب وبإضاءة أوضح'); return; }
+      const ta = root.querySelector('[name=lc_notes]');
+      ta.value = (ta.value.trim() ? ta.value.trim() + '\n\n' : '') + text;
+      ta.dispatchEvent(new Event('input'));
+      A.toast('انضاف النص للملاحظات · راجعه واضغط «حفظ»');
+    } catch (e) {
+      const m = String(e && e.message || '');
+      A.toast(m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
+    } finally { btn.disabled = false; btn.textContent = label; }
   }
 
   function sheet(id) {
@@ -9977,6 +10011,8 @@ window.HAYATI_CONFIG = {
           b.addEventListener('pointerdown', (e) => e.preventDefault());   // يخلي الكيبورد مفتوح
           b.onclick = () => { const f = lastField, at = f.selectionStart ?? f.value.length; f.setRangeText(b.dataset.sym, at, f.selectionEnd ?? at, 'end'); f.focus(); };
         });
+        const ph = root.querySelector('[data-photo]'), phIn = root.querySelector('#lcPhoto');
+        if (ph && phIn) { ph.onclick = () => phIn.click(); phIn.onchange = () => { const f = phIn.files[0]; phIn.value = ''; if (f) runPhoto(root, f); }; }
         root.querySelectorAll('[data-ai]').forEach((b) => { b.onclick = () => runAi(root, l, b.dataset.ai, () => { root.querySelector('#lcCards').innerHTML = cardsList(); }); });
         const qz = root.querySelector('#lcQuiz');
         if (qz) qz.onclick = () => { A.closeSheet(); setTimeout(() => quiz([l.id]), 280); };
