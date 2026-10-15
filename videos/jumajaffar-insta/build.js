@@ -43,6 +43,17 @@ P['post-3-template-build.jpg'] = [1080, 1350, BASE(1080, 1350) + `<div class="bg
 <div class="abs" style="left:90px;right:90px;top:340px;font-size:128px;line-height:1.2">وش سويت<br>هالأسبوع <span class="lime">بالكود</span></div>
 <div class="abs" style="left:90px;right:90px;top:860px;padding:34px 44px;border-radius:30px;background:var(--ink);border:2px solid rgba(232,220,196,.16);font-size:40px;font-weight:400;direction:ltr;text-align:left;line-height:1.6;color:var(--lime)">$ git commit -m "..."</div>
 <div class="tag" style="top:1230px">@m_jumajaffar16 · قيد التطوير @hayati.bh</div>`];
+// تعريف 2 و3
+P['post-intro-2-keeper.jpg'] = [1080, 1350, BASE(1080, 1350) + `<div class="bg"></div><div class="grid"></div>
+<div class="abs" style="left:90px;top:120px"><span class="pill" style="display:inline-flex;gap:14px;align-items:center">${GLOVE(48)} الحراسة</span></div>
+<div class="abs" style="left:90px;right:90px;top:340px;font-size:150px;line-height:1.2">آخر خط<br><span class="lime">دفاع.</span></div>
+<div class="abs" style="left:90px;right:90px;top:860px;font-size:52px;font-weight:400;line-height:1.7;opacity:.85">أتدرّب، ألعب، وأشارككم الرحلة.</div>
+<div class="tag" style="top:1230px">@m_jumajaffar16</div>`];
+P['post-intro-3-builder.jpg'] = [1080, 1350, BASE(1080, 1350) + `<div class="bg"></div><div class="grid"></div>
+<div class="abs" style="left:90px;top:120px"><span class="pill" style="direction:ltr">&lt;/&gt; أبني</span></div>
+<div class="abs" style="left:90px;right:90px;top:340px;font-size:150px;line-height:1.2">وأبني<br><span class="lime">تطبيقات.</span></div>
+<div class="abs" style="left:90px;right:90px;top:860px;font-size:52px;font-weight:400;line-height:1.7;opacity:.85">حياتي · قيد التطوير<br>نسخة تجريبية</div>
+<div class="tag" style="top:1230px">@m_jumajaffar16</div>`];
 // 4) كفر الريل 1080×1920 — كل المهم بالمربع الوسطاني (420–1500)
 P['reel-cover-template.jpg'] = [1080, 1920, BASE(1080, 1920) + `<div class="bg"></div><div class="grid"></div>
 <div class="abs" style="left:0;right:0;top:620px;text-align:center;font-size:170px;line-height:1.1">عنوان<br><span class="lime">الريل</span></div>
