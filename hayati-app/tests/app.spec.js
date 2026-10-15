@@ -1850,3 +1850,74 @@ test('accessibility: dark mode keeps text readable (tools sheet tiles and muted 
   const muted = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--muted').trim().toUpperCase());
   expect(muted).toBe('#9EAEAF');   // 5.36:1 على خلفية الـ hero الداكنة (#133A3E)
 });
+
+// ================= DW-027: مخطط العمرة (بند 9) =================
+const inDays = (n) => { const x = new Date(); x.setDate(x.getDate() + n); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
+
+test('umrah planner: countdown, budget vs spent, packing list; everything stays on the device', async ({ page }) => {
+  await open(page);
+  await store(page, () => App.S.setSettings({ onboarded: true }));
+  await page.click('#toolsBtn');
+  await page.click('[data-tool="umrah"]');
+  await expect(page.locator('#sheetTitle')).toHaveText('🕋 مخطط العمرة');
+  await expect(page.locator('#umCount')).toHaveText('حدد تاريخ السفر');
+  await page.fill('#umGo', inDays(21)); await page.dispatchEvent('#umGo', 'change');
+  await page.fill('#umBack', inDays(26)); await page.dispatchEvent('#umBack', 'change');
+  await expect(page.locator('#umCount')).toHaveText('باقي 21 يوم على السفر');
+  await page.click('#umPlan');
+  await page.fill('#umP_flight', '120'); await page.fill('#umP_hotel', '180');
+  await page.click('#sheetSave');
+  await expect(page.locator('#sheetTitle')).toHaveText('🕋 مخطط العمرة');
+  await page.click('#umAdd');
+  await page.fill('#umA', '118.500');
+  await page.click('#sheetSave');
+  await expect(page.locator('#umSpent')).toContainText('118.500');
+  await expect(page.locator('#sheetBody')).toContainText('باقي 181.500');
+  await page.click('#umList [data-um="0"]:not([data-del])');
+  await expect(page.locator('#umDone')).toHaveText('1/12');
+  await page.fill('#umItem', 'سجادة صلاة صغيرة'); await page.click('#umItemAdd');
+  await expect(page.locator('#umDone')).toHaveText('1/13');
+  // على الجهاز بس: ولا عملية انضافت، ولا شي بالإعدادات اللي تتزامن
+  const st = await store(page, () => ({ tx: App.st.transactions.length, settings: JSON.stringify(App.st.settings), local: localStorage.getItem('hayati-umrah') }));
+  expect(st.tx).toBe(0);
+  expect(st.settings).not.toMatch(/umrah|عمرة/);
+  expect(JSON.parse(st.local).check.length).toBe(13);
+  await page.click('#sheetCancel');
+  await store(page, () => { App.go('today'); });
+  await expect(page.locator('[data-action="umrah"]')).toContainText('باقي 21 يوم على السفر');
+  await expect(page.locator('[data-action="umrah"]')).toContainText('التجهيز 1/13');
+});
+
+test('umrah planner: «سجّلها بالمصاريف» adds a neutral expense that never mentions umrah', async ({ page }) => {
+  await open(page);
+  await store(page, () => App.S.setSettings({ onboarded: true }));
+  await store(page, () => window.Extras.Umrah.sheet());
+  await page.click('#umAdd');
+  await page.selectOption('#umC', 'hotel');
+  await page.fill('#umA', '75');
+  await page.check('#umTx');
+  await page.click('#sheetSave');
+  await expect(page.locator('#umSpent')).toContainText('75.000');
+  const tx = await store(page, () => App.st.transactions.map((t) => ({ note: t.note, amount: t.amount })));
+  expect(tx).toEqual([{ note: 'سفر · الفندق', amount: 75 }]);
+});
+
+test('umrah countdown phases, and Arabic day counts (3–10 أيام, 11+ يوم) translate to English', async ({ page }) => {
+  await open(page);
+  const r = await store(page, ([a, b, c]) => {
+    const U = window.Extras.Umrah;
+    return { before: U.countdown({ go: a }).text, today: U.countdown({ go: b }).text, during: U.countdown({ go: c, back: a }).text, after: U.countdown({ go: c, back: c }).text,
+      n3: App.nDays(3), n10: App.nDays(10), n11: App.nDays(11), n21: App.nDays(21) };
+  }, [inDays(3), inDays(0), inDays(-2)]);
+  expect(r.before).toBe('باقي 3 أيام على السفر');
+  expect(r.today).toBe('السفر اليوم ✈️');
+  expect(r.during).toBe('رحلة موفقة 🤍');
+  expect(r.after).toBe('ترجع بالسلامة 🤍');
+  expect([r.n3, r.n10, r.n11, r.n21]).toEqual(['3 أيام', '10 أيام', '11 يوم', '21 يوم']);
+});
+
+test('English: «21 يوم» (11+ days) translates like «3 أيام»', async ({ page }) => {
+  await page.addInitScript(() => { if (!sessionStorage.getItem('i')) { localStorage.setItem('hayati-lang', 'en'); sessionStorage.setItem('i', '1'); } });
+  await open(page);
+  expect(await store(page, () => window.HayatiLang.tr('بعد 21 يوم · قبل 12 يوم · باقي 21 يوم'))).toBe('in 21 days · 12 days ago · Left 21 days');
+});

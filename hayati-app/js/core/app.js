@@ -192,7 +192,7 @@
     if (diff === 1) return 'بكرة';
     return DAYS[d.getDay()] + '، ' + d.getDate() + ' ' + MONTHS[d.getMonth()];
   }
-  function nDays(n) { return n === 1 ? 'يوم' : n === 2 ? 'يومين' : n + ' أيام'; }
+  function nDays(n) { return n === 1 ? 'يوم' : n === 2 ? 'يومين' : n <= 10 ? n + ' أيام' : n + ' يوم'; }   // 3–10 أيام، 11+ يوم
   function relDue(d) {
     const diff = daysBetween(new Date(), d);
     if (diff < 0) return 'متأخر ' + nDays(-diff);

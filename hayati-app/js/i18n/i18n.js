@@ -24,8 +24,8 @@
       .replace(/(\d)\s*م(?![؀-ۿ])/g, '$1 pm').replace(/(\d)\s*ص(?![؀-ۿ])/g, '$1 am')
       .replace(/(^|[\s\d.])من(?=$|[\s\d])/g, '$1of')
       // أرقام بوحدات عربية: «بعد 3 أيام»، «49 دقيقة»، «30 د»، «1.5 س»، «3 مرات»
-      .replace(/قبل\s+(\d+)\s*(?:أيام|days)(?![؀-ۿ])/g, '$1 days ago').replace(/قبل\s+(?:يومين|two days|2 days)(?![؀-ۿ])/g, '2 days ago').replace(/قبل\s+(?:يوم|a day|1 day|Day)(?![؀-ۿ\w])/g, 'a day ago')
-      .replace(/بعد\s+(\d+)\s*(?:أيام|يوم|days)(?![؀-ۿ])/g, 'in $1 days').replace(/(\d+)\s*أيام(?![؀-ۿ])/g, '$1 days')
+      .replace(/قبل\s+(\d+)\s*(?:أيام|يوم|days)(?![؀-ۿ])/g, '$1 days ago').replace(/قبل\s+(?:يومين|two days|2 days)(?![؀-ۿ])/g, '2 days ago').replace(/قبل\s+(?:يوم|a day|1 day|Day)(?![؀-ۿ\w])/g, 'a day ago')
+      .replace(/بعد\s+(\d+)\s*(?:أيام|يوم|days)(?![؀-ۿ])/g, 'in $1 days').replace(/(\d+)\s*(?:أيام|يوم)(?![؀-ۿ])/g, '$1 days')
       .replace(/(\d+)\s*(?:دقيقة|دقايق|دقائق)(?![؀-ۿ])/g, '$1 min').replace(/(\d+(?:\.\d+)?)\s*س(?![؀-ۿ.])/g, '$1 h')
       .replace(/(\d+)\s*د(?![؀-ۿ.])/g, '$1 min').replace(/(\d+)\s*مرات(?![؀-ۿ])/g, '$1 times')
       .replace(/(^|\s)يا\s+(?=\S)/g, ', ')

@@ -119,7 +119,7 @@
       '<div class="meta"><span>' + (np ? np.name + ' بعد ' + leftWord(np.left) + ' (' + np.at + ')' : 'خلصت صلوات اليوم') + '</span></div></div>';
     body += '<div class="small muted" style="margin:6px 4px 12px;display:flex;align-items:center;gap:8px">التاريخ الهجري تقدير (أم القرى)، وتقدر تعدّله للرؤية: ' +
       '<button type="button" class="btn ghost" data-ho="-1" style="padding:4px 12px">−1</button><b class="num" id="hoVal">' + (offset() > 0 ? '+' : '') + offset() + '</b><button type="button" class="btn ghost" data-ho="1" style="padding:4px 12px">+1</button></div>';
-    body += '<div class="actions"><button class="action" type="button" id="ibQibla"><div class="ico" style="' + tint('#0d9488') + '">🧭</div>القبلة</button><button class="action" type="button" id="ibTsb"><div class="ico" style="' + tint('#0d9488') + '">📿</div>المسبحة</button>' +
+    body += '<div class="actions"><button class="action" type="button" id="ibQibla"><div class="ico" style="' + tint('#0d9488') + '">🧭</div>القبلة</button><button class="action" type="button" id="ibUmrah"><div class="ico" style="' + tint('#0d9488') + '">🕋</div>مخطط العمرة</button><button class="action" type="button" id="ibTsb"><div class="ico" style="' + tint('#0d9488') + '">📿</div>المسبحة</button>' +
       '<button class="action" type="button" id="ibWird"><div class="ico" style="' + tint('#0d9488') + '">' + I('book') + '</div>' + (w ? 'وردك ' + ((w.log || {})[dateKey()] || 0) + '/' + E.Wird.goalPages(w) : 'ورد القرآن') + '</button></div>';
     body += A.secHead('المناسبات الجاية') + '<div class="card flush"><ul class="list">' + occ.map((o) => {
       const n = A.daysBetween(today, o.date);
@@ -139,6 +139,7 @@
         }; });
         root.querySelector('#ibTsb').onclick = () => tasbihSheet();
         root.querySelector('#ibQibla').onclick = () => (E.Qibla ? E.Qibla.sheet() : null);
+        root.querySelector('#ibUmrah').onclick = () => (E.Umrah ? E.Umrah.sheet() : null);
         root.querySelector('#ibWird').onclick = () => { A.closeSheet(); setTimeout(() => (E.pick ? E.pick('wird') : null), 280); };
       },
     });
