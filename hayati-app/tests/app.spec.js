@@ -1622,3 +1622,34 @@ test('lectures tab shows only for students, and the tools sheet has a tile for i
   await page.click('#toolsBtn');
   await expect(page.locator('[data-tool="lectures"]')).toBeVisible();
 });
+
+test('lectures AI: hidden behind sign-in; when signed in it sends only the notes and fills the summary and new questions', async ({ page }) => {
+  await open(page);
+  await asStudent(page);
+  await store(page, () => { App.ui.studySeg = 'lectures'; App.go('schedule'); });
+  await page.click('[data-action="lec-new"]');
+  await expect(page.locator('[data-ai]')).toHaveCount(0);
+  await expect(page.locator('.sheet')).toContainText('تسجّل دخول');
+  await page.click('#sheetCancel');
+  await page.waitForTimeout(350);
+  await store(page, () => {
+    App.S.status.signedIn = true;
+    window.__aiCalls = [];
+    App.S.invokeFn = async (name, body) => { window.__aiCalls.push({ name, body }); return body.mode === 'summary' ? { summary: 'النسب تقيس قدرة الشركة على السداد' } : { cards: [{ q: 'Current ratio?', a: 'CA / CL' }, { q: 'Quick ratio?', a: '(CA - Inv) / CL' }] }; };
+  });
+  await page.click('[data-action="lec-new"]');
+  await page.fill('[name=lc_title]', 'Chapter 3');
+  await page.fill('[name=lc_notes]', 'short');
+  await page.click('[data-ai="summary"]');
+  await expect.poll(() => store(page, () => window.__aiCalls.length)).toBe(0);
+  await page.fill('[name=lc_notes]', 'Current ratio = current assets / current liabilities. '.repeat(5));
+  await page.click('[data-ai="summary"]');
+  await expect(page.locator('[name=lc_summary]')).toHaveValue('النسب تقيس قدرة الشركة على السداد');
+  await page.click('[data-ai="quiz"]');
+  await expect(page.locator('#lcCards li')).toHaveCount(2);
+  await page.click('[data-ai="quiz"]');   // نفس الأسئلة ما تتكرر
+  await expect(page.locator('#lcCards li')).toHaveCount(2);
+  const calls = await store(page, () => window.__aiCalls);
+  expect(calls[0].name).toBe('lecture-ai');
+  expect(Object.keys(calls[0].body).sort()).toEqual(['mode', 'notes', 'title']);
+});

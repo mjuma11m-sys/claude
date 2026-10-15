@@ -600,8 +600,20 @@
   global.addEventListener('online', sync);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) sync(); });
 
+  // DW-021: server functions (AI) — only for a signed-in account; the API key lives in Supabase secrets, never here.
+  async function invokeFn(name, body) {
+    if (!sb || !status.signedIn) throw new Error('signin');
+    const { data, error } = await sb.functions.invoke(name, { body });
+    if (error) {
+      let msg = error.message || 'error';
+      try { const j = await error.context.json(); if (j && j.error) msg = j.error; } catch (e) { /* no body */ }
+      throw new Error(msg);
+    }
+    return data;
+  }
+
   global.Store = {
-    state, status, uuid, stableId,
+    state, status, uuid, stableId, invokeFn,
     subscribe: (fn) => { listeners.add(fn); return () => listeners.delete(fn); },
     upsert, remove, setSettings,
     init, getConfig, saveConfig, clearConfig,

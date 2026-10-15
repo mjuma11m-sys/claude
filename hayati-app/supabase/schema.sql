@@ -204,6 +204,27 @@ drop policy if exists "own rows" on public.lectures;
 create policy "own rows" on public.lectures for all to authenticated
   using (user_id = auth.uid()) with check (user_id = auth.uid());
 
+-- DW-021 phase 2: per-user daily AI quota (lecture-ai Edge Function). No client policies: only bump_ai_usage touches it.
+create table if not exists public.ai_usage (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  day date not null default current_date,
+  calls int not null default 0,
+  primary key (user_id, day)
+);
+alter table public.ai_usage enable row level security;
+create or replace function public.bump_ai_usage(lim int) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare n int;
+begin
+  if auth.uid() is null then return false; end if;
+  insert into ai_usage (user_id, day, calls) values (auth.uid(), current_date, 1)
+  on conflict (user_id, day) do update set calls = ai_usage.calls + 1
+  returning calls into n;
+  return n <= lim;
+end $$;
+revoke all on function public.bump_ai_usage(int) from public, anon;
+grant execute on function public.bump_ai_usage(int) to authenticated;
+
 -- الإعدادات: سطر واحد لكل مستخدم
 create table if not exists public.settings (
   user_id    uuid primary key default auth.uid() references auth.users(id) on delete cascade,

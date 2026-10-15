@@ -155,7 +155,7 @@ Expenses, studies, prayer times and tasks in one place. A Bahraini app (beta).
 |---|---|
 | Does your app collect or share user data? | **Yes** (DW-020: الحسابات مفعّلة، Supabase فرانكفورت). الحساب اختياري |
 | Data types | **Personal info → Email address** (Account management) · **Financial info → Other financial info** (App functionality) · **Other user-generated content** (App functionality) |
-| Collected / Shared | **Collected, not shared** · مو إجباري (Optional) · ما ينباع |
+| Collected / Shared | **Collected, not shared** · مو إجباري (Optional) · ما ينباع. ملاحظات المحاضرة اللي تنرسل لـ Anthropic لما المستخدم يضغط «لخّصها لي ✨» = **service provider** يعالج نيابة عنا، فـ Google ما تعتبرها «Shared» (DW-021) |
 | Security | **Encrypted in transit: Yes** · **Users can request deletion: Yes** (الإعدادات ← احذف كل بياناتي) |
 | Privacy policy URL | `https://<رابط-Production>/privacy.html` |
 | Terms of use / EULA URL | `https://<رابط-Production>/terms.html` (بـ App Store Connect: App Information ← License Agreement ← Custom، أو خلّه Standard Apple EULA) |

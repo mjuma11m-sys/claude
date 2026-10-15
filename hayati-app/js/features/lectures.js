@@ -48,6 +48,36 @@
   }
 
   // ================= ملف المحاضرة =================
+  // DW-021 phase 2: AI summary + questions from the notes. Signed-in only; the notes go to the server function, recordings never do.
+  const AI_MIN = 200;
+  function aiBlock() {
+    if (!(S.status && S.status.signedIn && S.invokeFn)) return '<p class="small muted" style="margin:0 4px 12px">✨ التلخيص والأسئلة التلقائية تشتغل لما تسجّل دخول بحسابك.</p>';
+    return '<div class="row-btns" style="display:flex;gap:8px;margin:0 0 6px"><button type="button" class="btn ghost" style="flex:1" data-ai="summary">لخّصها لي ✨</button><button type="button" class="btn ghost" style="flex:1" data-ai="quiz">سوّ لي أسئلة ✨</button></div>' +
+      '<p class="small muted" style="margin:0 4px 12px">يقرأ ملاحظاتك المكتوبة بس (مو التسجيل). راجع النتيجة، ممكن يغلط.</p>';
+  }
+  async function runAi(root, l, mode, redrawCards) {
+    const notes = A.val(root, 'lc_notes');
+    if (notes.length < AI_MIN) { A.toast('اكتب ملاحظات أكثر أول (' + AI_MIN + ' حرف على الأقل)'); return; }
+    const btns = root.querySelectorAll('[data-ai]'); btns.forEach((b) => { b.disabled = true; });
+    const btn = root.querySelector('[data-ai="' + mode + '"]'); const label = btn.textContent; btn.textContent = 'لحظة…';
+    try {
+      const r = await S.invokeFn('lecture-ai', { mode, title: A.val(root, 'lc_title'), notes: notes.slice(0, 20000) });
+      if (mode === 'summary' && r && r.summary) {
+        root.querySelector('[name=lc_summary]').value = String(r.summary).slice(0, 4000);
+        A.toast('الملخص جاهز · راجعه واضغط «حفظ»');
+      } else if (mode === 'quiz' && r && Array.isArray(r.cards)) {
+        const have = new Set(l.cards.map((c) => c.q.trim()));
+        const add = r.cards.filter((c) => c && c.q && c.a && !have.has(String(c.q).trim())).slice(0, 10);
+        add.forEach((c) => l.cards.push({ id: S.uuid(), q: String(c.q).slice(0, 300), a: String(c.a).slice(0, 600) }));
+        redrawCards();
+        A.toast(add.length ? 'انضاف ' + add.length + ' سؤال · اضغط «حفظ»' : 'ما طلع أسئلة جديدة');
+      } else A.toast('ما قدرنا نطلع نتيجة');
+    } catch (e) {
+      const m = String(e && e.message || '');
+      A.toast(m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
+    } finally { btns.forEach((b) => { b.disabled = false; }); btn.textContent = label; }
+  }
+
   function sheet(id) {
     const old = lectures().find((x) => x.id === id);
     const l = Object.assign({ id: S.uuid(), course_id: '', title: '', date: today(), notes: '', summary: '', cards: [], audio: [] }, old || {});
@@ -66,6 +96,7 @@
         '<button type="button" class="btn block" id="lcRec">🎙️ ابدأ التسجيل</button><div id="lcClips">' + audioList() + '</div>' +
         '<div class="group-title">' + I('book') + 'ملاحظاتك</div><div class="field"><textarea name="lc_notes" rows="5" maxlength="20000" placeholder="اللي قاله الدكتور، النقاط المهمة…">' + h(l.notes) + '</textarea></div>' +
         '<div class="field"><label>ملخصك بسطور</label><textarea name="lc_summary" rows="3" maxlength="4000" placeholder="لو بتشرحها لربعك بثلاث جمل، شنو بتقول؟">' + h(l.summary) + '</textarea></div>' +
+        aiBlock() +
         '<div class="group-title">' + I('target') + 'أسئلة تختبر فيها نفسك</div>' +
         '<div class="field"><input name="lc_q" maxlength="300" placeholder="السؤال"></div><div class="field"><input name="lc_a" maxlength="600" placeholder="الجواب"></div>' +
         '<button type="button" class="btn ghost block" id="lcAddCard">' + I('plus') + 'أضف السؤال</button>' +
@@ -105,6 +136,7 @@
           root.querySelector('#lcCards').innerHTML = cardsList();
         };
         root.querySelector('#lcCards').onclick = (e) => { const d = e.target.closest('[data-delcard]'); if (d) { l.cards.splice(Number(d.dataset.delcard), 1); root.querySelector('#lcCards').innerHTML = cardsList(); } };
+        root.querySelectorAll('[data-ai]').forEach((b) => { b.onclick = () => runAi(root, l, b.dataset.ai, () => { root.querySelector('#lcCards').innerHTML = cardsList(); }); });
         const qz = root.querySelector('#lcQuiz');
         if (qz) qz.onclick = () => { A.closeSheet(); setTimeout(() => quiz([l.id]), 280); };
         const del = root.querySelector('#lcDel');
