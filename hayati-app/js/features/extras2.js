@@ -189,7 +189,7 @@
     const lec = A.lectures();
     A.openSheet({
       title: 'بطاقة مراجعة', saveLabel: 'أضف',
-      body: '<div class="field"><label>المادة</label><select name="course"><option value="">عام</option>' + lec.map((c) => '<option value="' + c.id + '">' + h(c.name) + '</option>').join('') + '</select></div>' +
+      body: '<div class="field"><label>المادة</label><select name="course"><option value="">عام</option>' + lec.map((c) => '<option data-noi18n value="' + c.id + '">' + h(c.name) + '</option>').join('') + '</select></div>' +
         '<div class="field"><label>السؤال</label><textarea name="q" placeholder="مثلاً: What is a function?"></textarea></div>' +
         '<div class="field"><label>الجواب</label><textarea name="a"></textarea></div>' +
         '<label class="switch"><input type="checkbox" name="more" checked> أضيف بطاقة ثانية بعدها</label>',

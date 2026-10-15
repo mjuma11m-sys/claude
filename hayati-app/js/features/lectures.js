@@ -60,7 +60,7 @@
     const groups = courses.map((c) => [c, byCourse(c.id)]).filter(([, l]) => l.length);
     const loose = byCourse('');
     if (loose.length) groups.push([{ id: '', name: 'بدون مادة', color: '#64748b' }, loose]);
-    return out + groups.map(([c, ls]) => A.secHead('<span class="dot" style="background:' + (c.color || '#1A8A8F') + '"></span>' + h(c.name), '<span class="small muted num">' + ls.length + '</span>') +
+    return out + groups.map(([c, ls]) => A.secHead('<span class="dot" style="background:' + (c.color || '#1A8A8F') + '"></span><bdi>' + h(c.name) + '</bdi>', '<span class="small muted num">' + ls.length + '</span>') +
       '<div class="card flush"><ul class="list">' + ls.map(row).join('') + '</ul></div>').join('');
   }
   function row(l) {
@@ -110,7 +110,7 @@
     const cardsList = () => l.cards.map((c, i) => '<li class="row" style="cursor:default"><div class="main"><div class="title"><span class="t" dir="auto" style="white-space:normal;overflow:visible">' + mathify(c.q) + '</span></div><div class="sub" dir="auto">' + mathify(c.a) + '</div></div><button type="button" class="icon-x" data-delcard="' + i + '" aria-label="حذف السؤال">✕</button></li>').join('');
     A.openSheet({
       title: old ? 'ملف المحاضرة' : 'محاضرة جديدة',
-      body: '<div class="field"><label>المادة</label><select name="lc_course"><option value="">بدون مادة</option>' + courses.map((c) => '<option value="' + c.id + '"' + (c.id === l.course_id ? ' selected' : '') + '>' + h(c.name) + '</option>').join('') + '</select></div>' +
+      body: '<div class="field"><label>المادة</label><select name="lc_course"><option value="">بدون مادة</option>' + courses.map((c) => '<option data-noi18n value="' + c.id + '"' + (c.id === l.course_id ? ' selected' : '') + '>' + h(c.name) + '</option>').join('') + '</select></div>' +
         '<div class="field"><label>عنوان المحاضرة</label><input name="lc_title" maxlength="120" placeholder="مثلاً: Chapter 3 — Ratios" value="' + h(l.title) + '"></div>' +
         '<div class="field"><label>التاريخ</label><input name="lc_date" type="date" value="' + h(l.date) + '"></div>' +
         '<div class="group-title">' + I('timer') + 'التسجيل</div>' +

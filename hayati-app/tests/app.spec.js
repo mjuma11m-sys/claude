@@ -1987,3 +1987,20 @@ test('encrypted backup (DW-029): one file with account + device data + recording
   }));
   expect(back).toEqual({ tx: ['مطعم سرّي جداً'], trip: 'رحلة لندن السرية', clip: [1, 2, 3, 4, 5] });
 });
+
+// DW-030 (البند 15): أي نص جديد بالواجهة بدون ترجمة يطيّح هالاختبار. لإضافة ترجمة: js/i18n/i18n-en.js
+//   تقرير كامل أعمق: DEEP=1 node tests/tools/i18n-audit.js out.json
+test('English: every screen, sheet and settings item has a translation (no Arabic left outside user data)', async ({ page }) => {
+  test.setTimeout(180000);
+  const { crawl, seed } = require('./tools/i18n-audit.js');
+  await page.addInitScript(() => { if (!sessionStorage.getItem('i')) { localStorage.setItem('hayati-lang', 'en'); sessionStorage.setItem('i', '1'); } });
+  await open(page);
+  await page.evaluate(seed);
+  // الكاشف نفسه يشتغل: نص عربي بدون ترجمة ينمسك، وبيانات المستخدم (bdi) لا
+  await store(page, () => { const d = document.createElement('p'); d.innerHTML = 'نص تجريبي بدون ترجمة <bdi>اسم كتبه المستخدم</bdi>'; document.getElementById('view').appendChild(d); });
+  await page.waitForFunction(() => HayatiLang.missing().length > 0);
+  expect(await store(page, () => HayatiLang.missing())).toEqual(['نص تجريبي بدون ترجمة']);
+  await store(page, () => App.render());
+  const left = (await crawl(page, false)).filter((x) => x.s !== 'نص تجريبي بدون ترجمة');
+  expect(left).toEqual([]);
+});

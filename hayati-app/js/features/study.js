@@ -99,7 +99,7 @@
         lec.map((c) => {
           const weekly = ((c.days || []).length * (lecEnd(c) - A.minutesOf(c.start_time))) / 60;
           const suggest = Math.round(weekly * 2 * 2) / 2;
-          return '<div class="cb-row"><div class="ico" style="' + tint(c.color || '#1A8A8F') + '">' + I('book') + '</div><span>' + h(c.name) +
+          return '<div class="cb-row"><div class="ico" style="' + tint(c.color || '#1A8A8F') + '">' + I('book') + '</div><span><bdi>' + h(c.name) + '</bdi>' +
             '<small class="muted" style="display:block;font-weight:500">مقترح: ' + suggest + ' س</small></span>' +
             '<input name="g_' + c.id + '" inputmode="decimal" placeholder="' + suggest + '" value="' + (Number(c.study_goal) ? Number(c.study_goal) / 60 : '') + '" aria-label="ساعات"></div>';
         }).join('') + '</div><p class="small muted" style="margin:8px 4px 0">بالساعات بالأسبوع.</p>',

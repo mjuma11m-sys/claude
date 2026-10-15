@@ -516,7 +516,7 @@
     const draw = () => {
       const done = wkDone(c.id);
       return '<div class="hero" style="margin-top:4px;padding:16px 18px"><span class="eyebrow">' + I('dumbbell') + (wk.focus || 'تمرين') + '</span>' +
-        '<div class="big" style="font-size:22px;margin:8px 0 2px">' + h(c.name) + '</div>' +
+        '<div class="big" style="font-size:22px;margin:8px 0 2px"><bdi>' + h(c.name) + '</bdi></div>' +
         '<div class="meta"><span>' + I('clock') + time12(c.start_time) + ' — ' + time12(c.end_time) + '</span><span>' + done.length + ' من ' + wk.exercises.length + ' خلصت</span></div>' +
         '<div class="track"><span style="width:' + (done.length / wk.exercises.length) * 100 + '%"></span></div></div>' +
         '<div class="card flush"><ul class="list">' + wk.exercises.map((x, i) =>
@@ -870,7 +870,7 @@
     if (!t) {
       out += '<div class="chips" style="margin-bottom:12px;flex-wrap:nowrap;overflow-x:auto">' +
         '<button class="chip' + (!ui.focusCourse ? ' on' : '') + '" data-action="focus-course" data-id="">عام</button>' +
-        lec.map((c) => '<button class="chip' + (ui.focusCourse === c.id ? ' on' : '') + '" data-action="focus-course" data-id="' + c.id + '">' + h(c.name) + '</button>').join('') + '</div>';
+        lec.map((c) => '<button class="chip' + (ui.focusCourse === c.id ? ' on' : '') + '" data-action="focus-course" data-id="' + c.id + '"><bdi>' + h(c.name) + '</bdi></button>').join('') + '</div>';
     }
     const course = t ? (t.course_id && courseById(t.course_id)) : (ui.focusCourse && courseById(ui.focusCourse));
     out += '<div class="card timer-card"><div class="small muted" style="text-align:center;margin-bottom:6px">' + (course ? h(course.name) : 'مذاكرة عامة') + '</div>' +
@@ -1120,7 +1120,7 @@
     if (ui.tab === 'today') {
       const hr = n.getHours();
       const nm = (st.settings.name || '').trim();
-      return (hr < 12 ? 'صباح الخير' : 'مساء الخير') + (nm ? ' يا ' + nm : '') + ' · ' + DAYS[n.getDay()] + ' ' + n.getDate() + ' ' + MONTHS[n.getMonth()];
+      return (hr < 12 ? 'صباح الخير' : 'مساء الخير') + (nm ? ' يا <bdi>' + h(nm) + '</bdi>' : '') + ' · ' + DAYS[n.getDay()] + ' ' + n.getDate() + ' ' + MONTHS[n.getMonth()];
     }
     if (ui.tab === 'money') return { tx: 'تتبّع صرفك ودخلك', subs: 'اشتراكاتك ومصاريفك الثابتة', goals: 'وفّر لأحلامك', debts: 'الفلوس اللي لك واللي عليك' }[ui.moneySeg];
     if (ui.tab === 'schedule') return { schedule: has('student') ? 'محاضراتك وتمرينك ومواعيدك' : 'شغلك وتمرينك ومواعيدك', lectures: 'ملف لكل محاضرة: تسجيل، ملخص، وأسئلة', focus: 'ركّز وذاكر', gpa: 'معدلك الفصلي والتراكمي' }[ui.studySeg];
@@ -1138,7 +1138,7 @@
     if (bootHold) return;
     const tabInfo = tabOf(TABS.find((t) => t[0] === ui.tab));
     document.getElementById('title').textContent = tabInfo[1];
-    document.getElementById('subtitle').textContent = subtitle();
+    document.getElementById('subtitle').innerHTML = ui.tab === 'today' ? subtitle() : h(subtitle());
     renderTabbar();
     const y = window.scrollY;
     view.innerHTML = { today: viewToday, money: viewMoney, schedule: viewStudy, tasks: viewTasks }[ui.tab]();
@@ -1441,7 +1441,7 @@
           [30, 60, 90, 120].map((m) => '<button type="button" data-k="' + m + '" class="' + ((Number(x.duration) || 60) === m ? 'on' : '') + '">' + (m < 60 ? m + ' د' : m / 60 + ' س') + '</button>').join('') + '</div></div>' +
         '<div class="field"><label>المكان</label><input name="place" value="' + h(x.place || '') + '" placeholder="اختياري"></div></div>' +
         (st.courses.length ? '<div class="field"><label>المادة (اختياري)</label><select name="course_id"><option value="">—</option>' +
-          st.courses.map((c) => '<option value="' + c.id + '"' + (c.id === x.course_id ? ' selected' : '') + '>' + h(c.name) + '</option>').join('') + '</select></div>' : '') +
+          st.courses.map((c) => '<option data-noi18n value="' + c.id + '"' + (c.id === x.course_id ? ' selected' : '') + '>' + h(c.name) + '</option>').join('') + '</select></div>' : '') +
         '<div class="field"><label>ملاحظات</label><textarea name="notes" placeholder="اختياري">' + h(x.notes || '') + '</textarea></div>' +
         (t ? '<button class="btn danger block" type="button" id="delTask">' + I('trash') + 'حذف المهمة</button>' : ''),
       mount(root) {
@@ -1766,7 +1766,7 @@
     const lec = lectures();
     openSheet({
       title: 'تسجيل مذاكرة',
-      body: '<div class="field"><label>المادة</label><select name="course"><option value="">عام</option>' + lec.map((c) => '<option value="' + c.id + '"' + (ui.focusCourse === c.id ? ' selected' : '') + '>' + h(c.name) + '</option>').join('') + '</select></div>' +
+      body: '<div class="field"><label>المادة</label><select name="course"><option value="">عام</option>' + lec.map((c) => '<option data-noi18n value="' + c.id + '"' + (ui.focusCourse === c.id ? ' selected' : '') + '>' + h(c.name) + '</option>').join('') + '</select></div>' +
         '<div class="field"><label>كم دقيقة ذاكرت؟</label><div class="seg" id="minSeg">' + [15, 30, 45, 60, 90, 120].map((m) => '<button type="button" data-k="' + m + '" class="' + (m === 60 ? 'on' : '') + '">' + m + '</button>').join('') + '</div></div>' +
         '<div class="field"><label>متى؟</label><input type="datetime-local" name="when" value="' + toLocalInput(new Date(Date.now() - 3600000)) + '"></div>',
       mount(root) { root.dataset.min = 60; segPick(root, '#minSeg', (k) => { root.dataset.min = k; }); },

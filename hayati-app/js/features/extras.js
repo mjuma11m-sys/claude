@@ -272,7 +272,7 @@
       const lim = Number(cc.absence_limit) || 0;
       const warn = lim && abs.length >= lim - 1;
       return '<div class="hero" style="margin-top:4px;padding:16px 18px;background:linear-gradient(135deg,' + h(cc.color || '#1A8A8F') + ',#0E3B43)"><span class="eyebrow">' + I('book') + 'محاضرة · ' +
-        (cc.days || []).slice().sort().map((d) => A.DAYS_SHORT[d]).join('، ') + '</span><div class="big" style="font-size:24px;margin:8px 0 2px">' + h(cc.name) + '</div>' +
+        (cc.days || []).slice().sort().map((d) => A.DAYS_SHORT[d]).join('، ') + '</span><div class="big" style="font-size:24px;margin:8px 0 2px"><bdi>' + h(cc.name) + '</bdi></div>' +
         '<div class="meta"><span>' + I('clock') + A.time12(cc.start_time) + ' — ' + A.time12(cc.end_time) + '</span>' + (cc.room ? '<span>' + I('pin') + h(cc.room) + '</span>' : '') + '</div></div>' +
         // الغياب
         '<div class="group-title">' + I('user') + 'الغياب</div><div class="card"><div style="display:flex;align-items:center;gap:12px">' +

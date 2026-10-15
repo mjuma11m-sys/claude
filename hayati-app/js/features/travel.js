@@ -181,7 +181,7 @@
         root.querySelector('#tvPlan').onclick = () => planSheet(t);
         root.querySelector('#tvAdd').onclick = () => costSheet(t);
         root.querySelector('#tvDel').onclick = async () => {
-          if (!(await A.ask('تحذف «' + t.name + '» من جوالك؟'))) return;
+          if (!(await A.ask('تحذف هالرحلة من جوالك؟\n' + t.name))) return;
           saveAll(all().filter((x) => x.id !== t.id)); A.render(); listSheet();
         };
       },
