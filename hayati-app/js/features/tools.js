@@ -36,6 +36,7 @@
     ]],
     ['📚 الدراسة والصحة', [
       ['schedule', 'graduation', '#1A8A8F', 'الجدول', () => goSeg('schedule', 'studySeg', 'schedule')],
+      ['lectures', 'book', '#1A8A8F', 'المحاضرات', () => goSeg('schedule', 'studySeg', 'lectures')],
       ['focus', 'timer', '#f97316', 'المذاكرة والتركيز', () => goSeg('schedule', 'studySeg', 'focus')],
       ['gpa', 'award', '#8b5cf6', 'المعدل', () => goSeg('schedule', 'studySeg', 'gpa')],
       ['health', 'heart', '#e11d48', 'صحتي', () => goSeg('schedule', 'studySeg', 'health')],

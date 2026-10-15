@@ -57,7 +57,7 @@
 
   const GRADE_POINTS = { 'A': 4, 'A-': 3.67, 'B+': 3.33, 'B': 3, 'B-': 2.67, 'C+': 2.33, 'C': 2, 'C-': 1.67, 'D+': 1.33, 'D': 1, 'F': 0 };
   const MONEY_SEGS = [['tx', 'العمليات'], ['subs', 'اشتراكات'], ['goals', 'أهداف'], ['debts', 'لي وعلي']];
-  const STUDY_SEGS = [['schedule', 'الجدول'], ['focus', 'المذاكرة'], ['gpa', 'المعدل'], ['health', 'صحتي']];
+  const STUDY_SEGS = [['schedule', 'الجدول'], ['lectures', 'المحاضرات'], ['focus', 'المذاكرة'], ['gpa', 'المعدل'], ['health', 'صحتي']];
   const SUB_PRESETS = [
     ['نتفليكس', 'ترفيه'], ['شاهد', 'ترفيه'], ['سبوتيفاي', 'ترفيه'], ['iCloud', 'فواتير واتصالات'],
     ['باقة الجوال', 'فواتير واتصالات'], ['الإنترنت', 'فواتير واتصالات'], ['النادي الرياضي', 'صحة'], ['ChatGPT', 'جامعة ودراسة'],
@@ -755,9 +755,9 @@
 
   // ================= الجدول/المذاكرة/المعدل =================
   function viewStudy() {
-    const segs = has('student') ? STUDY_SEGS : STUDY_SEGS.filter((x) => x[0] !== 'gpa');
+    const segs = has('student') ? STUDY_SEGS : STUDY_SEGS.filter((x) => x[0] !== 'gpa' && x[0] !== 'lectures');
     if (!segs.some((x) => x[0] === ui.studySeg)) ui.studySeg = 'schedule';
-    return segBar(segs, ui.studySeg, 'study-seg') + ({ schedule: viewSchedule, focus: viewFocus, gpa: viewGpa, health: () => X('viewHealth') })[ui.studySeg]();
+    return segBar(segs, ui.studySeg, 'study-seg') + ({ schedule: viewSchedule, lectures: () => X('viewLectures'), focus: viewFocus, gpa: viewGpa, health: () => X('viewHealth') })[ui.studySeg]();
   }
 
   // جدول فاضي = بداية: كل عميل يبني أسبوعه، والأزرار على حسب ملفه
@@ -1122,7 +1122,7 @@
       return (hr < 12 ? 'صباح الخير' : 'مساء الخير') + (nm ? ' يا ' + nm : '') + ' · ' + DAYS[n.getDay()] + ' ' + n.getDate() + ' ' + MONTHS[n.getMonth()];
     }
     if (ui.tab === 'money') return { tx: 'تتبّع صرفك ودخلك', subs: 'اشتراكاتك ومصاريفك الثابتة', goals: 'وفّر لأحلامك', debts: 'الفلوس اللي لك واللي عليك' }[ui.moneySeg];
-    if (ui.tab === 'schedule') return { schedule: has('student') ? 'محاضراتك وتمرينك ومواعيدك' : 'شغلك وتمرينك ومواعيدك', focus: 'ركّز وذاكر', gpa: 'معدلك الفصلي والتراكمي' }[ui.studySeg];
+    if (ui.tab === 'schedule') return { schedule: has('student') ? 'محاضراتك وتمرينك ومواعيدك' : 'شغلك وتمرينك ومواعيدك', lectures: 'ملف لكل محاضرة: تسجيل، ملخص، وأسئلة', focus: 'ركّز وذاكر', gpa: 'معدلك الفصلي والتراكمي' }[ui.studySeg];
     return 'واجبات واختبارات ومشاوير';
   }
 
@@ -2006,7 +2006,7 @@
   tabbar.onclick = (e) => {
     if (e.target.closest('#addBtn')) {
       if (ui.tab === 'money') ({ tx: () => txForm(), subs: () => subForm(), goals: () => goalForm(), debts: () => debtForm() })[ui.moneySeg]();
-      else if (ui.tab === 'schedule') ({ schedule: () => courseForm(), focus: sessionForm, gpa: () => gradeForm() })[ui.studySeg]();
+      else if (ui.tab === 'schedule') ({ schedule: () => courseForm(), lectures: () => X('lectureForm'), focus: sessionForm, gpa: () => gradeForm() })[ui.studySeg]();
       else if (ui.tab === 'tasks' && X('tasksFab')) return;
       else ({ today: addChooser, tasks: () => taskForm() })[ui.tab]();
       return;

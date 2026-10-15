@@ -1554,3 +1554,71 @@ test('«جديد بحياتي»: waits behind the PIN lock and shows after unloc
   await store(page, () => document.body.classList.remove('locked'));
   await expect(page.locator('#sheetTitle')).toHaveText('جديد بحياتي ✨', { timeout: 3000 });
 });
+
+// ================= DW-021: «المحاضرات» =================
+const asStudent = (page) => store(page, () => { App.S.setSettings({ onboarded: true, roles: ['student'] }); App.S.upsert('courses', { id: 'c1', name: 'محاسبة إدارية', type: 'lecture', days: [1], start_time: '10:00', end_time: '11:15', color: '#1A8A8F' }); });
+
+test('lectures: a file per lecture under its course with notes, summary and self-test questions; the practice quiz scores and is saved', async ({ page }) => {
+  await open(page);
+  await asStudent(page);
+  await store(page, () => { App.ui.studySeg = 'lectures'; App.go('schedule'); });
+  await expect(page.locator('.study-seg, .seg button.on', { hasText: 'المحاضرات' }).first()).toBeVisible();
+  await page.click('[data-action="lec-new"]');
+  await page.selectOption('[name=lc_course]', 'c1');
+  await page.fill('[name=lc_title]', 'Chapter 3 — Ratios');
+  await page.fill('[name=lc_notes]', 'Current ratio = current assets / current liabilities');
+  await page.fill('[name=lc_summary]', 'النسب تقيس السيولة');
+  for (const [q, a] of [['Current ratio?', 'CA / CL'], ['Quick ratio?', '(CA - Inventory) / CL']]) {
+    await page.fill('[name=lc_q]', q); await page.fill('[name=lc_a]', a); await page.click('#lcAddCard');
+  }
+  await expect(page.locator('#lcCards li')).toHaveCount(2);
+  await page.click('#sheetSave');
+  await expect(page.locator('.lec-row')).toHaveCount(1);
+  await expect(page.locator('#view')).toContainText('محاسبة إدارية');
+  await expect(page.locator('.lec-row')).toContainText('❓ 2');
+  // الاختبار التجريبي: سؤال، تشوف الجواب، عرفتها/ما عرفتها
+  await page.click('[data-action="lec-quiz-all"]');
+  await expect(page.locator('#qzQ')).toBeVisible();
+  await page.click('[data-qz="show"]'); await expect(page.locator('#qzA')).toBeVisible(); await page.click('[data-qz="yes"]');
+  await page.click('[data-qz="show"]'); await page.click('[data-qz="no"]');
+  await expect(page.locator('#qzRoot')).toContainText('50%');
+  await page.click('#sheetCancel');
+  await expect(page.locator('.lec-row')).toContainText('✓ 50%');
+  const saved = await store(page, () => App.st.lectures[0]);
+  expect(saved.course_id).toBe('c1'); expect(saved.cards.length).toBe(2); expect(saved.summary).toContain('السيولة');
+});
+
+test('lectures: a recording stays on the device (IndexedDB), is listed on the lecture and is not part of the synced record', async ({ page }) => {
+  await page.addInitScript(() => {
+    // مايك مزيّف: يرجّع صوت وهمي بدون جهاز
+    navigator.mediaDevices.getUserMedia = async () => ({ getTracks: () => [{ stop() {} }] });
+    window.MediaRecorder = class { constructor() { this.mimeType = 'audio/webm'; } start() { setTimeout(() => this.ondataavailable({ data: new Blob(['x'.repeat(100)], { type: 'audio/webm' }) }), 50); } stop() { setTimeout(() => this.onstop(), 10); } };
+  });
+  await open(page);
+  await asStudent(page);
+  await store(page, () => { App.ui.studySeg = 'lectures'; App.go('schedule'); });
+  await page.click('[data-action="lec-new"]');
+  await page.fill('[name=lc_title]', 'Lecture 1');
+  await page.click('#lcRec');
+  await expect(page.locator('#lcRec')).toContainText('وقّف');
+  await page.waitForTimeout(300);
+  await page.click('#lcRec');
+  await expect(page.locator('[data-play="0"]')).toBeVisible();
+  await page.click('#sheetSave');
+  await expect(page.locator('.lec-row')).toContainText('🎙️ 1');
+  const rec = await store(page, async () => { const l = App.st.lectures[0]; const blob = await window.Extras.Lectures.getClip(l.audio[0].id); return { size: blob && blob.size, keys: Object.keys(l.audio[0]) }; });
+  expect(rec.size).toBeGreaterThan(0);
+  expect(rec.keys.sort()).toEqual(['at', 'dur', 'id']);   // السجل نفسه فيه رقم التسجيل بس، مو الصوت
+});
+
+test('lectures tab shows only for students, and the tools sheet has a tile for it', async ({ page }) => {
+  await open(page);
+  await store(page, () => App.S.setSettings({ onboarded: true, roles: ['employee'] }));
+  await store(page, () => App.go('schedule'));
+  await expect(page.locator('[data-action="study-seg"][data-k="lectures"]')).toHaveCount(0);
+  await asStudent(page);
+  await store(page, () => App.go('schedule'));
+  await expect(page.locator('[data-action="study-seg"][data-k="lectures"]')).toHaveCount(1);
+  await page.click('#toolsBtn');
+  await expect(page.locator('[data-tool="lectures"]')).toBeVisible();
+});

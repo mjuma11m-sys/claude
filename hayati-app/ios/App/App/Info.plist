@@ -78,5 +78,7 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>«حياتي» يستخدم المايك بس لما تسجّل محاضرة بنفسك، والتسجيل يظل على جوالك.</string>
 </dict>
 </plist>
