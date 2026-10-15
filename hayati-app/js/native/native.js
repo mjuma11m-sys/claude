@@ -19,7 +19,7 @@
   const TEST_ID = 990001;
   // ⚙️ التنبيهات: كل نوع له مفتاح، وملخص الصباح مقفل افتراضياً (ما نزعج)
   const PREFS = 'hayati-notif-prefs';
-  const DEF = { lectures: true, attend: true, exams: true, homework: true, subs: true, brief: false, briefAt: '07:00', checkin: false, checkinAt: '21:30', adhkar: false };
+  const DEF = { lectures: true, attend: true, exams: true, homework: true, subs: true, trips: true, brief: false, briefAt: '07:00', checkin: false, checkinAt: '21:30', adhkar: false };
   function prefs() {
     try { return Object.assign({}, DEF, JSON.parse(localStorage.getItem(PREFS) || '{}')); } catch (e) { return Object.assign({}, DEF); }
   }
@@ -55,6 +55,9 @@
     const out = [];
     const add = (key, when, title, body, extra) => {
       if (!(when > now)) return;
+      // التنبيه يطلع من النظام مو من الصفحة، فنترجمه هني لو التطبيق بالإنقليزي (DW-030)
+      const L = window.HayatiLang;
+      if (L && L.lang === 'en' && typeof L.tr === 'function') { title = L.tr(title); body = L.tr(body || ''); }
       const n = { id: nid(key), title, body: body || '', schedule: { at: when, allowWhileIdle: true }, extra: extra || { kind: 'today' } };
       if (extra && extra.act) n.actionTypeId = extra.act === 'attend' ? ATTEND_ACTIONS : TASK_ACTIONS;   // «حضرت/غبت» أو «خلصته/بعد ساعة»
       out.push(n);
@@ -124,6 +127,11 @@
         add('sub:' + sub.id + ':' + rd.toDateString(), at(day, before === 0 ? 9 * 60 : EVENING),
           dayWord(before) + ' يتجدد: ' + sub.name, A.fmt(sub.amount) + ' د.ب', { kind: 'sub', id: sub.id });
       }
+    }
+
+    // 🧳 قبل السفر بـ 3 أيام والليلة اللي قبله، مع كم غرض باقي (DW-033)
+    if (p.trips && window.Extras && window.Extras.Travel && window.Extras.Travel.reminders) {
+      for (const r of window.Extras.Travel.reminders()) add(r.key, r.at, r.title, r.body, r.extra);
     }
 
     // ☀️ ملخص الصباح (اختياري): محاضرات اليوم واختباراته وتسليماته
@@ -212,6 +220,7 @@
     const t = extra.kind === 'task' && (A.st.tasks || []).find((x) => x.id === extra.id);
     if (extra.kind === 'task') { A.go('tasks'); if (t) setTimeout(() => A.taskForm(t), 50); else A.toast('ما لقيت المهمة، يمكن انحذفت'); return; }
     if (extra.kind === 'sub') { A.ui.moneySeg = 'subs'; A.go('money'); return; }
+    if (extra.kind === 'trip' && window.Extras && window.Extras.Travel) { window.Extras.Travel.tripSheet(extra.id); return; }
     if (extra.kind === 'checkin') { A.ui.moneySeg = 'tx'; A.go('money'); setTimeout(() => A.txForm(), 50); return; }
     A.go('today');
   }
@@ -304,7 +313,7 @@
 
   // ⚙️ الإعدادات ← التنبيهات (نسخة الآيفون بس)
   const TYPES = [['lectures', '📅 الجدول والصلاة', 'قبل المحاضرة بـ 10 دقايق، والصلاة بوقتها'], ['attend', '🎓 سؤال الحضور', 'بعد كل محاضرة: حضرت ولا غبت، من التنبيه نفسه'], ['exams', '📝 الاختبارات', 'الليلة اللي قبلها، وقبل الاختبار بساعتين'],
-    ['homework', '📚 الواجبات', 'الليلة اللي قبل التسليم'], ['subs', '💳 تجديد الاشتراكات', 'قبل التجديد بالأيام اللي تحددها بالاشتراك'], ['brief', '☀️ ملخص الصباح', 'جدولك واختباراتك اليوم، والأيام الفاضية ما فيها'],
+    ['homework', '📚 الواجبات', 'الليلة اللي قبل التسليم'], ['trips', '🧳 قبل السفر', 'قبله بـ 3 أيام والليلة اللي قبله: كم غرض باقي'], ['subs', '💳 تجديد الاشتراكات', 'قبل التجديد بالأيام اللي تحددها بالاشتراك'], ['brief', '☀️ ملخص الصباح', 'جدولك واختباراتك اليوم، والأيام الفاضية ما فيها'],
     ['checkin', '🌙 سكّر يومك', 'بالليل، بس لو ما سجلت ولا مصروف بيومك'], ['adhkar', '📿 تذكير الأذكار', 'بعد الفجر والعصر بنص ساعة']];
   function prefsSheet() {
     const p = prefs();

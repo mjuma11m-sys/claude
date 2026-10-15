@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 33,
+  "next": 34,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -247,12 +247,20 @@
       "title": "ودجت أندرويد للشاشة الرئيسية (الجاي + الميزانية + أزرار)",
       "owner": "CEO",
       "priority": "P2",
-      "status": "review",
+      "status": "done",
       "opened": "2026-10-15",
       "updated": "2026-10-15"
     },
     "DW-032": {
       "title": "تحويل العملات بمخطط السفر",
+      "owner": "CEO",
+      "priority": "P3",
+      "status": "done",
+      "opened": "2026-10-15",
+      "updated": "2026-10-15"
+    },
+    "DW-033": {
+      "title": "تذكير قبل السفر: كم غرض باقي",
       "owner": "CEO",
       "priority": "P3",
       "status": "done",

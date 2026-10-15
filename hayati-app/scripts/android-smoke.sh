@@ -80,12 +80,8 @@ case "$wg" in
   "") echo "❌ ما وصلت لقطة للودجت خلال 30 ثانية"; exit 1 ;;
   *) echo "❌ $wg"; exit 1 ;;
 esac
-# التحديث الدوري (نظام أندرويد) يمر على نفس الكود بدون التطبيق
-adb shell am broadcast -a android.appwidget.action.APPWIDGET_UPDATE -n "$PKG/.HayatiWidget" --eia appWidgetIds 1 >/dev/null || true
-sleep 2
-adb logcat -d > "$OUT/logcat.txt" || true
-grep -q 'hayati-widget:render' "$OUT/logcat.txt" || { echo "❌ التحديث الدوري للودجت ما اشتغل"; exit 1; }
-if grep -q 'FATAL EXCEPTION' "$OUT/logcat.txt"; then echo "❌ طيحة بعد تحديث الودجت"; exit 1; fi
+# ملاحظة: التحديث الدوري (APPWIDGET_UPDATE) ما نقدر نرسله من adb (بث محمي بالنظام)، وهو يمر على نفس build() اللي فوق
+if grep -q 'FATAL EXCEPTION' "$OUT/logcat.txt"; then echo "❌ طيحة بعد رسم الودجت"; exit 1; fi
 
 echo "▶ زر «+ مصروف» بالودجت يفتح نافذة المصروف"
 adb logcat -c || true

@@ -67,7 +67,11 @@
     if (!Array.isArray(list)) list = [];
     return migrate(list);
   }
-  const saveAll = (list) => { try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) { A.toast('ما قدرنا نحفظ على هالجهاز'); } };
+  // كل تعديل يعيد جدولة تنبيهات السفر (الرحلات على الجهاز، فما تمر على مزامنة Store)
+  const saveAll = (list) => {
+    try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) { A.toast('ما قدرنا نحفظ على هالجهاز'); }
+    if (window.HayatiNative && typeof HayatiNative.reschedule === 'function') { clearTimeout(saveAll.t); saveAll.t = setTimeout(() => HayatiNative.reschedule(), 800); }
+  };
   const put = (t) => { const list = all(), i = list.findIndex((x) => x.id === t.id); if (i >= 0) list[i] = t; else list.push(t); saveAll(list); };
   const get = (id) => all().find((x) => x.id === id) || null;
 
@@ -89,6 +93,25 @@
     if (back && A.daysBetween(now, back) >= 0) return { text: 'رحلة موفقة 🤍', n: 0, phase: 'during' };
     return { text: 'ترجع بالسلامة 🤍', n: 0, phase: 'after' };
   }
+  // ⏰ تذكير قبل السفر (DW-033): قبله بـ 3 أيام والليلة اللي قبله، الساعة 8 الليل، مع كم غرض باقي
+  const nItems = (n) => (n === 1 ? 'غرض واحد' : n === 2 ? 'غرضين' : n <= 10 ? n + ' أغراض' : n + ' غرض');
+  function leftLine(t) {
+    const left = t.check.filter((c) => !c.on);
+    return left.length ? 'باقي ' + nItems(left.length) + ': ' + left.slice(0, 3).map((c) => c.t).join('، ') + (left.length > 3 ? '…' : '') : 'كل أغراضك جاهزة ✓';
+  }
+  function reminders() {
+    const out = [];
+    for (const t of all()) {
+      const go = day(t.go);
+      if (!go) continue;
+      const at = (before) => new Date(go.getFullYear(), go.getMonth(), go.getDate() - before, 20, 0, 0, 0);
+      const extra = { kind: 'trip', id: t.id }, icon = (KINDS[t.kind] || KINDS.leisure)[1];
+      out.push({ key: 'trip3:' + t.id + ':' + t.go, at: at(3), title: icon + ' باقي 3 أيام على ' + t.name, body: leftLine(t), extra });
+      out.push({ key: 'trip1:' + t.id + ':' + t.go, at: at(1), title: '✈️ بكرة السفر: ' + t.name, body: leftLine(t), extra });
+    }
+    return out;
+  }
+
   const order = (list) => list.slice().sort((a, b) => {
     const pa = ['during', 'today', 'before', 'none', 'after'].indexOf(countdown(a).phase), pb = ['during', 'today', 'before', 'none', 'after'].indexOf(countdown(b).phase);
     return pa - pb || String(a.go || '9').localeCompare(String(b.go || '9'));
@@ -314,7 +337,7 @@
     const t = order(all()).find((x) => { const c = countdown(x); return c.phase === 'today' || c.phase === 'during' || (c.phase === 'before' && c.n <= 30); });
     if (!t) return '';
     const cd = countdown(t), done = t.check.filter((c) => c.on).length;
-    return '<button class="cta" data-action="trip" data-id="' + t.id + '" style="margin-top:10px"><div class="ico">' + (KINDS[t.kind] || KINDS.leisure)[1] + '</div><div style="flex:1;min-width:0"><b>' + h(t.name) + ': ' + cd.text + '</b><small>الأغراض ' + done + '/' + t.check.length + '</small></div>' + I('chevL') + '</button>';
+    return '<button class="cta" data-action="trip" data-id="' + t.id + '" style="margin-top:10px"><div class="ico">' + (KINDS[t.kind] || KINDS.leisure)[1] + '</div><div style="flex:1;min-width:0"><b>' + h(t.name) + ': ' + cd.text + '</b><small>' + (cd.phase === 'before' && cd.n <= 3 && done < t.check.length ? 'باقي ' + nItems(t.check.length - done) : 'الأغراض ' + done + '/' + t.check.length) + '</small></div>' + I('chevL') + '</button>';
   }
 
   // ================= الربط =================
@@ -325,6 +348,6 @@
     if (name === 'umrah') { umrah(); return; }
     return prev(name, el, e);
   });
-  E.Travel = { CUR, toBHD, inCur, KEY, KINDS, CATS, GROUPS, PACK, all, get, countdown, spentOf, planned, listSheet, tripSheet, newSheet, umrah };
+  E.Travel = { CUR, toBHD, inCur, reminders, leftLine, KEY, KINDS, CATS, GROUPS, PACK, all, get, countdown, spentOf, planned, listSheet, tripSheet, newSheet, umrah };
   E.Umrah = { sheet: umrah, countdown };
 })();

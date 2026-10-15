@@ -2095,3 +2095,60 @@ test('travel currency (DW-032): pegged rates prefilled, floating ones need a rat
   await expect(page.locator('#tvFx')).toBeVisible();
   expect(await store(page, () => window.Extras.Travel.toBHD({ cur: { code: 'TRY', rate: 91.5 } }, 915))).toBe(10);
 });
+
+test('trip reminder (DW-033): 3 days before and the night before at 8 pm, with how many items are left; Today says «باقي N أغراض»', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.Capacitor = { isNativePlatform: () => true, Plugins: { LocalNotifications: {
+      checkPermissions: async () => ({ display: 'granted' }), requestPermissions: async () => ({ display: 'granted' }),
+      getPending: async () => ({ notifications: [] }), cancel: async () => {}, schedule: async () => {},
+    } } };
+  });
+  await open(page);
+  const r = await store(page, () => {
+    App.S.setSettings({ onboarded: true });
+    const k = (off) => { const d = new Date(); d.setDate(d.getDate() + off); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+    const check = [{ g: 'أوراق', t: 'جواز السفر', on: true }, { g: 'أوراق', t: 'التأشيرة', on: false }, { g: 'ملابس', t: 'ملابس سباحة', on: false }, { g: 'صحة', t: 'أدوية', on: false }, { g: 'أغراض', t: 'شاحن', on: false }];
+    localStorage.setItem('hayati-trips', JSON.stringify([
+      { id: 't1', name: 'إسطنبول', kind: 'leisure', go: k(5), back: '', plan: {}, costs: [], check },
+      { id: 't2', name: 'بدون تاريخ', kind: 'work', go: '', back: '', plan: {}, costs: [], check: [] },
+    ]));
+    const now = new Date(); now.setHours(9, 0, 0, 0);
+    const pick = (opts) => HayatiNative.upcoming(now, opts).filter((n) => n.extra && n.extra.kind === 'trip').map((n) => ({ t: n.title, b: n.body, at: n.schedule.at.getTime() }));
+    const on = pick({ trips: true }), off = pick({ trips: false });
+    const at3 = new Date(); at3.setDate(at3.getDate() + 2); at3.setHours(20, 0, 0, 0);
+    // بعد ما يخلص التجهيز، الرسالة تتغيّر
+    const all = JSON.parse(localStorage.getItem('hayati-trips')); all[0].check.forEach((c) => { c.on = true; });
+    return { on, off, at3: at3.getTime(), ready: window.Extras.Travel.leftLine(all[0]) };
+  });
+  expect(r.off).toEqual([]);
+  expect(r.on.map((x) => x.t)).toEqual(['🏖️ باقي 3 أيام على إسطنبول', '✈️ بكرة السفر: إسطنبول']);
+  expect(r.on[0].at).toBe(r.at3);
+  expect(r.on[0].b).toBe('باقي 4 أغراض: التأشيرة، ملابس سباحة، أدوية…');
+  expect(r.ready).toBe('كل أغراضك جاهزة ✓');
+  // شاشة اليوم: قبل السفر بـ 3 أيام أو أقل يطلع «باقي N أغراض»
+  await store(page, () => {
+    const all = JSON.parse(localStorage.getItem('hayati-trips'));
+    const d = new Date(); d.setDate(d.getDate() + 2);
+    all[0].go = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    localStorage.setItem('hayati-trips', JSON.stringify(all)); App.go('today');
+  });
+  await expect(page.locator('#view [data-action="trip"]')).toContainText('باقي 4 أغراض');
+});
+
+test('English: scheduled notifications are translated too (they leave the page, so the DOM layer misses them)', async ({ page }) => {
+  await page.addInitScript(() => {
+    if (!sessionStorage.getItem('i')) { localStorage.setItem('hayati-lang', 'en'); sessionStorage.setItem('i', '1'); }
+    window.Capacitor = { isNativePlatform: () => true, Plugins: { LocalNotifications: {
+      checkPermissions: async () => ({ display: 'granted' }), requestPermissions: async () => ({ display: 'granted' }),
+      getPending: async () => ({ notifications: [] }), cancel: async () => {}, schedule: async () => {},
+    } } };
+  });
+  await open(page);
+  const n = await store(page, () => {
+    const k = (off) => { const d = new Date(); d.setDate(d.getDate() + off); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+    localStorage.setItem('hayati-trips', JSON.stringify([{ id: 't1', name: 'Istanbul', kind: 'leisure', go: k(5), back: '', plan: {}, costs: [], check: [{ g: 'أوراق', t: 'جواز السفر (صالح 6 أشهر على الأقل)', on: false }] }]));
+    const now = new Date(); now.setHours(9, 0, 0, 0);
+    return HayatiNative.upcoming(now, { trips: true }).filter((x) => x.extra.kind === 'trip').map((x) => x.title + ' | ' + x.body);
+  });
+  expect(n).toEqual(['🏖️ 3 days to Istanbul | Left 1 item: Passport (valid 6+ months)', '✈️ Travelling tomorrow: Istanbul | Left 1 item: Passport (valid 6+ months)']);
+});
