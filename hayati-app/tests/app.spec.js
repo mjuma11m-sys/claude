@@ -1851,61 +1851,74 @@ test('accessibility: dark mode keeps text readable (tools sheet tiles and muted 
   expect(muted).toBe('#9EAEAF');   // 5.36:1 على خلفية الـ hero الداكنة (#133A3E)
 });
 
-// ================= DW-027: مخطط العمرة (بند 9) =================
+// ================= DW-027/028: تخطيط السفر (والعمرة نوع رحلة) =================
 const inDays = (n) => { const x = new Date(); x.setDate(x.getDate() + n); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
 
-test('umrah planner: countdown, budget vs spent, packing list; everything stays on the device', async ({ page }) => {
+test('travel planner: a new trip gets a packing list for its kind, budget vs spent, countdown; all on the device', async ({ page }) => {
   await open(page);
   await store(page, () => App.S.setSettings({ onboarded: true }));
   await page.click('#toolsBtn');
-  await page.click('[data-tool="umrah"]');
-  await expect(page.locator('#sheetTitle')).toHaveText('🕋 مخطط العمرة');
-  await expect(page.locator('#umCount')).toHaveText('حدد تاريخ السفر');
-  await page.fill('#umGo', inDays(21)); await page.dispatchEvent('#umGo', 'change');
-  await page.fill('#umBack', inDays(26)); await page.dispatchEvent('#umBack', 'change');
-  await expect(page.locator('#umCount')).toHaveText('باقي 21 يوم على السفر');
-  await page.click('#umPlan');
-  await page.fill('#umP_flight', '120'); await page.fill('#umP_hotel', '180');
+  await page.click('[data-tool="travel"]');
+  await expect(page.locator('#sheetTitle')).toHaveText('🧳 تخطيط السفر');
+  await page.click('#tvNew');
+  await page.fill('#tvName', 'إسطنبول');
+  await page.selectOption('#tvKind', 'leisure');
+  await page.fill('#tvGo0', inDays(21)); await page.fill('#tvBack0', inDays(26));
   await page.click('#sheetSave');
-  await expect(page.locator('#sheetTitle')).toHaveText('🕋 مخطط العمرة');
-  await page.click('#umAdd');
-  await page.fill('#umA', '118.500');
+  await expect(page.locator('#sheetTitle')).toHaveText('🧳 إسطنبول');
+  await expect(page.locator('#tvCount')).toHaveText('باقي 21 يوم على السفر');
+  await expect(page.locator('#tvDone')).toHaveText('0/16');   // 14 أساسية + 2 للسياحة
+  await expect(page.locator('#tvList')).toContainText('ملابس سباحة');
+  await expect(page.locator('#tvList')).not.toContainText('الإحرام');
+  await expect(page.locator('#tvList .group-title').first()).toContainText('أوراق');
+  await page.click('#tvPlan');
+  await page.fill('#tvP_flight', '120'); await page.fill('#tvP_hotel', '250');
   await page.click('#sheetSave');
-  await expect(page.locator('#umSpent')).toContainText('118.500');
-  await expect(page.locator('#sheetBody')).toContainText('باقي 181.500');
-  await page.click('#umList [data-um="0"]:not([data-del])');
-  await expect(page.locator('#umDone')).toHaveText('1/12');
-  await page.fill('#umItem', 'سجادة صلاة صغيرة'); await page.click('#umItemAdd');
-  await expect(page.locator('#umDone')).toHaveText('1/13');
-  // على الجهاز بس: ولا عملية انضافت، ولا شي بالإعدادات اللي تتزامن
-  const st = await store(page, () => ({ tx: App.st.transactions.length, settings: JSON.stringify(App.st.settings), local: localStorage.getItem('hayati-umrah') }));
+  await page.click('#tvAdd');
+  await page.fill('#tvA', '118.500');
+  await page.click('#sheetSave');
+  await expect(page.locator('#tvSpent')).toContainText('118.500');
+  await expect(page.locator('#sheetBody')).toContainText('باقي 251.500');
+  await expect(page.locator('#sheetBody')).toContainText('بالليلة');
+  await page.click('#tvList [data-tv="0"]:not([data-del])');
+  await page.selectOption('#tvGroup', 'إلكترونيات'); await page.fill('#tvItem', 'سماعات'); await page.click('#tvItemAdd');
+  await expect(page.locator('#tvDone')).toHaveText('1/17');
+  const st = await store(page, () => ({ tx: App.st.transactions.length, settings: JSON.stringify(App.st.settings), trips: JSON.parse(localStorage.getItem('hayati-trips')) }));
   expect(st.tx).toBe(0);
-  expect(st.settings).not.toMatch(/umrah|عمرة/);
-  expect(JSON.parse(st.local).check.length).toBe(13);
+  expect(st.settings).not.toMatch(/trip|إسطنبول/);
+  expect(st.trips.length).toBe(1);
+  expect(st.trips[0].check.find((c) => c.t === 'سماعات').g).toBe('إلكترونيات');
   await page.click('#sheetCancel');
-  await store(page, () => { App.go('today'); });
-  await expect(page.locator('[data-action="umrah"]')).toContainText('باقي 21 يوم على السفر');
-  await expect(page.locator('[data-action="umrah"]')).toContainText('التجهيز 1/13');
+  await store(page, () => App.go('today'));
+  await expect(page.locator('[data-action="trip"]')).toContainText('إسطنبول: باقي 21 يوم على السفر');
+  await page.click('[data-action="trip"]');
+  await expect(page.locator('#sheetTitle')).toHaveText('🧳 إسطنبول');
 });
 
-test('umrah planner: «سجّلها بالمصاريف» adds a neutral expense that never mentions umrah', async ({ page }) => {
+test('travel planner: Umrah from «عبادتي» is a trip with its own items; an old Umrah plan moves over; expenses stay neutral', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('hayati-umrah', JSON.stringify({ go: '', back: '', plan: { package: 95 }, costs: [{ id: 'c1', cat: 'package', amount: 50, note: '' }], check: [{ t: 'جواز السفر', on: true }] })));
   await open(page);
   await store(page, () => App.S.setSettings({ onboarded: true }));
   await store(page, () => window.Extras.Umrah.sheet());
-  await page.click('#umAdd');
-  await page.selectOption('#umC', 'hotel');
-  await page.fill('#umA', '75');
-  await page.check('#umTx');
+  await expect(page.locator('#sheetTitle')).toHaveText('🧳 العمرة');
+  await expect(page.locator('#tvSpent')).toContainText('50.000');
+  const moved = await store(page, () => ({ old: localStorage.getItem('hayati-umrah'), trips: JSON.parse(localStorage.getItem('hayati-trips')) }));
+  expect(moved.old).toBeNull();
+  expect(moved.trips[0].plan.visa).toBe(95);
+  await page.click('#tvAdd');
+  await page.selectOption('#tvC', 'hotel'); await page.fill('#tvA', '75'); await page.check('#tvTx');
   await page.click('#sheetSave');
-  await expect(page.locator('#umSpent')).toContainText('75.000');
-  const tx = await store(page, () => App.st.transactions.map((t) => ({ note: t.note, amount: t.amount })));
-  expect(tx).toEqual([{ note: 'سفر · الفندق', amount: 75 }]);
+  const tx = await store(page, () => App.st.transactions.map((t) => t.note));
+  expect(tx).toEqual(['سفر · السكن']);
+  // رحلة عمرة جديدة تجي فيها أغراضها
+  await store(page, () => { localStorage.removeItem('hayati-trips'); window.Extras.Umrah.sheet(); });
+  await expect(page.locator('#tvList')).toContainText('ملابس الإحرام');
 });
 
-test('umrah countdown phases, and Arabic day counts (3–10 أيام, 11+ يوم) translate to English', async ({ page }) => {
+test('trip countdown phases, and Arabic day counts (3–10 أيام, 11+ يوم)', async ({ page }) => {
   await open(page);
   const r = await store(page, ([a, b, c]) => {
-    const U = window.Extras.Umrah;
+    const U = window.Extras.Travel;
     return { before: U.countdown({ go: a }).text, today: U.countdown({ go: b }).text, during: U.countdown({ go: c, back: a }).text, after: U.countdown({ go: c, back: c }).text,
       n3: App.nDays(3), n10: App.nDays(10), n11: App.nDays(11), n21: App.nDays(21) };
   }, [inDays(3), inDays(0), inDays(-2)]);

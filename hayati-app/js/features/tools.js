@@ -26,6 +26,7 @@
       ['debts', 'users', '#0891b2', 'لي وعلي', () => goSeg('money', 'moneySeg', 'debts')],
       ['report', 'chart', '#8b5cf6', 'تقرير الشهر', () => { goSeg('money', 'moneySeg', 'tx'); setTimeout(() => run('report'), 50); }],
       ['year', 'chart', '#6366f1', 'ملخص السنة', () => run('year')],
+      ['travel', 'briefcase', '#0d9488', 'تخطيط السفر', () => run('travel')],
     ]],
     ['🗓️ يومك', [
       ['shop', 'cart', '#16a34a', 'المشتريات', () => goSeg('tasks', 'tasksSeg', 'shop')],
@@ -44,7 +45,7 @@
     ['🕌 العبادة', [
       ['ibada', 'moon', '#0d9488', 'عبادتي', () => run('ibada')],
       ['qibla', 'compass', '#0d9488', 'القبلة', () => run('qibla')],
-      ['umrah', 'briefcase', '#0d9488', 'مخطط العمرة', () => run('umrah')],
+      ['umrah', 'moon', '#0d9488', 'مخطط العمرة', () => run('umrah')],
       ['tasbih', 'repeat', '#0d9488', 'المسبحة', () => run('tasbih')],
       ['wird', 'book', '#0d9488', 'ورد القرآن', () => (E.pick ? E.pick('wird') : null)],
     ]],
