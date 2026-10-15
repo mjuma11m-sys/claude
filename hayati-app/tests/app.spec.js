@@ -2062,3 +2062,36 @@ test('Android widget (DW-031): the app sends the snapshot to the native plugin, 
   await page.waitForFunction(() => window.__wg.sent.length > 0);
   expect(await store(page, () => window.__wg.sent[window.__wg.sent.length - 1].budget.line)).toBe('باقي 100.000 د.ب من الميزانية');
 });
+
+test('travel currency (DW-032): pegged rates prefilled, floating ones need a rate, costs in local currency convert to BHD', async ({ page }) => {
+  await open(page);
+  await store(page, () => {
+    App.S.setSettings({ onboarded: true });
+    localStorage.setItem('hayati-trips', JSON.stringify([{ id: 't1', name: 'دبي', kind: 'leisure', go: '', back: '', plan: { hotel: 100 }, costs: [], check: [] }]));
+    window.Extras.Travel.tripSheet('t1');
+  });
+  await expect(page.locator('#tvCurNote')).toContainText('اختار عملة البلد');
+  await page.selectOption('#tvCur', 'AED');
+  await expect(page.locator('#tvRate')).toHaveValue('9.7672');                   // الدرهم مربوط بالدولار، والدينار بعد
+  await expect(page.locator('#tvCurNote')).toContainText('تقدير');
+  // المحوّل بالاتجاهين
+  await page.fill('#tvFx', '100'); await expect(page.locator('#tvFxB')).toHaveValue('10.238');
+  await page.fill('#tvFxB', '1');  await expect(page.locator('#tvFx')).toHaveValue('9.77');
+  await expect(page.locator('#tvCurNote').locator('xpath=..')).toContainText('976.72 AED');
+  // مصروف بالدرهم ينحفظ بالدينار ومعه المبلغ الأصلي
+  await page.click('#tvAdd');
+  await page.selectOption('#tvC', 'hotel'); await page.fill('#tvA', '488.36');
+  await expect(page.locator('#tvAB')).toContainText('50.000');
+  await page.click('#sheetSave');
+  const cost = await store(page, () => JSON.parse(localStorage.getItem('hayati-trips'))[0].costs[0]);
+  expect(cost).toMatchObject({ amount: 50, orig: { code: 'AED', value: 488.36, rate: 9.7672 } });
+  await expect(page.locator('#tvSpent')).toContainText('50.000');
+  // عملة سعرها يتغيّر: ما فيه سعر جاهز، ولازم يكتبه
+  await page.selectOption('#tvCur', 'TRY');
+  await expect(page.locator('#tvRate')).toHaveValue('');
+  await expect(page.locator('#tvCurNote')).toContainText('سعرها يتغيّر');
+  await expect(page.locator('#tvFx')).toHaveCount(0);
+  await page.fill('#tvRate', '91.5'); await page.locator('#tvRate').dispatchEvent('change');
+  await expect(page.locator('#tvFx')).toBeVisible();
+  expect(await store(page, () => window.Extras.Travel.toBHD({ cur: { code: 'TRY', rate: 91.5 } }, 915))).toBe(10);
+});

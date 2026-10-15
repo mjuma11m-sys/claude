@@ -75,6 +75,13 @@ test('home-screen widget (DW-031): registered, RemoteViews-safe layouts, ids mat
   assert.doesNotMatch(m, /BIND_APPWIDGET|READ_CONTACTS/);
 });
 
+test('every Android XML resource is well-formed (no «--» inside comments, which breaks the build)', () => {
+  const files = ['app/src/main/AndroidManifest.xml'];
+  const walk = (d) => { for (const f of fs.readdirSync(path.join(A, d))) { const p = d + '/' + f; if (fs.statSync(path.join(A, p)).isDirectory()) walk(p); else if (f.endsWith('.xml')) files.push(p); } };
+  walk('app/src/main/res');
+  for (const f of files) for (const c of read(f).matchAll(/<!--([\s\S]*?)-->/g)) assert.ok(!c[1].includes('--'), f + ': «--» inside a comment');
+});
+
 // DW-011: جاهزية المتجر
 const W = path.join(__dirname, '../..');
 test('Play versionCode follows APP_VERSION, so every update uploads with a new number', () => {

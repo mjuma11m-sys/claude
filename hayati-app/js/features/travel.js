@@ -34,6 +34,19 @@
     study: [['أوراق', 'القبول والشهادات'], ['إلكترونيات', 'اللابتوب وشاحنه']],
     family: [['أغراض', 'هدايا الأهل']],
   };
+  // 💱 العملات (DW-032): [الرمز، الاسم، كم وحدة تساوي 1 د.ب (0 = المستخدم يكتبه)]. المربوطة بالدولار لها سعر جاهز (الدينار نفسه مربوط: 1 د.ب = 2.6596 $)،
+  //   والباقي يتغيّر كل يوم فالمستخدم يكتب السعر من بنكه أو الصرّاف. كلها تقدير: البنك ياخذ عمولة فوق.
+  const CUR = [
+    ['SAR', 'ريال سعودي', 9.9734], ['AED', 'درهم إماراتي', 9.7672], ['QAR', 'ريال قطري', 9.6809], ['OMR', 'ريال عماني', 1.0226],
+    ['USD', 'دولار أمريكي', 2.6596], ['KWD', 'دينار كويتي', 0], ['EUR', 'يورو', 0], ['GBP', 'جنيه إسترليني', 0],
+    ['TRY', 'ليرة تركية', 0], ['EGP', 'جنيه مصري', 0], ['JOD', 'دينار أردني', 1.8857], ['INR', 'روبية هندية', 0],
+    ['THB', 'بات تايلندي', 0], ['MYR', 'رينغيت ماليزي', 0], ['GEL', 'لاري جورجي', 0], ['AZN', 'مانات أذربيجاني', 4.5213],
+  ];
+  const curOf = (t) => (t.cur && t.cur.code && t.cur.rate > 0 ? t.cur : null);
+  const curName = (code) => (CUR.find((c) => c[0] === code) || [code, code, code])[1];
+  const toBHD = (t, v) => { const c = curOf(t); return c ? Math.round((v / c.rate) * 1000) / 1000 : v; };
+  const inCur = (t, bhd) => { const c = curOf(t); return c ? (Math.round(bhd * c.rate * 100) / 100).toLocaleString('en-US', { maximumFractionDigits: 2 }) + ' ' + c.code : ''; };
+
   const packFor = (kind) => PACK.base.concat(PACK[kind] || []).map(([g, t]) => ({ g, t, on: false }));
 
   // ================= التخزين (على الجهاز) =================
@@ -147,6 +160,7 @@
           '<div class="sub">' + (pl ? 'من ' + A.fmt(pl) + ' د.ب' : 'بدون ميزانية') + '</div></div><div class="amount fit">' + A.money(s) + '</div></li>';
       }).join('') + '</ul></div>' +
       '<button type="button" class="btn block" id="tvAdd" style="margin-top:10px">' + I('plus') + 'أضف مصروف للرحلة</button>' +
+      curCard(t, p, sp) +
       A.secHead('الأغراض', '<span class="count" id="tvDone">' + done + '/' + t.check.length + '</span>') +
       '<div id="tvList">' + packList(t) + '</div>' +
       '<div class="field" style="display:flex;gap:8px;margin-top:10px"><select id="tvGroup" aria-label="المجموعة" style="flex:none;width:auto">' + GROUPS.map((g) => '<option>' + g + '</option>').join('') + '</select><input id="tvItem" maxlength="80" placeholder="أضف غرض" aria-label="أضف غرض" style="flex:1;min-width:0"><button type="button" class="btn" id="tvItemAdd">أضف</button></div>' +
@@ -179,6 +193,7 @@
           t.check.push({ g: root.querySelector('#tvGroup').value, t: v.slice(0, 80), on: false }); inp.value = ''; persist(); refreshList();
         };
         root.querySelector('#tvPlan').onclick = () => planSheet(t);
+        curMount(root, t);
         root.querySelector('#tvAdd').onclick = () => costSheet(t);
         root.querySelector('#tvDel').onclick = async () => {
           if (!(await A.ask('تحذف هالرحلة من جوالك؟\n' + t.name))) return;
@@ -201,6 +216,39 @@
     }).join('');
   }
 
+  function curCard(t, p, sp) {
+    const c = curOf(t), code = (t.cur && t.cur.code) || '';
+    return A.secHead('💱 العملة', '') + '<div class="card">' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="field" style="margin:0;min-width:0"><label for="tvCur">عملة البلد</label><select id="tvCur" style="width:100%"><option value="">الدينار بس</option>' +
+        CUR.map(([k, n]) => '<option value="' + k + '"' + (k === code ? ' selected' : '') + '>' + k + ' · ' + n + '</option>').join('') + '</select></div>' +
+      '<div class="field" style="margin:0;min-width:0"><label for="tvRate">1 د.ب = ؟' + (code ? ' ' + code : '') + '</label><input id="tvRate" inputmode="decimal" dir="ltr" placeholder="' + (code ? 'من البنك أو الصرّاف' : '—') + '" value="' + (t.cur && t.cur.rate > 0 ? t.cur.rate : '') + '"' + (code ? '' : ' disabled') + ' style="width:100%;min-width:0;box-sizing:border-box"></div></div>' +
+      (c ? '<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:end;margin-top:10px">' +
+          '<div class="field" style="margin:0;min-width:0"><label for="tvFx">' + c.code + '</label><input id="tvFx" inputmode="decimal" dir="ltr" placeholder="0" style="width:100%;min-width:0;box-sizing:border-box"></div>' +
+          '<span style="padding:0 0 12px">⇄</span>' +
+          '<div class="field" style="margin:0;min-width:0"><label for="tvFxB">د.ب</label><input id="tvFxB" inputmode="decimal" dir="ltr" placeholder="0.000" style="width:100%;min-width:0;box-sizing:border-box"></div></div>' +
+          (p ? '<p class="small muted num" style="margin:8px 4px 0">' + (sp > p ? 'تعدّيت بـ ' : 'باقي ≈ ') + '<bdi dir="ltr">' + inCur(t, Math.abs(p - sp)) + '</bdi>' + '</p>' : '') : '') +
+      '<p class="small muted" style="margin:8px 4px 0" id="tvCurNote">' + (code && !c ? 'اكتب سعر الصرف من بنكك أو الصرّاف، لأن هالعملة سعرها يتغيّر.' : c ? 'الأسعار <b>تقدير</b>: البنك أو الصرّاف ياخذ عمولة فوقها.' : 'اختار عملة البلد عشان تحوّل وتسجّل المصاريف بعملته.') + '</p></div>';
+  }
+  function curMount(root, t) {
+    const sel = root.querySelector('#tvCur'), rate = root.querySelector('#tvRate');
+    sel.onchange = () => {
+      const k = sel.value, d = CUR.find((c) => c[0] === k);
+      t.cur = k ? { code: k, rate: d && d[2] ? d[2] : 0 } : null;
+      put(t); tripSheet(t.id);
+    };
+    rate.onchange = () => {
+      const v = A.parseAmount(rate.value);
+      if (!t.cur) return;
+      t.cur.rate = v > 0 ? v : 0; put(t); tripSheet(t.id);
+    };
+    const fx = root.querySelector('#tvFx'), fb = root.querySelector('#tvFxB');
+    if (fx && fb) {
+      const c = curOf(t);
+      fx.oninput = () => { const v = A.parseAmount(fx.value); fb.value = v > 0 ? (v / c.rate).toFixed(3) : ''; };
+      fb.oninput = () => { const v = A.parseAmount(fb.value); fx.value = v > 0 ? String(Math.round(v * c.rate * 100) / 100) : ''; };
+    }
+  }
+
   function planSheet(t) {
     A.openSheet({
       title: 'ميزانية ' + h(t.name),
@@ -218,14 +266,30 @@
       title: 'مصروف للرحلة',
       saveLabel: 'أضف',
       body: '<div class="field"><label for="tvC">البند</label><select id="tvC">' + CATS.map(([k, n, e]) => '<option value="' + k + '">' + e + ' ' + n + '</option>').join('') + '</select></div>' +
-        '<div class="field"><label for="tvA">المبلغ (د.ب)</label><input id="tvA" inputmode="decimal" placeholder="0.000"></div>' +
+        (curOf(t) ? '<div class="seg" id="tvIn" role="group" aria-label="العملة" style="margin-bottom:8px"><button type="button" class="on" data-in="cur">' + curOf(t).code + '</button><button type="button" data-in="bhd">د.ب</button></div>' : '') +
+        '<div class="field"><label for="tvA" id="tvAL">المبلغ (' + (curOf(t) ? curOf(t).code : 'د.ب') + ')</label><input id="tvA" inputmode="decimal" placeholder="0.000"><small class="muted num" id="tvAB"></small></div>' +
         '<div class="field"><label for="tvN">ملاحظة (اختياري)</label><input id="tvN" maxlength="80" placeholder="مثلاً: عربون الفندق"></div>' +
         '<label class="small" style="display:flex;gap:8px;align-items:center;margin:4px 4px 0"><input type="checkbox" id="tvTx"> سجّلها بالمصاريف بعد (تنكتب «سفر» بس)</label>',
+      mount(root) {
+        const seg = root.querySelector('#tvIn'), inp = root.querySelector('#tvA'), hint = root.querySelector('#tvAB');
+        if (!seg) return;
+        const show = () => { const v = A.parseAmount(inp.value), cur = seg.querySelector('.on').dataset.in === 'cur'; hint.textContent = v > 0 && cur ? '≈ ' + A.fmt(toBHD(t, v)) + ' د.ب' : ''; };
+        seg.onclick = (e) => {
+          const b = e.target.closest('[data-in]'); if (!b) return;
+          seg.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
+          root.querySelector('#tvAL').textContent = 'المبلغ (' + (b.dataset.in === 'cur' ? curOf(t).code : 'د.ب') + ')'; show();
+        };
+        inp.oninput = show;
+      },
       onSave(root) {
-        const amount = A.parseAmount(root.querySelector('#tvA').value);
-        if (!(amount > 0)) throw new Error('اكتب المبلغ');
+        const raw = A.parseAmount(root.querySelector('#tvA').value);
+        if (!(raw > 0)) throw new Error('اكتب المبلغ');
+        const seg = root.querySelector('#tvIn'), foreign = !!(seg && seg.querySelector('.on').dataset.in === 'cur');
+        const amount = foreign ? toBHD(t, raw) : raw;
         const cat = root.querySelector('#tvC').value, note = root.querySelector('#tvN').value.trim().slice(0, 80);
-        t.costs.push({ id: S.uuid(), cat, amount, note, at: new Date().toISOString() });
+        const cost = { id: S.uuid(), cat, amount, note, at: new Date().toISOString() };
+        if (foreign) cost.orig = { code: curOf(t).code, value: raw, rate: curOf(t).rate };
+        t.costs.push(cost);
         put(t);
         if (root.querySelector('#tvTx').checked) {
           const c = CATS.find((x) => x[0] === cat);
@@ -261,6 +325,6 @@
     if (name === 'umrah') { umrah(); return; }
     return prev(name, el, e);
   });
-  E.Travel = { KEY, KINDS, CATS, GROUPS, PACK, all, get, countdown, spentOf, planned, listSheet, tripSheet, newSheet, umrah };
+  E.Travel = { CUR, toBHD, inCur, KEY, KINDS, CATS, GROUPS, PACK, all, get, countdown, spentOf, planned, listSheet, tripSheet, newSheet, umrah };
   E.Umrah = { sheet: umrah, countdown };
 })();

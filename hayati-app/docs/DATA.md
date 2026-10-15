@@ -66,3 +66,4 @@
 | `hayati-seen-version` | localStorage | آخر نسخة شاف فيها المستخدم «جديد بحياتي» (DW-019) | الجهاز بس |
 | `hayati-first-step` | localStorage | وين وصل المستخدم بـ«أول دقيقة» (`step` / `done`) (DW-024) | الجهاز بس |
 | `hayati-trips` | localStorage | تخطيط السفر: الرحلات (الوجهة، النوع، التواريخ، الميزانية، المصاريف، والأغراض) (DW-028). العمرة نوع رحلة. ما تتزامن أبداً؛ `hayati-umrah` القديم ينتقل لها وينمسح | الجهاز بس |
+| `hayati-trips[].cur` (DW-032) | `{code, rate}`: كم وحدة = 1 د.ب. المصروف بعملة البلد ينحفظ `amount` بالدينار + `orig: {code, value, rate}` |
