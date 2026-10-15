@@ -4,10 +4,11 @@
 
   const KEY = 'hayati-v1';
   const CFG_KEY = 'hayati-supabase';
-  const TABLES = ['transactions', 'courses', 'tasks', 'subscriptions', 'goals', 'grades', 'study_sessions', 'debts', 'habits', 'daily', 'lifts', 'body', 'cards', 'events', 'shopping', 'journal', 'matches', 'lectures'];
-  const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges', 'name', 'roles', 'onboarded'];
+  const TABLES = ['transactions', 'courses', 'tasks', 'subscriptions', 'goals', 'grades', 'study_sessions', 'debts', 'habits', 'daily', 'lifts', 'body', 'cards', 'events', 'shopping', 'journal', 'matches', 'lectures', 'trips'];
+  const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges', 'name', 'roles', 'onboarded', 'payday', 'gold_price', 'today_hide'];
   // على الجهاز بس (ما تروح لجدول settings بالسيرفر) بس تدخل بالنسخة الاحتياطية (DW-012)
-  const LOCAL_SETTINGS = ['payday', 'madhhab', 'gold_price', 'khums_start', 'wird', 'hijri_offset', 'tasbih', 'today_hide'];
+  //   DW-035: يوم الراتب وسعر الذهب وترتيب «اليوم» صارت تتزامن؛ إعدادات العبادة تظل على الجهاز (خصوصية)
+  const LOCAL_SETTINGS = ['madhhab', 'khums_start', 'wird', 'hijri_offset', 'tasbih'];
   const NUMERIC = ['amount', 'target', 'saved', 'credits', 'minutes', 'day', 'month', 'duration', 'remind_days', 'weight', 'waist', 'water', 'sleep', 'absence_limit'];
 
   const listeners = new Set();
@@ -358,10 +359,23 @@
     if (error) throw new Error(arabicAuthError(error.message));
     status.recovery = false; emit();
   }
-  // المزودين المفعّلين بلوحة Supabase (صاحب التطبيق يكتبهم بـ config.js لما يفعّلهم)
+  // المزودين المفعّلين: نسأل Supabase نفسه (/auth/v1/settings)، فأول ما يتفعّل Google أو Apple بلوحة Supabase تطلع أزرارهم
+  //   بدون تعديل بالكود. نسأل بس لما تفتح صفحة «حسابك» (بدون حساب ما يطلع أي اتصال، DW-011). PROVIDERS بـ config.js يظل يضيف
+  let detected = [], checkedAt = 0;
+  async function checkProviders() {
+    const cfg = getConfig();
+    if (!sb || !cfg || typeof fetch !== 'function' || Date.now() - checkedAt < 10 * 60e3) return providers();
+    try {
+      const r = await fetch(cfg.url.replace(/\/$/, '') + '/auth/v1/settings', { headers: { apikey: cfg.key } });
+      const j = r.ok ? await r.json() : null, ext = (j && j.external) || {};
+      if (j) { detected = ['apple', 'google'].filter((p) => ext[p] === true); checkedAt = Date.now(); }
+    } catch (e) { /* بدون نت: نكمل بالإيميل */ }
+    return providers();
+  }
   function providers() {
     const p = (global.HAYATI_CONFIG || {}).PROVIDERS;
-    return sb && Array.isArray(p) ? p.filter((x) => x === 'apple' || x === 'google') : [];
+    const list = detected.concat(Array.isArray(p) ? p : []);
+    return sb ? ['apple', 'google'].filter((x) => list.includes(x)) : [];
   }
 
   function arabicAuthError(msg) {
@@ -617,7 +631,7 @@
     subscribe: (fn) => { listeners.add(fn); return () => listeners.delete(fn); },
     upsert, remove, setSettings,
     init, getConfig, saveConfig, clearConfig,
-    signIn, signUp, signOut, sync, resolveMerge, signInWithProvider, exchangeCode, resetPassword, updatePassword, providers, localCount, getSeed, processInbox, smsToTransaction,
+    signIn, signUp, signOut, sync, resolveMerge, signInWithProvider, exchangeCode, resetPassword, updatePassword, providers, checkProviders, localCount, getSeed, processInbox, smsToTransaction,
     ensureIngestToken, rotateIngestToken, exportJSON, importJSON, wipeAll,
   };
 })(window);

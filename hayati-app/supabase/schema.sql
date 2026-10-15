@@ -204,6 +204,19 @@ drop policy if exists "own rows" on public.lectures;
 create policy "own rows" on public.lectures for all to authenticated
   using (user_id = auth.uid()) with check (user_id = auth.uid());
 
+-- DW-035: الرحلات (تخطيط السفر) تتزامن بين الأجهزة. رحلات العمرة تظل على الجهاز بس وما توصل هني
+create table if not exists public.trips (
+  user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  id         uuid not null,
+  data       jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.trips enable row level security;
+drop policy if exists "own rows" on public.trips;
+create policy "own rows" on public.trips for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+
 -- DW-021 phase 2: per-user daily AI quota (lecture-ai Edge Function). No client policies: only bump_ai_usage touches it.
 create table if not exists public.ai_usage (
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -284,7 +297,7 @@ grant execute on function public.ingest_sms(text, text) to anon, authenticated;
 do $$
 declare t text;
 begin
-  foreach t in array array['transactions','courses','tasks','subscriptions','goals','grades','study_sessions','debts','habits','daily','lifts','body','cards','events','shopping','journal','matches','lectures','settings','sms_inbox'] loop
+  foreach t in array array['transactions','courses','tasks','subscriptions','goals','grades','study_sessions','debts','habits','daily','lifts','body','cards','events','shopping','journal','matches','lectures','trips','settings','sms_inbox'] loop
     begin
       execute format('alter publication supabase_realtime add table public.%I', t);
     exception when duplicate_object then null;
@@ -299,5 +312,5 @@ begin
   if auth.uid() is null then raise exception 'not signed in' using errcode = '28000'; end if;
   delete from auth.users where id = auth.uid();
 end $$;
-revoke all on function public.delete_my_account() from public;
+revoke all on function public.delete_my_account() from public, anon;
 grant execute on function public.delete_my_account() to authenticated;

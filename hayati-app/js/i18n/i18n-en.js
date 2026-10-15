@@ -1793,5 +1793,27 @@ window.HAYATI_EN = {
 "نقرا الصورة…": "Reading the photo…",
 "ما قدرنا نقرا الصورة · صوّرها أقرب وبإضاءة أوضح": "Couldn't read the photo · take it closer and in better light",
 "انضاف النص للملاحظات · راجعه واضغط «حفظ»": "Text added to your notes · check it and tap «Save»",
-"يقرأ ملاحظاتك المكتوبة أو الصورة اللي تصوّرها (مو التسجيل). الصورة ما تنحفظ. راجع النتيجة، ممكن يغلط.": "It reads your written notes or the photo you take (not the recording). The photo isn't saved. Check the result, it can make mistakes."
+"يقرأ ملاحظاتك المكتوبة أو الصورة اللي تصوّرها (مو التسجيل). الصورة ما تنحفظ. راجع النتيجة، ممكن يغلط.": "It reads your written notes or the photo you take (not the recording). The photo isn't saved. Check the result, it can make mistakes.",
+// DW-030: الترجمة الكاملة (الأخبار، الأدوات، أول دقيقة، النسخة المشفّرة، البلاغ، القبلة، عبادتي، الورد، المحاضرات، السفر، يوم الراتب والزكاة)
+"وش يوصل لكل أجهزتك؟": "What reaches all your devices?",
+"الفلوس والميزانية والاشتراكات والأهداف والديون": "Money, budget, subscriptions, goals and debts",
+"الجدول والمهام والدرجات والمحاضرات (الملاحظات والأسئلة)": "Schedule, tasks, grades and lectures (notes and questions)",
+"الرحلات وقوائم الأغراض، والصحة والعادات واليوميات": "Trips and packing lists, health, habits and journal",
+"إعداداتك: الميزانية، يوم الراتب، ترتيب «اليوم»": "Your settings: budget, payday, the «Today» layout",
+"يظل على هالجهاز بس:": "Stays on this device only:",
+"تسجيلات المحاضرات الصوتية (حجمها كبير) · تنقلها بـ «نسخة مشفّرة»": "Lecture audio recordings (large) · move them with «Encrypted backup»",
+"إعدادات العبادة (المذهب، الورد، المسبحة): خصوصية": "Worship settings (madhhab, wird, tasbih): privacy",
+"رمز القفل واللغة والمظهر": "Lock PIN, language and theme",
+"حساب واحد": "One account",
+"نفس بياناتك على كل أجهزتك": "The same data on all your devices",
+"سجّل من جوالك والآيباد والماك، وأي شي تضيفه يوصل للثاني": "Sign in on your phone, iPad and Mac, and whatever you add reaches the others",
+"فيه مشكلة بالمزامنة": "There's a sync problem",
+"بياناتك متزامنة بين أجهزتك": "Your data is synced across your devices",
+"نفس الرابط على كل أجهزتك": "The same link on all your devices",
+"سجّل دخول أو أنشئ حساب": "Sign in or create an account",
+"نفس بياناتك على جوالك وأي جهاز ثاني": "The same data on your phone and any other device",
+"بياناتك على هالجوال بس": "Your data is on this phone only",
+"سوّ حساب وتوصل لك نفس البيانات على أي جهاز ثاني، وما تضيع لو تبدّل الجوال.": "Create an account and get the same data on any other device, and nothing is lost if you change phones.",
+"سجّل أو أنشئ حساب": "Sign in or sign up",
+"رحلات العمرة تظل على هالجهاز بس": "Umrah trips stay on this device only"
 };

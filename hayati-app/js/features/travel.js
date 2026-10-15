@@ -1,6 +1,6 @@
 // «تخطيط السفر» (DW-028): أكثر من رحلة، كل رحلة لها ميزانية بنود مقابل المصروف، قائمة أغراض مقسّمة عشان ما تنسى شي، وعداد للسفر.
 // «مخطط العمرة» (DW-027) صار نوع رحلة من هني، وبياناته القديمة تنتقل بروحها.
-// كل الرحلات على الجهاز بس (localStorage) وما تتزامن: الوجهة والتواريخ خاصة، والعمرة معلومة دينية.
+// DW-035: الرحلات تتزامن مع حسابك (جدول trips) عشان توصل لكل أجهزتك. رحلات العمرة تظل على الجهاز بس (معلومة دينية، قاعدة المالك).
 // «سجّلها بالمصاريف» اختياري، والعملية تنكتب «سفر · البند» بكلمة محايدة.
 (function () {
   'use strict';
@@ -49,7 +49,22 @@
 
   const packFor = (kind) => PACK.base.concat(PACK[kind] || []).map(([g, t]) => ({ g, t, on: false }));
 
-  // ================= التخزين (على الجهاز) =================
+  // ================= التخزين =================
+  const isLocal = (t) => t.kind === 'umrah';
+  const readLocal = () => { try { const l = JSON.parse(localStorage.getItem(KEY) || '[]'); return Array.isArray(l) ? l : []; } catch (e) { return []; } };
+  // التعديل على الجهاز ما يمر على Store، فنعيد جدولة تنبيهات السفر بأنفسنا
+  const writeLocal = (l) => {
+    try { localStorage.setItem(KEY, JSON.stringify(l)); } catch (e) { A.toast('ما قدرنا نحفظ على هالجهاز'); }
+    if (window.HayatiNative && typeof HayatiNative.reschedule === 'function') { clearTimeout(writeLocal.t); writeLocal.t = setTimeout(() => HayatiNative.reschedule(), 800); }
+  };
+  // رحلات من قبل DW-035 كانت كلها على الجهاز: غير العمرة تنتقل للحساب مرة وحدة
+  function adopt() {
+    const list = readLocal(), moving = list.filter((t) => t && t.id && !isLocal(t));
+    if (!moving.length) return;
+    // نشيلها من الجهاز أول: upsert يعيد رسم الشاشة ويقرا الرحلات مرة ثانية
+    writeLocal(list.filter((t) => t && isLocal(t)));
+    moving.forEach((t) => S.upsert('trips', t));
+  }
   function migrate(list) {
     let old = null;
     try { old = JSON.parse(localStorage.getItem(OLD) || 'null'); } catch (e) { old = null; }
@@ -62,17 +77,19 @@
     return list;
   }
   function all() {
-    let list = [];
-    try { list = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { list = []; }
-    if (!Array.isArray(list)) list = [];
-    return migrate(list);
+    adopt();
+    const synced = (S.state.trips || []).map((t) => Object.assign({ plan: {}, costs: [], check: [] }, t, { plan: Object.assign({}, t.plan), costs: (t.costs || []).slice(), check: (t.check || []).map((c) => Object.assign({}, c)) }));
+    return migrate(readLocal()).concat(synced);
   }
-  // كل تعديل يعيد جدولة تنبيهات السفر (الرحلات على الجهاز، فما تمر على مزامنة Store)
-  const saveAll = (list) => {
-    try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) { A.toast('ما قدرنا نحفظ على هالجهاز'); }
-    if (window.HayatiNative && typeof HayatiNative.reschedule === 'function') { clearTimeout(saveAll.t); saveAll.t = setTimeout(() => HayatiNative.reschedule(), 800); }
-  };
-  const put = (t) => { const list = all(), i = list.findIndex((x) => x.id === t.id); if (i >= 0) list[i] = t; else list.push(t); saveAll(list); };
+  function put(t) {
+    if (!isLocal(t)) { S.upsert('trips', t); return; }
+    const list = readLocal(), i = list.findIndex((x) => x.id === t.id);
+    if (i >= 0) list[i] = t; else list.push(t);
+    writeLocal(list);
+  }
+  function drop(t) {
+    if (isLocal(t)) writeLocal(readLocal().filter((x) => x.id !== t.id)); else S.remove('trips', t.id);
+  }
   const get = (id) => all().find((x) => x.id === id) || null;
 
   const sum = (arr) => arr.reduce((a, x) => a + (Number(x) || 0), 0);
@@ -220,7 +237,7 @@
         root.querySelector('#tvAdd').onclick = () => costSheet(t);
         root.querySelector('#tvDel').onclick = async () => {
           if (!(await A.ask('تحذف هالرحلة من جوالك؟\n' + t.name))) return;
-          saveAll(all().filter((x) => x.id !== t.id)); A.render(); listSheet();
+          drop(t); A.render(); listSheet();
         };
       },
     });

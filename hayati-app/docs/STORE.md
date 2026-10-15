@@ -157,6 +157,8 @@ Expenses, studies, prayer times and tasks in one place. A Bahraini app (beta).
 | Location | **لا تختارها**: موقع القبلة (DW-023) يتحسب على الجهاز وما يطلع منه، وGoogle ما تعتبر المعالجة على الجهاز «collected». الإذن بالـ manifest: `ACCESS_COARSE_LOCATION` |
 | Data types | **Personal info → Email address** (Account management) · **Financial info → Other financial info** (App functionality) · **Other user-generated content** (App functionality) |
 | Collected / Shared | **Collected, not shared** · مو إجباري (Optional) · ما ينباع. ملاحظات المحاضرة اللي تنرسل لـ Anthropic لما المستخدم يضغط «لخّصها لي ✨» = **service provider** يعالج نيابة عنا، فـ Google ما تعتبرها «Shared» (DW-021) |
+| Photos (DW-034) | **Photos and videos → Photos** · Collected, **processed ephemerally** (تنرسل لـ Anthropic عشان تتحوّل لنص وما تنحفظ) · Optional · App functionality |
+| الرحلات (DW-035) | ضمن **Other user-generated content** (تتزامن مع الحساب). رحلات العمرة على الجهاز بس |
 | Security | **Encrypted in transit: Yes** · **Users can request deletion: Yes** (الإعدادات ← احذف كل بياناتي) |
 | Privacy policy URL | `https://<رابط-Production>/privacy.html` |
 | Terms of use / EULA URL | `https://<رابط-Production>/terms.html` (بـ App Store Connect: App Information ← License Agreement ← Custom، أو خلّه Standard Apple EULA) |

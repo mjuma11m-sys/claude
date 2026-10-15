@@ -2502,7 +2502,29 @@ window.HAYATI_EN = {
 "نقرا الصورة…": "Reading the photo…",
 "ما قدرنا نقرا الصورة · صوّرها أقرب وبإضاءة أوضح": "Couldn't read the photo · take it closer and in better light",
 "انضاف النص للملاحظات · راجعه واضغط «حفظ»": "Text added to your notes · check it and tap «Save»",
-"يقرأ ملاحظاتك المكتوبة أو الصورة اللي تصوّرها (مو التسجيل). الصورة ما تنحفظ. راجع النتيجة، ممكن يغلط.": "It reads your written notes or the photo you take (not the recording). The photo isn't saved. Check the result, it can make mistakes."
+"يقرأ ملاحظاتك المكتوبة أو الصورة اللي تصوّرها (مو التسجيل). الصورة ما تنحفظ. راجع النتيجة، ممكن يغلط.": "It reads your written notes or the photo you take (not the recording). The photo isn't saved. Check the result, it can make mistakes.",
+// DW-030: الترجمة الكاملة (الأخبار، الأدوات، أول دقيقة، النسخة المشفّرة، البلاغ، القبلة، عبادتي، الورد، المحاضرات، السفر، يوم الراتب والزكاة)
+"وش يوصل لكل أجهزتك؟": "What reaches all your devices?",
+"الفلوس والميزانية والاشتراكات والأهداف والديون": "Money, budget, subscriptions, goals and debts",
+"الجدول والمهام والدرجات والمحاضرات (الملاحظات والأسئلة)": "Schedule, tasks, grades and lectures (notes and questions)",
+"الرحلات وقوائم الأغراض، والصحة والعادات واليوميات": "Trips and packing lists, health, habits and journal",
+"إعداداتك: الميزانية، يوم الراتب، ترتيب «اليوم»": "Your settings: budget, payday, the «Today» layout",
+"يظل على هالجهاز بس:": "Stays on this device only:",
+"تسجيلات المحاضرات الصوتية (حجمها كبير) · تنقلها بـ «نسخة مشفّرة»": "Lecture audio recordings (large) · move them with «Encrypted backup»",
+"إعدادات العبادة (المذهب، الورد، المسبحة): خصوصية": "Worship settings (madhhab, wird, tasbih): privacy",
+"رمز القفل واللغة والمظهر": "Lock PIN, language and theme",
+"حساب واحد": "One account",
+"نفس بياناتك على كل أجهزتك": "The same data on all your devices",
+"سجّل من جوالك والآيباد والماك، وأي شي تضيفه يوصل للثاني": "Sign in on your phone, iPad and Mac, and whatever you add reaches the others",
+"فيه مشكلة بالمزامنة": "There's a sync problem",
+"بياناتك متزامنة بين أجهزتك": "Your data is synced across your devices",
+"نفس الرابط على كل أجهزتك": "The same link on all your devices",
+"سجّل دخول أو أنشئ حساب": "Sign in or create an account",
+"نفس بياناتك على جوالك وأي جهاز ثاني": "The same data on your phone and any other device",
+"بياناتك على هالجوال بس": "Your data is on this phone only",
+"سوّ حساب وتوصل لك نفس البيانات على أي جهاز ثاني، وما تضيع لو تبدّل الجوال.": "Create an account and get the same data on any other device, and nothing is lost if you change phones.",
+"سجّل أو أنشئ حساب": "Sign in or sign up",
+"رحلات العمرة تظل على هالجهاز بس": "Umrah trips stay on this device only"
 };
 
 </script>
@@ -2897,10 +2919,11 @@ window.HAYATI_CONFIG = {
 
   const KEY = 'hayati-v1';
   const CFG_KEY = 'hayati-supabase';
-  const TABLES = ['transactions', 'courses', 'tasks', 'subscriptions', 'goals', 'grades', 'study_sessions', 'debts', 'habits', 'daily', 'lifts', 'body', 'cards', 'events', 'shopping', 'journal', 'matches', 'lectures'];
-  const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges', 'name', 'roles', 'onboarded'];
+  const TABLES = ['transactions', 'courses', 'tasks', 'subscriptions', 'goals', 'grades', 'study_sessions', 'debts', 'habits', 'daily', 'lifts', 'body', 'cards', 'events', 'shopping', 'journal', 'matches', 'lectures', 'trips'];
+  const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges', 'name', 'roles', 'onboarded', 'payday', 'gold_price', 'today_hide'];
   // على الجهاز بس (ما تروح لجدول settings بالسيرفر) بس تدخل بالنسخة الاحتياطية (DW-012)
-  const LOCAL_SETTINGS = ['payday', 'madhhab', 'gold_price', 'khums_start', 'wird', 'hijri_offset', 'tasbih', 'today_hide'];
+  //   DW-035: يوم الراتب وسعر الذهب وترتيب «اليوم» صارت تتزامن؛ إعدادات العبادة تظل على الجهاز (خصوصية)
+  const LOCAL_SETTINGS = ['madhhab', 'khums_start', 'wird', 'hijri_offset', 'tasbih'];
   const NUMERIC = ['amount', 'target', 'saved', 'credits', 'minutes', 'day', 'month', 'duration', 'remind_days', 'weight', 'waist', 'water', 'sleep', 'absence_limit'];
 
   const listeners = new Set();
@@ -3251,10 +3274,23 @@ window.HAYATI_CONFIG = {
     if (error) throw new Error(arabicAuthError(error.message));
     status.recovery = false; emit();
   }
-  // المزودين المفعّلين بلوحة Supabase (صاحب التطبيق يكتبهم بـ config.js لما يفعّلهم)
+  // المزودين المفعّلين: نسأل Supabase نفسه (/auth/v1/settings)، فأول ما يتفعّل Google أو Apple بلوحة Supabase تطلع أزرارهم
+  //   بدون تعديل بالكود. نسأل بس لما تفتح صفحة «حسابك» (بدون حساب ما يطلع أي اتصال، DW-011). PROVIDERS بـ config.js يظل يضيف
+  let detected = [], checkedAt = 0;
+  async function checkProviders() {
+    const cfg = getConfig();
+    if (!sb || !cfg || typeof fetch !== 'function' || Date.now() - checkedAt < 10 * 60e3) return providers();
+    try {
+      const r = await fetch(cfg.url.replace(/\/$/, '') + '/auth/v1/settings', { headers: { apikey: cfg.key } });
+      const j = r.ok ? await r.json() : null, ext = (j && j.external) || {};
+      if (j) { detected = ['apple', 'google'].filter((p) => ext[p] === true); checkedAt = Date.now(); }
+    } catch (e) { /* بدون نت: نكمل بالإيميل */ }
+    return providers();
+  }
   function providers() {
     const p = (global.HAYATI_CONFIG || {}).PROVIDERS;
-    return sb && Array.isArray(p) ? p.filter((x) => x === 'apple' || x === 'google') : [];
+    const list = detected.concat(Array.isArray(p) ? p : []);
+    return sb ? ['apple', 'google'].filter((x) => list.includes(x)) : [];
   }
 
   function arabicAuthError(msg) {
@@ -3510,7 +3546,7 @@ window.HAYATI_CONFIG = {
     subscribe: (fn) => { listeners.add(fn); return () => listeners.delete(fn); },
     upsert, remove, setSettings,
     init, getConfig, saveConfig, clearConfig,
-    signIn, signUp, signOut, sync, resolveMerge, signInWithProvider, exchangeCode, resetPassword, updatePassword, providers, localCount, getSeed, processInbox, smsToTransaction,
+    signIn, signUp, signOut, sync, resolveMerge, signInWithProvider, exchangeCode, resetPassword, updatePassword, providers, checkProviders, localCount, getSeed, processInbox, smsToTransaction,
     ensureIngestToken, rotateIngestToken, exportJSON, importJSON, wipeAll,
   };
 })(window);
@@ -5623,13 +5659,11 @@ window.HAYATI_CONFIG = {
     });
   }
 
-  // --- الإعدادات ---
-  function settingsSheet() {
+  // --- صفحة الحساب (DW-035): دخول، حساب جديد، Apple/Google، ووش يتزامن بين الأجهزة ---
+  function accountCard() {
     const s = S.status;
     const cfg = S.getConfig();
-    let body = '';
-
-    body += '<div class="group-title">' + I('user') + 'حسابك</div><div class="card account-card">';
+    let body = '<div class="card account-card">';
     if (s.mode === 'artifact') {
       body += '<div class="status-line"><div class="ico">' + I('check') + '</div><div style="flex:1;min-width:0"><b style="display:block">محفوظ في حسابك على Claude</b>' +
         '<span class="small ' + (s.error ? 'late' : 'muted') + '">' + (s.error ? h(s.error) : 'افتح نفس الرابط من الجوال أو الماك وتلقى نفس بياناتك' + (s.lastSync ? ' · آخر تحديث ' + timeOf(s.lastSync) : '')) +
@@ -5660,6 +5694,55 @@ window.HAYATI_CONFIG = {
         '<div class="btn-row" style="margin-top:14px"><button class="btn" data-set="sync">' + I('refresh') + 'زامن</button><button class="btn" data-set="signout">' + I('logout') + 'خروج</button></div>';
     }
     body += '</div>';
+    return body;
+  }
+  // اللي يتزامن مع الحساب واللي يظل على الجهاز بس (DW-035)
+  function syncInfo() {
+    const row = (ok, t) => '<li style="display:flex;gap:10px;align-items:flex-start;margin:6px 0"><span aria-hidden="true">' + (ok ? '✅' : '📱') + '</span><span>' + t + '</span></li>';
+    return '<div class="group-title">' + I('refresh') + 'وش يوصل لكل أجهزتك؟</div><div class="card"><ul style="list-style:none;margin:0;padding:0" class="small">' +
+      row(true, 'الفلوس والميزانية والاشتراكات والأهداف والديون') +
+      row(true, 'الجدول والمهام والدرجات والمحاضرات (الملاحظات والأسئلة)') +
+      row(true, 'الرحلات وقوائم الأغراض، والصحة والعادات واليوميات') +
+      row(true, 'إعداداتك: الميزانية، يوم الراتب، ترتيب «اليوم»') +
+      '</ul><p class="small muted" style="margin:10px 0 4px">يظل على هالجهاز بس:</p><ul style="list-style:none;margin:0;padding:0" class="small">' +
+      row(false, 'تسجيلات المحاضرات الصوتية (حجمها كبير) · تنقلها بـ «نسخة مشفّرة»') +
+      row(false, 'إعدادات العبادة (المذهب، الورد، المسبحة): خصوصية') +
+      row(false, 'رحلات العمرة تظل على هالجهاز بس') +
+      row(false, 'رمز القفل واللغة والمظهر') +
+      '</ul></div>';
+  }
+  function accountSheet() {
+    const s = S.status;
+    const hero = s.signedIn ? '' :
+      '<div class="hero dark" style="margin-bottom:12px"><span class="eyebrow">' + I('user') + 'حساب واحد</span><div class="big" style="font-size:24px">نفس بياناتك على كل أجهزتك</div>' +
+      '<div class="meta"><span>سجّل من جوالك والآيباد والماك، وأي شي تضيفه يوصل للثاني</span></div></div>';
+    openSheet({
+      title: 'حسابك',
+      cancelLabel: 'تم',
+      body: '<div class="account-page">' + hero + accountCard() + syncInfo() + '</div>',
+      mount(root) {
+        root.onclick = onSettingsClick;
+        // Google/Apple: لو انفعّلوا بلوحة Supabase، الأزرار تطلع (نعيد رسم الصفحة لو تغيّر شي)
+        if (!s.signedIn && S.checkProviders) {
+          const had = S.providers().join();
+          S.checkProviders().then((now) => { if (now.join() !== had && sheetBody.querySelector('.account-page')) accountSheet(); }).catch(() => {});
+        }
+      },
+    });
+  }
+
+  // --- الإعدادات ---
+  function settingsSheet() {
+    const s = S.status;
+    const cfg = S.getConfig();
+    let body = '';
+
+    body += '<div class="group-title">' + I('user') + 'حسابك</div><div class="menu">' +
+      (s.signedIn
+        ? '<button data-set="account"><div class="ico" style="' + tint('#13636B') + '">' + I('user') + '</div><div style="flex:1;min-width:0"><b style="overflow:hidden;text-overflow:ellipsis">' + h(s.email || 'حسابك') + '</b><small>' + (s.error ? 'فيه مشكلة بالمزامنة' : 'بياناتك متزامنة بين أجهزتك' + (st.pending.length ? ' · ' + st.pending.length + ' بانتظار الرفع' : '')) + '</small></div>' + I('chevL') + '</button>'
+        : s.mode === 'artifact' ? '<button data-set="account"><div class="ico" style="' + tint('#13636B') + '">' + I('check') + '</div><div style="flex:1;min-width:0"><b>محفوظ في حسابك على Claude</b><small>نفس الرابط على كل أجهزتك</small></div>' + I('chevL') + '</button>'
+        : '<button data-set="account"><div class="ico" style="' + tint('#13636B') + '">' + I('user') + '</div><div style="flex:1;min-width:0"><b>سجّل دخول أو أنشئ حساب</b><small>نفس بياناتك على جوالك وأي جهاز ثاني</small></div>' + I('chevL') + '</button>') +
+      '</div>';
 
     body += '<div class="group-title">' + I('message') + 'تسجيل رسايل البنك تلقائياً</div><div class="card">';
     if (s.mode === 'artifact') {
@@ -5731,7 +5814,10 @@ window.HAYATI_CONFIG = {
     if (!b) return;
     const root = sheetBody;
     const act = b.dataset.set;
+    // بعد الدخول/الخروج نرجع لنفس الصفحة اللي كان فيها (الحساب أو الإعدادات)
+    const back = () => (sheetBody.querySelector('.account-page') ? accountSheet() : settingsSheet());
     try {
+      if (act === 'account') { closeSheet(); setTimeout(accountSheet, 280); return; }
       if (window.Extras && window.Extras.settingsAction && await window.Extras.settingsAction(act, root, b)) return;
       if (act === 'connect') {
         const url = val(root, 'sb_url'), key = val(root, 'sb_key');
@@ -5739,7 +5825,7 @@ window.HAYATI_CONFIG = {
         if (key.length < 30) throw new Error('المفتاح ناقص');
         await S.saveConfig(url, key);
         toast('انربط ✓ سجّل دخول الحين');
-        settingsSheet();
+        back();
       } else if (act === 'signin' || act === 'signup') {
         const email = val(root, 'email'), pw = root.querySelector('[name=password]').value;
         if (!email || !pw) throw new Error('اكتب الإيميل وكلمة المرور');
@@ -5749,11 +5835,11 @@ window.HAYATI_CONFIG = {
           const confirmNeeded = await S.signUp(email, pw);
           toast(confirmNeeded ? 'أرسلنا لك إيميل تأكيد، أكّده وارجع سجّل دخول' : 'تم إنشاء الحساب ✓');
         }
-        setTimeout(settingsSheet, 300);
+        setTimeout(back, 300);
       } else if (act === 'sso') {
         b.disabled = true;
         // بالآيفون: متصفح النظام (Google يمنع الدخول من داخل التطبيق). بالمتصفح: تحويل ورجوع
-        if (window.HayatiNative && window.HayatiNative.oauth) { await window.HayatiNative.oauth(b.dataset.p); setTimeout(settingsSheet, 300); }
+        if (window.HayatiNative && window.HayatiNative.oauth) { await window.HayatiNative.oauth(b.dataset.p); setTimeout(back, 300); }
         else await S.signInWithProvider(b.dataset.p);
       } else if (act === 'forgot') {
         const email = val(root, 'email');
@@ -5768,11 +5854,11 @@ window.HAYATI_CONFIG = {
           if (!(await ask('فيه ' + err.count + ' تعديل ما انرفع (يمكن ما فيه نت). لو طلعت الحين تضيع. تطلع؟'))) return;
           await S.signOut({ force: true });
         }
-        toast('طلعت ✓'); settingsSheet();
+        toast('طلعت ✓'); back();
       } else if (act === 'disconnect') {
-        S.clearConfig(); settingsSheet();
+        S.clearConfig(); back();
       } else if (act === 'sync') {
-        await S.sync(); toast(S.status.error || 'تمت المزامنة ✓'); settingsSheet();
+        await S.sync(); toast(S.status.error || 'تمت المزامنة ✓'); back();
       } else if (act === 'rotate') {
         if (await ask('بعد التغيير لازم تحدّث الرمز في الاختصار. أكمل؟')) { S.rotateIngestToken(); settingsSheet(); toast('تغيّر الرمز'); }
       } else if (act === 'notify') {
@@ -5924,7 +6010,7 @@ window.HAYATI_CONFIG = {
   window.App = {
     S, st, I, ui, h, fmt, money, tint, catMeta, catIcon, pad, monthKey, shiftKey, monthRange, monthLabel, payday, sameDay, startOfDay, daysBetween, time12, timeOf, minutesOf,
     nowMinutes, toLocalInput, dayLabel, nDays, toast, ask, courseById, lectures, lecturesOn, agendaOn, empty, secHead, ring, openSheet,
-    closeSheet, val, parseAmount, segPick, render, go, txForm, pasteSmsForm, txInMonth, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, courseForm, taskForm,
+    closeSheet, accountSheet, val, parseAmount, segPick, render, go, txForm, pasteSmsForm, txInMonth, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, courseForm, taskForm,
     notify, has, nextRenewal, sharedSms, expensesCSV, lastBackup, markBackup, backupNow, APP_VERSION, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
   };
   setInterval(timerTickUI, 1000);
@@ -9339,7 +9425,7 @@ window.HAYATI_CONFIG = {
   <script>/* js/features/travel.js */
 // «تخطيط السفر» (DW-028): أكثر من رحلة، كل رحلة لها ميزانية بنود مقابل المصروف، قائمة أغراض مقسّمة عشان ما تنسى شي، وعداد للسفر.
 // «مخطط العمرة» (DW-027) صار نوع رحلة من هني، وبياناته القديمة تنتقل بروحها.
-// كل الرحلات على الجهاز بس (localStorage) وما تتزامن: الوجهة والتواريخ خاصة، والعمرة معلومة دينية.
+// DW-035: الرحلات تتزامن مع حسابك (جدول trips) عشان توصل لكل أجهزتك. رحلات العمرة تظل على الجهاز بس (معلومة دينية، قاعدة المالك).
 // «سجّلها بالمصاريف» اختياري، والعملية تنكتب «سفر · البند» بكلمة محايدة.
 (function () {
   'use strict';
@@ -9388,7 +9474,22 @@ window.HAYATI_CONFIG = {
 
   const packFor = (kind) => PACK.base.concat(PACK[kind] || []).map(([g, t]) => ({ g, t, on: false }));
 
-  // ================= التخزين (على الجهاز) =================
+  // ================= التخزين =================
+  const isLocal = (t) => t.kind === 'umrah';
+  const readLocal = () => { try { const l = JSON.parse(localStorage.getItem(KEY) || '[]'); return Array.isArray(l) ? l : []; } catch (e) { return []; } };
+  // التعديل على الجهاز ما يمر على Store، فنعيد جدولة تنبيهات السفر بأنفسنا
+  const writeLocal = (l) => {
+    try { localStorage.setItem(KEY, JSON.stringify(l)); } catch (e) { A.toast('ما قدرنا نحفظ على هالجهاز'); }
+    if (window.HayatiNative && typeof HayatiNative.reschedule === 'function') { clearTimeout(writeLocal.t); writeLocal.t = setTimeout(() => HayatiNative.reschedule(), 800); }
+  };
+  // رحلات من قبل DW-035 كانت كلها على الجهاز: غير العمرة تنتقل للحساب مرة وحدة
+  function adopt() {
+    const list = readLocal(), moving = list.filter((t) => t && t.id && !isLocal(t));
+    if (!moving.length) return;
+    // نشيلها من الجهاز أول: upsert يعيد رسم الشاشة ويقرا الرحلات مرة ثانية
+    writeLocal(list.filter((t) => t && isLocal(t)));
+    moving.forEach((t) => S.upsert('trips', t));
+  }
   function migrate(list) {
     let old = null;
     try { old = JSON.parse(localStorage.getItem(OLD) || 'null'); } catch (e) { old = null; }
@@ -9401,17 +9502,19 @@ window.HAYATI_CONFIG = {
     return list;
   }
   function all() {
-    let list = [];
-    try { list = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { list = []; }
-    if (!Array.isArray(list)) list = [];
-    return migrate(list);
+    adopt();
+    const synced = (S.state.trips || []).map((t) => Object.assign({ plan: {}, costs: [], check: [] }, t, { plan: Object.assign({}, t.plan), costs: (t.costs || []).slice(), check: (t.check || []).map((c) => Object.assign({}, c)) }));
+    return migrate(readLocal()).concat(synced);
   }
-  // كل تعديل يعيد جدولة تنبيهات السفر (الرحلات على الجهاز، فما تمر على مزامنة Store)
-  const saveAll = (list) => {
-    try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) { A.toast('ما قدرنا نحفظ على هالجهاز'); }
-    if (window.HayatiNative && typeof HayatiNative.reschedule === 'function') { clearTimeout(saveAll.t); saveAll.t = setTimeout(() => HayatiNative.reschedule(), 800); }
-  };
-  const put = (t) => { const list = all(), i = list.findIndex((x) => x.id === t.id); if (i >= 0) list[i] = t; else list.push(t); saveAll(list); };
+  function put(t) {
+    if (!isLocal(t)) { S.upsert('trips', t); return; }
+    const list = readLocal(), i = list.findIndex((x) => x.id === t.id);
+    if (i >= 0) list[i] = t; else list.push(t);
+    writeLocal(list);
+  }
+  function drop(t) {
+    if (isLocal(t)) writeLocal(readLocal().filter((x) => x.id !== t.id)); else S.remove('trips', t.id);
+  }
   const get = (id) => all().find((x) => x.id === id) || null;
 
   const sum = (arr) => arr.reduce((a, x) => a + (Number(x) || 0), 0);
@@ -9559,7 +9662,7 @@ window.HAYATI_CONFIG = {
         root.querySelector('#tvAdd').onclick = () => costSheet(t);
         root.querySelector('#tvDel').onclick = async () => {
           if (!(await A.ask('تحذف هالرحلة من جوالك؟\n' + t.name))) return;
-          saveAll(all().filter((x) => x.id !== t.id)); A.render(); listSheet();
+          drop(t); A.render(); listSheet();
         };
       },
     });
@@ -10420,6 +10523,43 @@ window.HAYATI_CONFIG = {
   };
 
   E.Widget = { snapshot, items, sheet, push, prefs };
+})();
+
+</script>
+  <script>/* js/features/account.js */
+// «حسابك» (DW-035): بطاقة باليوم تدعو للحساب لما يكون عندك بيانات تستاهل، عشان توصل لكل أجهزتك.
+// تطلع بس لو Supabase مربوط وأنت مو مسجّل، وعندك 10 سجلات أو أكثر. «بعدين» يخفيها 30 يوم.
+(function () {
+  'use strict';
+
+  const A = window.App, E = window.Extras, S = window.Store;
+  if (!A || !E || !S) return;
+  const { I } = A;
+  const KEY = 'hayati-account-later';
+  const wrap = (name, fn) => { const prev = E[name]; E[name] = (...a) => fn(prev ? prev : () => '', ...a); };
+
+  const later = () => { try { return Number(localStorage.getItem(KEY)) || 0; } catch (e) { return 0; } };
+  function due() {
+    const s = S.status;
+    if (!s.configured || s.signedIn || s.mode === 'artifact') return false;
+    if (Date.now() - later() < 30 * 864e5) return false;
+    return (S.localCount ? S.localCount() : 0) >= 10;
+  }
+  function card() {
+    if (!due()) return '';
+    return '<div class="card" id="accNudge" style="margin-top:12px;display:flex;gap:12px;align-items:flex-start">' +
+      '<div class="ico" style="flex:none">' + I('user') + '</div><div style="flex:1;min-width:0"><b>بياناتك على هالجوال بس</b>' +
+      '<p class="small muted" style="margin:4px 0 10px">سوّ حساب وتوصل لك نفس البيانات على أي جهاز ثاني، وما تضيع لو تبدّل الجوال.</p>' +
+      '<div class="btn-row"><button class="btn primary" data-action="account">' + I('user') + 'سجّل أو أنشئ حساب</button><button class="btn ghost" data-action="account-later">بعدين</button></div></div></div>';
+  }
+
+  wrap('todayTop', (prev) => prev() + card());
+  wrap('action', (prev, name, el, e) => {
+    if (name === 'account') { A.accountSheet(); return; }
+    if (name === 'account-later') { try { localStorage.setItem(KEY, String(Date.now())); } catch (er) { /* تجاهل */ } A.render(); return; }
+    return prev(name, el, e);
+  });
+  E.Account = { due, card, KEY };
 })();
 
 </script>

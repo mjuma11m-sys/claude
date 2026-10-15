@@ -1829,13 +1829,11 @@
     });
   }
 
-  // --- الإعدادات ---
-  function settingsSheet() {
+  // --- صفحة الحساب (DW-035): دخول، حساب جديد، Apple/Google، ووش يتزامن بين الأجهزة ---
+  function accountCard() {
     const s = S.status;
     const cfg = S.getConfig();
-    let body = '';
-
-    body += '<div class="group-title">' + I('user') + 'حسابك</div><div class="card account-card">';
+    let body = '<div class="card account-card">';
     if (s.mode === 'artifact') {
       body += '<div class="status-line"><div class="ico">' + I('check') + '</div><div style="flex:1;min-width:0"><b style="display:block">محفوظ في حسابك على Claude</b>' +
         '<span class="small ' + (s.error ? 'late' : 'muted') + '">' + (s.error ? h(s.error) : 'افتح نفس الرابط من الجوال أو الماك وتلقى نفس بياناتك' + (s.lastSync ? ' · آخر تحديث ' + timeOf(s.lastSync) : '')) +
@@ -1866,6 +1864,55 @@
         '<div class="btn-row" style="margin-top:14px"><button class="btn" data-set="sync">' + I('refresh') + 'زامن</button><button class="btn" data-set="signout">' + I('logout') + 'خروج</button></div>';
     }
     body += '</div>';
+    return body;
+  }
+  // اللي يتزامن مع الحساب واللي يظل على الجهاز بس (DW-035)
+  function syncInfo() {
+    const row = (ok, t) => '<li style="display:flex;gap:10px;align-items:flex-start;margin:6px 0"><span aria-hidden="true">' + (ok ? '✅' : '📱') + '</span><span>' + t + '</span></li>';
+    return '<div class="group-title">' + I('refresh') + 'وش يوصل لكل أجهزتك؟</div><div class="card"><ul style="list-style:none;margin:0;padding:0" class="small">' +
+      row(true, 'الفلوس والميزانية والاشتراكات والأهداف والديون') +
+      row(true, 'الجدول والمهام والدرجات والمحاضرات (الملاحظات والأسئلة)') +
+      row(true, 'الرحلات وقوائم الأغراض، والصحة والعادات واليوميات') +
+      row(true, 'إعداداتك: الميزانية، يوم الراتب، ترتيب «اليوم»') +
+      '</ul><p class="small muted" style="margin:10px 0 4px">يظل على هالجهاز بس:</p><ul style="list-style:none;margin:0;padding:0" class="small">' +
+      row(false, 'تسجيلات المحاضرات الصوتية (حجمها كبير) · تنقلها بـ «نسخة مشفّرة»') +
+      row(false, 'إعدادات العبادة (المذهب، الورد، المسبحة): خصوصية') +
+      row(false, 'رحلات العمرة تظل على هالجهاز بس') +
+      row(false, 'رمز القفل واللغة والمظهر') +
+      '</ul></div>';
+  }
+  function accountSheet() {
+    const s = S.status;
+    const hero = s.signedIn ? '' :
+      '<div class="hero dark" style="margin-bottom:12px"><span class="eyebrow">' + I('user') + 'حساب واحد</span><div class="big" style="font-size:24px">نفس بياناتك على كل أجهزتك</div>' +
+      '<div class="meta"><span>سجّل من جوالك والآيباد والماك، وأي شي تضيفه يوصل للثاني</span></div></div>';
+    openSheet({
+      title: 'حسابك',
+      cancelLabel: 'تم',
+      body: '<div class="account-page">' + hero + accountCard() + syncInfo() + '</div>',
+      mount(root) {
+        root.onclick = onSettingsClick;
+        // Google/Apple: لو انفعّلوا بلوحة Supabase، الأزرار تطلع (نعيد رسم الصفحة لو تغيّر شي)
+        if (!s.signedIn && S.checkProviders) {
+          const had = S.providers().join();
+          S.checkProviders().then((now) => { if (now.join() !== had && sheetBody.querySelector('.account-page')) accountSheet(); }).catch(() => {});
+        }
+      },
+    });
+  }
+
+  // --- الإعدادات ---
+  function settingsSheet() {
+    const s = S.status;
+    const cfg = S.getConfig();
+    let body = '';
+
+    body += '<div class="group-title">' + I('user') + 'حسابك</div><div class="menu">' +
+      (s.signedIn
+        ? '<button data-set="account"><div class="ico" style="' + tint('#13636B') + '">' + I('user') + '</div><div style="flex:1;min-width:0"><b style="overflow:hidden;text-overflow:ellipsis">' + h(s.email || 'حسابك') + '</b><small>' + (s.error ? 'فيه مشكلة بالمزامنة' : 'بياناتك متزامنة بين أجهزتك' + (st.pending.length ? ' · ' + st.pending.length + ' بانتظار الرفع' : '')) + '</small></div>' + I('chevL') + '</button>'
+        : s.mode === 'artifact' ? '<button data-set="account"><div class="ico" style="' + tint('#13636B') + '">' + I('check') + '</div><div style="flex:1;min-width:0"><b>محفوظ في حسابك على Claude</b><small>نفس الرابط على كل أجهزتك</small></div>' + I('chevL') + '</button>'
+        : '<button data-set="account"><div class="ico" style="' + tint('#13636B') + '">' + I('user') + '</div><div style="flex:1;min-width:0"><b>سجّل دخول أو أنشئ حساب</b><small>نفس بياناتك على جوالك وأي جهاز ثاني</small></div>' + I('chevL') + '</button>') +
+      '</div>';
 
     body += '<div class="group-title">' + I('message') + 'تسجيل رسايل البنك تلقائياً</div><div class="card">';
     if (s.mode === 'artifact') {
@@ -1937,7 +1984,10 @@
     if (!b) return;
     const root = sheetBody;
     const act = b.dataset.set;
+    // بعد الدخول/الخروج نرجع لنفس الصفحة اللي كان فيها (الحساب أو الإعدادات)
+    const back = () => (sheetBody.querySelector('.account-page') ? accountSheet() : settingsSheet());
     try {
+      if (act === 'account') { closeSheet(); setTimeout(accountSheet, 280); return; }
       if (window.Extras && window.Extras.settingsAction && await window.Extras.settingsAction(act, root, b)) return;
       if (act === 'connect') {
         const url = val(root, 'sb_url'), key = val(root, 'sb_key');
@@ -1945,7 +1995,7 @@
         if (key.length < 30) throw new Error('المفتاح ناقص');
         await S.saveConfig(url, key);
         toast('انربط ✓ سجّل دخول الحين');
-        settingsSheet();
+        back();
       } else if (act === 'signin' || act === 'signup') {
         const email = val(root, 'email'), pw = root.querySelector('[name=password]').value;
         if (!email || !pw) throw new Error('اكتب الإيميل وكلمة المرور');
@@ -1955,11 +2005,11 @@
           const confirmNeeded = await S.signUp(email, pw);
           toast(confirmNeeded ? 'أرسلنا لك إيميل تأكيد، أكّده وارجع سجّل دخول' : 'تم إنشاء الحساب ✓');
         }
-        setTimeout(settingsSheet, 300);
+        setTimeout(back, 300);
       } else if (act === 'sso') {
         b.disabled = true;
         // بالآيفون: متصفح النظام (Google يمنع الدخول من داخل التطبيق). بالمتصفح: تحويل ورجوع
-        if (window.HayatiNative && window.HayatiNative.oauth) { await window.HayatiNative.oauth(b.dataset.p); setTimeout(settingsSheet, 300); }
+        if (window.HayatiNative && window.HayatiNative.oauth) { await window.HayatiNative.oauth(b.dataset.p); setTimeout(back, 300); }
         else await S.signInWithProvider(b.dataset.p);
       } else if (act === 'forgot') {
         const email = val(root, 'email');
@@ -1974,11 +2024,11 @@
           if (!(await ask('فيه ' + err.count + ' تعديل ما انرفع (يمكن ما فيه نت). لو طلعت الحين تضيع. تطلع؟'))) return;
           await S.signOut({ force: true });
         }
-        toast('طلعت ✓'); settingsSheet();
+        toast('طلعت ✓'); back();
       } else if (act === 'disconnect') {
-        S.clearConfig(); settingsSheet();
+        S.clearConfig(); back();
       } else if (act === 'sync') {
-        await S.sync(); toast(S.status.error || 'تمت المزامنة ✓'); settingsSheet();
+        await S.sync(); toast(S.status.error || 'تمت المزامنة ✓'); back();
       } else if (act === 'rotate') {
         if (await ask('بعد التغيير لازم تحدّث الرمز في الاختصار. أكمل؟')) { S.rotateIngestToken(); settingsSheet(); toast('تغيّر الرمز'); }
       } else if (act === 'notify') {
@@ -2130,7 +2180,7 @@
   window.App = {
     S, st, I, ui, h, fmt, money, tint, catMeta, catIcon, pad, monthKey, shiftKey, monthRange, monthLabel, payday, sameDay, startOfDay, daysBetween, time12, timeOf, minutesOf,
     nowMinutes, toLocalInput, dayLabel, nDays, toast, ask, courseById, lectures, lecturesOn, agendaOn, empty, secHead, ring, openSheet,
-    closeSheet, val, parseAmount, segPick, render, go, txForm, pasteSmsForm, txInMonth, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, courseForm, taskForm,
+    closeSheet, accountSheet, val, parseAmount, segPick, render, go, txForm, pasteSmsForm, txInMonth, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, courseForm, taskForm,
     notify, has, nextRenewal, sharedSms, expensesCSV, lastBackup, markBackup, backupNow, APP_VERSION, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
   };
   setInterval(timerTickUI, 1000);

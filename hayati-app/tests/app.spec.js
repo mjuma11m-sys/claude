@@ -1080,13 +1080,18 @@ test('accounts: «لا، ابدأ من حسابي» drops guest data; sign-out w
 test('accounts: Apple/Google buttons only when enabled, web OAuth returns to the app, password reset, account screen', async ({ page }) => {
   await useFakeSupabase(page);
   await open(page);
+  // DW-035: الإعدادات فيها سطر «حسابك» يفتح صفحة الحساب
   await page.click('#settingsBtn');
+  await expect(page.locator('#sheetBody [data-set="account"]')).toContainText('سجّل دخول أو أنشئ حساب');
+  await page.click('#sheetBody [data-set="account"]');
+  await expect(page.locator('#sheetTitle')).toHaveText('حسابك');
   await expect(page.locator('.account-card')).toContainText('بدون حساب؟ التطبيق يشتغل عادي');
+  await expect(page.locator('.account-page')).toContainText('وش يوصل لكل أجهزتك؟');
   await expect(page.locator('[data-set="sso"]')).toHaveCount(0);       // PROVIDERS فاضي = ولا زر ميت
   await store(page, () => App.closeSheet());
   await store(page, () => { window.HAYATI_CONFIG.PROVIDERS = ['apple', 'google']; });
   await page.waitForFunction(() => !document.getElementById('sheet').open);
-  await page.click('#settingsBtn');
+  await store(page, () => App.accountSheet());
   const sso = page.locator('[data-set="sso"]');
   await expect(sso).toHaveCount(2);
   await expect(sso.first()).toContainText('تابع مع Apple');            // Apple أول (إرشاد 4.8)
@@ -1886,10 +1891,12 @@ test('travel planner: a new trip gets a packing list for its kind, budget vs spe
   await page.click('#tvList [data-tv="0"]:not([data-del])');
   await page.selectOption('#tvGroup', 'إلكترونيات'); await page.fill('#tvItem', 'سماعات'); await page.click('#tvItemAdd');
   await expect(page.locator('#tvDone')).toHaveText('1/17');
-  const st = await store(page, () => ({ tx: App.st.transactions.length, settings: JSON.stringify(App.st.settings), trips: JSON.parse(localStorage.getItem('hayati-trips')) }));
+  // DW-035: الرحلة بجدول trips (تتزامن مع الحساب)، مو بالإعدادات ولا بالمصاريف
+  const st = await store(page, () => ({ tx: App.st.transactions.length, settings: JSON.stringify(App.st.settings), trips: App.st.trips, local: localStorage.getItem('hayati-trips') }));
   expect(st.tx).toBe(0);
   expect(st.settings).not.toMatch(/trip|إسطنبول/);
   expect(st.trips.length).toBe(1);
+  expect(st.local || '[]').toBe('[]');
   expect(st.trips[0].check.find((c) => c.t === 'سماعات').g).toBe('إلكترونيات');
   await page.click('#sheetCancel');
   await store(page, () => App.go('today'));
@@ -1968,12 +1975,12 @@ test('encrypted backup (DW-029): one file with account + device data + recording
   const wrong = await store(page, (t) => HayatiBackup.decrypt(t, 'nope-nope').then(() => 'opened', (e) => e.message), saved.text);
   expect(wrong).toBe('wrong');
   const inner = await store(page, (t) => HayatiBackup.decrypt(t, 'Abu-Jafar-2026'), saved.text);
-  expect(Object.keys(inner.local)).toContain('hayati-trips');
+  expect(inner.store).toContain('رحلة لندن السرية');   // DW-035: الرحلات صارت ضمن بيانات الحساب
   expect(Object.keys(inner.local)).not.toContain('hayati-supabase');
   expect(inner.clips).toHaveLength(1);
   // نمسح كل شي ونسترجع من الملف عن طريق «استيراد»
   await store(page, async () => {
-    App.st.transactions.splice(0); localStorage.removeItem('hayati-trips');
+    App.st.transactions.splice(0); App.st.trips.splice(0); localStorage.removeItem('hayati-trips');
     await new Promise((ok) => { const r = indexedDB.open('hayati-audio', 1); r.onsuccess = () => { const tx = r.result.transaction('clips', 'readwrite'); tx.objectStore('clips').clear(); tx.oncomplete = () => { r.result.close(); ok(); }; }; });
   });
   await page.click('#settingsBtn');
@@ -1985,7 +1992,7 @@ test('encrypted backup (DW-029): one file with account + device data + recording
   await expect(page.locator('#toast')).toContainText('1 تسجيل');
   const back = await store(page, async () => ({
     tx: App.st.transactions.map((t) => t.merchant),
-    trip: JSON.parse(localStorage.getItem('hayati-trips'))[0].name,
+    trip: window.Extras.Travel.all()[0].name,
     clip: Array.from(new Uint8Array(await (await window.Extras.Lectures.getClip('clip-1')).arrayBuffer())),
   }));
   expect(back).toEqual({ tx: ['مطعم سرّي جداً'], trip: 'رحلة لندن السرية', clip: [1, 2, 3, 4, 5] });
@@ -2086,7 +2093,7 @@ test('travel currency (DW-032): pegged rates prefilled, floating ones need a rat
   await page.selectOption('#tvC', 'hotel'); await page.fill('#tvA', '488.36');
   await expect(page.locator('#tvAB')).toContainText('50.000');
   await page.click('#sheetSave');
-  const cost = await store(page, () => JSON.parse(localStorage.getItem('hayati-trips'))[0].costs[0]);
+  const cost = await store(page, () => App.st.trips[0].costs[0]);   // DW-035: بالحساب
   expect(cost).toMatchObject({ amount: 50, orig: { code: 'AED', value: 488.36, rate: 9.7672 } });
   await expect(page.locator('#tvSpent')).toContainText('50.000');
   // عملة سعرها يتغيّر: ما فيه سعر جاهز، ولازم يكتبه
@@ -2120,7 +2127,7 @@ test('trip reminder (DW-033): 3 days before and the night before at 8 pm, with h
     const on = pick({ trips: true }), off = pick({ trips: false });
     const at3 = new Date(); at3.setDate(at3.getDate() + 2); at3.setHours(20, 0, 0, 0);
     // بعد ما يخلص التجهيز، الرسالة تتغيّر
-    const all = JSON.parse(localStorage.getItem('hayati-trips')); all[0].check.forEach((c) => { c.on = true; });
+    const all = window.Extras.Travel.all(); all[0].check.forEach((c) => { c.on = true; });
     return { on, off, at3: at3.getTime(), ready: window.Extras.Travel.leftLine(all[0]) };
   });
   expect(r.off).toEqual([]);
@@ -2130,10 +2137,10 @@ test('trip reminder (DW-033): 3 days before and the night before at 8 pm, with h
   expect(r.ready).toBe('كل أغراضك جاهزة ✓');
   // شاشة اليوم: قبل السفر بـ 3 أيام أو أقل يطلع «باقي N أغراض»
   await store(page, () => {
-    const all = JSON.parse(localStorage.getItem('hayati-trips'));
+    const t = window.Extras.Travel.all()[0];
     const d = new Date(); d.setDate(d.getDate() + 2);
-    all[0].go = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-    localStorage.setItem('hayati-trips', JSON.stringify(all)); App.go('today');
+    t.go = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    App.S.upsert('trips', t); App.go('today');
   });
   await expect(page.locator('#view [data-action="trip"]')).toContainText('باقي 4 أغراض');
 });
@@ -2180,4 +2187,49 @@ test('lectures photo (DW-034): a board photo is shrunk on the device, sent once,
   await page.setInputFiles('#lcPhoto', { name: 'blur.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') });
   await expect(page.locator('#toast')).toContainText('ما قدرنا نقرا الصورة');
   await expect(page.locator('[name=lc_notes]')).toHaveValue(/CM ratio = CM \/ Sales$/);
+});
+
+test('account page (DW-035): Google shows up once Supabase enables it, trips follow the account to another device, Umrah stays on the device', async ({ page }) => {
+  await useFakeSupabase(page);
+  let asked = 0;
+  await page.route('**/auth/v1/settings', (r) => { asked++; r.fulfill({ contentType: 'application/json', headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' }, body: JSON.stringify({ external: { google: true, apple: false, email: true } }) }); });
+  await open(page);
+  await store(page, () => App.S.setSettings({ onboarded: true }));
+  expect(asked).toBe(0);                                                      // بدون ما تفتح الصفحة: ولا اتصال
+  await store(page, () => App.accountSheet());
+  await expect(page.locator('[data-set="sso"][data-p="google"]')).toBeVisible();   // من لوحة Supabase، بدون تعديل الكود
+  await expect(page.locator('[data-set="sso"][data-p="apple"]')).toHaveCount(0);
+  expect(asked).toBe(1);
+  // دخول ← رحلة سياحة (تتزامن) + رحلة عمرة (تظل على الجهاز)
+  await page.fill('.account-card [name=email]', 'mo@x.bh'); await page.fill('.account-card [name=password]', 'secret-123');
+  await page.click('.account-card [data-set="signin"]');
+  await page.waitForFunction(() => App.S.status.signedIn);
+  await store(page, () => {
+    App.S.upsert('trips', { id: 't-ist', name: 'إسطنبول', kind: 'leisure', go: '', back: '', plan: {}, costs: [], check: [] });
+    localStorage.setItem('hayati-trips', JSON.stringify([{ id: 't-umr', name: 'العمرة', kind: 'umrah', go: '', back: '', plan: {}, costs: [], check: [] }]));
+  });
+  await page.waitForFunction(() => (window.__srv.data['u-mo'] || {}).trips && window.__srv.data['u-mo'].trips.length === 1);
+  const server = await store(page, () => JSON.stringify(window.__srv.data['u-mo'].trips));
+  expect(server).toContain('إسطنبول');
+  expect(server).not.toContain('العمرة');
+  expect(await store(page, () => window.Extras.Travel.all().map((t) => t.name).sort())).toEqual(['إسطنبول', 'العمرة']);
+  // «جهاز ثاني»: نطلع (الجهاز يتفرّغ) وندخل من جديد، والرحلة ترجع من الحساب
+  await store(page, () => App.S.signOut({ force: true }));
+  expect(await store(page, () => App.st.trips.length)).toBe(0);
+  await store(page, () => window.__signInAs('u-mo', 'mo@x.bh'));
+  await page.waitForFunction(() => App.st.trips.some((t) => t.name === 'إسطنبول'));
+});
+
+test('account nudge (DW-035): Today invites to create an account once there is data worth keeping; «بعدين» hides it for 30 days', async ({ page }) => {
+  await useFakeSupabase(page);
+  await open(page);
+  await store(page, () => { App.S.setSettings({ onboarded: true }); App.go('today'); });
+  await expect(page.locator('#accNudge')).toHaveCount(0);                    // ما فيه بيانات تستاهل
+  await store(page, () => { for (let i = 0; i < 10; i++) App.S.upsert('transactions', { id: 'n' + i, kind: 'expense', amount: 1, merchant: 'x', category: 'قهوة', occurred_at: new Date().toISOString() }); App.render(); });
+  await expect(page.locator('#accNudge')).toContainText('بياناتك على هالجوال بس');
+  await page.click('#accNudge [data-action="account"]');
+  await expect(page.locator('#sheetTitle')).toHaveText('حسابك');
+  await page.click('#sheetCancel'); await page.waitForTimeout(350);
+  await page.click('#accNudge [data-action="account-later"]');
+  await expect(page.locator('#accNudge')).toHaveCount(0);
 });
