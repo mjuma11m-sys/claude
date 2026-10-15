@@ -12,6 +12,28 @@
   const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
   const mmss = (s) => Math.floor(s / 60) + ':' + String(Math.round(s % 60)).padStart(2, '0');
 
+  // ================= المعادلات (DW-022) =================
+  // عرض بس: نص المستخدم يتهرّب أول (h)، بعدين: ^ ← أس، _رقم ← سفلي، sqrt( ← √(، >= ≤ !=، والمعادلة وسط جملة عربية تنعزل LTR عشان ما تنقلب.
+  const MATH_CH = '[A-Za-z0-9.,+\\-−×÷*/=^_()√²³±≠≤≥πΣΔ∞∫% ]';
+  const RUN = new RegExp(MATH_CH + '{3,}', 'g');
+  const IS_EQ = /[=+×÷^√≤≥≠±Σ∫−]|[A-Za-z0-9)]\s*[*/]\s*[A-Za-z0-9(]|[A-Za-z0-9)]\s+-\s+[A-Za-z0-9(]/;
+  function mathify(text) {
+    let t = h(text == null ? '' : String(text))
+      .replace(/&gt;=/g, '≥').replace(/&lt;=/g, '≤').replace(/!=/g, '≠')
+      .replace(/\bsqrt\s*\(/gi, '√(').replace(/(\d)\s*\*\s*(\d)/g, '$1×$2');
+    t = t.replace(RUN, (m) => {
+      if (!IS_EQ.test(m) || !/[A-Za-z0-9]/.test(m)) return m;
+      const lead = m.match(/^[\s=:]*/)[0], trail = m.slice(lead.length).match(/[\s=:]*$/)[0], core = m.slice(lead.length, m.length - trail.length);
+      if (!core) return m;
+      return lead + '<bdi dir="ltr" class="eq"' + (core.length <= 28 ? ' style="white-space:nowrap"' : '') + '>' + core + '</bdi>' + trail;
+    });
+    return t.replace(/\^\(([^()]{1,20})\)|\^([A-Za-z0-9]{1,6})/g, (_, a, b) => '<sup>' + (a || b) + '</sup>')
+      .replace(/([A-Za-z)])_(\d{1,3})/g, '$1<sub>$2</sub>');
+  }
+  const SYMS = ['²', '³', '√', '÷', '×', '±', '≠', '≤', '≥', 'π', 'Σ', 'Δ', '∞', '∫', '½', '→'];
+  const mathBar = () => '<div class="mathbar" role="toolbar" aria-label="رموز رياضية" style="display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 12px;direction:ltr">' +
+    SYMS.map((x) => '<button type="button" class="chip" data-sym="' + x + '" aria-label="أضف ' + x + '" style="min-width:40px;font-size:17px">' + x + '</button>').join('') + '</div>';
+
   // ================= التسجيلات: IndexedDB على الجهاز =================
   const DB = 'hayati-audio', OS = 'clips';
   function db() {
@@ -85,7 +107,7 @@
     const courses = st.courses || [];
     let rec = null, chunks = [], t0 = 0, timer = null;
     const audioList = () => l.audio.length ? l.audio.map((a, i) => '<div class="clip" style="display:flex;align-items:center;gap:8px;margin:6px 0"><button type="button" class="btn ghost" data-play="' + i + '">▶︎ تسجيل ' + (i + 1) + ' · ' + mmss(a.dur || 0) + '</button><button type="button" class="icon-x" data-delclip="' + i + '" aria-label="حذف التسجيل">✕</button></div>').join('') : '<p class="small muted" style="margin:6px 4px">ما فيه تسجيل.</p>';
-    const cardsList = () => l.cards.map((c, i) => '<li class="row" style="cursor:default"><div class="main"><div class="title"><span class="t" dir="auto">' + h(c.q) + '</span></div><div class="sub" dir="auto">' + h(c.a) + '</div></div><button type="button" class="icon-x" data-delcard="' + i + '" aria-label="حذف السؤال">✕</button></li>').join('');
+    const cardsList = () => l.cards.map((c, i) => '<li class="row" style="cursor:default"><div class="main"><div class="title"><span class="t" dir="auto" style="white-space:normal;overflow:visible">' + mathify(c.q) + '</span></div><div class="sub" dir="auto">' + mathify(c.a) + '</div></div><button type="button" class="icon-x" data-delcard="' + i + '" aria-label="حذف السؤال">✕</button></li>').join('');
     A.openSheet({
       title: old ? 'ملف المحاضرة' : 'محاضرة جديدة',
       body: '<div class="field"><label>المادة</label><select name="lc_course"><option value="">بدون مادة</option>' + courses.map((c) => '<option value="' + c.id + '"' + (c.id === l.course_id ? ' selected' : '') + '>' + h(c.name) + '</option>').join('') + '</select></div>' +
@@ -94,7 +116,7 @@
         '<div class="group-title">' + I('timer') + 'التسجيل</div>' +
         '<p class="small muted" style="margin:0 4px 8px">سجّل بس بإذن الدكتور. التسجيل يظل على جوالك، ما ينرفع لأي مكان.</p>' +
         '<button type="button" class="btn block" id="lcRec">🎙️ ابدأ التسجيل</button><div id="lcClips">' + audioList() + '</div>' +
-        '<div class="group-title">' + I('book') + 'ملاحظاتك</div><div class="field"><textarea name="lc_notes" rows="5" maxlength="20000" placeholder="اللي قاله الدكتور، النقاط المهمة…">' + h(l.notes) + '</textarea></div>' +
+        '<div class="group-title">' + I('book') + 'ملاحظاتك</div><div class="field"><textarea name="lc_notes" rows="5" maxlength="20000" placeholder="اللي قاله الدكتور، النقاط المهمة…">' + h(l.notes) + '</textarea></div>' + mathBar() +
         '<div class="field"><label>ملخصك بسطور</label><textarea name="lc_summary" rows="3" maxlength="4000" placeholder="لو بتشرحها لربعك بثلاث جمل، شنو بتقول؟">' + h(l.summary) + '</textarea></div>' +
         aiBlock() +
         '<div class="group-title">' + I('target') + 'أسئلة تختبر فيها نفسك</div>' +
@@ -136,6 +158,12 @@
           root.querySelector('#lcCards').innerHTML = cardsList();
         };
         root.querySelector('#lcCards').onclick = (e) => { const d = e.target.closest('[data-delcard]'); if (d) { l.cards.splice(Number(d.dataset.delcard), 1); root.querySelector('#lcCards').innerHTML = cardsList(); } };
+        let lastField = root.querySelector('[name=lc_notes]');
+        root.querySelectorAll('[name=lc_notes],[name=lc_summary],[name=lc_q],[name=lc_a]').forEach((f) => { f.onfocus = () => { lastField = f; }; });
+        root.querySelectorAll('[data-sym]').forEach((b) => {
+          b.addEventListener('pointerdown', (e) => e.preventDefault());   // يخلي الكيبورد مفتوح
+          b.onclick = () => { const f = lastField, at = f.selectionStart ?? f.value.length; f.setRangeText(b.dataset.sym, at, f.selectionEnd ?? at, 'end'); f.focus(); };
+        });
         root.querySelectorAll('[data-ai]').forEach((b) => { b.onclick = () => runAi(root, l, b.dataset.ai, () => { root.querySelector('#lcCards').innerHTML = cardsList(); }); });
         const qz = root.querySelector('#lcQuiz');
         if (qz) qz.onclick = () => { A.closeSheet(); setTimeout(() => quiz([l.id]), 280); };
@@ -160,8 +188,8 @@
     let i = 0, right = 0, shown = false;
     const draw = () => i >= qs.length
       ? '<div class="hero" style="padding:18px;text-align:center"><span class="eyebrow">' + I('target') + 'النتيجة</span><div class="amount-big num">' + Math.round((right / qs.length) * 100) + '%</div><p class="small">' + right + ' من ' + qs.length + (right === qs.length ? ' · فاهمها 💪' : ' · راجع اللي ما عرفته') + '</p></div>'
-      : '<p class="small muted num" style="margin:0 4px 8px">سؤال ' + (i + 1) + ' من ' + qs.length + ' · ' + h(qs[i].l.title) + '</p><div class="card" style="padding:18px"><b id="qzQ" dir="auto" style="display:block">' + h(qs[i].c.q) + '</b>' +
-        (shown ? '<p id="qzA" dir="auto" style="margin:12px 0 0;color:var(--brand)">' + h(qs[i].c.a) + '</p>' : '') + '</div>' +
+      : '<p class="small muted num" style="margin:0 4px 8px">سؤال ' + (i + 1) + ' من ' + qs.length + ' · ' + h(qs[i].l.title) + '</p><div class="card" style="padding:18px"><b id="qzQ" dir="auto" style="display:block">' + mathify(qs[i].c.q) + '</b>' +
+        (shown ? '<p id="qzA" dir="auto" style="margin:12px 0 0;color:var(--brand)">' + mathify(qs[i].c.a) + '</p>' : '') + '</div>' +
         (shown ? '<div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="btn primary" style="flex:1" data-qz="yes">عرفتها ✓</button><button type="button" class="btn ghost" style="flex:1" data-qz="no">ما عرفتها</button></div>'
           : '<button type="button" class="btn block" style="margin-top:12px" data-qz="show">شوف الجواب</button>');
     A.openSheet({
@@ -194,5 +222,5 @@
       default: return prev(name, el, e);
     }
   });
-  E.Lectures = { view, sheet, quiz, putClip, getClip };
+  E.Lectures = { mathify, view, sheet, quiz, putClip, getClip };
 })();

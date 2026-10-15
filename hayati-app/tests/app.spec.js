@@ -1653,3 +1653,36 @@ test('lectures AI: hidden behind sign-in; when signed in it sends only the notes
   expect(calls[0].name).toBe('lecture-ai');
   expect(Object.keys(calls[0].body).sort()).toEqual(['mode', 'notes', 'title']);
 });
+
+// ================= DW-022: المعادلات =================
+test('lectures math: equations render (powers, subscripts, √, ≥) left-to-right inside Arabic, user text stays escaped', async ({ page }) => {
+  await open(page);
+  const out = await store(page, () => { const m = window.Extras.Lectures.mathify; return {
+    pow: m('x^2 + 3x - 4 = 0'), sub: m('x_1 + x_2 = -b/a'), root: m('sqrt(16) >= 2*2'),
+    ar: m('نقطة التعادل = FC / (P - VC) بالوحدات'), plain: m('Fixed cost?'), xss: m('<img src=x onerror=alert(1)> = 1'),
+  }; });
+  expect(out.pow).toBe('<bdi dir="ltr" class="eq" style="white-space:nowrap">x<sup>2</sup> + 3x - 4 = 0</bdi>');
+  expect(out.sub).toContain('x<sub>1</sub>');
+  expect(out.root).toContain('√(16) ≥ 2×2');
+  expect(out.ar).toBe('نقطة التعادل = <bdi dir="ltr" class="eq" style="white-space:nowrap">FC / (P - VC)</bdi> بالوحدات');   // «=» يظل جنب العربي
+  expect(out.plain).toBe('Fixed cost?');
+  expect(out.xss).not.toContain('<img');
+});
+
+test('lectures math: the symbol bar types into the field you were in, and a card shows its equation formatted', async ({ page }) => {
+  await open(page);
+  await asStudent(page);
+  await store(page, () => { App.ui.studySeg = 'lectures'; App.go('schedule'); });
+  await page.click('[data-action="lec-new"]');
+  await page.fill('[name=lc_title]', 'Quadratics');
+  await page.click('[name=lc_notes]'); await page.keyboard.type('x');
+  await page.click('[data-sym="²"]');
+  await expect(page.locator('[name=lc_notes]')).toHaveValue('x²');
+  await page.fill('[name=lc_q]', 'Solve x^2 = 9');
+  await page.click('[name=lc_a]'); await page.keyboard.type('x = ');
+  await page.click('[data-sym="±"]'); await page.keyboard.type('3');
+  await expect(page.locator('[name=lc_a]')).toHaveValue('x = ±3');
+  await page.click('#lcAddCard');
+  await expect(page.locator('#lcCards sup')).toHaveText('2');
+  await expect(page.locator('#lcCards .eq').first()).toHaveAttribute('dir', 'ltr');
+});
