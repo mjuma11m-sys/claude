@@ -1686,5 +1686,20 @@ window.HAYATI_EN = {
 "عندك": "You have",
 // DW-030: الترجمة الكاملة (الأخبار، الأدوات، أول دقيقة، النسخة المشفّرة، البلاغ، القبلة، عبادتي، الورد، المحاضرات، السفر، يوم الراتب والزكاة)
 "تحذف هالرحلة من جوالك؟": "Delete this trip from your phone?",
-"مثال:\nالأحد والثلاثاء 6-8 م ملعب نادي المحرق\nالخميس 5:30 م لياقة\nمباراة 24/10 الساعة 7 م ضد الرفاع": "Example:\nSun & Tue 6-8 pm, Muharraq Club pitch\nThu 5:30 pm fitness\nMatch 24/10 at 7 pm vs Riffa"
+"مثال:\nالأحد والثلاثاء 6-8 م ملعب نادي المحرق\nالخميس 5:30 م لياقة\nمباراة 24/10 الساعة 7 م ضد الرفاع": "Example:\nSun & Tue 6-8 pm, Muharraq Club pitch\nThu 5:30 pm fitness\nMatch 24/10 at 7 pm vs Riffa",
+// DW-030: الترجمة الكاملة (الأخبار، الأدوات، أول دقيقة، النسخة المشفّرة، البلاغ، القبلة، عبادتي، الورد، المحاضرات، السفر، يوم الراتب والزكاة)
+"ما فيه شي اليوم وبكرة": "Nothing today or tomorrow",
+"+ مصروف": "+ Expense",
+"الصق رسالة": "Paste SMS",
+"🔒 افتح حياتي": "🔒 Open Hayati",
+"حدد ميزانيتك من التطبيق": "Set your budget in the app",
+"تجاوزت الميزانية": "Over budget by",
+"من الميزانية": "of budget",
+"📱 ودجت حياتي": "📱 Hayati widget",
+"ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← الأدوات (Widgets) ← حياتي. يعرض الجاي اليوم وبكرة والميزانية، وفيه زر «+ مصروف» و«الصق رسالة».": "Add it from your home screen: long-press an empty spot → Widgets → Hayati. It shows what's next today and tomorrow plus your budget, with «+ Expense» and «Paste SMS» buttons.",
+"اعرض المبالغ بالودجت": "Show amounts on the widget",
+"الشاشة الرئيسية يشوفها أي أحد يمسك جوالك، فالمبالغ مخفية إلا لو فعّلتها (يطلع بس كم % باقي). ولو قفل التطبيق شغّال، الودجت ما يعرض أي بيانات.": "Anyone holding your phone can see the home screen, so amounts stay hidden unless you turn them on (only the % left shows). If the app lock is on, the widget shows no data at all.",
+"تحدّث الودجت": "Widget updated",
+"ودجت الشاشة الرئيسية": "Home-screen widget",
+"الجاي والميزانية بدون ما تفتح التطبيق": "What's next and your budget without opening the app"
 };

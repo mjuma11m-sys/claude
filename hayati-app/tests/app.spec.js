@@ -2004,3 +2004,61 @@ test('English: every screen, sheet and settings item has a translation (no Arabi
   const left = (await crawl(page, false)).filter((x) => x.s !== 'نص تجريبي بدون ترجمة');
   expect(left).toEqual([]);
 });
+
+test('Android widget (DW-031): snapshot hides amounts by default, shows nothing when locked, next items in time order', async ({ page }) => {
+  await open(page);
+  const snap = await store(page, () => {
+    const now = new Date(); now.setHours(9, 0, 0, 0);
+    const S = App.S, d = now.getDay();
+    S.setSettings({ onboarded: true, budget: 200, payday: 1 });
+    S.upsert('transactions', { id: 'w1', kind: 'expense', amount: 50, merchant: 'x', category: 'قهوة', occurred_at: now.toISOString() });
+    S.upsert('courses', { id: 'c2', name: 'Marketing', type: 'lecture', days: [d], start_time: '13:00', end_time: '14:15', room: 'S20' });
+    S.upsert('courses', { id: 'c1', name: 'Accounting', type: 'lecture', days: [d], start_time: '10:00', end_time: '11:15', room: 'S40' });
+    const W = window.Extras.Widget;
+    const hidden = W.snapshot(now);
+    localStorage.setItem('hayati-widget', JSON.stringify({ amounts: true }));
+    const shown = W.snapshot(now);
+    localStorage.setItem('hayati-lock', JSON.stringify({ h: 'x' }));
+    const locked = W.snapshot(now);
+    localStorage.removeItem('hayati-lock'); localStorage.removeItem('hayati-widget');
+    return { hidden, shown, locked };
+  });
+  expect(snap.hidden.budget).toEqual({ line: 'باقي 75% من الميزانية', pct: 75 });
+  expect(JSON.stringify(snap.hidden)).not.toContain('150');
+  expect(snap.shown.budget.line).toBe('باقي 150.000 د.ب من الميزانية');
+  expect(snap.hidden.items.map((x) => x.title).filter((t) => /^[A-Z]/.test(t))).toEqual(['Accounting', 'Marketing']);
+  expect(snap.hidden.items.map((x) => x.t)).toEqual(snap.hidden.items.map((x) => x.t).slice().sort((a, b) => a - b));
+  expect(snap.hidden.items[0].sub).toContain('S40');
+  expect(snap.hidden.rtl).toBe(true);
+  expect(snap.locked).toMatchObject({ locked: true, items: [] });
+  expect(snap.locked.budget).toBeUndefined();
+});
+
+test('Android widget (DW-031): the app sends the snapshot to the native plugin, and the widget buttons open «+ مصروف»', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__wg = { sent: [], listeners: {} };
+    window.Capacitor = { getPlatform: () => 'android', Plugins: { HayatiWidget: {
+      update: async (o) => { window.__wg.sent.push(JSON.parse(o.data)); },
+      take: async () => ({ name: 'add-tx' }),
+      addListener: (ev, fn) => { window.__wg.listeners[ev] = fn; return Promise.resolve({ remove() {} }); },
+    } } };
+  });
+  await open(page);
+  // زر الودجت «+ مصروف» فتح التطبيق: نافذة المصروف تفتح
+  await expect(page.locator('#sheet[open] [name="amount"]')).toBeVisible({ timeout: 5000 });
+  await store(page, () => App.closeSheet());
+  await page.waitForFunction(() => window.__wg.sent.length > 0, null, { timeout: 8000 });
+  const first = await store(page, () => window.__wg.sent[window.__wg.sent.length - 1]);
+  expect(first).toMatchObject({ v: 1, locked: false, labels: { add: '+ مصروف', paste: 'الصق رسالة' } });
+  // التطبيق مفتوح وضغطت «الصق رسالة» بالودجت
+  await store(page, () => window.__wg.listeners.action({ name: 'paste-sms' }));
+  await expect(page.locator('#sheetTitle')).toContainText('رسالة بنك');   // أول مرة: الموافقة قبل اللصق
+  await store(page, () => App.closeSheet());
+  // من الإعدادات: «اعرض المبالغ» يحدّث الودجت على طول
+  await store(page, () => { App.S.setSettings({ budget: 100 }); window.__wg.sent.length = 0; });
+  await page.click('#settingsBtn');
+  await page.click('#sheetBody [data-set="widget"]');
+  await page.check('#wgAmounts'); await page.click('#sheetSave');
+  await page.waitForFunction(() => window.__wg.sent.length > 0);
+  expect(await store(page, () => window.__wg.sent[window.__wg.sent.length - 1].budget.line)).toBe('باقي 100.000 د.ب من الميزانية');
+});

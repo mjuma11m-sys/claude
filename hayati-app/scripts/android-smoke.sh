@@ -54,3 +54,48 @@ adb exec-out screencap -p > "$OUT/share.png" || true
 adb logcat -d -t 300 > "$OUT/logcat.txt" || true
 [ -n "$shared" ] || { echo "❌ المشاركة ما فتحت نافذة اللصق خلال 30 ثانية"; exit 1; }
 echo "✅ المشاركة وصلت ($shared)"
+
+# DW-031: ودجت الشاشة الرئيسية
+echo "▶ الودجت مسجّل بالنظام؟"
+adb shell dumpsys appwidget > "$OUT/appwidget.txt" || true
+grep -q "bh.hayati.app/bh.hayati.app.HayatiWidget\|bh.hayati.app/.HayatiWidget" "$OUT/appwidget.txt" \
+  || { echo "❌ الودجت مو مسجّل (AndroidManifest receiver)"; exit 1; }
+echo "✅ الودجت موجود بقائمة الأدوات"
+
+echo "▶ التطبيق يرسل لقطة للودجت، والودجت ينرسم بدون خطأ"
+# فتح من جديد: الواجهة ترسل اللقطة بعد ما تشتغل
+adb shell am force-stop "$PKG" || true
+adb logcat -c || true
+adb shell am start -n "$PKG/.MainActivity" >/dev/null
+wg=""
+for try in $(seq 1 15); do
+  sleep 2
+  wg=$(adb logcat -d | grep -o 'hayati-widget:inflate [a-z]*.*' | head -1 || true)
+  [ -n "$wg" ] && break
+done
+adb logcat -d -t 300 > "$OUT/logcat.txt" || true
+adb exec-out run-as "$PKG" cat files/widget-preview.png > "$OUT/widget.png" 2>/dev/null || true
+case "$wg" in
+  "hayati-widget:inflate ok"*) echo "✅ الودجت انرسم ($(du -h "$OUT/widget.png" | cut -f1))" ;;
+  "") echo "❌ ما وصلت لقطة للودجت خلال 30 ثانية"; exit 1 ;;
+  *) echo "❌ $wg"; exit 1 ;;
+esac
+# التحديث الدوري (نظام أندرويد) يمر على نفس الكود بدون التطبيق
+adb shell am broadcast -a android.appwidget.action.APPWIDGET_UPDATE -n "$PKG/.HayatiWidget" --eia appWidgetIds 1 >/dev/null || true
+sleep 2
+adb logcat -d > "$OUT/logcat.txt" || true
+grep -q 'hayati-widget:render' "$OUT/logcat.txt" || { echo "❌ التحديث الدوري للودجت ما اشتغل"; exit 1; }
+if grep -q 'FATAL EXCEPTION' "$OUT/logcat.txt"; then echo "❌ طيحة بعد تحديث الودجت"; exit 1; fi
+
+echo "▶ زر «+ مصروف» بالودجت يفتح نافذة المصروف"
+adb logcat -c || true
+adb shell "am start -n $PKG/.MainActivity -a bh.hayati.app.WIDGET_1 --es hayati_action add-tx" >/dev/null
+act=""
+for try in $(seq 1 10); do
+  sleep 2
+  act=$(adb logcat -d | grep -o 'hayati-widget-action:[a-z-]*' | head -1 || true)
+  [ -n "$act" ] && break
+done
+adb exec-out screencap -p > "$OUT/widget-action.png" || true
+[ "$act" = "hayati-widget-action:add-tx" ] || { echo "❌ زر الودجت ما وصل للواجهة ($act)"; adb logcat -d -t 300 > "$OUT/logcat.txt"; exit 1; }
+echo "✅ زر الودجت وصل ($act)"

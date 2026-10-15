@@ -58,6 +58,7 @@
 | | وين | الصيغة |
 |---|---|---|
 | نسخة احتياطية | الإعدادات ← نسخة احتياطية | JSON، كل الجداول (`S.exportJSON()`) |
+| ودجت أندرويد (DW-031) | الشاشة الرئيسية ← الأدوات ← حياتي | `widget.js` يرسل لقطة JSON (الجاي 8 عناصر لمدة يومين + سطر الميزانية) لـ `HayatiWidget.update` ← SharedPreferences `hayati_widget` (خاصة بالتطبيق). `localStorage` «hayati-widget» = `{amounts}` (افتراضي مخفية). القفل شغّال ← `locked:true` بدون بيانات |
 | نسخة مشفّرة (DW-029) | الإعدادات ← نسخة مشفّرة بكلمة سر | JSON مغلّف: `{app,v,kdf:{PBKDF2,SHA-256,250000,salt},cipher:AES-GCM,iv,data}`. بداخله `S.exportJSON()` + مفاتيح الجهاز (`HayatiBackup.LOCAL`) + تسجيلات `hayati-audio` اختياري. بدون `hayati-supabase` ولا `hayati-lock`. الاستيراد العادي يتعرّف عليه ويطلب كلمة السر |
 | المصاريف | الإعدادات ← صدّر مصاريفك (Excel) | CSV، بدون `raw` (`App.expensesCSV()`) |
 | الحذف | الإعدادات ← احذف كل بياناتي | الجهاز + db + Supabase + الحساب (`js/features/privacy.js`) |

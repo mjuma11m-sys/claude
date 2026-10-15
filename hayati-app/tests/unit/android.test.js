@@ -38,12 +38,41 @@ test('share to Hayati (DW-009): plain text only, registered, capped, and no perm
   const m = read('app/src/main/AndroidManifest.xml');
   assert.match(m, /<action android:name="android.intent.action.SEND" \/>[\s\S]*?<data android:mimeType="text\/plain" \/>/);
   assert.doesNotMatch(m, /READ_SMS|RECEIVE_SMS/);
-  assert.match(read('app/src/main/java/bh/hayati/app/MainActivity.java'), /registerPlugin\(ShareInPlugin\.class\);\s*super\.onCreate/);
+  assert.match(read('app/src/main/java/bh/hayati/app/MainActivity.java'), /registerPlugin\(ShareInPlugin\.class\);[\s\S]*?super\.onCreate/);
   const p = read('app/src/main/java/bh/hayati/app/ShareInPlugin.java');
   assert.match(p, /@CapacitorPlugin\(name = "ShareIn"\)/);
   assert.match(p, /static final int MAX = 2000;/);
   const web = JSON.parse(fs.readFileSync(path.join(__dirname, '../../manifest.webmanifest'), 'utf8'));
   assert.equal(web.share_target.params.text, 'share_text');
+});
+
+// DW-031: ودجت الشاشة الرئيسية
+test('home-screen widget (DW-031): registered, RemoteViews-safe layouts, ids match the code, no extra permissions', () => {
+  const m = read('app/src/main/AndroidManifest.xml');
+  assert.match(m, /<receiver[\s\S]*?android:name="\.HayatiWidget"[\s\S]*?android.appwidget.action.APPWIDGET_UPDATE[\s\S]*?android:resource="@xml\/hayati_widget_info"/);
+  assert.match(read('app/src/main/java/bh/hayati/app/MainActivity.java'), /registerPlugin\(WidgetPlugin\.class\);[\s\S]*?super\.onCreate/);
+  const info = read('app/src/main/res/xml/hayati_widget_info.xml');
+  assert.match(info, /android:initialLayout="@layout\/hayati_widget"/);
+  assert.ok(Number(/updatePeriodMillis="(\d+)"/.exec(info)[1]) >= 1800000, 'Android ignores updates more often than 30 min');
+  const java = read('app/src/main/java/bh/hayati/app/HayatiWidget.java') + read('app/src/main/java/bh/hayati/app/WidgetPlugin.java');
+  for (const f of ['hayati_widget.xml', 'hayati_widget_ltr.xml']) {
+    const x = read('app/src/main/res/layout/' + f);
+    // الودجت يقبل عناصر محددة بس؛ غيرها = «ما قدرنا نحمّل الودجت» بالشاشة الرئيسية
+    const tags = [...x.matchAll(/<([A-Za-z.]+)[\s>]/g)].map((t) => t[1]);
+    for (const t of tags) assert.ok(['LinearLayout', 'TextView', 'ProgressBar', 'FrameLayout', 'ImageView'].includes(t), f + ': <' + t + '> is not allowed in a widget');
+    const ids = [...x.matchAll(/@\+id\/(\w+)/g)].map((t) => t[1]);
+    for (const id of ['wg_root', 'wg_label', 'wg_title', 'wg_sub', 'wg_budget', 'wg_bar', 'wg_add', 'wg_paste']) assert.ok(ids.includes(id), f + ' is missing @+id/' + id);
+    for (const used of java.matchAll(/R\.id\.(\w+)/g)) assert.ok(ids.includes(used[1]), f + ' has no id ' + used[1]);
+  }
+  assert.match(read('app/src/main/res/layout/hayati_widget.xml'), /layoutDirection="rtl"/);
+  assert.match(read('app/src/main/res/layout/hayati_widget_ltr.xml'), /layoutDirection="ltr"/);
+  for (const r of java.matchAll(/R\.(layout|drawable|xml)\.(\w+)/g)) assert.ok(fs.existsSync(path.join(A, 'app/src/main/res', r[1], r[2] + '.xml')), 'missing res/' + r[1] + '/' + r[2]);
+  // PendingIntent لازم IMMUTABLE من أندرويد 12، وكل زر له request code مختلف
+  assert.match(java, /PendingIntent\.FLAG_IMMUTABLE/);
+  assert.match(java, /open\(ctx, "add-tx", 1\)[\s\S]*open\(ctx, "paste-sms", 2\)/);
+  // الأزرار تقبل اسمين بس
+  assert.match(java, /"add-tx"\.equals\(name\) \|\| "paste-sms"\.equals\(name\)/);
+  assert.doesNotMatch(m, /BIND_APPWIDGET|READ_CONTACTS/);
 });
 
 // DW-011: جاهزية المتجر

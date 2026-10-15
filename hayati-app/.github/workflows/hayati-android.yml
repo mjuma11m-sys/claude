@@ -48,6 +48,8 @@ jobs:
           path: |
             android-smoke/launch.png
             android-smoke/share.png
+            android-smoke/widget.png
+            android-smoke/widget-action.png
             android-smoke/build.log
             android-smoke/logcat.txt
           retention-days: 14
