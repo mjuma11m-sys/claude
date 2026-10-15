@@ -60,3 +60,5 @@
 | نسخة احتياطية | الإعدادات ← نسخة احتياطية | JSON، كل الجداول (`S.exportJSON()`) |
 | المصاريف | الإعدادات ← صدّر مصاريفك (Excel) | CSV، بدون `raw` (`App.expensesCSV()`) |
 | الحذف | الإعدادات ← احذف كل بياناتي | الجهاز + db + Supabase + الحساب (`js/features/privacy.js`) |
+
+| `hayati-seen-version` | localStorage | آخر نسخة شاف فيها المستخدم «جديد بحياتي» (DW-019) | الجهاز بس |

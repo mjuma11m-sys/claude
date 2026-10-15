@@ -4,8 +4,11 @@ const fs = require('fs');
 const path = require('path');
 
 // كل اختبار: نمنع أي اتصال برّا (خطوط، CDN) ونفشل لو صار أي خطأ JavaScript
+// «جديد بحياتي» (DW-019) تطلع للمستخدم القديم بعد التحديث؛ الاختبارات تعتبرها انشافت إلا اختباراتها هي
+const APP_V = /const APP_VERSION = '(v\d+)'/.exec(fs.readFileSync(path.join(__dirname, '../js/core/app.js'), 'utf8'))[1];
 const test = base.extend({
-  page: async ({ page, baseURL }, use) => {
+  page: async ({ page, baseURL }, use, testInfo) => {
+    if (!/جديد بحياتي/.test(testInfo.title)) await page.addInitScript((v) => { try { localStorage.setItem('hayati-seen-version', v); } catch (e) { /* تجاهل */ } }, APP_V);
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.route('**/*', (r) => (r.request().url().startsWith(baseURL) ? r.continue() : r.abort()));
@@ -1513,4 +1516,41 @@ test('«رتّب اليوم»: hiding a card hides it on Today, survives a reloa
   await expect(page.locator('#view section[data-tk="recent"]')).toBeHidden();
   await store(page, () => App.S.setSettings({ today_hide: [] }));
   await expect(page.locator('#view section[data-tk="recent"]')).toBeVisible();
+});
+
+
+// ================= DW-019: «جديد بحياتي» =================
+const seedOld = (page) => store(page, () => { App.S.setSettings({ onboarded: true, name: 'سارة' }); App.S.upsert('transactions', { id: 't1', kind: 'expense', amount: 2.3, merchant: 'Costa', category: 'قهوة', occurred_at: new Date().toISOString() }); });
+
+test('«جديد بحياتي»: an existing user sees what is new once after the update, and «تمام» keeps it away', async ({ page }) => {
+  await open(page);
+  await seedOld(page);
+  await store(page, () => localStorage.setItem('hayati-seen-version', 'v21'));   // كان على النسخة اللي قبل
+  await open(page);
+  await expect(page.locator('#sheetTitle')).toHaveText('جديد بحياتي ✨', { timeout: 5000 });
+  await expect(page.locator('#sheetBody .news-item')).toHaveCount(4);
+  await page.click('#sheetCancel');
+  expect(await store(page, () => localStorage.getItem('hayati-seen-version'))).toBe(await store(page, () => App.APP_VERSION));
+  await open(page);
+  await page.waitForTimeout(2000);
+  await expect(page.locator('#sheet[open]')).toHaveCount(0);
+});
+
+test('«جديد بحياتي»: a new user never sees it (they get the welcome instead)', async ({ page }) => {
+  await open(page);
+  await page.waitForTimeout(2000);
+  await expect(page.locator('#sheet[open]')).toHaveCount(0);
+  expect(await store(page, () => localStorage.getItem('hayati-seen-version'))).toBe(await store(page, () => App.APP_VERSION));
+});
+
+test('«جديد بحياتي»: waits behind the PIN lock and shows after unlocking', async ({ page }) => {
+  await open(page);
+  await seedOld(page);
+  await store(page, () => localStorage.setItem('hayati-seen-version', 'v21'));
+  await open(page);
+  await store(page, () => document.body.classList.add('locked'));   // القفل مفتوح قبل ما تطلع
+  await page.waitForTimeout(2500);
+  await expect(page.locator('#sheet[open]')).toHaveCount(0);
+  await store(page, () => document.body.classList.remove('locked'));
+  await expect(page.locator('#sheetTitle')).toHaveText('جديد بحياتي ✨', { timeout: 3000 });
 });
