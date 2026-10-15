@@ -60,6 +60,7 @@ description: فهرس وموجّه الـ skills — يحدد أي skill (أو �
 | مقاطع بدون كلام على الإيقاع | `montage-video` |
 | بودكاست / كاميرتين | `podcast-video` |
 | موشن قرافيكس بدون تصوير | `motion-video` |
+| موشن جرافيك بـ Remotion من الصفر (ستايل whatships، مكونات 21st.dev، فويس أوفر، موسيقى، MP4) | `motion-graphics-remotion` |
 | تايملاين دافنشي قابل للتعديل | `davinci-video` |
 | تعديل يدوي بالجوال | `capcut-guide` |
 | كفر / ثمبنيل | `thumbnail-video` |
