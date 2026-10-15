@@ -8782,7 +8782,7 @@ window.HAYATI_CONFIG = {
   const NEWS = {
     v22: [
       ['🧰', '«كل شي بحياتي»', 'زر فوق فيه كل الأدوات، وترتّب شاشة «اليوم» على كيفك'],
-      ['💰', 'يوم الراتب', 'الشهر يمشي من راتبك لراتبك، و«راتبك وين راح؟» أول أيام الراتب'],
+      ['💰', 'يوم الراتب', 'الشهر يمشي من راتب لراتب، مع «راتبك وين راح؟»'],
       ['🕌', '«عبادتي»', 'التاريخ الهجري، الصلاة الجاية، المسبحة، والمناسبات'],
       ['⚡', 'أسرع', 'التطبيق صار يفتح أسرع'],
     ],
@@ -8801,6 +8801,7 @@ window.HAYATI_CONFIG = {
         items.map(([ic, t, d]) => '<li class="row news-item" style="cursor:default"><div class="ico" style="font-size:22px;background:none">' + ic + '</div><div class="main"><div class="title"><span class="t">' + h(t) + '</span></div><div class="sub">' + h(d) + '</div></div></li>').join('') +
         '</ul></div>',
     });
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();   // بدون إطار التركيز على «تمام»
     lsSet(A.APP_VERSION);   // انشافت = ما ترجع، حتى لو سكّرها بأي طريقة
   }
 
