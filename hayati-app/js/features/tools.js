@@ -67,7 +67,7 @@
       title: 'كل شي بحياتي',
       cancelLabel: 'تم',
       body: GROUPS.map(([g, items]) => '<div class="group-title">' + g + '</div><div class="tools-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">' +
-        items.filter((x) => x[0] !== 'notif' || window.HayatiNative).map(([k, ic, col, l]) => '<button type="button" class="tool" data-tool="' + k + '" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;border-radius:16px;border:1px solid var(--line, #e5e2da);background:var(--card, #fff);font:inherit;cursor:pointer"><div class="ico" style="' + tint(col) + '">' + I(ic) + '</div><span style="font-size:13px;text-align:center">' + l + '</span></button>').join('') + '</div>').join('') +
+        items.filter((x) => x[0] !== 'notif' || window.HayatiNative).map(([k, ic, col, l]) => '<button type="button" class="tool" data-tool="' + k + '" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;border-radius:16px;border:1px solid var(--border);background:var(--surface);font:inherit;cursor:pointer"><div class="ico" style="' + tint(col) + '">' + I(ic) + '</div><span style="font-size:13px;text-align:center">' + l + '</span></button>').join('') + '</div>').join('') +
         '<button type="button" class="btn ghost block" id="tkOpen" style="margin-top:16px">' + I('settings') + 'رتّب شاشة «اليوم»</button>',
       mount(root) {
         root.querySelectorAll('[data-tool]').forEach((b) => { b.onclick = () => {

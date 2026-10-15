@@ -1082,7 +1082,7 @@
     out += '<div class="summary">' +
       '<span class="pill">' + I('tasks') + '<span class="num">' + open.length + '</span> مفتوحة</span>' +
       (groups[0][2].length ? '<span class="pill late">' + I('alert') + '<span class="num">' + groups[0][2].length + '</span> متأخرة</span>' : '') +
-      (exams[0] ? '<span class="pill" style="color:#e11d48">' + I('pen') + 'أقرب اختبار ' + (daysBetween(now, new Date(exams[0].due_at)) === 0 ? 'اليوم' : 'بعد ' + nDays(daysBetween(now, new Date(exams[0].due_at)))) + '</span>' : '') +
+      (exams[0] ? '<span class="pill" style="color:var(--expense)">' + I('pen') + 'أقرب اختبار ' + (daysBetween(now, new Date(exams[0].due_at)) === 0 ? 'اليوم' : 'بعد ' + nDays(daysBetween(now, new Date(exams[0].due_at)))) + '</span>' : '') +
       '</div>';
 
     let any = false;

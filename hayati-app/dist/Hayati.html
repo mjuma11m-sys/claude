@@ -61,7 +61,7 @@
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme="light"]) {
         --bg: #0A1A1E; --surface: #10262B; --surface-2: #163238; --border: #1F3D43;
-        --text: #EFE8DA; --text-2: #C9C2B4; --muted: #8A9A9B;
+        --text: #EFE8DA; --text-2: #C9C2B4; --muted: #9EAEAF;
         --brand: #6EC5C0; --brand-2: #8FD6D1; --brand-soft: #133A3E; --on-brand: #0A1A1E;
         --expense: #FF7A6B; --income: #4FC79E; --warn: #F2B84B; --warn-soft: #3A2C10; --danger-soft: #3B1A18;
         --hero: linear-gradient(140deg, #0F4A52 0%, #0E3B43 58%, #0B2E34 100%);
@@ -72,7 +72,7 @@
     }
     :root[data-theme="dark"] {
       --bg: #0A1A1E; --surface: #10262B; --surface-2: #163238; --border: #1F3D43;
-      --text: #EFE8DA; --text-2: #C9C2B4; --muted: #8A9A9B;
+      --text: #EFE8DA; --text-2: #C9C2B4; --muted: #9EAEAF;
       --brand: #6EC5C0; --brand-2: #8FD6D1; --brand-soft: #133A3E; --on-brand: #0A1A1E;
       --expense: #FF7A6B; --income: #4FC79E; --warn: #F2B84B; --warn-soft: #3A2C10; --danger-soft: #3B1A18;
       --hero: linear-gradient(140deg, #0F4A52 0%, #0E3B43 58%, #0B2E34 100%);
@@ -537,6 +537,11 @@
     .stepper { display: flex; align-items: center; gap: 8px; }
     .stepper button { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); font-size: 18px; font-weight: 700; }
     .stepper b { min-width: 34px; text-align: center; }
+    /* DW-026 إمكانية الوصول: مساحة لمس 44px على الأقل بدون ما يتغير الشكل (WCAG 2.5.5 / Apple HIG) */
+    :where(.check, .icon-x, .link, .icon-btn, .chip, .seg button, .stepper button, #sheetCancel, #sheetSave, .undo-bar button) { position: relative; }
+    :where(.check, .icon-x, .link, .icon-btn, .chip, .seg button, .stepper button, #sheetCancel, #sheetSave, .undo-bar button)::after { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%); }
+    .cup { position: relative; }
+    .cup::after { content: ""; position: absolute; left: -4px; right: -4px; top: 50%; height: 44px; transform: translateY(-50%); }   /* بالعرض بس لين نص الفراغ عشان ما ياخذ الكوب اللي جنبه */
     .habits { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
     .habit { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--surface); border-radius: 99px; padding: 7px 14px; font-weight: 600; font-size: 14px; }
     .habit small { color: #f97316; font-weight: 700; }
@@ -4338,7 +4343,7 @@ window.HAYATI_CONFIG = {
     out += '<div class="summary">' +
       '<span class="pill">' + I('tasks') + '<span class="num">' + open.length + '</span> مفتوحة</span>' +
       (groups[0][2].length ? '<span class="pill late">' + I('alert') + '<span class="num">' + groups[0][2].length + '</span> متأخرة</span>' : '') +
-      (exams[0] ? '<span class="pill" style="color:#e11d48">' + I('pen') + 'أقرب اختبار ' + (daysBetween(now, new Date(exams[0].due_at)) === 0 ? 'اليوم' : 'بعد ' + nDays(daysBetween(now, new Date(exams[0].due_at)))) + '</span>' : '') +
+      (exams[0] ? '<span class="pill" style="color:var(--expense)">' + I('pen') + 'أقرب اختبار ' + (daysBetween(now, new Date(exams[0].due_at)) === 0 ? 'اليوم' : 'بعد ' + nDays(daysBetween(now, new Date(exams[0].due_at)))) + '</span>' : '') +
       '</div>';
 
     let any = false;
@@ -8864,7 +8869,7 @@ window.HAYATI_CONFIG = {
       title: 'كل شي بحياتي',
       cancelLabel: 'تم',
       body: GROUPS.map(([g, items]) => '<div class="group-title">' + g + '</div><div class="tools-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">' +
-        items.filter((x) => x[0] !== 'notif' || window.HayatiNative).map(([k, ic, col, l]) => '<button type="button" class="tool" data-tool="' + k + '" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;border-radius:16px;border:1px solid var(--line, #e5e2da);background:var(--card, #fff);font:inherit;cursor:pointer"><div class="ico" style="' + tint(col) + '">' + I(ic) + '</div><span style="font-size:13px;text-align:center">' + l + '</span></button>').join('') + '</div>').join('') +
+        items.filter((x) => x[0] !== 'notif' || window.HayatiNative).map(([k, ic, col, l]) => '<button type="button" class="tool" data-tool="' + k + '" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;border-radius:16px;border:1px solid var(--border);background:var(--surface);font:inherit;cursor:pointer"><div class="ico" style="' + tint(col) + '">' + I(ic) + '</div><span style="font-size:13px;text-align:center">' + l + '</span></button>').join('') + '</div>').join('') +
         '<button type="button" class="btn ghost block" id="tkOpen" style="margin-top:16px">' + I('settings') + 'رتّب شاشة «اليوم»</button>',
       mount(root) {
         root.querySelectorAll('[data-tool]').forEach((b) => { b.onclick = () => {

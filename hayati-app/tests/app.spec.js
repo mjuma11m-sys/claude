@@ -1804,3 +1804,49 @@ test('worst-case data: huge amounts, long names and missing fields never spill o
   await expect(page.locator('#view')).not.toContainText('NaN');
   await expect(page.locator('#view')).toContainText('بدون اسم');
 });
+
+// ================= DW-026: إمكانية الوصول (بند 13) =================
+test('accessibility: every button has a name, every field a label, and small controls answer taps within 44px', async ({ page }) => {
+  await open(page);
+  await store(page, () => {
+    App.S.setSettings({ onboarded: true, roles: ['student'] });
+    App.S.upsert('tasks', { id: 'k1', title: 'واجب', due_at: new Date().toISOString(), kind: 'task' });
+  });
+  const audit = () => page.evaluate(() => {
+    const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(e).visibility !== 'hidden' && !e.closest('[hidden],[aria-hidden="true"]'); };
+    const root = document.querySelector('dialog[open]') || document.body, out = [];
+    root.querySelectorAll('button, a[href]').forEach((e) => { if (vis(e) && !(e.getAttribute('aria-label') || e.title || e.textContent).trim()) out.push('noname ' + e.outerHTML.slice(0, 60)); });
+    root.querySelectorAll('input:not([type=hidden]), select, textarea').forEach((e) => {
+      if (vis(e) && !(e.getAttribute('aria-label') || e.placeholder || (e.id && document.querySelector('label[for="' + e.id + '"]')) || e.closest('label') || (e.closest('.field') && e.closest('.field').querySelector('label')))) out.push('nolabel ' + e.outerHTML.slice(0, 60));
+    });
+    const hb = document.querySelector('.top').getBoundingClientRect().bottom, nb = document.querySelector('nav.tabbar').getBoundingClientRect().top;
+    root.querySelectorAll('.check, .icon-x, .link, .icon-btn, .chip, .seg button, .stepper button, #sheetCancel, #sheetSave, .cup').forEach((e) => {
+      const r = e.getBoundingClientRect(); if (!vis(e) || r.bottom < 0 || r.top > innerHeight) return;
+      if (!e.closest('header, nav, dialog') && (r.top - 22 < hb || r.bottom + 22 > nb)) return;
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2, H = Math.max(r.height / 2 - 1, 21), W = e.classList.contains('cup') ? r.width / 2 + 1 : Math.max(r.width / 2 - 1, 21);
+      for (const [x, y] of [[cx, cy - H], [cx, cy + H], [cx - W, cy], [cx + W, cy]]) {
+        if (x < 1 || y < 1 || x > innerWidth - 1 || y > innerHeight - 1) continue;
+        const hit = document.elementFromPoint(x, y);
+        if (hit !== e && !e.contains(hit)) { out.push('small ' + (e.getAttribute('aria-label') || e.textContent.trim()).slice(0, 20)); break; }
+      }
+    });
+    return out;
+  });
+  for (const go of ['today', 'money', 'tasks', 'schedule']) {
+    await store(page, (t) => { App.go(t); scrollTo(0, 0); }, go);
+    expect(await audit(), go).toEqual([]);
+  }
+  await store(page, () => App.txForm());
+  expect(await audit(), 'tx form').toEqual([]);
+});
+
+test('accessibility: dark mode keeps text readable (tools sheet tiles and muted text on the hero)', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await open(page);
+  await store(page, () => App.S.setSettings({ onboarded: true }));
+  await page.click('#toolsBtn');
+  const bg = await page.locator('[data-tool="payday"]').evaluate((e) => getComputedStyle(e).backgroundColor);
+  expect(bg).not.toBe('rgb(255, 255, 255)');
+  const muted = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--muted').trim().toUpperCase());
+  expect(muted).toBe('#9EAEAF');   // 5.36:1 على خلفية الـ hero الداكنة (#133A3E)
+});

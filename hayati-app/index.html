@@ -54,7 +54,7 @@
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme="light"]) {
         --bg: #0A1A1E; --surface: #10262B; --surface-2: #163238; --border: #1F3D43;
-        --text: #EFE8DA; --text-2: #C9C2B4; --muted: #8A9A9B;
+        --text: #EFE8DA; --text-2: #C9C2B4; --muted: #9EAEAF;
         --brand: #6EC5C0; --brand-2: #8FD6D1; --brand-soft: #133A3E; --on-brand: #0A1A1E;
         --expense: #FF7A6B; --income: #4FC79E; --warn: #F2B84B; --warn-soft: #3A2C10; --danger-soft: #3B1A18;
         --hero: linear-gradient(140deg, #0F4A52 0%, #0E3B43 58%, #0B2E34 100%);
@@ -65,7 +65,7 @@
     }
     :root[data-theme="dark"] {
       --bg: #0A1A1E; --surface: #10262B; --surface-2: #163238; --border: #1F3D43;
-      --text: #EFE8DA; --text-2: #C9C2B4; --muted: #8A9A9B;
+      --text: #EFE8DA; --text-2: #C9C2B4; --muted: #9EAEAF;
       --brand: #6EC5C0; --brand-2: #8FD6D1; --brand-soft: #133A3E; --on-brand: #0A1A1E;
       --expense: #FF7A6B; --income: #4FC79E; --warn: #F2B84B; --warn-soft: #3A2C10; --danger-soft: #3B1A18;
       --hero: linear-gradient(140deg, #0F4A52 0%, #0E3B43 58%, #0B2E34 100%);
@@ -530,6 +530,11 @@
     .stepper { display: flex; align-items: center; gap: 8px; }
     .stepper button { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); font-size: 18px; font-weight: 700; }
     .stepper b { min-width: 34px; text-align: center; }
+    /* DW-026 إمكانية الوصول: مساحة لمس 44px على الأقل بدون ما يتغير الشكل (WCAG 2.5.5 / Apple HIG) */
+    :where(.check, .icon-x, .link, .icon-btn, .chip, .seg button, .stepper button, #sheetCancel, #sheetSave, .undo-bar button) { position: relative; }
+    :where(.check, .icon-x, .link, .icon-btn, .chip, .seg button, .stepper button, #sheetCancel, #sheetSave, .undo-bar button)::after { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%); }
+    .cup { position: relative; }
+    .cup::after { content: ""; position: absolute; left: -4px; right: -4px; top: 50%; height: 44px; transform: translateY(-50%); }   /* بالعرض بس لين نص الفراغ عشان ما ياخذ الكوب اللي جنبه */
     .habits { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
     .habit { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--surface); border-radius: 99px; padding: 7px 14px; font-weight: 600; font-size: 14px; }
     .habit small { color: #f97316; font-weight: 700; }
