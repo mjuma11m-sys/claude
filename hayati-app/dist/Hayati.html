@@ -8870,7 +8870,7 @@ window.HAYATI_CONFIG = {
     const courses = st.courses || [];
     let rec = null, chunks = [], t0 = 0, timer = null;
     const audioList = () => l.audio.length ? l.audio.map((a, i) => '<div class="clip" style="display:flex;align-items:center;gap:8px;margin:6px 0"><button type="button" class="btn ghost" data-play="' + i + '">▶︎ تسجيل ' + (i + 1) + ' · ' + mmss(a.dur || 0) + '</button><button type="button" class="icon-x" data-delclip="' + i + '" aria-label="حذف التسجيل">✕</button></div>').join('') : '<p class="small muted" style="margin:6px 4px">ما فيه تسجيل.</p>';
-    const cardsList = () => l.cards.map((c, i) => '<li class="row" style="cursor:default"><div class="main"><div class="title"><span class="t">' + h(c.q) + '</span></div><div class="sub">' + h(c.a) + '</div></div><button type="button" class="icon-x" data-delcard="' + i + '" aria-label="حذف السؤال">✕</button></li>').join('');
+    const cardsList = () => l.cards.map((c, i) => '<li class="row" style="cursor:default"><div class="main"><div class="title"><span class="t" dir="auto">' + h(c.q) + '</span></div><div class="sub" dir="auto">' + h(c.a) + '</div></div><button type="button" class="icon-x" data-delcard="' + i + '" aria-label="حذف السؤال">✕</button></li>').join('');
     A.openSheet({
       title: old ? 'ملف المحاضرة' : 'محاضرة جديدة',
       body: '<div class="field"><label>المادة</label><select name="lc_course"><option value="">بدون مادة</option>' + courses.map((c) => '<option value="' + c.id + '"' + (c.id === l.course_id ? ' selected' : '') + '>' + h(c.name) + '</option>').join('') + '</select></div>' +
@@ -8945,8 +8945,8 @@ window.HAYATI_CONFIG = {
     let i = 0, right = 0, shown = false;
     const draw = () => i >= qs.length
       ? '<div class="hero" style="padding:18px;text-align:center"><span class="eyebrow">' + I('target') + 'النتيجة</span><div class="amount-big num">' + Math.round((right / qs.length) * 100) + '%</div><p class="small">' + right + ' من ' + qs.length + (right === qs.length ? ' · فاهمها 💪' : ' · راجع اللي ما عرفته') + '</p></div>'
-      : '<p class="small muted num" style="margin:0 4px 8px">سؤال ' + (i + 1) + ' من ' + qs.length + ' · ' + h(qs[i].l.title) + '</p><div class="card" style="padding:18px"><b id="qzQ">' + h(qs[i].c.q) + '</b>' +
-        (shown ? '<p id="qzA" style="margin:12px 0 0;color:var(--brand)">' + h(qs[i].c.a) + '</p>' : '') + '</div>' +
+      : '<p class="small muted num" style="margin:0 4px 8px">سؤال ' + (i + 1) + ' من ' + qs.length + ' · ' + h(qs[i].l.title) + '</p><div class="card" style="padding:18px"><b id="qzQ" dir="auto" style="display:block">' + h(qs[i].c.q) + '</b>' +
+        (shown ? '<p id="qzA" dir="auto" style="margin:12px 0 0;color:var(--brand)">' + h(qs[i].c.a) + '</p>' : '') + '</div>' +
         (shown ? '<div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="btn primary" style="flex:1" data-qz="yes">عرفتها ✓</button><button type="button" class="btn ghost" style="flex:1" data-qz="no">ما عرفتها</button></div>'
           : '<button type="button" class="btn block" style="margin-top:12px" data-qz="show">شوف الجواب</button>');
     A.openSheet({
