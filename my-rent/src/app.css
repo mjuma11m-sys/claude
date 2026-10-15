@@ -167,8 +167,8 @@ a.icon-btn { color: var(--brand); }
 
 @media print {
   body * { visibility: hidden !important; }
-  #receipt, #receipt * { visibility: visible !important; }
-  #receipt { position: fixed; inset: 0 auto auto 0; width: 100%; border: 0; }
+  #receipt, #receipt *, #statement, #statement * { visibility: visible !important; }
+  #receipt, #statement { position: absolute; inset: 0 auto auto 0; width: 100%; border: 0; }
 }
 
 /* DW-014: نموذج الوحدة، الإخلاء، التقارير */
@@ -315,3 +315,23 @@ html[data-size="xl"] body { zoom: 1.25; }
 html[data-size="large"] .hero-amount, html[data-size="xl"] .hero-amount { font-size: 30px; }
 html[data-size="xl"] .ring { width: 80px; height: 80px; } html[data-size="xl"] .ring svg { width: 80px; height: 80px; }
 html[data-size="xl"] .hero-owed { flex-wrap: wrap; }
+
+/* DW-017: تذكير النسخة، المصاريف الثابتة، كشف الحساب */
+.nudge { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 10px; padding: 10px 14px; border-radius: var(--radius); background: var(--due-soft); color: var(--text); font-size: 14px; animation: fade-in 260ms var(--ease-out); }
+.nudge-gold { margin-top: 0; background: color-mix(in srgb, var(--gold) 16%, var(--surface)); border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent); }
+.nudge-acts { display: flex; align-items: center; gap: 6px; }
+.icon-x { width: 32px; height: 32px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; }
+@media (hover: hover) { .icon-x:hover { background: var(--surface-2); color: var(--text); } }
+.btn-sm { min-height: 36px; padding: 6px 14px; font-size: 14px; }
+.check-row { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; color: var(--text); cursor: pointer; }
+.check-row input { width: 20px; height: 20px; accent-color: var(--brand); }
+.backup-state { font-size: 14px; padding: 8px 12px; border-radius: var(--radius-sm); background: var(--paid-soft); }
+.backup-state.is-due { background: var(--due-soft); }
+.st-table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 13px; }
+.st-table th { text-align: start; font-weight: 600; color: #5B6578; padding: 6px 4px; border-bottom: 1px solid #DDD6C8; }
+.st-table td { padding: 6px 4px; border-bottom: 1px solid #EDE8DD; }
+.st-table .pill { font-size: 11px; padding: 1px 8px; }
+.st-totals { display: grid; gap: 4px; margin-top: 12px; }
+.st-totals > div { display: flex; justify-content: space-between; font-size: 14px; }
+.st-totals .is-late b { color: #B83A2B; }
+.receipt { --paid: #1E7A4C; --paid-soft: #E3F1E8; --due: #965F00; --due-soft: #F7ECD6; --late: #B83A2B; --late-soft: #F8E2DE; --muted: #5B6578; }

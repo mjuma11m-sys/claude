@@ -17,8 +17,8 @@ function reminderUrl(unit: Unit, months: string[], amount: number) {
 }
 
 /** تفاصيل الوحدة + المتأخرات + تسجيل دفعة + الإيصالات */
-export function PaySheet({ unit, onClose, onReceipt, onEdit }: { unit: Unit | null; onClose: () => void; onReceipt: (p: Payment, u: Unit) => void; onEdit: (u: Unit) => void }) {
-  const { data, pay, unpay, vacate, deleteUnit, saveUnit } = useStore();
+export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement }: { unit: Unit | null; onClose: () => void; onReceipt: (p: Payment, u: Unit) => void; onEdit: (u: Unit) => void; onStatement: (u: Unit) => void }) {
+  const { data, pay, unpay, vacate, undeposit, deleteUnit, saveUnit } = useStore();
   const [confirmVacate, setConfirmVacate] = useState(false);
   const toast = useToast();
   const [shown, setShown] = useState<Unit | null>(unit);
@@ -47,6 +47,16 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit }: { unit: Unit | nu
   const status = u ? unitStatus(data, u) : "due";
   const arr = u ? arrears(data, u) : { months: [], amount: 0 };
   const history = u ? data.payments.filter((p) => p.unitId === u.id).sort((a, b) => b.month.localeCompare(a.month) || b.date.localeCompare(a.date)).slice(0, 6) : [];
+
+  // الإخلاء + سجل التأمين (رجع أو انخصم). التراجع يرجّع المستأجر ويمسح سجل التأمين
+  const doVacate = (returned?: boolean) => {
+    if (!u) return;
+    const before = u;
+    const log = vacate(u.id, returned);
+    onClose();
+    const dep = log ? ` · التأمين ${fmt(log.amount)} د.ب ${log.returned ? "رجع" : "انخصم"}` : "";
+    toast({ text: `${u.name} صارت شاغرة${dep}`, undo: () => { saveUnit(before); if (log) undeposit(log.id); } });
+  };
 
   const pickMonth = (m: string) => {
     setMonth(m);
@@ -80,6 +90,7 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit }: { unit: Unit | nu
             <div><div className="muted small">الإيجار الشهري</div><Money fils={u.rent} /></div>
             <div><div className="muted small">يستحق يوم</div><span className="num strong">{u.dueDay}</span></div>
             {u.tenant && <div><div className="muted small">من</div><span className="num strong">{u.tenant.since}</span></div>}
+            {!!u.tenant?.deposit && <div><div className="muted small">التأمين</div><Money fils={u.tenant.deposit} /></div>}
           </div>
 
           {arr.amount > 0 && (
@@ -125,6 +136,7 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit }: { unit: Unit | nu
           )}
 
           <div className="unit-actions">
+            {u.tenant && <button type="button" className="btn btn-ghost press" onClick={() => onStatement(u)}>كشف حساب</button>}
             <button type="button" className="btn btn-ghost press" onClick={() => onEdit(u)}>{u.tenant ? "تعديل" : "أضف مستأجر"}</button>
             {u.tenant && !confirmVacate && <button type="button" className="btn btn-ghost press danger-text" onClick={() => setConfirmVacate(true)}>إخلاء الوحدة</button>}
             {!u.tenant && !data.payments.some((p) => p.unitId === u.id) && (
@@ -136,10 +148,21 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit }: { unit: Unit | nu
               <div className="strong">إخلاء {u.name} من {u.tenant.name}؟</div>
               {arr.amount > 0 && <div className="small">عليه متأخرات <Money fils={arr.amount} /> — بعد الإخلاء ما تبين بالمتأخرات. سجّلها أو اطبع كشف قبل.</div>}
               <div className="small muted">الدفعات السابقة تبقى بالسجل والتقارير.</div>
-              <div className="grid-2">
-                <button type="button" className="btn btn-danger press" onClick={() => { const before = u; vacate(u.id); onClose(); toast({ text: `${u.name} صارت شاغرة`, undo: () => saveUnit(before) }); }}>أكيد، أخلِها</button>
-                <button type="button" className="btn btn-ghost press" onClick={() => setConfirmVacate(false)}>إلغاء</button>
-              </div>
+              {u.tenant.deposit ? (
+                <>
+                  <div className="small">التأمين <Money fils={u.tenant.deposit} />: رجّعته له؟</div>
+                  <div className="grid-2">
+                    <button type="button" className="btn btn-danger press" onClick={() => doVacate(true)}>رجّعته، أخلِها</button>
+                    <button type="button" className="btn btn-danger press" onClick={() => doVacate(false)}>انخصم، أخلِها</button>
+                  </div>
+                  <button type="button" className="btn btn-ghost press" onClick={() => setConfirmVacate(false)}>إلغاء</button>
+                </>
+              ) : (
+                <div className="grid-2">
+                  <button type="button" className="btn btn-danger press" onClick={() => doVacate()}>أكيد، أخلِها</button>
+                  <button type="button" className="btn btn-ghost press" onClick={() => setConfirmVacate(false)}>إلغاء</button>
+                </div>
+              )}
             </div>
           )}
         </div>

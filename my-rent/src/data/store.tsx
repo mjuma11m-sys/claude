@@ -1,8 +1,8 @@
 // مخزن البيانات: useReducer + localStorage. لما ينربط Supabase، يتبدل load/save بس والشاشات ما تتغيّر.
 import { createContext, useContext, useEffect, useReducer, useState, type ReactNode } from "react";
-import type { Data, Expense, Method, Payment, Unit } from "./types";
+import type { Data, DepositLog, Expense, Method, Payment, Recurring, Unit } from "./types";
 import { demoData, emptyData } from "./demo";
-import { isoDay, owedMonths } from "./logic";
+import { dueRecurring, isoDay, owedMonths } from "./logic";
 
 const KEY = "idarati:v2";
 
@@ -15,7 +15,13 @@ type Action =
   | { type: "unit"; unit: Unit }
   | { type: "vacate"; id: string }
   | { type: "delunit"; id: string }
-  | { type: "replace"; data: Data };
+  | { type: "replace"; data: Data }
+  | { type: "recurring"; item: Recurring }
+  | { type: "unrecurring"; id: string }
+  | { type: "expenses"; items: Expense[] }
+  | { type: "unexpenses"; ids: string[] }
+  | { type: "deposit"; log: DepositLog }
+  | { type: "undeposit"; id: string };
 
 function reducer(state: Data, a: Action): Data {
   switch (a.type) {
@@ -32,6 +38,12 @@ function reducer(state: Data, a: Action): Data {
     case "delunit": // بس الوحدة اللي ما عليها دفعات — السجل المالي ما ينحذف
       return state.payments.some((p) => p.unitId === a.id) ? state : { ...state, units: state.units.filter((u) => u.id !== a.id) };
     case "replace": return a.data;
+    case "recurring": return { ...state, recurring: [...(state.recurring ?? []), a.item] };
+    case "unrecurring": return { ...state, recurring: (state.recurring ?? []).filter((r) => r.id !== a.id) };
+    case "expenses": return { ...state, expenses: [...a.items, ...state.expenses] };
+    case "unexpenses": return { ...state, expenses: state.expenses.filter((e) => !a.ids.includes(e.id)) };
+    case "deposit": return { ...state, deposits: [a.log, ...(state.deposits ?? [])] };
+    case "undeposit": return { ...state, deposits: (state.deposits ?? []).filter((d) => d.id !== a.id) };
   }
 }
 
@@ -53,6 +65,15 @@ function load(): Data {
   return demoData();
 }
 
+const PERSIST_KEY = "idarati:persist";
+function requestPersist() {
+  try {
+    if (localStorage.getItem(PERSIST_KEY) || !navigator.storage?.persist) return;
+    localStorage.setItem(PERSIST_KEY, "asked");
+    navigator.storage.persist().then((ok) => { try { localStorage.setItem(PERSIST_KEY, ok ? "granted" : "denied"); } catch { /* ignore */ } });
+  } catch { /* ignore */ }
+}
+
 const uid = () => Math.random().toString(36).slice(2, 10);
 
 type Store = {
@@ -65,7 +86,12 @@ type Store = {
   unexpense: (id: string) => void;
   toggleTask: (id: string) => void;
   saveUnit: (unit: Omit<Unit, "id"> & { id?: string }) => Unit;
-  vacate: (id: string) => void;
+  vacate: (id: string, depositReturned?: boolean) => DepositLog | null;
+  undeposit: (id: string) => void;
+  addRecurring: (catId: string, label: string, amount: number) => Recurring;
+  removeRecurring: (id: string) => void;
+  logRecurring: () => Expense[];
+  unexpenses: (ids: string[]) => void;
   deleteUnit: (id: string) => boolean;
   replace: (data: Data) => void;
   resetDemo: () => void;
@@ -87,6 +113,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try { localStorage.setItem(KEY, JSON.stringify(data)); } catch { /* ignore */ }
   }, [data]);
+
+  // DW-017: نطلب من المتصفح ما يمسح البيانات (Safari يمسح بيانات المواقع بعد 7 أيام بدون استخدام). مرة وحدة بس.
+  useEffect(() => { requestPersist(); }, []);
 
   const store: Store = {
     data,
@@ -120,7 +149,31 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "unit", unit });
       return unit;
     },
-    vacate: (id) => dispatch({ type: "vacate", id }),
+    // الإخلاء: لو فيه تأمين، ينسجل رجع أو انخصم — والسجل يبقى بعد ما يروح المستأجر
+    vacate: (id, depositReturned) => {
+      const unit = data.units.find((u) => u.id === id);
+      let log: DepositLog | null = null;
+      if (unit?.tenant?.deposit) {
+        log = { id: uid(), unitId: id, tenant: unit.tenant.name, amount: unit.tenant.deposit, returned: !!depositReturned, date: isoDay(new Date()) };
+        dispatch({ type: "deposit", log });
+      }
+      dispatch({ type: "vacate", id });
+      return log;
+    },
+    undeposit: (id) => dispatch({ type: "undeposit", id }),
+    addRecurring: (catId, label, amount) => {
+      const item = { id: "r" + uid(), catId, label, amount };
+      dispatch({ type: "recurring", item });
+      return item;
+    },
+    removeRecurring: (id) => dispatch({ type: "unrecurring", id }),
+    // يسجّل المصاريف الثابتة اللي ما انسجلت هالشهر بس — الضغطة الثانية ما تكرر
+    logRecurring: () => {
+      const items = dueRecurring(data).map((r) => ({ id: uid(), catId: r.catId, label: r.label, amount: r.amount, date: isoDay(new Date()) }));
+      if (items.length) dispatch({ type: "expenses", items });
+      return items;
+    },
+    unexpenses: (ids) => dispatch({ type: "unexpenses", ids }),
     deleteUnit: (id) => {
       if (data.payments.some((p) => p.unitId === id)) return false;
       dispatch({ type: "delunit", id });

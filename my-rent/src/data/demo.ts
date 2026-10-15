@@ -15,8 +15,8 @@ export function demoData(now = new Date()): Data {
     trackFrom: m2,
     units: [
       { id: "u1", name: "شقة 1", building: "عمارة المالكية", rent: 180000, dueDay: 1, tenant: { name: "أحمد عبدالله", phone: "3xxx 1101", since: "2024-03" } },
-      { id: "u2", name: "شقة 2", building: "عمارة المالكية", rent: 220000, dueDay: 5, tenant: { name: "يوسف محمد", phone: "3xxx 1102", since: "2025-01", until: isoDay(new Date(y, mo, now.getDate() + 20)) } },
-      { id: "u3", name: "شقة 3", building: "عمارة المالكية", rent: 200000, dueDay: 1, tenant: { name: "عائلة سلمان", phone: "3xxx 1103", since: "2023-09" } },
+      { id: "u2", name: "شقة 2", building: "عمارة المالكية", rent: 220000, dueDay: 5, tenant: { name: "يوسف محمد", phone: "3xxx 1102", since: "2025-01", until: isoDay(new Date(y, mo, now.getDate() + 20)), deposit: 220000 } },
+      { id: "u3", name: "شقة 3", building: "عمارة المالكية", rent: 200000, dueDay: 1, tenant: { name: "عائلة سلمان", phone: "3xxx 1103", since: "2023-09", deposit: 200000 } },
       { id: "u4", name: "شقة 4", building: "عمارة المالكية", rent: 190000, dueDay: 10, tenant: { name: "خالد ناصر", phone: "3xxx 1104", since: "2025-06", until: isoDay(new Date(y + 1, 5, 30)) } },
       { id: "u5", name: "شقة 5", building: "عمارة المالكية", rent: 200000, dueDay: 28, tenant: { name: "مريم حسن", phone: "3xxx 1105", since: m1 } },
       { id: "u6", name: "محل 1", building: "شارع المالكية", rent: 450000, dueDay: 1, tenant: { name: "مطعم الريف", phone: "17xx 2201", since: "2022-11" } },
@@ -44,6 +44,12 @@ export function demoData(now = new Date()): Data {
       { id: "e4", catId: "c4", label: "تبديل زيت", amount: 18000, date: day(0, 8) },
       { id: "e5", catId: "c1", label: "دهان مدخل العمارة", amount: 190000, date: day(0, 9) },
     ],
+    recurring: [
+      { id: "r1", catId: "c2", label: "فاتورة EWA العمارة", amount: 162500 },
+      { id: "r2", catId: "c3", label: "إنترنت البيت", amount: 22000 },
+      { id: "r3", catId: "c3", label: "راتب العاملة", amount: 160000 },
+    ],
+    deposits: [],
     members: [
       { id: "m1", name: "الوالد" },
       { id: "m2", name: "أبو جعفر" },
@@ -76,5 +82,5 @@ export function demoData(now = new Date()): Data {
 
 /** بداية نظيفة بعد «احذف كل البيانات» */
 export function emptyData(now = new Date()): Data {
-  return { trackFrom: monthKey(now), units: [], payments: [], cats: [], expenses: [], members: [], bank: [], accounts: [], tasks: [], vendors: [] };
+  return { trackFrom: monthKey(now), units: [], payments: [], cats: [], expenses: [], members: [], bank: [], accounts: [], tasks: [], vendors: [], recurring: [], deposits: [] };
 }

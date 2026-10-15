@@ -1,8 +1,8 @@
 import { useRef, useState } from "react";
 import { isData, useStore } from "../data/store";
-import { isoDay } from "../data/logic";
+import { backupDue, isoDay } from "../data/logic";
 import { Chips, useToast } from "../ui/kit";
-import { loadPrefs, savePrefs, type Prefs, type TextSize, type Theme } from "../data/prefs";
+import { getLastBackup, loadPrefs, savePrefs, setLastBackup, type Prefs, type TextSize, type Theme } from "../data/prefs";
 
 /** نسخة احتياطية، استرجاع، وحذف كل البيانات (حق المحو — PDPL) */
 export function Settings() {
@@ -12,6 +12,7 @@ export function Settings() {
   const [confirmErase, setConfirmErase] = useState(false);
   const [error, setError] = useState("");
   const [prefs, setPrefs] = useState<Prefs>(loadPrefs);
+  const [lastBackup, setLast] = useState(getLastBackup);
   const update = (p: Partial<Prefs>) => { const n = { ...prefs, ...p }; setPrefs(n); savePrefs(n); };
 
   const exportJson = () => {
@@ -21,6 +22,8 @@ export function Settings() {
     a.download = `idarati-backup-${isoDay(new Date())}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
+    const day = isoDay(new Date());
+    setLastBackup(day); setLast(day);
     toast({ text: "انحفظت النسخة الاحتياطية بالتنزيلات" });
   };
 
@@ -52,7 +55,10 @@ export function Settings() {
 
       <section className="card stack">
         <h2 className="set-title">النسخة الاحتياطية</h2>
-        <p className="muted small" style={{ margin: 0 }}>البيانات الحين محفوظة على هالجهاز بس. خذ نسخة كل أسبوع لين ينربط التطبيق بالسحابة.</p>
+        <p className="muted small" style={{ margin: 0 }}>البيانات الحين محفوظة على هالجهاز بس. خذ نسخة كل شهر على الأقل لين ينربط التطبيق بالسحابة.</p>
+        <div className={`backup-state ${backupDue(lastBackup) ? "is-due" : ""}`} role="status">
+          {lastBackup ? <>آخر نسخة: <span className="num">{lastBackup}</span></> : "ما فيه نسخة احتياطية لين الحين"}
+        </div>
         <div className="grid-2">
           <button className="btn press" onClick={exportJson}>تنزيل نسخة</button>
           <button className="btn btn-ghost press" onClick={() => file.current?.click()}>استرجاع من ملف</button>

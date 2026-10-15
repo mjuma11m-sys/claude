@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { useStore } from "../data/store";
-import { arrears, balances, budget, collection, contractAlerts, fmt, monthName, unitStatus } from "../data/logic";
+import { arrears, backupDue, balances, budget, collection, contractAlerts, fmt, monthName, unitStatus } from "../data/logic";
 import type { Unit } from "../data/types";
 import { Money, StatusPill } from "../theme/AppShell";
 import { useStagger } from "../theme/motion";
 import { Bar, DemoNote, EmptyState, SectionHead, SkeletonCards, useToast } from "../ui/kit";
 import { Icon } from "../ui/icons";
+import { getLastBackup } from "../data/prefs";
 
 /** حلقة التحصيل: تنرسم لما تتغيّر النسبة (stroke-dashoffset) */
 function Ring({ value, label }: { value: number; label: string }) {
@@ -30,6 +32,8 @@ export function Home({ onOpenUnit, go, onQuick }: { onOpenUnit: (u: Unit) => voi
     if (p) toast({ text: `استلمت ${u.name} · ${monthName(p.month)} · ${fmt(p.amount)} د.ب`, undo: () => unpay(p.id), stamp: true });
   };
   const stagger = useStagger(loading);
+  const [nudge, setNudge] = useState(() => data.units.length > 0 && backupDue(getLastBackup()));
+  const last = getLastBackup();
   const c = collection(data);
   const b = budget(data);
   const bank = balances(data);
@@ -87,6 +91,15 @@ export function Home({ onOpenUnit, go, onQuick }: { onOpenUnit: (u: Unit) => voi
               );
             })}
           </ul>
+        )}
+        {nudge && (
+          <div className="nudge" role="status">
+            <span>{last ? <>آخر نسخة احتياطية <span className="num">{last}</span></> : "ما فيه نسخة احتياطية للبيانات"} · البيانات على هالجهاز بس</span>
+            <span className="nudge-acts">
+              <button className="link press" onClick={() => go("settings")}>خذ نسخة</button>
+              <button className="icon-x press" onClick={() => setNudge(false)} aria-label="بعدين">×</button>
+            </span>
+          </div>
         )}
       </section>
 

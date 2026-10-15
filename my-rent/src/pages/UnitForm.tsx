@@ -10,7 +10,7 @@ type Props = { open: boolean; unit: Unit | null; onClose: () => void; onSaved?: 
 export function UnitForm({ open, unit, onClose, onSaved }: Props) {
   const { saveUnit } = useStore();
   const toast = useToast();
-  const [f, setF] = useState({ name: "", building: "", rent: "", dueDay: "1", tenant: "", phone: "", since: "", until: "" });
+  const [f, setF] = useState({ name: "", building: "", rent: "", dueDay: "1", tenant: "", phone: "", since: "", until: "", deposit: "" });
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -25,6 +25,7 @@ export function UnitForm({ open, unit, onClose, onSaved }: Props) {
       phone: unit?.tenant?.phone ?? "",
       since: unit?.tenant?.since ?? monthKey(new Date()),
       until: unit?.tenant?.until ?? "",
+      deposit: unit?.tenant?.deposit ? fmt(unit.tenant.deposit) : "",
     });
   }, [open, unit]);
 
@@ -38,13 +39,15 @@ export function UnitForm({ open, unit, onClose, onSaved }: Props) {
     if (!Number.isInteger(day) || day < 1 || day > 28) return setError("يوم الاستحقاق من 1 إلى 28");
     if (f.tenant.trim() && !/^\d{4}-\d{2}$/.test(f.since)) return setError("اختار شهر بداية العقد");
     if (f.until && f.until.slice(0, 7) < f.since) return setError("نهاية العقد قبل بدايته");
+    const deposit = f.deposit.trim() ? parseBHD(f.deposit) : 0;
+    if (deposit === null) return setError("اكتب التأمين بالدينار، مثل 200، أو خلّه فاضي");
     const saved = saveUnit({
       id: unit?.id,
       name: f.name.trim(),
       building: f.building.trim() || "بدون مبنى",
       rent,
       dueDay: day,
-      tenant: f.tenant.trim() ? { name: f.tenant.trim(), phone: f.phone.trim(), since: f.since, until: f.until || undefined } : undefined,
+      tenant: f.tenant.trim() ? { name: f.tenant.trim(), phone: f.phone.trim(), since: f.since, until: f.until || undefined, ...(deposit ? { deposit } : {}) } : undefined,
     });
     onClose();
     toast({ text: unit ? `انحفظ تعديل ${saved.name}` : `انضافت ${saved.name}` });
@@ -71,6 +74,7 @@ export function UnitForm({ open, unit, onClose, onSaved }: Props) {
           <label className="field"><span>بداية العقد (شهر)</span><input id="u-since" className="input num" type="month" dir="ltr" value={f.since} onChange={set("since")} /></label>
           <label className="field"><span>نهاية العقد</span><input id="u-until" className="input num" type="date" dir="ltr" value={f.until} onChange={set("until")} /></label>
         </div>
+        <label className="field"><span>التأمين (د.ب) <span className="muted small">اختياري · يرجع وقت الإخلاء</span></span><input id="u-deposit" className="input num" inputMode="decimal" dir="ltr" value={f.deposit} onChange={set("deposit")} placeholder="0.000" /></label>
         {error && <div className="field-error" role="alert">{error}</div>}
         <button type="submit" className="btn btn-block press">{unit ? "احفظ التعديل" : "أضف الوحدة"}</button>
       </form>

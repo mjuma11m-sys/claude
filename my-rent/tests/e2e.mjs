@@ -204,6 +204,71 @@ try {
   await r.getByRole("button", { name: "سجّل الدفعة" }).click(); await r.waitForTimeout(60);
   ok(v0 !== await r.locator(".hero-amount").innerText(), "تقليل الحركة: الرقم يتحدّث فوري");
 
+  {
+  // 12) DW-017: حماية التخزين + تذكير النسخة + المصاريف الثابتة + التأمين + كشف الحساب
+  const k = await browser.newPage({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
+  const kErr = []; k.on("pageerror", (e) => kErr.push(e.message));
+  const ago = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+  await k.goto(URL + "#home"); await k.evaluate(() => localStorage.clear()); await k.reload(); await k.waitForTimeout(900);
+  ok(await k.locator(".nudge").isVisible(), "تذكير النسخة يطلع لو ما فيه نسخة");
+  ok(!!(await k.evaluate(() => localStorage.getItem("idarati:persist"))), "انطلب storage.persist مرة وحدة");
+  await k.evaluate((d) => localStorage.setItem("idarati:lastBackup", d), ago(29)); await k.reload(); await k.waitForTimeout(700);
+  ok(await k.locator(".nudge").count() === 0, "29 يوم: ما فيه تذكير");
+  await k.evaluate((d) => localStorage.setItem("idarati:lastBackup", d), ago(30)); await k.reload(); await k.waitForTimeout(700);
+  ok(await k.locator(".nudge").isVisible(), "30 يوم بالضبط: التذكير يطلع");
+  await k.locator(".nudge .link").click(); await k.waitForTimeout(500);
+  const bk = k.waitForEvent("download"); await k.getByRole("button", { name: "تنزيل نسخة" }).click(); await bk;
+  ok((await k.locator(".backup-state").innerText()).includes(ago(0)), "بعد التنزيل: «آخر نسخة» = اليوم");
+  await k.goto(URL + "#home"); await k.waitForTimeout(700);
+  ok(await k.locator(".nudge").count() === 0, "بعد النسخة: التذكير يختفي");
+
+  // المصاريف الثابتة: EWA مسجلة هالشهر، فالباقي 2 · الضغطة الثانية ما تكرر · التراجع يحذف الكل
+  await k.goto(URL + "#budget"); await k.waitForTimeout(700);
+  const n0 = await k.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")).expenses.length);
+  ok((await k.locator(".nudge-gold").innerText()).includes("2"), "مصاريف ثابتة: 2 ما انسجلت (EWA مسجلة)");
+  await k.getByRole("button", { name: "سجّلها كلها" }).click(); await k.waitForTimeout(400);
+  const n1 = await k.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")).expenses.length);
+  ok(n1 === n0 + 2 && await k.locator(".nudge-gold").count() === 0, "سجّلها كلها: +2 والشريط يختفي", `${n0}→${n1}`);
+  await k.reload(); await k.waitForTimeout(700);
+  ok(await k.locator(".nudge-gold").count() === 0, "بعد إعادة الفتح: ما تتكرر بنفس الشهر");
+  await k.evaluate(() => { const d = JSON.parse(localStorage.getItem("idarati:v2")); d.expenses = d.expenses.slice(2); localStorage.setItem("idarati:v2", JSON.stringify(d)); });
+  await k.reload(); await k.waitForTimeout(700);
+  await k.getByRole("button", { name: "سجّلها كلها" }).click(); await k.waitForTimeout(300);
+  await k.getByRole("button", { name: "تراجع" }).click(); await k.waitForTimeout(300);
+  ok(await k.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")).expenses.length) === n0 && await k.locator(".nudge-gold").isVisible(), "تراجع: يحذف الاثنين ويرجع الشريط");
+  await k.locator(".fab").click(); await k.waitForTimeout(400);
+  await k.locator("#exp-label").fill("اشتراك نتفلكس"); await k.locator("#exp-amount").fill("4.5");
+  await k.locator(".check-row input").check(); await k.getByRole("button", { name: "أضف المصروف" }).click(); await k.waitForTimeout(400);
+  ok(await k.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")).recurring.some((r) => r.label === "اشتراك نتفلكس" && r.amount === 4500)), "«يتكرر كل شهر»: ينضاف للمصاريف الثابتة بالفلس");
+
+  // كشف الحساب: المتأخرات = نفس رقم المتأخرات بنافذة الوحدة
+  await k.goto(URL + "#tenants"); await k.waitForTimeout(700);
+  await k.locator(".unit-card", { hasText: "شقة 3 " }).click(); await k.waitForTimeout(500);
+  const arrTxt = (await k.locator(".dlg .arrears .money").innerText()).trim();
+  await k.getByRole("button", { name: "كشف حساب" }).click(); await k.waitForTimeout(500);
+  const stLate = (await k.locator(".st-totals .is-late b .num").innerText()).trim();
+  ok(arrTxt === stLate, "كشف الحساب: المتأخرات = arrears", `${arrTxt} / ${stLate}`);
+  const stPaid = await k.evaluate(() => { const d = JSON.parse(localStorage.getItem("idarati:v2")); return d.payments.filter((p) => p.unitId === "u3" && p.month >= d.trackFrom).reduce((s, p) => s + p.amount, 0); });
+  ok(Number((await k.locator(".st-totals b .num").first().innerText()).replace(/,/g, "")) * 1000 === stPaid, "كشف الحساب: مجموع المدفوع = الدفعات");
+  ok(await k.locator(".st-table tbody tr").count() >= 2, "كشف الحساب: صف لكل شهر");
+  await k.keyboard.press("Escape"); await k.waitForTimeout(400);
+
+  // التأمين: الإخلاء يسأل رجّعته؟ · السجل ينحفظ · التراجع يرجّع المستأجر ويمسح السجل
+  await k.locator(".unit-card", { hasText: "شقة 3 " }).click(); await k.waitForTimeout(500);
+  await k.getByRole("button", { name: "إخلاء الوحدة" }).click(); await k.waitForTimeout(200);
+  await k.getByRole("button", { name: "رجّعته، أخلِها" }).click(); await k.waitForTimeout(400);
+  const dep = await k.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")).deposits);
+  ok(dep.length === 1 && dep[0].amount === 200000 && dep[0].returned === true, "الإخلاء: سجل التأمين 200.000 «رجع»");
+  await k.getByRole("button", { name: "تراجع" }).click(); await k.waitForTimeout(400);
+  const after = await k.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")));
+  ok(after.deposits.length === 0 && after.units.find((u) => u.id === "u3").tenant?.deposit === 200000, "تراجع الإخلاء: المستأجر والتأمين يرجعون");
+  await k.locator(".fab").click(); await k.waitForTimeout(400);
+  await k.locator("#u-name").fill("شقة 9"); await k.locator("#u-rent").fill("150"); await k.locator("#u-tenant").fill("سعيد"); await k.locator("#u-deposit").fill("١٥٠");
+  await k.getByRole("button", { name: "أضف الوحدة" }).click(); await k.waitForTimeout(400);
+  ok(await k.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")).units.find((u) => u.name === "شقة 9")?.tenant?.deposit === 150000), "نموذج الوحدة: التأمين بالأرقام العربية ينحفظ بالفلس");
+  ok(kErr.length === 0, "DW-017: بدون أخطاء", kErr.join(" | "));
+
+  }
   if (process.env.SHOTS) {
     for (const [n, w, h, s] of [["home-phone", 390, 844, "light"], ["home-dark", 390, 844, "dark"], ["home-desk", 1280, 800, "light"], ["tenants-tab", 820, 1180, "light"], ["budget-phone", 390, 844, "light"]]) {
       const q = await browser.newPage({ viewport: { width: w, height: h }, colorScheme: s });

@@ -34,3 +34,12 @@ export const normalize = (s: string) =>
     .replace(/[ً-ْ]/g, "")
     .replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي")
     .replace(/\s+/g, "").toLowerCase();
+
+/** تاريخ آخر نسخة احتياطية (YYYY-MM-DD) — للتذكير كل 30 يوم (DW-017) */
+const BACKUP_KEY = "idarati:lastBackup";
+export function getLastBackup(): string | undefined {
+  try { return localStorage.getItem(BACKUP_KEY) ?? undefined; } catch { return undefined; }
+}
+export function setLastBackup(day: string) {
+  try { localStorage.setItem(BACKUP_KEY, day); } catch { /* ignore */ }
+}

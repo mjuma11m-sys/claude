@@ -133,3 +133,41 @@ export function monthTrail(data: Data, unit: Unit, now = new Date(), n = 6) {
     return { month: m, state: "late" as const };
   });
 }
+
+// ── DW-017 ──────────────────────────────────────────────
+
+/** المصاريف الثابتة اللي ما انسجلت هالشهر (نفس الفئة ونفس الوصف = انسجلت) */
+export function dueRecurring(data: Data, now = new Date()) {
+  const m = monthKey(now);
+  const logged = new Set(data.expenses.filter((e) => e.date.startsWith(m)).map((e) => `${e.catId}|${e.label.trim()}`));
+  return (data.recurring ?? []).filter((r) => !logged.has(`${r.catId}|${r.label.trim()}`));
+}
+
+/** كشف حساب المستأجر: كل شهر من بداية الحساب لين هالشهر — المطلوب والمدفوع والباقي.
+ *  «متأخر» = نفس arrears بالضبط، و«مستحق» = هالشهر لو ما عدّى السماح. */
+export function statement(data: Data, unit: Unit, now = new Date()) {
+  if (!unit.tenant) return { rows: [], paid: 0, late: 0, due: 0 };
+  const cur = monthKey(now);
+  const start = data.trackFrom > unit.tenant.since ? data.trackFrom : unit.tenant.since;
+  const lateNow = now.getDate() > unit.dueDay + GRACE_DAYS;
+  const rows = monthsBetween(start, cur).map((month) => {
+    const paid = paidFor(data, unit.id, month);
+    const left = Math.max(0, unit.rent - paid);
+    const state = left === 0 ? "paid" : month === cur && !lateNow ? "due" : "late";
+    return { month, rent: unit.rent, paid, left, state: state as Status };
+  });
+  return {
+    rows,
+    paid: rows.reduce((s, r) => s + r.paid, 0),
+    late: rows.filter((r) => r.state === "late").reduce((s, r) => s + r.left, 0),
+    due: rows.filter((r) => r.state === "due").reduce((s, r) => s + r.left, 0),
+  };
+}
+
+/** تذكير النسخة الاحتياطية: ما فيه نسخة أبد، أو آخر وحدة قبل 30 يوم أو أكثر */
+export const BACKUP_DAYS = 30;
+export function backupDue(last: string | undefined, now = new Date()) {
+  if (!last) return true;
+  const days = (now.getTime() - new Date(last + "T00:00:00").getTime()) / 86_400_000;
+  return days >= BACKUP_DAYS;
+}
