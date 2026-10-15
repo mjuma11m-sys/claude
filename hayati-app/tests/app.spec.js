@@ -9,6 +9,7 @@ const APP_V = /const APP_VERSION = '(v\d+)'/.exec(fs.readFileSync(path.join(__di
 const test = base.extend({
   page: async ({ page, baseURL }, use, testInfo) => {
     if (!/جديد بحياتي/.test(testInfo.title)) await page.addInitScript((v) => { try { localStorage.setItem('hayati-seen-version', v); } catch (e) { /* تجاهل */ } }, APP_V);
+    if (!/أول دقيقة/.test(testInfo.title)) await page.addInitScript(() => { try { localStorage.setItem('hayati-first-step', 'done'); } catch (e) { /* تجاهل */ } });
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.route('**/*', (r) => (r.request().url().startsWith(baseURL) ? r.continue() : r.abort()));
@@ -1727,4 +1728,47 @@ test('qibla: opens from the tools sheet and «عبادتي», follows the compas
   await page.waitForTimeout(400);
   await page.click('#ibQibla');
   await expect(page.locator('#sheetTitle')).toHaveText('🧭 القبلة');
+});
+
+// ================= DW-024: «أول دقيقة» + «بلّغ عن مشكلة» =================
+test('«أول دقيقة»: right after the welcome a new user gets one step, and the first expense shows their first number', async ({ page }) => {
+  await open(page);
+  await page.fill('#obBudget', '300');
+  await page.click('[data-action="ob-save"]');
+  const fm = page.locator('#fmCard');
+  await expect(fm).toContainText('أول دقيقة');
+  await expect(fm.locator('[data-action="paste-sms"]')).toBeVisible();
+  await expect(fm.locator('[data-action="add-tx"]')).toBeVisible();
+  await store(page, () => App.S.upsert('transactions', { id: 't1', kind: 'expense', amount: 75, category: 'food', note: 'غدا', occurred_at: new Date().toISOString() }));
+  await expect(fm).toContainText('أول رقم لك');
+  await expect(fm).toContainText('25%');
+  await fm.locator('[data-action="fm-done"]').click();
+  await expect(page.locator('#fmCard')).toHaveCount(0);
+  await page.reload();
+  await expect(page.locator('#view')).toBeVisible();
+  await expect(page.locator('#fmCard')).toHaveCount(0);
+});
+
+test('«أول دقيقة»: «بعدين» hides it for good, and an existing user with expenses never sees it', async ({ page }) => {
+  await open(page);
+  await page.click('[data-action="ob-skip"]');
+  await page.click('[data-action="fm-later"]');
+  await expect(page.locator('#fmCard')).toHaveCount(0);
+  await page.evaluate(() => localStorage.removeItem('hayati-first-step'));
+  await store(page, () => { App.S.upsert('transactions', { id: 't1', kind: 'expense', amount: 5, category: 'food', occurred_at: new Date().toISOString() }); App.render(); });
+  await expect(page.locator('#fmCard')).toHaveCount(0);
+});
+
+test('bug report: the message has the version and device only, never amounts or names', async ({ page }) => {
+  await open(page);
+  await store(page, () => { App.S.setSettings({ onboarded: true, name: 'سارة', budget: 380 }); App.S.upsert('transactions', { id: 't1', kind: 'expense', amount: 92.325, category: 'food', note: 'لولو', occurred_at: new Date().toISOString() }); });
+  await store(page, () => window.Extras.settingsAction('bug'));
+  await expect(page.locator('#sheetTitle')).toHaveText('🐞 بلّغ عن مشكلة');
+  await page.click('#sheetSave');
+  await expect(page.locator('#sheet')).toHaveAttribute('open', '');   // لازم يكتب وش صار
+  await page.fill('#bugWhat', 'لصقت رسالة وما طلع المبلغ');
+  const text = await page.evaluate(() => window.HayatiFeedback.bugText(document.getElementById('sheetBody')));
+  expect(text).toContain('النسخة: ' + APP_V);
+  expect(text).toContain('الجهاز: ');
+  expect(text).not.toMatch(/سارة|92|380|لولو/);
 });

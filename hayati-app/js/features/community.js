@@ -81,9 +81,9 @@
       const patch = read(document.getElementById('obCard'));
       S.setSettings(patch);
       A.toast(patch.name ? 'أهلاً ' + patch.name + ' 👋' : 'أهلاً فيك 👋');
-      A.render(); return;
+      A.render(); scrollTo({ top: 0, behavior: 'smooth' }); return;   // «أول دقيقة» تطلع فوق
     }
-    if (name === 'ob-skip') { S.setSettings({ onboarded: true }); A.render(); return; }
+    if (name === 'ob-skip') { S.setSettings({ onboarded: true }); A.render(); scrollTo({ top: 0, behavior: 'smooth' }); return; }
     if (name === 'ob-account') {
       S.setSettings(read(document.getElementById('obCard')));
       A.render(); setTimeout(() => { const b = document.getElementById('settingsBtn'); if (b) b.click(); }, 200);
@@ -105,6 +105,7 @@
       '<button data-set="profile"><div class="ico" style="' + A.tint('#13636B') + '">' + I('user') + '</div><div style="flex:1;min-width:0"><b>' + h(s.name || 'اسمك ومين أنت') + '</b><small>' + h(who) + '</small></div>' + I('chevL') + '</button>' +
       // «سوّ ميزتك»: الاقتراح يروح رسالة على إنستقرام، وكل أسبوع وحدة تنبني
       '<button data-set="feedback"><div class="ico" style="' + A.tint('#13636B') + '">' + I('message') + '</div><div style="flex:1;min-width:0"><b>رأيك بالتطبيق</b><small>دقيقة وحدة، وكل رأي ينقرا</small></div>' + I('chevL') + '</button>' +
+      '<button data-set="bug"><div class="ico" style="' + A.tint('#e11d48') + '">' + I('alert') + '</div><div style="flex:1;min-width:0"><b>🐞 بلّغ عن مشكلة</b><small>نرسل رقم النسخة ونوع الجهاز بس، بدون بياناتك</small></div></button>' +
       '<a class="menu-link" href="https://ig.me/m/hayati.bh" target="_blank" rel="noopener"><div class="ico" style="' + A.tint('#FF6B4A') + '">' + I('sparkle') + '</div><div style="flex:1;min-width:0"><b>💡 اقترح ميزة</b><small>كل أسبوع نبني اقتراح، ونذكر اسمك</small></div>' + I('chevL') + '</a></div>' +
       (prevExtra ? prevExtra.apply(this, arguments) : '');
   };
@@ -112,6 +113,7 @@
   E.settingsAction = async function (act) {
     if (act === 'profile') { A.closeSheet(); setTimeout(profileSheet, 280); return true; }
     if (act === 'feedback') { A.closeSheet(); setTimeout(feedbackSheet, 280); return true; }
+    if (act === 'bug') { A.closeSheet(); setTimeout(bugSheet, 280); return true; }
     return prevSet ? prevSet.apply(this, arguments) : false;
   };
   function profileSheet() {
@@ -155,7 +157,36 @@
       },
     });
   }
-  window.HayatiFeedback = { feedbackText };
+  // ---------- «بلّغ عن مشكلة» (DW-024 · بند 2): النسخة والجهاز بس، ولا مبلغ ولا اسم ----------
+  function deviceInfo() {
+    const ua = navigator.userAgent || '', cap = window.Capacitor && window.Capacitor.getPlatform ? window.Capacitor.getPlatform() : 'web';
+    const android = ua.match(/Android\s([\d.]+)/), ios = ua.match(/OS (\d+)[_.](\d+)/);
+    const os = android ? 'Android ' + android[1] : /iPhone|iPad/.test(ua) && ios ? 'iOS ' + ios[1] + '.' + ios[2] : /Mac/.test(ua) ? 'Mac' : /Windows/.test(ua) ? 'Windows' : 'غير معروف';
+    return os + ' · ' + (cap === 'web' ? 'متصفح' : 'تطبيق') + ' · ' + screen.width + '×' + screen.height + ' · ' + ((window.HayatiLang && window.HayatiLang.lang) || 'ar');
+  }
+  function bugText(root) {
+    const what = root.querySelector('#bugWhat').value.trim(), where = root.querySelector('#bugWhere').value.trim();
+    return ['🐞 مشكلة في «حياتي»', 'وش صار: ' + what, where ? 'وين: ' + where : '', 'النسخة: ' + A.APP_VERSION, 'الجهاز: ' + deviceInfo()].filter(Boolean).join('\n');
+  }
+  function bugSheet() {
+    A.openSheet({
+      title: '🐞 بلّغ عن مشكلة',
+      saveLabel: 'انسخ وأرسل',
+      body: '<p class="small muted" style="margin:0 0 12px">نجهّز رسالة فيها وصفك + رقم النسخة ونوع الجهاز بس (بدون أي مبلغ أو اسم أو بيانات). تنسخها وترسلها لنا على إنستقرام.</p>' +
+        '<div class="field"><label for="bugWhat">وش صار؟</label><textarea id="bugWhat" maxlength="800" placeholder="مثلاً: لصقت رسالة البنك وما طلع المبلغ"></textarea></div>' +
+        '<div class="field"><label for="bugWhere">وين؟ (اختياري)</label><input id="bugWhere" maxlength="80" placeholder="مثلاً: المصاريف ← لصق رسالة"></div>' +
+        '<p class="small muted" style="margin:0">بيوصلنا: <span class="num" dir="ltr">' + h(A.APP_VERSION + ' · ' + deviceInfo()) + '</span></p>',
+      async onSave(root) {
+        if (!root.querySelector('#bugWhat').value.trim()) throw new Error('اكتب وش صار');
+        const text = bugText(root);
+        let copied = false;
+        try { await navigator.clipboard.writeText(text); copied = true; } catch (e) { /* بعض المتصفحات تمنع النسخ */ }
+        window.open('https://ig.me/m/hayati.bh', '_blank', 'noopener');
+        A.toast(copied ? 'انسخت ✓ الصقها بالرسالة' : 'افتحنا إنستقرام — اكتب المشكلة هناك');
+      },
+    });
+  }
+  window.HayatiFeedback = { feedbackText, bugText, deviceInfo };
 
   window.HayatiProfile = { ROLES, isNew };
   A.render();

@@ -9140,6 +9140,52 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
+  <script>/* js/features/firstmin.js */
+// «أول دقيقة» (DW-024 · بند 11): بعد الترحيب مباشرة خطوة وحدة توصل لأول رقم مفيد.
+// 1) ما عنده ولا عملية ← «الصق آخر رسالة بنك» أو «أضف أول مصروف» (أو «بعدين» وما ترجع)
+// 2) أول عملية تنضاف ← بطاقة مرة وحدة: كم صرف هالشهر وكم من ميزانيته. الحالة بالجهاز بس (localStorage).
+(function () {
+  'use strict';
+
+  const A = window.App, E = window.Extras;
+  if (!A || !E) return;
+  const { st, I, tint } = A;
+  const wrap = (name, fn) => { const prev = E[name]; E[name] = (...a) => fn(prev ? prev : () => '', ...a); };
+  const KEY = 'hayati-first-step';   // فاضي ← step ← done
+  const get = () => { try { return localStorage.getItem(KEY); } catch (e) { return 'done'; } };
+  const put = (v) => { try { localStorage.setItem(KEY, v); } catch (e) { /* بدون تخزين: تختفي مع الجلسة */ } };
+
+  function card() {
+    const s = st.settings || {}, state = get();
+    if (!s.onboarded || state === 'done') return '';
+    if (!st.transactions.length) {
+      if (state !== 'step') put('step');
+      return '<div class="card ob" id="fmCard"><b class="ob-title">⚡ أول دقيقة</b>' +
+        '<p class="small muted" style="margin:2px 0 12px">خطوة وحدة وتشوف وين رايحة فلوسك.</p>' +
+        '<div class="actions" style="margin:0"><button class="action" data-action="paste-sms"><div class="ico" style="' + tint('#0d9488') + '">' + I('message') + '</div>الصق آخر رسالة بنك</button>' +
+        '<button class="action" data-action="add-tx"><div class="ico" style="' + tint('#1A8A8F') + '">' + I('plus') + '</div>أضف أول مصروف</button></div>' +
+        '<button class="btn ghost block" style="margin-top:10px" data-action="fm-later">بعدين</button></div>';
+    }
+    if (state !== 'step') return '';   // مستخدم قديم عنده عمليات: ما نطلّع له شي
+    const spent = A.sums(A.txInMonth(A.monthKey(new Date()))).exp, budget = Number(s.budget) || 0;
+    const pct = budget ? Math.round((spent / budget) * 100) : 0;
+    return '<div class="card ob" id="fmCard"><b class="ob-title">🎉 أول رقم لك</b>' +
+      '<p style="margin:6px 0 4px">هالشهر صرفت <b class="num">' + A.money(spent) + '</b>' + (budget ? '، يعني <b class="num">' + pct + '%</b> من ميزانيتك.' : '.') + '</p>' +
+      '<p class="small muted" style="margin:0 0 12px">' + (budget ? 'كل ما تضيف رسالة، الرقم يتحدّث بروحه.' : 'حدد ميزانيتك ونقولك كم باقي لك.') + '</p>' +
+      '<div class="btn-row">' + (budget ? '' : '<button class="btn primary" data-action="budget">حدد الميزانية</button>') +
+      '<button class="btn ' + (budget ? 'primary' : 'ghost') + '" data-action="fm-done">تمام</button></div></div>';
+  }
+
+  wrap('todayTop', (prev) => prev() + card());
+  wrap('action', (prev, name, el, e) => {
+    if (name === 'fm-later' || name === 'fm-done') { put('done'); A.render(); return; }
+    if (name === 'budget' && get() === 'step' && st.transactions.length) put('done');
+    return prev(name, el, e);
+  });
+  E.FirstMinute = { KEY, card };
+})();
+
+</script>
   <script>/* js/features/whatsnew.js */
 // «جديد بحياتي ✨» (DW-019): نافذة مرة وحدة بعد كل تحديث، للي كان يستخدم التطبيق قبل بس
 // المستخدم الجديد ما يشوفها (يشوف الترحيب)، وما تطلع فوق قفل الرمز ولا فوق نافذة مفتوحة
@@ -9393,9 +9439,9 @@ window.HAYATI_CONFIG = {
       const patch = read(document.getElementById('obCard'));
       S.setSettings(patch);
       A.toast(patch.name ? 'أهلاً ' + patch.name + ' 👋' : 'أهلاً فيك 👋');
-      A.render(); return;
+      A.render(); scrollTo({ top: 0, behavior: 'smooth' }); return;   // «أول دقيقة» تطلع فوق
     }
-    if (name === 'ob-skip') { S.setSettings({ onboarded: true }); A.render(); return; }
+    if (name === 'ob-skip') { S.setSettings({ onboarded: true }); A.render(); scrollTo({ top: 0, behavior: 'smooth' }); return; }
     if (name === 'ob-account') {
       S.setSettings(read(document.getElementById('obCard')));
       A.render(); setTimeout(() => { const b = document.getElementById('settingsBtn'); if (b) b.click(); }, 200);
@@ -9417,6 +9463,7 @@ window.HAYATI_CONFIG = {
       '<button data-set="profile"><div class="ico" style="' + A.tint('#13636B') + '">' + I('user') + '</div><div style="flex:1;min-width:0"><b>' + h(s.name || 'اسمك ومين أنت') + '</b><small>' + h(who) + '</small></div>' + I('chevL') + '</button>' +
       // «سوّ ميزتك»: الاقتراح يروح رسالة على إنستقرام، وكل أسبوع وحدة تنبني
       '<button data-set="feedback"><div class="ico" style="' + A.tint('#13636B') + '">' + I('message') + '</div><div style="flex:1;min-width:0"><b>رأيك بالتطبيق</b><small>دقيقة وحدة، وكل رأي ينقرا</small></div>' + I('chevL') + '</button>' +
+      '<button data-set="bug"><div class="ico" style="' + A.tint('#e11d48') + '">' + I('alert') + '</div><div style="flex:1;min-width:0"><b>🐞 بلّغ عن مشكلة</b><small>نرسل رقم النسخة ونوع الجهاز بس، بدون بياناتك</small></div></button>' +
       '<a class="menu-link" href="https://ig.me/m/hayati.bh" target="_blank" rel="noopener"><div class="ico" style="' + A.tint('#FF6B4A') + '">' + I('sparkle') + '</div><div style="flex:1;min-width:0"><b>💡 اقترح ميزة</b><small>كل أسبوع نبني اقتراح، ونذكر اسمك</small></div>' + I('chevL') + '</a></div>' +
       (prevExtra ? prevExtra.apply(this, arguments) : '');
   };
@@ -9424,6 +9471,7 @@ window.HAYATI_CONFIG = {
   E.settingsAction = async function (act) {
     if (act === 'profile') { A.closeSheet(); setTimeout(profileSheet, 280); return true; }
     if (act === 'feedback') { A.closeSheet(); setTimeout(feedbackSheet, 280); return true; }
+    if (act === 'bug') { A.closeSheet(); setTimeout(bugSheet, 280); return true; }
     return prevSet ? prevSet.apply(this, arguments) : false;
   };
   function profileSheet() {
@@ -9467,7 +9515,36 @@ window.HAYATI_CONFIG = {
       },
     });
   }
-  window.HayatiFeedback = { feedbackText };
+  // ---------- «بلّغ عن مشكلة» (DW-024 · بند 2): النسخة والجهاز بس، ولا مبلغ ولا اسم ----------
+  function deviceInfo() {
+    const ua = navigator.userAgent || '', cap = window.Capacitor && window.Capacitor.getPlatform ? window.Capacitor.getPlatform() : 'web';
+    const android = ua.match(/Android\s([\d.]+)/), ios = ua.match(/OS (\d+)[_.](\d+)/);
+    const os = android ? 'Android ' + android[1] : /iPhone|iPad/.test(ua) && ios ? 'iOS ' + ios[1] + '.' + ios[2] : /Mac/.test(ua) ? 'Mac' : /Windows/.test(ua) ? 'Windows' : 'غير معروف';
+    return os + ' · ' + (cap === 'web' ? 'متصفح' : 'تطبيق') + ' · ' + screen.width + '×' + screen.height + ' · ' + ((window.HayatiLang && window.HayatiLang.lang) || 'ar');
+  }
+  function bugText(root) {
+    const what = root.querySelector('#bugWhat').value.trim(), where = root.querySelector('#bugWhere').value.trim();
+    return ['🐞 مشكلة في «حياتي»', 'وش صار: ' + what, where ? 'وين: ' + where : '', 'النسخة: ' + A.APP_VERSION, 'الجهاز: ' + deviceInfo()].filter(Boolean).join('\n');
+  }
+  function bugSheet() {
+    A.openSheet({
+      title: '🐞 بلّغ عن مشكلة',
+      saveLabel: 'انسخ وأرسل',
+      body: '<p class="small muted" style="margin:0 0 12px">نجهّز رسالة فيها وصفك + رقم النسخة ونوع الجهاز بس (بدون أي مبلغ أو اسم أو بيانات). تنسخها وترسلها لنا على إنستقرام.</p>' +
+        '<div class="field"><label for="bugWhat">وش صار؟</label><textarea id="bugWhat" maxlength="800" placeholder="مثلاً: لصقت رسالة البنك وما طلع المبلغ"></textarea></div>' +
+        '<div class="field"><label for="bugWhere">وين؟ (اختياري)</label><input id="bugWhere" maxlength="80" placeholder="مثلاً: المصاريف ← لصق رسالة"></div>' +
+        '<p class="small muted" style="margin:0">بيوصلنا: <span class="num" dir="ltr">' + h(A.APP_VERSION + ' · ' + deviceInfo()) + '</span></p>',
+      async onSave(root) {
+        if (!root.querySelector('#bugWhat').value.trim()) throw new Error('اكتب وش صار');
+        const text = bugText(root);
+        let copied = false;
+        try { await navigator.clipboard.writeText(text); copied = true; } catch (e) { /* بعض المتصفحات تمنع النسخ */ }
+        window.open('https://ig.me/m/hayati.bh', '_blank', 'noopener');
+        A.toast(copied ? 'انسخت ✓ الصقها بالرسالة' : 'افتحنا إنستقرام — اكتب المشكلة هناك');
+      },
+    });
+  }
+  window.HayatiFeedback = { feedbackText, bugText, deviceInfo };
 
   window.HayatiProfile = { ROLES, isNew };
   A.render();
