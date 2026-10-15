@@ -2233,3 +2233,32 @@ test('account nudge (DW-035): Today invites to create an account once there is d
   await page.click('#accNudge [data-action="account-later"]');
   await expect(page.locator('#accNudge')).toHaveCount(0);
 });
+
+test('lectures PDF (DW-036): one call fills notes, summary and new questions; too big or not a PDF is refused on the device', async ({ page }) => {
+  await open(page);
+  await asStudent(page);
+  await store(page, () => {
+    App.S.status.signedIn = true; window.__aiCalls = [];
+    App.S.invokeFn = async (name, body) => {
+      window.__aiCalls.push({ name, mode: body.mode, media: body.media, head: (body.image || '').slice(0, 5), title: body.title, notes: body.notes });
+      return { notes: 'Break-even = FC / (P - VC)\nCM ratio = CM / Sales', summary: 'نقطة التعادل لما الربح صفر', cards: [{ q: 'What is CM ratio?', a: 'CM / Sales' }, { q: 'Break-even units?', a: 'FC / (P - VC)' }] };
+    };
+    App.ui.studySeg = 'lectures'; App.go('schedule');
+  });
+  await page.click('[data-action="lec-new"]');
+  const pdf = Buffer.from('%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n');
+  await page.setInputFiles('#lcPdf', { name: 'Chapter 4 - CVP.pdf', mimeType: 'application/pdf', buffer: pdf });
+  await expect(page.locator('[name=lc_summary]')).toHaveValue('نقطة التعادل لما الربح صفر');
+  await expect(page.locator('[name=lc_notes]')).toHaveValue(/CM ratio = CM \/ Sales/);
+  await expect(page.locator('[name=lc_title]')).toHaveValue('Chapter 4 - CVP');           // العنوان من اسم الملف لو فاضي
+  await expect(page.locator('#lcCards li')).toHaveCount(2);
+  const call = await store(page, () => window.__aiCalls[0]);
+  expect(call).toMatchObject({ name: 'lecture-ai', mode: 'pdf', media: 'application/pdf', head: 'JVBER', title: 'Chapter 4 - CVP' });
+  expect(call.notes).toBeUndefined();
+  // مو PDF، أو أكبر من 6MB: ما يطلع شي من الجوال
+  await page.setInputFiles('#lcPdf', { name: 'fake.pdf', mimeType: 'application/pdf', buffer: Buffer.from('hello') });
+  await expect(page.locator('#toast')).toContainText('مو ملف PDF');
+  await page.setInputFiles('#lcPdf', { name: 'big.pdf', mimeType: 'application/pdf', buffer: Buffer.concat([pdf, Buffer.alloc(6 * 1024 * 1024)]) });
+  await expect(page.locator('#toast')).toContainText('الحد 6MB');
+  expect(await store(page, () => window.__aiCalls.length)).toBe(1);
+});

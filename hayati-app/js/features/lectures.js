@@ -74,9 +74,10 @@
   const AI_MIN = 200;
   function aiBlock() {
     if (!(S.status && S.status.signedIn && S.invokeFn)) return '<p class="small muted" style="margin:0 4px 12px">✨ التلخيص والأسئلة التلقائية تشتغل لما تسجّل دخول بحسابك.</p>';
-    return '<button type="button" class="btn ghost block" data-photo style="margin:0 0 8px">📷 صوّر السبورة أو الورقة</button><input type="file" id="lcPhoto" accept="image/*" capture="environment" hidden>' +
+    return '<div style="display:flex;gap:8px;margin:0 0 8px"><button type="button" class="btn ghost" style="flex:1" data-photo>📷 صوّر السبورة</button><button type="button" class="btn ghost" style="flex:1" data-pdf>📄 ملف PDF</button></div>' +
+      '<input type="file" id="lcPhoto" accept="image/*" capture="environment" hidden><input type="file" id="lcPdf" accept="application/pdf,.pdf" hidden>' +
       '<div class="row-btns" style="display:flex;gap:8px;margin:0 0 6px"><button type="button" class="btn ghost" style="flex:1" data-ai="summary">لخّصها لي ✨</button><button type="button" class="btn ghost" style="flex:1" data-ai="quiz">سوّ لي أسئلة ✨</button></div>' +
-      '<p class="small muted" style="margin:0 4px 12px">يقرأ ملاحظاتك المكتوبة أو الصورة اللي تصوّرها (مو التسجيل). الصورة ما تنحفظ. راجع النتيجة، ممكن يغلط.</p>';
+      '<p class="small muted" style="margin:0 4px 12px">يقرأ ملاحظاتك المكتوبة، أو الصورة أو ملف PDF اللي تختاره (مو التسجيل). الصورة والملف ما ينحفظون. راجع النتيجة، ممكن يغلط.</p>';
   }
   async function runAi(root, l, mode, redrawCards) {
     const notes = A.val(root, 'lc_notes');
@@ -126,6 +127,34 @@
       const m = String(e && e.message || '');
       A.toast(m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
     } finally { btn.disabled = false; btn.textContent = label; }
+  }
+
+  // DW-036: ملف المحاضرة PDF ← ملاحظات + ملخص + أسئلة بطلب واحد. الملف يمر على الخدمة بس وما ينحفظ
+  const PDF_MAX = 6 * 1024 * 1024;
+  const toB64 = (file) => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] || ''); r.onerror = () => no(r.error); r.readAsDataURL(file); });
+  async function runPdf(root, l, file, redrawCards) {
+    if (file.size > PDF_MAX) { A.toast('الملف كبير · الحد 6MB (قسّمه أو صدّر الشرائح المهمة بس)'); return; }
+    const btn = root.querySelector('[data-pdf]'), label = btn.textContent;
+    root.querySelectorAll('[data-ai],[data-photo],[data-pdf]').forEach((b) => { b.disabled = true; }); btn.textContent = 'نقرا الملف… (دقيقة تقريباً)';
+    try {
+      const image = await toB64(file);
+      if (!image.startsWith('JVBER')) { A.toast('هذا مو ملف PDF'); return; }
+      const r = await S.invokeFn('lecture-ai', { mode: 'pdf', title: A.val(root, 'lc_title') || file.name.replace(/\.pdf$/i, ''), image, media: 'application/pdf' });
+      const notes = String((r && r.notes) || '').trim().slice(0, 12000), summary = String((r && r.summary) || '').trim().slice(0, 4000);
+      if (!notes && !summary) { A.toast('ما قدرنا نقرا الملف · يمكن صور بدون نص'); return; }
+      const ta = root.querySelector('[name=lc_notes]');
+      if (notes) { ta.value = (ta.value.trim() ? ta.value.trim() + '\n\n' : '') + notes; ta.dispatchEvent(new Event('input')); }
+      const sm = root.querySelector('[name=lc_summary]'); if (summary && !sm.value.trim()) sm.value = summary;
+      const titleIn = root.querySelector('[name=lc_title]'); if (!titleIn.value.trim()) titleIn.value = file.name.replace(/\.pdf$/i, '').slice(0, 120);
+      const have = new Set(l.cards.map((c) => c.q.trim()));
+      const add = (Array.isArray(r.cards) ? r.cards : []).filter((c) => c && c.q && c.a && !have.has(String(c.q).trim())).slice(0, 10);
+      add.forEach((c) => l.cards.push({ id: S.uuid(), q: String(c.q).slice(0, 300), a: String(c.a).slice(0, 600) }));
+      if (add.length) redrawCards();
+      A.toast('انضافت الملاحظات والملخص' + (add.length ? ' و' + add.length + ' سؤال' : '') + ' · راجعها واضغط «حفظ»');
+    } catch (e) {
+      const m = String(e && e.message || '');
+      A.toast(m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
+    } finally { root.querySelectorAll('[data-ai],[data-photo],[data-pdf]').forEach((b) => { b.disabled = false; }); btn.textContent = label; }
   }
 
   function sheet(id) {
@@ -194,6 +223,8 @@
         });
         const ph = root.querySelector('[data-photo]'), phIn = root.querySelector('#lcPhoto');
         if (ph && phIn) { ph.onclick = () => phIn.click(); phIn.onchange = () => { const f = phIn.files[0]; phIn.value = ''; if (f) runPhoto(root, f); }; }
+        const pd = root.querySelector('[data-pdf]'), pdIn = root.querySelector('#lcPdf');
+        if (pd && pdIn) { pd.onclick = () => pdIn.click(); pdIn.onchange = () => { const f = pdIn.files[0]; pdIn.value = ''; if (f) runPdf(root, l, f, () => { root.querySelector('#lcCards').innerHTML = cardsList(); }); }; }
         root.querySelectorAll('[data-ai]').forEach((b) => { b.onclick = () => runAi(root, l, b.dataset.ai, () => { root.querySelector('#lcCards').innerHTML = cardsList(); }); });
         const qz = root.querySelector('#lcQuiz');
         if (qz) qz.onclick = () => { A.closeSheet(); setTimeout(() => quiz([l.id]), 280); };

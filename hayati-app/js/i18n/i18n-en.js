@@ -1815,5 +1815,16 @@ window.HAYATI_EN = {
 "بياناتك على هالجوال بس": "Your data is on this phone only",
 "سوّ حساب وتوصل لك نفس البيانات على أي جهاز ثاني، وما تضيع لو تبدّل الجوال.": "Create an account and get the same data on any other device, and nothing is lost if you change phones.",
 "سجّل أو أنشئ حساب": "Sign in or sign up",
-"رحلات العمرة تظل على هالجهاز بس": "Umrah trips stay on this device only"
+"رحلات العمرة تظل على هالجهاز بس": "Umrah trips stay on this device only",
+// DW-030: الترجمة الكاملة (الأخبار، الأدوات، أول دقيقة، النسخة المشفّرة، البلاغ، القبلة، عبادتي، الورد، المحاضرات، السفر، يوم الراتب والزكاة)
+"📷 صوّر السبورة": "📷 Snap the board",
+"📄 ملف PDF": "📄 PDF file",
+"نقرا الملف… (دقيقة تقريباً)": "Reading the file… (about a minute)",
+"الملف كبير · الحد 6MB (قسّمه أو صدّر الشرائح المهمة بس)": "File too big · 6MB limit (split it or export only the key slides)",
+"هذا مو ملف PDF": "This isn't a PDF file",
+"ما قدرنا نقرا الملف · يمكن صور بدون نص": "Couldn't read the file · it may be images without text",
+"انضافت الملاحظات والملخص": "Notes and summary added",
+"يقرأ ملاحظاتك المكتوبة، أو الصورة أو ملف PDF اللي تختاره (مو التسجيل). الصورة والملف ما ينحفظون. راجع النتيجة، ممكن يغلط.": "It reads your written notes, or the photo or PDF you choose (not the recording). The photo and file aren't saved. Check the result, it can make mistakes.",
+"سؤال · راجعها واضغط «حفظ»": "questions · check and tap «Save»",
+"· راجعها واضغط «حفظ»": "· check and tap «Save»"
 };

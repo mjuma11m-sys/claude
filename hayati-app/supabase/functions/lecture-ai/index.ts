@@ -1,5 +1,6 @@
 // DW-021 phase 2 — lecture notes → summary / practice questions.
 // DW-034 — photo of a board or page → notes text (the image is only passed through, never stored).
+// DW-036 — lecture PDF → notes + summary + practice questions in one call (the file is only passed through, never stored).
 // Secrets (Supabase → Edge Functions → Secrets, never in the app or repo):
 //   ANTHROPIC_API_KEY  required
 //   AI_MODEL           optional, default claude-opus-5-5 (claude-haiku-5-5 is ~35× cheaper)
@@ -26,6 +27,24 @@ const SCHEMAS = {
     type: "object",
     properties: { text: { type: "string" } },
     required: ["text"],
+    additionalProperties: false,
+  },
+  pdf: {
+    type: "object",
+    properties: {
+      notes: { type: "string" },
+      summary: { type: "string" },
+      cards: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: { q: { type: "string" }, a: { type: "string" } },
+          required: ["q", "a"],
+          additionalProperties: false,
+        },
+      },
+    },
+    required: ["notes", "summary", "cards"],
     additionalProperties: false,
   },
   quiz: {
@@ -67,6 +86,14 @@ const TASKS = {
     "Transcribe the lecture content into clean study notes: keep headings, bullet points and every formula, in reading order. " +
     "Keep the original language of each line (Arabic or English). Do not add explanations or anything that is not in the photo. " +
     "If nothing is readable, or the photo is not lecture material, return an empty string." + MATH,
+  pdf:
+    "This PDF is a university lecture (slides or handout). Produce three things for a student revising for an exam: " +
+    "notes: the key points as short lines in reading order, every definition and formula kept exactly (at most about 40 lines); " +
+    "summary: 5–8 short lines, each one key idea, most important first; " +
+    "cards: 5–8 practice questions with one- or two-sentence answers, mixing recall and 'why/how', plus 1–3 short calculation questions if the lecture has formulas " +
+    "(each answer shows the formula, the numbers substituted and the result, checked carefully). " +
+    "Write in the language the lecture is mostly written in. Use only what is in the PDF; do not add outside facts. " +
+    "If the PDF is not lecture material or has no readable text, return empty notes and summary and no cards." + MATH,
 };
 const MEDIA = ["image/jpeg", "image/png", "image/webp"];
 
@@ -83,7 +110,7 @@ Deno.serve(async (req) => {
 
   let body: { mode?: string; title?: string; notes?: string; image?: string; media?: string };
   try { body = await req.json(); } catch { return json({ error: "bad" }, 400); }
-  const mode = body.mode === "quiz" ? "quiz" : body.mode === "summary" ? "summary" : body.mode === "photo" ? "photo" : null;
+  const mode = body.mode === "quiz" ? "quiz" : body.mode === "summary" ? "summary" : body.mode === "photo" ? "photo" : body.mode === "pdf" ? "pdf" : null;
   const notes = String(body.notes ?? "").slice(0, 20000).trim();
   const title = String(body.title ?? "").slice(0, 120).trim();
   const image = String(body.image ?? ""), media = String(body.media ?? "image/jpeg");
@@ -91,6 +118,9 @@ Deno.serve(async (req) => {
   if (mode === "photo") {
     // the app sends a resized JPEG (~300 KB); 5 MB of base64 is the hard cap
     if (!image || image.length > 5_000_000 || !/^[A-Za-z0-9+/=]+$/.test(image.slice(0, 200)) || !MEDIA.includes(media)) return json({ error: "bad" }, 400);
+  } else if (mode === "pdf") {
+    // ≤ 6 MB file → ≤ 8.4 MB of base64
+    if (!image || image.length > 8_400_000 || !image.startsWith("JVBER")) return json({ error: "bad" }, 400);
   } else if (notes.length < 200) return json({ error: "bad" }, 400);
 
   const key = Deno.env.get("ANTHROPIC_API_KEY");
@@ -107,12 +137,17 @@ Deno.serve(async (req) => {
   try {
     const response = await client.beta.messages.create({
       model,
-      max_tokens: 8000,
+      max_tokens: 8000,   // Edge Function wall-clock limit: keep answers short enough to finish in time
       ...(opus5 ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" } : {}),
       output_config: { format: { type: "json_schema", schema: SCHEMAS[mode] } },
       messages: [{
         role: "user",
-        content: mode === "photo"
+        content: mode === "pdf"
+          ? [
+            { type: "document", source: { type: "base64", media_type: "application/pdf", data: image } },
+            { type: "text", text: TASKS.pdf + (title ? "\n\n<title>" + title + "</title>" : "") },
+          ]
+          : mode === "photo"
           ? [
             { type: "image", source: { type: "base64", media_type: media, data: image } },
             { type: "text", text: TASKS.photo + (title ? "\n\n<title>" + title + "</title>" : "") },
