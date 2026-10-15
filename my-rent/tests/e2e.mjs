@@ -1,5 +1,10 @@
 // اختبار شامل: npm run build && npm test   (يشغّل vite preview ويفحص بـ Chromium)
 import { chromium } from "playwright-core";
+import writeXlsxFile from "write-excel-file/node";
+import readXlsxFile from "read-excel-file/node";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { spawn } from "node:child_process";
 
 const PORT = 4179;
@@ -321,6 +326,49 @@ try {
     ok(size === 13, "الملف نفسه محفوظ بالجهاز (IndexedDB)", String(size));
     ok(cErr.length === 0, "DW-020: بدون أخطاء", cErr.join(" | "));
     await c.close();
+  }
+
+  // 15) DW-021: Excel — استيراد بمعاينة وأخطاء لكل صف + تراجع + تصدير يرجع ينقرا
+  {
+    const x = await browser.newPage({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
+    const xErr = []; x.on("pageerror", (e) => xErr.push(e.message));
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "idarati-xl-"));
+    const xl = path.join(tmp, "import.xlsx");
+    const buf = await writeXlsxFile([
+      { sheet: "الوحدات", data: [["الوحدة", "المبنى", "الإيجار", "يوم الاستحقاق", "المستأجر", "الهاتف", "بداية العقد", "CPR"], ["شقة 20", "برج السيف", 250, 5, "ناصر علي", "33334444", "2026-02", "880101234"], ["شقة 1", "عمارة المالكية", 185, 1, "أحمد عبدالله", "3xxx 1101", "2024-03", ""], ["", "", "مو رقم", "", "", "", "", ""], ["شقة 21", "", "abc", 3, "", "", "", ""]] },
+      { sheet: "الدفعات", data: [["الوحدة", "الشهر", "المبلغ", "الطريقة", "التاريخ"], ["شقة 20", "2026-09", 250, "نقد", "2026-09-04"], ["شقة 20", { value: new Date(2026, 9, 1), format: "yyyy-mm-dd" }, "٢٥٠", "BenefitPay", ""], ["شقة 99", "2026-10", 100, "نقد", ""], ["شقة 20", "13/2026", 250, "", ""]] },
+      { sheet: "المصاريف", data: [["الوصف", "المبلغ", "الفئة", "التاريخ"], ["تصليح باب", 35.5, "صيانة العقار", "2026-10-02"], ["تأمين المبنى", 120, "تأمينات", "02/10/2026"]] },
+    ], { dateFormat: "yyyy-mm-dd" }).toBuffer();
+    fs.writeFileSync(xl, buf);
+    await x.goto(URL + "#reports"); await x.evaluate(() => localStorage.clear()); await x.reload(); await x.waitForTimeout(900);
+    const before = await x.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")));
+    await x.locator("#xl-file").setInputFiles(xl); await x.waitForTimeout(1500);
+    const prev = await x.locator(".xl-preview").innerText();
+    ok(/1\s*وحدة جديدة/.test(prev) && /1\s*وحدة تتحدّث/.test(prev) && /2\s*دفعة/.test(prev) && /2\s*مصروف/.test(prev), "Excel: المعاينة تعد الصح", prev.replace(/\s+/g, " ").slice(0, 160));
+    ok(prev.includes("تأمينات") && prev.includes("CPR"), "Excel: فئة جديدة تنذكر + تنبيه CPR");
+    const errs = await x.locator(".xl-errors").textContent();
+    ok(errs.includes("صف 4") && errs.includes("الإيجار") && errs.includes("شقة 99") && errs.includes("الشهر"), "Excel: كل خطأ برقم صفه وسببه", errs.replace(/\s+/g, " ").slice(0, 200));
+    await x.getByRole("button", { name: /^استورد/ }).click(); await x.waitForTimeout(500);
+    const after = await x.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")));
+    const u20 = after.units.find((u) => u.name === "شقة 20");
+    ok(u20 && u20.rent === 250000 && u20.dueDay === 5 && u20.tenant.name === "ناصر علي" && !JSON.stringify(u20).includes("880101234"), "Excel: الوحدة الجديدة بالفلس وبدون CPR");
+    ok(after.units.length === before.units.length + 1 && after.units.find((u) => u.id === "u1").rent === 185000, "Excel: «شقة 1» تتحدّث بدون تكرار");
+    ok(after.payments.filter((p) => p.unitId === u20.id).map((p) => p.month).sort().join() === "2026-09,2026-10" && after.payments.some((p) => p.unitId === u20.id && p.amount === 250000 && p.method === "BenefitPay"), "Excel: الدفعات (تاريخ Excel + أرقام عربية)");
+    ok(after.expenses.some((e) => e.label === "تأمين المبنى" && e.date === "2026-10-02") && after.cats.some((c) => c.name === "تأمينات"), "Excel: المصاريف + فئة جديدة + تاريخ يوم/شهر/سنة");
+    await x.getByRole("button", { name: "تراجع" }).click(); await x.waitForTimeout(400);
+    const undone = await x.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")));
+    ok(JSON.stringify(undone.units) === JSON.stringify(before.units) && undone.payments.length === before.payments.length && undone.expenses.length === before.expenses.length && undone.cats.length === before.cats.length, "Excel: التراجع يرجّع كل شي مثل قبل");
+    const dl = x.waitForEvent("download"); await x.getByRole("button", { name: "تصدير التقارير Excel" }).click();
+    const out = path.join(tmp, "export.xlsx"); await (await dl).saveAs(out);
+    const sheets = await readXlsxFile(out);
+    ok(sheets.map((s) => s.sheet).join("|") === "التقرير الشهري|الدفعات|المصاريف|الوحدات" && sheets[1].data.length === before.payments.length + 1, "Excel: التصدير 4 صفحات وينقرا", sheets.map((s) => s.sheet + ":" + s.data.length).join(" "));
+    const dl2 = x.waitForEvent("download"); await x.getByRole("button", { name: "نزّل القالب" }).click();
+    const tpl = path.join(tmp, "tpl.xlsx"); await (await dl2).saveAs(tpl);
+    ok((await readXlsxFile(tpl)).length === 3, "Excel: القالب 3 صفحات");
+    await x.locator("#xl-file").setInputFiles({ name: "x.csv", mimeType: "text/csv", buffer: Buffer.from("a,b") }); await x.waitForTimeout(300);
+    ok((await x.locator(".field-error").first().innerText()).includes("xlsx"), "Excel: ملف مو xlsx ينرفض");
+    ok(xErr.length === 0, "DW-021: بدون أخطاء", xErr.join(" | "));
+    await x.close();
   }
 
   if (process.env.SHOTS) {

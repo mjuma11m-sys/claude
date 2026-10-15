@@ -1,6 +1,6 @@
 // مخزن البيانات: useReducer + localStorage. لما ينربط Supabase، يتبدل load/save بس والشاشات ما تتغيّر.
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import type { Data, DepositLog, Expense, Method, Payment, Recurring, Unit } from "./types";
+import type { BudgetCat, Data, DepositLog, Expense, Method, Payment, Recurring, Unit } from "./types";
 import { demoData, emptyData } from "./demo";
 import { dueRecurring, isoDay, owedMonths } from "./logic";
 import { SyncEngine, loadSyncConfig, saveSyncConfig, type SyncAction, type SyncConfig, type SyncStatus } from "./sync";
@@ -23,7 +23,9 @@ export type Action =
   | { type: "unexpenses"; ids: string[] }
   | { type: "deposit"; log: DepositLog }
   | { type: "undeposit"; id: string }
-  | { type: "contract"; template: string; owner: string };
+  | { type: "contract"; template: string; owner: string }
+  | { type: "import"; units: Unit[]; payments: Payment[]; expenses: Expense[]; cats: BudgetCat[] }
+  | { type: "unimport"; restore: Unit[]; unitIds: string[]; paymentIds: string[]; expenseIds: string[]; catIds: string[] };
 
 export function reducer(state: Data, a: Action): Data {
   switch (a.type) {
@@ -46,6 +48,19 @@ export function reducer(state: Data, a: Action): Data {
     case "unexpenses": return { ...state, expenses: state.expenses.filter((e) => !a.ids.includes(e.id)) };
     case "deposit": return { ...state, deposits: [a.log, ...(state.deposits ?? [])] };
     case "undeposit": return { ...state, deposits: (state.deposits ?? []).filter((d) => d.id !== a.id) };
+    // DW-021: استيراد Excel كتعديل واحد (يتزامن مرة وحدة، والتراجع يرجّعه كله)
+    case "import": return { ...state,
+      units: [...state.units.map((u) => a.units.find((x) => x.id === u.id) ?? u), ...a.units.filter((u) => !state.units.some((x) => x.id === u.id))],
+      payments: [...state.payments, ...a.payments],
+      expenses: [...a.expenses, ...state.expenses],
+      cats: [...state.cats, ...a.cats.filter((c) => !state.cats.some((x) => x.id === c.id))],
+    };
+    case "unimport": return { ...state,
+      units: state.units.filter((u) => !a.unitIds.includes(u.id)).map((u) => a.restore.find((r) => r.id === u.id) ?? u),
+      payments: state.payments.filter((p) => !a.paymentIds.includes(p.id)),
+      expenses: state.expenses.filter((e) => !a.expenseIds.includes(e.id)),
+      cats: state.cats.filter((c) => !a.catIds.includes(c.id)),
+    };
     case "contract": return { ...state, contractTemplate: a.template, contractOwner: a.owner };
     default: return state; // حدث من نسخة أحدث للتطبيق: نتجاهله بدل ما ننكسر
   }
@@ -97,6 +112,7 @@ type Store = {
   logRecurring: () => Expense[];
   unexpenses: (ids: string[]) => void;
   setContract: (template: string, owner: string) => void;
+  importPlan: (p: { units: Unit[]; payments: Payment[]; expenses: Expense[]; cats: BudgetCat[] }) => () => void; // يرجّع دالة التراجع
   deleteUnit: (id: string) => boolean;
   replace: (data: Data) => void;
   resetDemo: () => void;
@@ -238,6 +254,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     unexpenses: (ids) => dispatch({ type: "unexpenses", ids }),
     setContract: (template, owner) => dispatch({ type: "contract", template, owner }),
+    importPlan: (p) => {
+      const restore = data.units.filter((u) => p.units.some((x) => x.id === u.id));
+      dispatch({ type: "import", units: p.units, payments: p.payments, expenses: p.expenses, cats: p.cats });
+      return () => dispatch({ type: "unimport", restore, unitIds: p.units.filter((u) => !restore.some((r) => r.id === u.id)).map((u) => u.id), paymentIds: p.payments.map((x) => x.id), expenseIds: p.expenses.map((x) => x.id), catIds: p.cats.map((c) => c.id) });
+    },
     deleteUnit: (id) => {
       if (data.payments.some((p) => p.unitId === id)) return false;
       dispatch({ type: "delunit", id });

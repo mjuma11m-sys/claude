@@ -352,3 +352,8 @@ html[data-size="xl"] .hero-owed { flex-wrap: wrap; }
 .ct-fields { display: flex; flex-wrap: wrap; gap: 6px; }
 .ct-fields .chip { font-size: 12px; }
 .ct-preview { padding: 12px; border: 1px dashed var(--line); border-radius: var(--radius); background: var(--surface-2); }
+
+/* DW-021: Excel */
+.xl-counts { margin: 0; padding-inline-start: 18px; font-size: 14px; line-height: 1.9; }
+.xl-errors { margin: 6px 0 0; padding-inline-start: 18px; font-size: 13px; line-height: 1.8; max-height: 220px; overflow: auto; }
+.xl-preview details summary { cursor: pointer; }

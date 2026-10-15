@@ -2,6 +2,7 @@ import { useStore } from "../data/store";
 import { fmt, isoDay, monthName, monthlyReport, toCSV } from "../data/logic";
 import { Money } from "../theme/AppShell";
 import { DemoNote, SectionHead, useToast } from "../ui/kit";
+import { ExcelPanel } from "./ExcelPanel";
 
 /** الدخل مقابل المصروف لآخر 6 أشهر + تصدير CSV للمحاسب */
 export function Reports() {
@@ -65,8 +66,9 @@ export function Reports() {
         </table>
       </section>
 
+      <ExcelPanel />
       <button className="btn btn-ghost press" onClick={exportCsv}>تصدير CSV للمحاسب</button>
-      <p className="muted small" style={{ margin: 0 }}>الملف فيه أسماء المستأجرين — لا ترسله إلا للمحاسب.</p>
+      <p className="muted small" style={{ margin: 0 }}>ملفات Excel وCSV فيها أسماء المستأجرين — لا ترسلها إلا للمحاسب.</p>
       <DemoNote />
     </div>
   );
