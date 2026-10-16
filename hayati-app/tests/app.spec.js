@@ -1975,6 +1975,33 @@ test('English: «21 يوم» (11+ days) translates like «3 أيام»', async (
   expect(await store(page, () => window.HayatiLang.tr('بعد 21 يوم · قبل 12 يوم · باقي 21 يوم'))).toBe('in 21 days · 12 days ago · Left 21 days');
 });
 
+test('performance (DW-042): 2000 saves in a row write and redraw once, and month/day lists come from one index', async ({ page }) => {
+  await open(page);
+  const r = await store(page, async () => {
+    const S = App.S; let emits = 0; let writes = 0;
+    const off = S.subscribe(() => emits++);
+    const set = localStorage.setItem.bind(localStorage);
+    localStorage.setItem = (k, v) => { if (k === 'hayati-v1') writes++; return set(k, v); };
+    const t0 = performance.now(), now = Date.now();
+    for (let i = 0; i < 2000; i++) S.upsert('transactions', { kind: 'expense', amount: 1, category: 'قهوة', merchant: 'x', occurred_at: new Date(now - i * 36e5).toISOString() });
+    const syncMs = performance.now() - t0;
+    await Promise.resolve(); await new Promise((r) => setTimeout(r, 0));
+    localStorage.setItem = set; off();
+    const m = App.monthKey(new Date());
+    const a = App.txInMonth(m), b = App.st.transactions.filter((t) => App.monthKey(new Date(t.occurred_at)) === m);
+    const today = App.txOnDay(new Date()).length, todayRef = App.st.transactions.filter((t) => App.sameDay(new Date(t.occurred_at), new Date())).length;
+    // تعديل بعد الفهرسة يبين على طول (الفهرس ينبني من جديد)
+    S.upsert('transactions', { kind: 'expense', amount: 2, category: 'قهوة', occurred_at: new Date().toISOString() });
+    return { syncMs, emits, writes, same: a.length === b.length && a.every((t, i) => i === 0 || new Date(a[i - 1].occurred_at) >= new Date(t.occurred_at)), today, todayRef, after: App.txOnDay(new Date()).length };
+  });
+  expect(r.emits).toBe(1);
+  expect(r.writes).toBe(1);
+  expect(r.syncMs).toBeLessThan(3000);
+  expect(r.same).toBe(true);
+  expect(r.today).toBe(r.todayRef);
+  expect(r.after).toBe(r.today + 1);
+});
+
 test('month report as an image (DW-041): numbers hidden by default, no shop names, draws a 1080×1350 PNG and saves it', async ({ page }) => {
   await open(page);
   const r = await store(page, async () => {

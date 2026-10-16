@@ -47,7 +47,10 @@
     try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* تجاهل */ }
   }
 
+  // رقم يزيد مع كل تغيير بالبيانات: الواجهة تعيد حساب الفهارس (عمليات الشهر/اليوم) بس لما يتغيّر (DW-042)
+  let rev = 0;
   function emit() {
+    rev++;
     for (const fn of listeners) fn(state, status);
   }
 
@@ -106,9 +109,17 @@
     state.pending = state.pending.filter((p) => !(p.table === op.table && (p.row ? p.row.id : p.id) === (op.row ? op.row.id : op.id) && op.table !== 'settings'));
     if (op.table === 'settings') state.pending = state.pending.filter((p) => p.table !== 'settings');
     state.pending.push(op);
-    save();
-    emit();
-    flush();
+    rev++;
+    commitSoon();
+  }
+
+  // DW-042: تعديلات ورا بعض (استيراد، استرجاع، قبول عدة رسائل) تنكتب وترسم مرة وحدة بآخر الدفعة بدال كل سجل.
+  // microtask: تخلص قبل أي حدث ثاني وقبل ما تنقفل الصفحة، فما يضيع شي.
+  let commitQueued = false;
+  function commitSoon() {
+    if (commitQueued) return;
+    commitQueued = true;
+    queueMicrotask(() => { commitQueued = false; save(); emit(); flush(); });
   }
 
   // ---------- Supabase ----------
@@ -627,7 +638,7 @@
   }
 
   global.Store = {
-    state, status, uuid, stableId, invokeFn,
+    state, status, uuid, stableId, invokeFn, rev: () => rev,
     subscribe: (fn) => { listeners.add(fn); return () => listeners.delete(fn); },
     upsert, remove, setSettings,
     init, getConfig, saveConfig, clearConfig,

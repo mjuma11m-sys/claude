@@ -287,9 +287,25 @@
     return items.sort((a, b) => a.start - b.start);
   }
   function hhmm(m) { return pad(Math.floor(m / 60) % 24) + ':' + pad(m % 60); }
-  function txInMonth(key) {
-    return st.transactions.filter((t) => monthKey(new Date(t.occurred_at)) === key).sort((a, b) => new Date(b.occurred_at) - new Date(a.occurred_at));
+  // فهرس العمليات حسب الشهر واليوم، يتبنى مرة وحدة لكل تغيير بالبيانات بدال ما نقرا كل التواريخ بكل رسمة (DW-042)
+  let txIdx = null;
+  function txIndex() {
+    const rev = S.rev ? S.rev() : -1;
+    if (txIdx && txIdx.rev === rev && txIdx.list === st.transactions && rev !== -1) return txIdx;
+    const byMonth = new Map(), byDay = new Map();
+    const sorted = st.transactions.map((t) => ({ t, ms: new Date(t.occurred_at).getTime() })).sort((a, b) => b.ms - a.ms);
+    for (const { t, ms } of sorted) {
+      const d = new Date(ms), mk = monthKey(d), dk = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+      if (!byMonth.has(mk)) byMonth.set(mk, []);
+      byMonth.get(mk).push(t);
+      if (!byDay.has(dk)) byDay.set(dk, []);
+      byDay.get(dk).push(t);
+    }
+    txIdx = { rev, list: st.transactions, byMonth, byDay };
+    return txIdx;
   }
+  function txInMonth(key) { return (txIndex().byMonth.get(key) || []).slice(); }
+  function txOnDay(d) { return (txIndex().byDay.get(d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate()) || []).slice(); }
   function sums(list) {
     let exp = 0, inc = 0;
     for (const t of list) { if (t.kind === 'income') inc += Number(t.amount) || 0; else exp += Number(t.amount) || 0; }
@@ -457,7 +473,7 @@
       const end = isThisMonth ? new Date() : new Date(y, m, 0);
       const days = [];
       for (let i = 6; i >= 0; i--) { const d = new Date(end); d.setDate(end.getDate() - i); days.push(d); }
-      const vals = days.map((d) => sums(st.transactions.filter((t) => sameDay(new Date(t.occurred_at), d))).exp);
+      const vals = days.map((d) => sums(txOnDay(d)).exp);
       const max = Math.max(...vals, 1);
       const total = vals.reduce((a, b) => a + b, 0);
       out += secHead('آخر ٧ أيام', '<span class="small muted">المجموع ' + money(total) + '</span>');
@@ -2185,7 +2201,7 @@
   window.App = {
     S, st, I, ui, h, fmt, money, tint, catMeta, catIcon, pad, monthKey, shiftKey, monthRange, monthLabel, payday, sameDay, startOfDay, daysBetween, time12, timeOf, minutesOf,
     nowMinutes, toLocalInput, dayLabel, nDays, toast, ask, courseById, lectures, lecturesOn, agendaOn, empty, secHead, ring, openSheet,
-    closeSheet, accountSheet, val, parseAmount, segPick, render, go, txForm, pasteSmsForm, txInMonth, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, courseForm, taskForm,
+    closeSheet, accountSheet, val, parseAmount, segPick, render, go, txForm, pasteSmsForm, txInMonth, txOnDay, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, courseForm, taskForm,
     notify, has, nextRenewal, sharedSms, expensesCSV, lastBackup, markBackup, backupNow, APP_VERSION, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
   };
   setInterval(timerTickUI, 1000);
