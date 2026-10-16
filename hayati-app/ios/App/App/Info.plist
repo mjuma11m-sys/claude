@@ -82,5 +82,7 @@
 	<string>«حياتي» يستخدم موقعك بس لما تضغط «استخدم موقعي» بالقبلة، عشان يحسب اتجاهها. الموقع ما ينحفظ ولا يطلع من جوالك.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>«حياتي» يستخدم المايك بس لما تسجّل محاضرة بنفسك، والتسجيل يظل على جوالك.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>«حياتي» يحوّل تسجيل محاضرتك لنص على جوالك نفسه، والصوت ما يطلع لأي مكان.</string>
 </dict>
 </plist>

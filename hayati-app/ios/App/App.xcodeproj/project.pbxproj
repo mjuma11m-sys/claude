@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D04700000000000000000002 /* SpeechPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04700000000000000000001 /* SpeechPlugin.swift */; };
 		D04600000000000000000002 /* ShareInPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04600000000000000000001 /* ShareInPlugin.swift */; };
 		D04600000000000000000007 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04600000000000000000006 /* ShareViewController.swift */; };
 		D0460000000000000000000B /* HayatiShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D0460000000000000000000A /* HayatiShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -58,6 +59,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D04700000000000000000001 /* SpeechPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechPlugin.swift; sourceTree = "<group>"; };
 		D04600000000000000000001 /* ShareInPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareInPlugin.swift; sourceTree = "<group>"; };
 		D04600000000000000000006 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		D04600000000000000000008 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -137,6 +139,7 @@
 				D04400000000000000000003 /* MainViewController.swift */,
 				D04400000000000000000001 /* WidgetPlugin.swift */,
 				D04600000000000000000001 /* ShareInPlugin.swift */,
+				D04700000000000000000001 /* SpeechPlugin.swift */,
 				D04400000000000000000005 /* App.entitlements */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
@@ -331,6 +334,7 @@
 				D04400000000000000000002 /* WidgetPlugin.swift in Sources */,
 				D04400000000000000000004 /* MainViewController.swift in Sources */,
 				D04600000000000000000002 /* ShareInPlugin.swift in Sources */,
+				D04700000000000000000002 /* SpeechPlugin.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

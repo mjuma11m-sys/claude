@@ -49,6 +49,46 @@
   const getClip = (id) => idb('readonly', (s) => s.get(id));
   const delClip = (id) => idb('readwrite', (s) => s.delete(id)).catch(() => {});
 
+  // ================= التسجيل ← نص (DW-047): آيفون، على الجهاز بس =================
+  // الإضافة HayatiSpeech (Swift) تستخدم SFSpeechRecognizer مع requiresOnDeviceRecognition، فالصوت ما يطلع من الجوال.
+  // الزر ما يطلع إلا لو الجهاز قال إنه يقدر يحوّل هاللغة بدون نت. النص يدخل الملاحظات مسودة، والحفظ بيد الطالب.
+  const SPEECH_MAX = 25e6;
+  let speechLangs = null;   // ['ar','en'] حسب الجهاز، تنحسب مرة
+  function speechPlugin() {
+    const C = window.Capacitor;
+    if (!C || typeof C.getPlatform !== 'function' || C.getPlatform() !== 'ios') return null;
+    return (C.Plugins && C.Plugins.HayatiSpeech) || (typeof C.registerPlugin === 'function' ? C.registerPlugin('HayatiSpeech') : null);
+  }
+  async function speechSupport() {
+    if (speechLangs) return speechLangs;
+    const P = speechPlugin();
+    if (!P || typeof P.available !== 'function') return (speechLangs = []);
+    const out = [];
+    for (const lang of ['ar', 'en']) { try { const r = await P.available({ lang }); if (r && r.onDevice) out.push(lang); } catch (e) { /* ما يدعم */ } }
+    return (speechLangs = out);
+  }
+  const blobB64 = (blob) => new Promise((ok, no) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result).split(',')[1] || ''); fr.onerror = () => no(fr.error); fr.readAsDataURL(blob); });
+  const SPEECH_ERR = { denied: 'ما فيه إذن للتعرّف على الكلام · من إعدادات الآيفون', unsupported: 'جهازك ما يحوّل هاللغة بدون نت', format: 'صيغة التسجيل ما تنقرا', big: 'التسجيل كبير (أكثر من 25MB)', busy: 'فيه تحويل شغّال، استنى يخلص' };
+  async function transcribeClip(root, l, i, lang, btn) {
+    const c = l.audio[i], P = speechPlugin();
+    if (!c || !P) return;
+    const blob = await getClip(c.id).catch(() => null);
+    if (!blob) { A.toast('التسجيل مو موجود على هالجهاز'); return; }
+    if (blob.size > SPEECH_MAX) { A.toast(SPEECH_ERR.big); return; }
+    const all = root.querySelectorAll('[data-stt]'), label = btn.textContent;
+    all.forEach((b) => { b.disabled = true; }); btn.textContent = '⏳ يحوّل…';
+    try {
+      const r = await P.transcribe({ data: await blobB64(blob), mime: blob.type || '', lang });
+      const text = String((r && r.text) || '').trim();
+      if (!text) { A.toast('ما طلع كلام واضح من التسجيل'); return; }
+      const notes = root.querySelector('[name=lc_notes]');
+      notes.value = (notes.value.trim() ? notes.value.trimEnd() + '\n\n' : '') + '🎙️ تسجيل ' + (i + 1) + ' (مسودة من الصوت):\n' + text.slice(0, 15000);
+      A.toast('انضاف النص للملاحظات · مسودة، راجعها واضغط «حفظ»');
+    } catch (e) {
+      A.toast(SPEECH_ERR[String(e && (e.message || e.code) || '')] || 'ما قدرنا نحوّله · جرّب مرة ثانية');
+    } finally { all.forEach((b) => { b.disabled = false; }); btn.textContent = label; }
+  }
+
   // ================= الشاشة =================
   function view() {
     const courses = st.courses || [];
@@ -163,7 +203,9 @@
     l.cards = (l.cards || []).map((c) => Object.assign({}, c)); l.audio = (l.audio || []).slice();
     const courses = st.courses || [];
     let rec = null, chunks = [], t0 = 0, timer = null;
-    const audioList = () => l.audio.length ? l.audio.map((a, i) => '<div class="clip" style="display:flex;align-items:center;gap:8px;margin:6px 0"><button type="button" class="btn ghost" data-play="' + i + '">▶︎ تسجيل ' + (i + 1) + ' · ' + mmss(a.dur || 0) + '</button><button type="button" class="icon-x" data-delclip="' + i + '" aria-label="حذف التسجيل">✕</button></div>').join('') : '<p class="small muted" style="margin:6px 4px">ما فيه تسجيل.</p>';
+    const sttBtns = (i) => (speechLangs || []).map((lg) => '<button type="button" class="btn ghost" data-stt="' + i + '" data-lang="' + lg + '" aria-label="' + (lg === 'ar' ? 'حوّل التسجيل لنص عربي' : 'حوّل التسجيل لنص إنقليزي') + '">📝 ' + (lg === 'ar' ? 'نص' : 'EN') + '</button>').join('');
+    const audioList = () => l.audio.length ? l.audio.map((a, i) => '<div class="clip" style="display:flex;align-items:center;gap:8px;margin:6px 0;flex-wrap:wrap"><button type="button" class="btn ghost" data-play="' + i + '">▶︎ تسجيل ' + (i + 1) + ' · ' + mmss(a.dur || 0) + '</button>' + sttBtns(i) + '<button type="button" class="icon-x" data-delclip="' + i + '" aria-label="حذف التسجيل">✕</button></div>').join('') +
+      ((speechLangs || []).length ? '<p class="small muted" style="margin:2px 4px 0">📝 يحوّل الصوت لنص على جوالك نفسه (ما يطلع لأي مكان)، والنص مسودة تراجعها.</p>' : '') : '<p class="small muted" style="margin:6px 4px">ما فيه تسجيل.</p>';
     const cardsList = () => l.cards.map((c, i) => '<li class="row" style="cursor:default"><div class="main"><div class="title"><span class="t" dir="auto" style="white-space:normal;overflow:visible">' + mathify(c.q) + '</span></div><div class="sub" dir="auto">' + mathify(c.a) + '</div></div><button type="button" class="icon-x" data-delcard="' + i + '" aria-label="حذف السؤال">✕</button></li>').join('');
     A.openSheet({
       title: old ? 'ملف المحاضرة' : 'محاضرة جديدة',
@@ -185,6 +227,7 @@
       mount(root) {
         const recBtn = root.querySelector('#lcRec');
         const redrawClips = () => { root.querySelector('#lcClips').innerHTML = audioList(); };
+        if (!speechLangs) speechSupport().then((ls) => { if (ls.length && root.isConnected) redrawClips(); });
         recBtn.onclick = async () => {
           if (rec) { rec.stop(); return; }
           if (!navigator.mediaDevices || !window.MediaRecorder) { A.toast('التسجيل ما يشتغل على هالجهاز'); return; }
@@ -203,6 +246,8 @@
           recBtn.textContent = '⏹ وقّف · 0:00';
         };
         root.querySelector('#lcClips').onclick = async (e) => {
+          const t = e.target.closest('[data-stt]');
+          if (t) { transcribeClip(root, l, Number(t.dataset.stt), t.dataset.lang, t); return; }
           const p = e.target.closest('[data-play]'), d = e.target.closest('[data-delclip]');
           if (p) { const c = l.audio[Number(p.dataset.play)]; const blob = c && await getClip(c.id).catch(() => null); if (!blob) { A.toast('التسجيل مو موجود على هالجهاز'); return; } new Audio(URL.createObjectURL(blob)).play(); }
           if (d && await A.ask('تحذف التسجيل؟')) { const [c] = l.audio.splice(Number(d.dataset.delclip), 1); if (c) delClip(c.id); redrawClips(); }

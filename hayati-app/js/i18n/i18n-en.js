@@ -1877,5 +1877,19 @@ window.HAYATI_EN = {
 "صحّح تصنيف محل مرة، والرسايل الجاية منه تتصنّف مثله": "Fix a shop's category once, and its next messages follow",
 "ودجت أصغر": "Smaller widget",
 "2×2 بالأندرويد: كم باقي من الميزانية و«+ مصروف»": "2×2 on Android: budget left and «+ Expense»",
-"أرفق آخر الأخطاء التقنية (بدون أرقام ولا أسماء)": "Attach the latest technical errors (no numbers or names)"
+"أرفق آخر الأخطاء التقنية (بدون أرقام ولا أسماء)": "Attach the latest technical errors (no numbers or names)",
+// DW-047: تسجيل المحاضرة ← نص (آيفون)
+"حوّل التسجيل لنص عربي": "Turn the recording into Arabic text",
+"حوّل التسجيل لنص إنقليزي": "Turn the recording into English text",
+"📝 يحوّل الصوت لنص على جوالك نفسه (ما يطلع لأي مكان)، والنص مسودة تراجعها.": "📝 Turns the audio into text on your phone itself (it goes nowhere); the text is a draft for you to review.",
+"⏳ يحوّل…": "⏳ Converting…",
+"ما طلع كلام واضح من التسجيل": "No clear speech found in the recording",
+"انضاف النص للملاحظات · مسودة، راجعها واضغط «حفظ»": "Text added to your notes · it's a draft, review it and tap «Save»",
+"ما فيه إذن للتعرّف على الكلام · من إعدادات الآيفون": "No speech recognition permission · enable it in iPhone Settings",
+"جهازك ما يحوّل هاللغة بدون نت": "Your phone can't convert this language offline",
+"صيغة التسجيل ما تنقرا": "The recording format can't be read",
+"التسجيل كبير (أكثر من 25MB)": "The recording is too big (over 25MB)",
+"فيه تحويل شغّال، استنى يخلص": "A conversion is already running, wait for it to finish",
+"ما قدرنا نحوّله · جرّب مرة ثانية": "Couldn't convert it · try again",
+"(مسودة من الصوت):": "(draft from audio):"
 };

@@ -2532,3 +2532,43 @@ test('lighter start (DW-046): Arabic never downloads the 120KB English dictionar
   expect(asked.length).toBe(1);
   await expect(page.locator('#title')).toHaveText('Today');
 });
+
+// ================= DW-047: تسجيل المحاضرة ← نص (آيفون، على الجهاز) =================
+test('lecture recording to text (DW-047): iPhone only, only for languages the phone can do offline, text lands in the notes as a draft', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__stt = { calls: [] };
+    window.Capacitor = { isNativePlatform: () => true, getPlatform: () => 'ios', Plugins: {
+      HayatiSpeech: {
+        available: async ({ lang }) => ({ onDevice: lang === 'ar' }),   // الجهاز يدعم العربي بس
+        transcribe: async (o) => { window.__stt.calls.push({ lang: o.lang, mime: o.mime, len: o.data.length }); return { text: 'النسبة الحالية تساوي الأصول المتداولة على الخصوم المتداولة' }; },
+      },
+      HayatiWidget: { update: async () => {}, take: async () => ({}), addListener: () => Promise.resolve({ remove() {} }) },
+    } };
+  });
+  await open(page);
+  await store(page, async () => {
+    await window.Extras.Lectures.putClip('c1', new Blob([new Uint8Array(2048)], { type: 'audio/mp4' }));
+    App.S.upsert('lectures', { id: 'l1', title: 'Ratios', date: '2026-10-16', notes: 'ملاحظتي', summary: '', cards: [], audio: [{ id: 'c1', dur: 65 }] });
+    window.Extras.Lectures.sheet('l1');
+  });
+  const ar = page.locator('[data-stt="0"][data-lang="ar"]');
+  await expect(ar).toBeVisible({ timeout: 5000 });
+  await expect(page.locator('[data-stt][data-lang="en"]')).toHaveCount(0);   // الإنقليزي مو مدعوم بدون نت هني
+  await ar.click();
+  await expect(page.locator('[name=lc_notes]')).toHaveValue(/ملاحظتي\n\n🎙️ تسجيل 1 \(مسودة من الصوت\):\nالنسبة الحالية/);
+  expect(await store(page, () => window.__stt.calls)).toEqual([{ lang: 'ar', mime: 'audio/mp4', len: expect.any(Number) }]);
+  // ما ينحفظ بروحه: الطالب يراجع ويضغط «حفظ»
+  expect(await store(page, () => App.st.lectures.find((x) => x.id === 'l1').notes)).toBe('ملاحظتي');
+});
+
+test('lecture recording to text (DW-047): no button on Android or the web', async ({ page }) => {
+  await open(page);
+  await store(page, async () => {
+    await window.Extras.Lectures.putClip('c2', new Blob([new Uint8Array(64)], { type: 'audio/webm' }));
+    App.S.upsert('lectures', { id: 'l2', title: 'X', date: '2026-10-16', notes: '', summary: '', cards: [], audio: [{ id: 'c2', dur: 5 }] });
+    window.Extras.Lectures.sheet('l2');
+  });
+  await expect(page.locator('[data-play="0"]')).toBeVisible();
+  await page.waitForTimeout(500);
+  await expect(page.locator('[data-stt]')).toHaveCount(0);
+});

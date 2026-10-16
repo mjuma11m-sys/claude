@@ -192,3 +192,16 @@ test('iPhone share (DW-046): share extension embedded, plain text only, hands th
   assert.match(plug, /removeObject\(forKey: "share"\)/);   // تنقرا مرة وحدة
   assert.match(iosRead('App/MainViewController.swift'), /registerPluginInstance\(ShareInPlugin\(\)\)/);
 });
+
+test('lecture recording to text (DW-047): on-device only, permission text present, plugin registered', () => {
+  const iosRead = (f) => fs.readFileSync(path.join(W, 'ios/App', f), 'utf8');
+  const sp = iosRead('App/SpeechPlugin.swift');
+  assert.match(sp, /jsName = "HayatiSpeech"/);
+  assert.match(sp, /requiresOnDeviceRecognition = true/);   // سيرفرات Apple ما تنستخدم
+  assert.match(sp, /supportsOnDeviceRecognition/);
+  assert.match(sp, /removeItem\(at: url\)/);   // الملف المؤقت ينمسح
+  assert.doesNotMatch(sp, /URLSession|http/);
+  assert.match(iosRead('App/Info.plist'), /NSSpeechRecognitionUsageDescription/);
+  assert.match(iosRead('App/MainViewController.swift'), /registerPluginInstance\(SpeechPlugin\(\)\)/);
+  assert.ok(iosRead('App.xcodeproj/project.pbxproj').includes('SpeechPlugin.swift in Sources'));
+});

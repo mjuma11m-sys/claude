@@ -1,4 +1,4 @@
-// يسجّل إضافاتنا بجسر Capacitor (DW-044: ودجت الآيفون · DW-046: «شارك ← حياتي»)
+// يسجّل إضافاتنا بجسر Capacitor (DW-044: ودجت الآيفون · DW-046: «شارك ← حياتي» · DW-047: تسجيل ← نص)
 import Capacitor
 import UIKit
 
@@ -6,5 +6,6 @@ class MainViewController: CAPBridgeViewController {
     override open func capacitorDidLoad() {
         bridge?.registerPluginInstance(WidgetPlugin())
         bridge?.registerPluginInstance(ShareInPlugin())
+        bridge?.registerPluginInstance(SpeechPlugin())
     }
 }
