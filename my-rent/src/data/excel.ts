@@ -1,7 +1,7 @@
 // Excel (DW-021): قالب بثلاث صفحات، قراءة ملف المستخدم مع أخطاء لكل صف، وتصدير التقارير.
 // المنطق هني صافي (بدون مكتبات) عشان ينختبر؛ القراءة والكتابة الفعلية بمكتبات تتحمّل وقت الحاجة.
 import type { BudgetCat, Data, Expense, Kind as UnitKind, Method, Payment, Unit } from "./types";
-import { LEASE_LABEL, isoDay, kindLabel, kindOf as unitKind, monthKey, monthLabel, monthName, monthlyReport, parseBHD, rentTracker } from "./logic";
+import { DOC_LABEL, docKindLabel, docsList, rentAt, LEASE_LABEL, isoDay, kindLabel, kindOf as unitKind, monthKey, monthLabel, monthName, monthlyReport, parseBHD, rentTracker } from "./logic";
 import { normalize } from "./prefs";
 
 export type Cell = string | number | boolean | Date | null | undefined;
@@ -184,6 +184,7 @@ export function exportSheets(data: Data, now = new Date()) {
     { sheet: "التقرير الشهري", data: [["الشهر", "الدخل (د.ب)", "المصروف (د.ب)", "الصافي (د.ب)"].map(H), ...rep.rows.map((r) => [`${monthName(r.month)} ${r.month.slice(0, 4)}`, D(r.income), D(r.expense), D(r.net)]), ["المجموع", D(rep.income), D(rep.expense), D(rep.net)].map((v) => ({ value: v, fontWeight: "bold" as const }))] },
     { sheet: "الدفعات", data: [["الوحدة", "الشهر", "المبلغ", "الطريقة", "التاريخ"].map(H), ...[...data.payments].sort((a, b) => b.date.localeCompare(a.date)).map((p) => [unitName(p.unitId), p.month, D(p.amount), p.method, p.date])] },
     { sheet: "المصاريف", data: [["الوصف", "المبلغ", "الفئة", "التاريخ"].map(H), ...[...data.expenses].sort((a, b) => b.date.localeCompare(a.date)).map((e) => [e.label, D(e.amount), catName(e.catId), e.date])] },
+    { sheet: "الوثائق", data: [["الوثيقة", "النوع", "الرقم", "الوحدة", "تاريخ الانتهاء", "الأيام المتبقية", "الحالة"].map(H), ...docsList(data, now).map(({ doc, state, left }) => [doc.title, docKindLabel(doc.kind), doc.ref ?? "", doc.unitId ? unitName(doc.unitId) : "العقار كله", doc.expires ?? "", left ?? "", DOC_LABEL[state]])] },
     { sheet: "الوحدات", data: [["الوحدة", "النوع", "المبنى", "الإيجار", "يوم الاستحقاق", "المستأجر", "الهاتف", "بداية العقد", "نهاية العقد", "التأمين", "عداد الكهرباء", "عداد الماء"].map(H), ...data.units.map((u) => [u.name, kindLabel(unitKind(u)), u.building, D(u.rent), u.dueDay, u.tenant?.name ?? "", u.tenant?.phone ?? "", u.tenant?.since ?? "", u.tenant?.until ?? "", u.tenant?.deposit ? D(u.tenant.deposit) : "", u.meters?.elec ?? "", u.meters?.water ?? ""])] },
   ];
 }
@@ -199,7 +200,7 @@ export function trackerSheet(data: Data, now = new Date(), rows = rentTracker(da
     data: [
       TRACK_HEAD.map(H),
       ...rows.map((r) => [
-        r.unit.name, kindLabel(r.kind), r.unit.building, r.unit.tenant?.name ?? "شاغرة", D(r.unit.rent),
+        r.unit.name, kindLabel(r.kind), r.unit.building, r.unit.tenant?.name ?? "شاغرة", D(rentAt(r.unit, monthKey(now))),
         D(r.due), D(r.paid), D(r.left), r.status ? PAY_LABEL[r.status] : "—",
         r.through ? monthLabel(r.through) : "—", r.ahead, D(r.aheadAmount),
         r.unit.tenant?.until ?? "", r.daysLeft ?? "", LEASE_LABEL[r.lease],

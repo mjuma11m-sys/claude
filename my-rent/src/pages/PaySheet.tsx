@@ -139,7 +139,7 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onCont
               <span className="strong">دفعة مقدمة</span>
               <span className="muted small">{thru ? <>مدفوع لين <b>{monthLabel(thru)}</b>{pre.months.length > 0 && <> · مقدم <span className="num">{pre.months.length}</span> {pre.months.length > 10 || pre.months.length < 3 ? "شهر" : "أشهر"}</>}</> : "فيه أشهر ما اندفعت — المقدم يسددها أول"}</span>
               <Chips label="كم شهر" value={ahead} onChange={setAhead} options={[{ id: "1", label: "شهر" }, { id: "3", label: "3 أشهر" }, { id: "6", label: "6 أشهر" }, { id: "12", label: "سنة" }]} />
-              {ahead !== "0" && (() => { const ms = nextUnpaid(data, u, Number(ahead)); return <div className="small ahead-sum">من {monthLabel(ms[0])} لين {monthLabel(ms[ms.length - 1])} · <Money fils={ms.reduce((s, m) => s + rentAt(u, m), 0)} /></div>; })()}
+              {ahead !== "0" && (() => { const ms = nextUnpaid(data, u, Number(ahead)); const past = !!u.tenant?.until && ms[ms.length - 1] > u.tenant.until.slice(0, 7); return <><div className="small ahead-sum">من {monthLabel(ms[0])} لين {monthLabel(ms[ms.length - 1])} · <Money fils={ms.reduce((s, m) => s + rentAt(u, m), 0)} /></div>{past && <div className="small field-warn" id="ahead-warn">⚠️ فيها أشهر بعد نهاية العقد ({u.tenant!.until}). جدّد العقد لو اتفقتوا.</div>}</>; })()}
               {owed.length === 0 && <Chips label="طريقة الدفع" value={method} onChange={setMethod} options={METHODS.map((m) => ({ id: m, label: m }))} />}
               <button type="submit" id="ahead-btn" className="btn btn-ghost btn-block press" disabled={ahead === "0"}>احفظ الدفعة المقدمة</button>
             </form>

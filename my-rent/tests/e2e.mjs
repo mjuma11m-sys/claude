@@ -361,7 +361,7 @@ try {
     const dl = x.waitForEvent("download"); await x.getByRole("button", { name: "تصدير التقارير Excel" }).click();
     const out = path.join(tmp, "export.xlsx"); await (await dl).saveAs(out);
     const sheets = await readXlsxFile(out);
-    ok(sheets.map((s) => s.sheet).join("|") === "متابعة الإيجار|التقرير الشهري|الدفعات|المصاريف|الوحدات" && sheets[2].data.length === before.payments.length + 1, "Excel: التصدير 5 صفحات وينقرا", sheets.map((s) => s.sheet + ":" + s.data.length).join(" "));
+    ok(sheets.map((s) => s.sheet).join("|") === "متابعة الإيجار|التقرير الشهري|الدفعات|المصاريف|الوثائق|الوحدات" && sheets[2].data.length === before.payments.length + 1 && sheets[4].data.length === 6, "Excel: التصدير 6 صفحات (مع الوثائق) وينقرا", sheets.map((s) => s.sheet + ":" + s.data.length).join(" "));
     const dl2 = x.waitForEvent("download"); await x.getByRole("button", { name: "نزّل القالب" }).click();
     const tpl = path.join(tmp, "tpl.xlsx"); await (await dl2).saveAs(tpl);
     ok((await readXlsxFile(tpl)).length === 3, "Excel: القالب 3 صفحات");
@@ -484,6 +484,47 @@ try {
     ok(JSON.stringify(back) === JSON.stringify(before), "التراجع يرجّع العقد والإيجار");
     ok(wErr.length === 0, "DW-024: بدون أخطاء", wErr.join(" | "));
     await w.close();
+  }
+
+  // 19) DW-025: الثغرات — سجل الإيجار يبقى مع التعديل، المستأجر الجديد ما يرثه، تباين الوضع الليلي، تنبيه المقدم
+  {
+    const v = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const vErr = []; v.on("pageerror", (e) => vErr.push(e.message));
+    await v.goto(URL + "#tenants"); await v.evaluate(() => localStorage.clear()); await v.reload(); await v.waitForTimeout(800);
+    const openU2 = async () => { await v.goto(URL + "#tenants"); await v.waitForTimeout(500); await v.locator(".unit-card", { hasText: "شقة 2" }).first().click(); await v.waitForTimeout(400); };
+    await openU2();
+    await v.getByRole("button", { name: "جدّد العقد" }).click(); await v.waitForTimeout(400);
+    await v.locator("#renew-rent").fill("240"); await v.locator("#renew-btn").click(); await v.waitForTimeout(500);
+    ok(await v.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")).units.find((u) => u.id === "u2").rentBefore?.length === 1), "التجديد انحفظ قبل التعديل");
+    await v.keyboard.press("Escape"); await v.waitForTimeout(500);
+    await openU2();
+    await v.getByRole("button", { name: /^تعديل$/ }).first().click(); await v.waitForTimeout(400);
+    await v.locator("#u-phone").fill("33001122"); await v.getByRole("button", { name: "احفظ التعديل" }).click(); await v.waitForTimeout(400);
+    let u2 = await v.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")).units.find((u) => u.id === "u2"));
+    ok(u2.tenant.phone === "33001122" && u2.rentBefore?.[0]?.rent === 220000, "تعديل الهاتف بعد التجديد: سجل الإيجار يبقى");
+    await openU2();
+    await v.getByRole("button", { name: /^تعديل$/ }).first().click(); await v.waitForTimeout(400);
+    await v.locator("#u-tenant").fill("مستأجر جديد"); await v.getByRole("button", { name: "احفظ التعديل" }).click(); await v.waitForTimeout(400);
+    u2 = await v.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")).units.find((u) => u.id === "u2"));
+    ok(!u2.rentBefore, "مستأجر جديد: ما يرث سجل إيجار السابق");
+    // تنبيه المقدم بعد نهاية العقد (شقة 2 عقدها ينتهي بعد 20 يوم)
+    await v.evaluate(() => localStorage.clear()); await v.reload(); await v.waitForTimeout(800); await openU2();
+    await v.locator(".ahead-form").getByRole("radio", { name: "6 أشهر" }).click(); await v.waitForTimeout(300);
+    ok(await v.locator("#ahead-warn").count() === 1, "دفعة مقدمة بعد نهاية العقد: تنبيه", await v.locator(".ahead-form").innerText().catch(() => "—"));
+    await v.close();
+    // تباين الوضع الليلي لعلامات العقد والوثائق
+    const dk = await browser.newPage({ viewport: { width: 1280, height: 900 }, colorScheme: "dark" });
+    const lum = (rgb) => { const [r, g, b] = rgb.match(/\d+(\.\d+)?/g).slice(0, 3).map(Number).map((c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+    const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
+    let worst = 99, which = "";
+    for (const [hash, sel] of [["track", ".pill[class*=lease-]"], ["docs", ".pill[class*=doc-]"]]) {
+      await dk.goto(URL + "#" + hash); await dk.evaluate(() => localStorage.clear()); await dk.reload(); await dk.waitForTimeout(900);
+      const pairs = await dk.evaluate((sel) => { const card = getComputedStyle(document.querySelector(".card")).backgroundColor; return [...document.querySelectorAll(sel)].map((el) => [el.className, getComputedStyle(el).color, card]); }, sel);
+      for (const [c, fg, bg] of pairs) { const r = ratio(fg, bg); if (r < worst) { worst = r; which = c; } }
+    }
+    ok(worst >= 4.5, "الوضع الليلي: تباين علامات العقد والوثائق ≥ 4.5", `${worst.toFixed(2)} ${which}`);
+    await dk.close();
+    ok(vErr.length === 0, "DW-025: بدون أخطاء", vErr.join(" | "));
   }
 
   if (process.env.SHOTS) {

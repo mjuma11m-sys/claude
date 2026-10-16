@@ -45,12 +45,15 @@ export function UnitForm({ open, unit, onClose, onSaved }: Props) {
     if (f.until && f.until.slice(0, 7) < f.since) return setError("نهاية العقد قبل بدايته");
     const deposit = f.deposit.trim() ? parseBHD(f.deposit) : 0;
     if (deposit === null) return setError("اكتب التأمين بالدينار، مثل 200، أو خلّه فاضي");
+    // سجل الإيجار (DW-024) يبقى لنفس المستأجر؛ المستأجر الجديد يبدأ بدون سجل
+    const sameTenant = !!unit?.tenant && unit.tenant.name === f.tenant.trim() && unit.tenant.since === f.since;
     const saved = saveUnit({
       id: unit?.id,
       name: f.name.trim(),
       building: f.building.trim() || "بدون مبنى",
       kind,
       ...(unit?.contractFile ? { contractFile: unit.contractFile } : {}), // التعديل ما يمسح ملف العقد
+      ...(sameTenant && unit?.rentBefore ? { rentBefore: unit.rentBefore } : {}),
       ...(f.elec.trim() || f.water.trim() ? { meters: { ...(f.elec.trim() ? { elec: f.elec.trim() } : {}), ...(f.water.trim() ? { water: f.water.trim() } : {}) } } : {}),
       rent,
       dueDay: day,

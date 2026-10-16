@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useStore } from "../data/store";
-import { arrears, backupDue, balances, budget, collection, contractAlerts, docAlerts, fmt, monthName, unitStatus } from "../data/logic";
+import { arrears, monthKey, rentAt, backupDue, balances, budget, collection, contractAlerts, docAlerts, fmt, monthName, unitStatus } from "../data/logic";
 import { DocPill } from "./Docs";
 import type { Unit } from "../data/types";
 import { Money, StatusPill } from "../theme/AppShell";
@@ -86,7 +86,7 @@ export function Home({ onOpenUnit, go, onQuick }: { onOpenUnit: (u: Unit) => voi
                 <li key={u.id} className={`att-row ${s.className}`} style={s.style}>
                   <button className="row-btn press" onClick={() => onOpenUnit(u)}>
                     <span><span className="strong">{u.name}</span> <span className="muted small">· {u.tenant?.name}</span></span>
-                    <span style={{ display: "flex", gap: 10, alignItems: "center" }}><Money fils={arrears(data, u).amount || u.rent} /><StatusPill status={unitStatus(data, u)} /></span>
+                    <span style={{ display: "flex", gap: 10, alignItems: "center" }}><Money fils={arrears(data, u).amount || rentAt(u, monthKey(new Date()))} /><StatusPill status={unitStatus(data, u)} /></span>
                   </button>
                   <button className="got-btn press" onClick={() => received(u)} aria-label={`استلمت إيجار ${u.name}`}>{Icon.check}<span>استلمت</span></button>
                 </li>

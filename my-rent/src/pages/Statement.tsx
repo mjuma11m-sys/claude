@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Unit } from "../data/types";
 import { useStore } from "../data/store";
-import { fmt, isoDay, monthName, statement } from "../data/logic";
+import { fmt, isoDay, monthKey, monthLabel, monthName, rentAt, statement, upcomingRent } from "../data/logic";
 import { Sheet, useToast } from "../ui/kit";
 import logoUrl from "../../brand/logo-horizontal.svg";
 
@@ -52,7 +52,7 @@ export function StatementSheet({ unit, onClose }: { unit: Unit | null; onClose: 
             <dl>
               <dt>المستأجر</dt><dd>{u.tenant?.name ?? "—"}</dd>
               <dt>العقار</dt><dd>{u.name} · {u.building}</dd>
-              <dt>الإيجار</dt><dd><span className="num">{fmt(u.rent)}</span> د.ب</dd>
+              <dt>الإيجار</dt><dd><span className="num">{fmt(rentAt(u, monthKey(new Date())))}</span> د.ب{(() => { const up = upcomingRent(u); return up ? <span className="muted small"> · يصير <span className="num">{fmt(up.rent)}</span> من {monthLabel(up.from)}</span> : null; })()}</dd>
               {!!u.tenant?.deposit && <><dt>التأمين</dt><dd><span className="num">{fmt(u.tenant.deposit)}</span> د.ب</dd></>}
             </dl>
             <table className="st-table">
