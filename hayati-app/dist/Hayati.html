@@ -2546,7 +2546,16 @@ window.HAYATI_EN = {
 "ما لقيت المبلغ، كمّل هني": "Couldn't find the amount, finish here",
 "بالليل، بس لو ما سجلت ولا مصروف بيومك. تقدر تسجّل من التنبيه نفسه": "At night, only if you logged no expense that day. You can log right from the notification",
 // DW-039: الودجت الصغير
-"ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← الأدوات (Widgets) ← حياتي. فيه حجمين: الكبير (4×2) يعرض الجاي اليوم وبكرة والميزانية مع «+ مصروف» و«الصق رسالة»، والصغير (2×2) يعرض كم باقي من الميزانية وزر «+ مصروف».": "Add it from the home screen: long-press an empty spot → Widgets → Hayati. There are two sizes: the large one (4×2) shows what's next today and tomorrow and your budget, with «+ Expense» and «Paste message»; the small one (2×2) shows how much budget is left and a «+ Expense» button."
+"ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← الأدوات (Widgets) ← حياتي. فيه حجمين: الكبير (4×2) يعرض الجاي اليوم وبكرة والميزانية مع «+ مصروف» و«الصق رسالة»، والصغير (2×2) يعرض كم باقي من الميزانية وزر «+ مصروف».": "Add it from the home screen: long-press an empty spot → Widgets → Hayati. There are two sizes: the large one (4×2) shows what's next today and tomorrow and your budget, with «+ Expense» and «Paste message»; the small one (2×2) shows how much budget is left and a «+ Expense» button.",
+// DW-040: صورة الهدف
+"صورة للهدف (اختياري)": "Goal photo (optional)",
+"📷 غيّر الصورة": "📷 Change photo",
+"📷 اختر صورة": "📷 Choose a photo",
+"غيّر الصورة": "Change photo",
+"اختر صورة": "Choose a photo",
+"شيل الصورة": "Remove photo",
+"الصورة تنحفظ على هالجهاز بس، ما ترتفع ولا تطلع لأحد.": "The photo is saved on this device only; it isn't uploaded or shared with anyone.",
+"ما قدرنا نفتح الصورة": "Couldn't open the photo"
 };
 
 </script>
@@ -4550,7 +4559,7 @@ window.HAYATI_CONFIG = {
         hint = daysBetween(new Date(), dl) < 0 ? '<span class="late">فات الموعد</span>' : 'وفّر ' + money(left / months) + ' بالشهر عشان توصل قبل ' + dl.getDate() + ' ' + MONTHS[dl.getMonth()];
       }
       const col = g.color || COLORS[0];
-      out += '<div class="card goal" data-action="edit-goal" data-id="' + g.id + '">' +
+      out += '<div class="card goal" data-action="edit-goal" data-id="' + g.id + '">' + X('goalBanner', g) +
         '<div class="goal-top"><div class="ico" style="' + tint(col) + (g.emoji ? ';font-size:20px' : '') + '">' + (g.emoji ? h(g.emoji) : I(g.done ? 'award' : 'piggy')) + '</div><div style="flex:1;min-width:0"><b>' + h(g.name) + '</b>' +
         '<div class="small muted">' + (g.done || sv >= t ? '🎉 تحقق الهدف' : 'باقي ' + money(left)) + '</div></div>' +
         '<div style="text-align:left;flex:none;max-width:45%"><b class="fit">' + money(sv) + '</b><div class="small muted num">' + Math.round(pct) + '%</div></div></div>' +
@@ -5449,6 +5458,7 @@ window.HAYATI_CONFIG = {
         '<div class="amount-box"><input name="target" inputmode="decimal" placeholder="0.000" value="' + (v.target !== '' ? Number(v.target).toFixed(3) : '') + '"><small id="targetHint">المبلغ المطلوب (د.ب)</small></div>' +
         (g ? '' : '<div class="field"><label>وفّرت منه للحين (اختياري)</label><input name="saved" inputmode="decimal" placeholder="0.000"></div>') +
         '<div class="field"><label>متى تبي توصل له؟ (اختياري)</label><input type="date" name="deadline" value="' + h(v.deadline || '') + '"></div>' +
+        X('goalFormExtra', g) +
         '<div class="field"><label>اللون</label><div class="colors" id="colorPick">' + COLORS.concat(['#ec4899']).filter((c, i, a) => a.indexOf(c) === i).map((col) =>
           '<button type="button" style="background:' + col + '" data-c="' + col + '" class="' + (col === v.color ? 'on' : '') + '" aria-label="لون"></button>').join('') + '</div></div>' +
         (g ? '<button class="btn danger block" type="button" id="delGoal">' + I('trash') + 'حذف الهدف</button>' : ''),
@@ -5486,7 +5496,8 @@ window.HAYATI_CONFIG = {
           if (b) root.querySelectorAll('#colorPick button').forEach((y) => y.classList.toggle('on', y === b));
         };
         const del = root.querySelector('#delGoal');
-        if (del) del.onclick = async () => { if (await ask('تحذف الهدف؟')) { S.remove('goals', g.id); closeSheet(); toast('انحذف'); } };
+        if (del) del.onclick = async () => { if (await ask('تحذف الهدف؟')) { S.remove('goals', g.id); X('goalDeleted', g.id); closeSheet(); toast('انحذف'); } };
+        X('goalFormMount', root, g);
         sync();
       },
       onSave(root) {
@@ -5499,10 +5510,11 @@ window.HAYATI_CONFIG = {
         if (!(target > 0)) throw new Error(items.length ? 'اكتب مبالغ البنود' : 'اكتب المبلغ المطلوب');
         const col = root.querySelector('#colorPick .on');
         const saved = g ? Number(g.saved) || 0 : parseAmount(val(root, 'saved')) || 0;
-        S.upsert('goals', Object.assign({}, g || {}, {
+        const savedGoal = S.upsert('goals', Object.assign({}, g || {}, {
           name, emoji: root.dataset.emoji || null, items, target: Math.round(target * 1000) / 1000, saved,
           deadline: val(root, 'deadline') || null, color: col ? col.dataset.c : COLORS[0], done: saved >= target,
         }));
+        X('goalSaved', savedGoal, root);
         toast(g ? 'تم التعديل' : 'انضاف الهدف 🎯 بالتوفيق!');
       },
     });
@@ -10338,6 +10350,96 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
+  <script>/* js/features/goalphoto.js */
+// «هدف بصورة» (DW-040): صورة للشي اللي توفّر له (السيارة، اللابتوب…) تطلع فوق بطاقة الهدف وتحفّزك.
+// الصورة على هالجهاز بس (IndexedDB)، مصغّرة لـ 800px، ما ترتفع للسيرفر ولا تتزامن مع أجهزتك الثانية.
+(function () {
+  'use strict';
+
+  const A = window.App, E = window.Extras;
+  if (!A || !E) return;
+  const DB = 'hayati-goal-photos', OS = 'photos', MAX = 800;
+  const cache = new Map();   // id → dataURL، عشان الرسم يظل متزامن
+
+  function idb(mode, fn) {
+    return new Promise((ok, no) => {
+      if (!window.indexedDB) return ok(null);
+      const r = indexedDB.open(DB, 1);
+      r.onupgradeneeded = () => r.result.createObjectStore(OS);
+      r.onerror = () => no(r.error);
+      r.onsuccess = () => {
+        const tx = r.result.transaction(OS, mode); const out = fn(tx.objectStore(OS));
+        tx.oncomplete = () => { r.result.close(); ok(out && out.result !== undefined ? out.result : out); };
+        tx.onerror = () => { r.result.close(); no(tx.error); };
+      };
+    });
+  }
+  async function load() {
+    try {
+      const keys = (await idb('readonly', (s) => s.getAllKeys())) || [];
+      const vals = (await idb('readonly', (s) => s.getAll())) || [];
+      keys.forEach((k, i) => { if (typeof vals[i] === 'string') cache.set(String(k), vals[i]); });
+      if (cache.size) A.render();
+    } catch (e) { /* بدون صور */ }
+  }
+  const put = (id, url) => { cache.set(id, url); return idb('readwrite', (s) => s.put(url, id)).catch(() => {}); };
+  const drop = (id) => { cache.delete(id); return idb('readwrite', (s) => s.delete(id)).catch(() => {}); };
+
+  async function shrink(file) {
+    const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = URL.createObjectURL(file); });
+    const k = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(img.src);
+    return c.toDataURL('image/jpeg', 0.8);
+  }
+
+  // بطاقة الهدف: الصورة فوق
+  E.goalBanner = (g) => {
+    const url = g && cache.get(String(g.id));
+    return url ? '<div class="goal-photo" style="margin:-16px -16px 12px;height:140px;border-radius:inherit;border-bottom-left-radius:0;border-bottom-right-radius:0;overflow:hidden;background:#0002">' +
+      '<img src="' + url + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></div>' : '';
+  };
+
+  // نموذج الهدف: اختار صورة / شيلها
+  E.goalFormExtra = (g) => {
+    const url = g && cache.get(String(g.id));
+    return '<div class="field"><label>صورة للهدف (اختياري)</label>' +
+      '<div id="gpPreview" style="' + (url ? '' : 'display:none;') + 'height:120px;border-radius:14px;overflow:hidden;margin-bottom:8px;background:#0002"><img alt="" style="width:100%;height:100%;object-fit:cover;display:block"' + (url ? ' src="' + url + '"' : '') + '></div>' +
+      '<div class="btn-row"><button type="button" class="btn ghost" id="gpPick">📷 ' + (url ? 'غيّر الصورة' : 'اختر صورة') + '</button>' +
+      '<button type="button" class="btn ghost" id="gpDel"' + (url ? '' : ' hidden') + '>شيل الصورة</button></div>' +
+      '<input type="file" id="gpFile" accept="image/*" hidden>' +
+      '<small class="muted">الصورة تنحفظ على هالجهاز بس، ما ترتفع ولا تطلع لأحد.</small></div>';
+  };
+  E.goalFormMount = (root) => {
+    const file = root.querySelector('#gpFile'), pick = root.querySelector('#gpPick'), del = root.querySelector('#gpDel'), box = root.querySelector('#gpPreview');
+    if (!file) return;
+    pick.onclick = () => file.click();
+    file.onchange = async () => {
+      const f = file.files && file.files[0]; file.value = '';
+      if (!f) return;
+      if (!/^image\//.test(f.type || 'image/')) { A.toast('اختر صورة'); return; }
+      try {
+        const url = await shrink(f);
+        root.dataset.goalPhoto = url;
+        box.querySelector('img').src = url; box.style.display = '';
+        del.hidden = false; pick.textContent = '📷 غيّر الصورة';
+      } catch (e) { A.toast('ما قدرنا نفتح الصورة'); }
+    };
+    del.onclick = () => { root.dataset.goalPhoto = '-'; box.style.display = 'none'; box.querySelector('img').removeAttribute('src'); del.hidden = true; pick.textContent = '📷 اختر صورة'; };
+  };
+  E.goalSaved = (g, root) => {
+    const p = root && root.dataset.goalPhoto;
+    if (!g || !g.id || !p) return;
+    if (p === '-') drop(String(g.id)); else put(String(g.id), p);
+    setTimeout(() => A.render(), 0);
+  };
+  E.goalDeleted = (id) => { if (id) drop(String(id)); };
+
+  E.GoalPhoto = { get: (id) => cache.get(String(id)) || null, all: () => Object.fromEntries(cache), put, drop, load, shrink };
+  load();
+})();
+
+</script>
   <script>/* js/features/backup.js */
 // «نسخة مشفّرة» (DW-029): ملف واحد بكلمة سر فيه كل شي: بيانات الحساب + اللي على الجهاز بس (الرحلات، الإعدادات) + تسجيلات المحاضرات (اختياري).
 // التشفير بالجهاز: PBKDF2-SHA256 (250k) ← AES-GCM-256. كلمة السر ما تنحفظ ولا تطلع، ولو نسيتها ما فيه طريقة نرجع الملف.
@@ -10412,12 +10514,15 @@ window.HAYATI_CONFIG = {
   async function pack(withAudio) {
     const local = {};
     for (const k of LOCAL) { try { const v = localStorage.getItem(k); if (v != null) local[k] = v; } catch (e) { /* تجاهل */ } }
-    return { store: S.exportJSON(), local, clips: withAudio ? await readClips() : [] };
+    const GP = E.GoalPhoto;   // صور الأهداف (DW-040): على الجهاز بس، فترجع مع النسخة
+    return { store: S.exportJSON(), local, clips: withAudio ? await readClips() : [], photos: GP ? GP.all() : {} };
   }
   async function unpack(p) {
     const n = S.importJSON(p.store);
     for (const k of Object.keys(p.local || {})) if (LOCAL.includes(k)) { try { localStorage.setItem(k, p.local[k]); } catch (e) { /* تجاهل */ } }
     if ((p.clips || []).length) await writeClips(p.clips);
+    const photos = p.photos && typeof p.photos === 'object' ? Object.entries(p.photos).filter(([, v]) => typeof v === 'string' && v.startsWith('data:image/')) : [];
+    if (photos.length && E.GoalPhoto) await Promise.all(photos.map(([id, v]) => E.GoalPhoto.put(id, v)));
     return { items: n, clips: (p.clips || []).length };
   }
 

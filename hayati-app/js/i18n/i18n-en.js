@@ -1837,5 +1837,14 @@ window.HAYATI_EN = {
 "ما لقيت المبلغ، كمّل هني": "Couldn't find the amount, finish here",
 "بالليل، بس لو ما سجلت ولا مصروف بيومك. تقدر تسجّل من التنبيه نفسه": "At night, only if you logged no expense that day. You can log right from the notification",
 // DW-039: الودجت الصغير
-"ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← الأدوات (Widgets) ← حياتي. فيه حجمين: الكبير (4×2) يعرض الجاي اليوم وبكرة والميزانية مع «+ مصروف» و«الصق رسالة»، والصغير (2×2) يعرض كم باقي من الميزانية وزر «+ مصروف».": "Add it from the home screen: long-press an empty spot → Widgets → Hayati. There are two sizes: the large one (4×2) shows what's next today and tomorrow and your budget, with «+ Expense» and «Paste message»; the small one (2×2) shows how much budget is left and a «+ Expense» button."
+"ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← الأدوات (Widgets) ← حياتي. فيه حجمين: الكبير (4×2) يعرض الجاي اليوم وبكرة والميزانية مع «+ مصروف» و«الصق رسالة»، والصغير (2×2) يعرض كم باقي من الميزانية وزر «+ مصروف».": "Add it from the home screen: long-press an empty spot → Widgets → Hayati. There are two sizes: the large one (4×2) shows what's next today and tomorrow and your budget, with «+ Expense» and «Paste message»; the small one (2×2) shows how much budget is left and a «+ Expense» button.",
+// DW-040: صورة الهدف
+"صورة للهدف (اختياري)": "Goal photo (optional)",
+"📷 غيّر الصورة": "📷 Change photo",
+"📷 اختر صورة": "📷 Choose a photo",
+"غيّر الصورة": "Change photo",
+"اختر صورة": "Choose a photo",
+"شيل الصورة": "Remove photo",
+"الصورة تنحفظ على هالجهاز بس، ما ترتفع ولا تطلع لأحد.": "The photo is saved on this device only; it isn't uploaded or shared with anyone.",
+"ما قدرنا نفتح الصورة": "Couldn't open the photo"
 };

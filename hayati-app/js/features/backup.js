@@ -71,12 +71,15 @@
   async function pack(withAudio) {
     const local = {};
     for (const k of LOCAL) { try { const v = localStorage.getItem(k); if (v != null) local[k] = v; } catch (e) { /* تجاهل */ } }
-    return { store: S.exportJSON(), local, clips: withAudio ? await readClips() : [] };
+    const GP = E.GoalPhoto;   // صور الأهداف (DW-040): على الجهاز بس، فترجع مع النسخة
+    return { store: S.exportJSON(), local, clips: withAudio ? await readClips() : [], photos: GP ? GP.all() : {} };
   }
   async function unpack(p) {
     const n = S.importJSON(p.store);
     for (const k of Object.keys(p.local || {})) if (LOCAL.includes(k)) { try { localStorage.setItem(k, p.local[k]); } catch (e) { /* تجاهل */ } }
     if ((p.clips || []).length) await writeClips(p.clips);
+    const photos = p.photos && typeof p.photos === 'object' ? Object.entries(p.photos).filter(([, v]) => typeof v === 'string' && v.startsWith('data:image/')) : [];
+    if (photos.length && E.GoalPhoto) await Promise.all(photos.map(([id, v]) => E.GoalPhoto.put(id, v)));
     return { items: n, clips: (p.clips || []).length };
   }
 

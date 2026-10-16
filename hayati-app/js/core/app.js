@@ -683,7 +683,7 @@
         hint = daysBetween(new Date(), dl) < 0 ? '<span class="late">فات الموعد</span>' : 'وفّر ' + money(left / months) + ' بالشهر عشان توصل قبل ' + dl.getDate() + ' ' + MONTHS[dl.getMonth()];
       }
       const col = g.color || COLORS[0];
-      out += '<div class="card goal" data-action="edit-goal" data-id="' + g.id + '">' +
+      out += '<div class="card goal" data-action="edit-goal" data-id="' + g.id + '">' + X('goalBanner', g) +
         '<div class="goal-top"><div class="ico" style="' + tint(col) + (g.emoji ? ';font-size:20px' : '') + '">' + (g.emoji ? h(g.emoji) : I(g.done ? 'award' : 'piggy')) + '</div><div style="flex:1;min-width:0"><b>' + h(g.name) + '</b>' +
         '<div class="small muted">' + (g.done || sv >= t ? '🎉 تحقق الهدف' : 'باقي ' + money(left)) + '</div></div>' +
         '<div style="text-align:left;flex:none;max-width:45%"><b class="fit">' + money(sv) + '</b><div class="small muted num">' + Math.round(pct) + '%</div></div></div>' +
@@ -1582,6 +1582,7 @@
         '<div class="amount-box"><input name="target" inputmode="decimal" placeholder="0.000" value="' + (v.target !== '' ? Number(v.target).toFixed(3) : '') + '"><small id="targetHint">المبلغ المطلوب (د.ب)</small></div>' +
         (g ? '' : '<div class="field"><label>وفّرت منه للحين (اختياري)</label><input name="saved" inputmode="decimal" placeholder="0.000"></div>') +
         '<div class="field"><label>متى تبي توصل له؟ (اختياري)</label><input type="date" name="deadline" value="' + h(v.deadline || '') + '"></div>' +
+        X('goalFormExtra', g) +
         '<div class="field"><label>اللون</label><div class="colors" id="colorPick">' + COLORS.concat(['#ec4899']).filter((c, i, a) => a.indexOf(c) === i).map((col) =>
           '<button type="button" style="background:' + col + '" data-c="' + col + '" class="' + (col === v.color ? 'on' : '') + '" aria-label="لون"></button>').join('') + '</div></div>' +
         (g ? '<button class="btn danger block" type="button" id="delGoal">' + I('trash') + 'حذف الهدف</button>' : ''),
@@ -1619,7 +1620,8 @@
           if (b) root.querySelectorAll('#colorPick button').forEach((y) => y.classList.toggle('on', y === b));
         };
         const del = root.querySelector('#delGoal');
-        if (del) del.onclick = async () => { if (await ask('تحذف الهدف؟')) { S.remove('goals', g.id); closeSheet(); toast('انحذف'); } };
+        if (del) del.onclick = async () => { if (await ask('تحذف الهدف؟')) { S.remove('goals', g.id); X('goalDeleted', g.id); closeSheet(); toast('انحذف'); } };
+        X('goalFormMount', root, g);
         sync();
       },
       onSave(root) {
@@ -1632,10 +1634,11 @@
         if (!(target > 0)) throw new Error(items.length ? 'اكتب مبالغ البنود' : 'اكتب المبلغ المطلوب');
         const col = root.querySelector('#colorPick .on');
         const saved = g ? Number(g.saved) || 0 : parseAmount(val(root, 'saved')) || 0;
-        S.upsert('goals', Object.assign({}, g || {}, {
+        const savedGoal = S.upsert('goals', Object.assign({}, g || {}, {
           name, emoji: root.dataset.emoji || null, items, target: Math.round(target * 1000) / 1000, saved,
           deadline: val(root, 'deadline') || null, color: col ? col.dataset.c : COLORS[0], done: saved >= target,
         }));
+        X('goalSaved', savedGoal, root);
         toast(g ? 'تم التعديل' : 'انضاف الهدف 🎯 بالتوفيق!');
       },
     });

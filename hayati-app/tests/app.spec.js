@@ -1975,6 +1975,41 @@ test('English: «21 يوم» (11+ days) translates like «3 أيام»', async (
   expect(await store(page, () => window.HayatiLang.tr('بعد 21 يوم · قبل 12 يوم · باقي 21 يوم'))).toBe('in 21 days · 12 days ago · Left 21 days');
 });
 
+test('goal photo (DW-040): pick a photo, it shows on the card, survives a reload, stays off the server, rides in the encrypted backup, and can be removed', async ({ page }) => {
+  // صورة PNG صغيرة (8×8 أحمر) تتولّد بالمتصفح
+  await open(page);
+  const png = await store(page, () => { const c = document.createElement('canvas'); c.width = c.height = 8; const x = c.getContext('2d'); x.fillStyle = '#e11'; x.fillRect(0, 0, 8, 8); return c.toDataURL('image/png').split(',')[1]; });
+  await store(page, () => { App.S.setSettings({ onboarded: true }); App.ui.moneySeg = 'goals'; App.go('money'); });
+  await page.click('[data-action="add-goal"] >> nth=0');
+  await page.fill('#sheetBody [name=name]', 'سيارة');
+  await page.fill('#sheetBody [name=target]', '3000');
+  await page.setInputFiles('#gpFile', { name: 'car.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') });
+  await expect(page.locator('#gpPreview img')).toHaveAttribute('src', /^data:image\/jpeg/);
+  await page.click('#sheetSave');
+  await expect(page.locator('.card.goal .goal-photo img')).toHaveCount(1);
+  const g = await store(page, () => App.st.goals.find((x) => x.name === 'سيارة'));
+  expect(JSON.stringify(g)).not.toContain('data:image');            // الصورة ما تدخل بيانات الحساب
+  expect(await store(page, () => App.S.exportJSON())).not.toContain('data:image');
+
+  await page.reload(); await page.waitForFunction(() => window.App && App.st);
+  await store(page, () => { App.ui.moneySeg = 'goals'; App.go('money'); });
+  await expect(page.locator('.card.goal .goal-photo img')).toHaveCount(1);
+
+  // النسخة المشفّرة تشيلها وترجّعها
+  const pack = await store(page, () => window.HayatiBackup.pack(false));
+  expect(Object.keys(pack.photos)).toEqual([g.id]);
+  await store(page, (id) => window.Extras.GoalPhoto.drop(id), g.id);
+  await store(page, (p) => window.HayatiBackup.unpack(p), pack);
+  expect(await store(page, (id) => !!window.Extras.GoalPhoto.get(id), g.id)).toBe(true);
+
+  // شيل الصورة من النموذج
+  await page.click('.card.goal');
+  await page.click('#gpDel');
+  await page.click('#sheetSave');
+  await expect(page.locator('.card.goal .goal-photo')).toHaveCount(0);
+  expect(await store(page, (id) => window.Extras.GoalPhoto.get(id), g.id)).toBeNull();
+});
+
 test('encrypted backup (DW-029): one file with account + device data + recordings, no plaintext inside, wrong password refused, restore works', async ({ page }) => {
   await open(page);
   await store(page, async () => {
