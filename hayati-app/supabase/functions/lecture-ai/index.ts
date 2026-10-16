@@ -4,7 +4,8 @@
 // DW-037 — «اسأل حياتي»: a question about the user's own numbers, answered from a snapshot the app sends with it (nothing is stored here).
 // Secrets (Supabase → Edge Functions → Secrets, never in the app or repo):
 //   ANTHROPIC_API_KEY  required
-//   AI_MODEL           optional, default claude-opus-5-5 (claude-haiku-5-5 is ~35× cheaper)
+//   AI_MODEL           optional, default claude-opus-5-5 (summaries, questions, photos, PDFs)
+//   AI_MODEL_ASK       optional, default claude-sonnet-5-5 for «اسأل حياتي» (DW-046: short answers from ready numbers, about half the cost)
 //   AI_DAILY_LIMIT     optional, default 10 calls per user per day
 import Anthropic from "npm:@anthropic-ai/sdk";
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -148,7 +149,9 @@ Deno.serve(async (req) => {
   if (limErr) return json({ error: "usage" }, 500);
   if (!allowed) return json({ error: "limit" }, 429);
 
-  const model = Deno.env.get("AI_MODEL") ?? "claude-opus-5-5";
+  const model = mode === "ask"
+    ? Deno.env.get("AI_MODEL_ASK") ?? "claude-sonnet-5-5"
+    : Deno.env.get("AI_MODEL") ?? "claude-opus-5-5";
   const client = new Anthropic({ apiKey: key });
   const opus5 = model.startsWith("claude-opus-5");
   try {
