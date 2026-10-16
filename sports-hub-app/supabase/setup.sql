@@ -1136,6 +1136,10 @@ end $$;
 
 revoke execute on function public.admin_provision_staff(text, public.app_role, text, text) from public, anon, authenticated;
 
+-- ===== migrations/0015_revoke_trigger_function.sql =====
+-- handle_new_user() only runs as the sign-up trigger. Supabase grants new functions to anon/authenticated by default, so close that door.
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+
 -- ===== seed_demo.sql =====
 -- Demo data mirroring src/data/demo.ts. Every row is is_demo = true; replace with real data via the service role.
 
