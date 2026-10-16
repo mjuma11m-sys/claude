@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 27,
+  "next": 28,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -201,6 +201,13 @@
     "DW-026": {
       "title": "Sports Hub: مشروع Supabase مستقل sports-hub مطبّق عليه كل المهاجرات",
       "priority": "P1",
+      "owner": "CEO",
+      "status": "review",
+      "opened": "2026-10-16"
+    },
+    "DW-027": {
+      "title": "Sports Hub: مراجعة الأمان وإصلاح الثغرات + خطة التطوير",
+      "priority": "P0",
       "owner": "CEO",
       "status": "review",
       "opened": "2026-10-16"
