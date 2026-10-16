@@ -1284,11 +1284,11 @@
     const before = P.learnedFor(t.kind, t.merchant);
     P.learn(t.kind, t.merchant, t.category);
     if (!oldCat || oldCat === t.category) return;
-    const key = P.brand(t.merchant).key;
+    const key = P.brand(t.merchant).key, name = '\u2068' + P.brand(t.merchant).label + '\u2069';   // الاسم الإنقليزي ما يقلب الجملة العربية
     const others = st.transactions.filter((x) => x.id !== t.id && x.kind === t.kind && x.category === oldCat && x.merchant && P.brand(x.merchant).key === key);
-    if (!others.length) { if (before !== t.category) toast('تمام، «' + P.brand(t.merchant).label + '» صار ' + t.category + ' للرسايل الجاية'); return; }
+    if (!others.length) { if (before !== t.category) toast('تمام، «' + name + '» صار ' + t.category + ' للرسايل الجاية'); return; }
     setTimeout(async () => {
-      if (!(await ask('فيه ' + others.length + ' عمليات ثانية من «' + P.brand(t.merchant).label + '» تصنيفها ' + oldCat + '. نخليها ' + t.category + ' بعد؟', 'غيّرها'))) return;
+      if (!(await ask('فيه ' + others.length + ' عمليات ثانية من «' + name + '» تصنيفها ' + oldCat + '. نخليها ' + t.category + ' بعد؟', 'غيّرها'))) return;
       for (const x of others) S.upsert('transactions', Object.assign({}, x, { category: t.category }));
       toast('تعدّلت ' + others.length + ' عمليات ✓');
     }, 500);
