@@ -73,11 +73,13 @@ for try in $(seq 1 15); do
   wg=$(adb logcat -d | grep -o 'hayati-widget:inflate [a-z]*.*' | head -1 || true)
   [ -n "$wg" ] && break
 done
-adb logcat -d -t 300 > "$OUT/logcat.txt" || true
+adb logcat -d > "$OUT/logcat.txt" || true
 adb exec-out run-as "$PKG" cat files/widget-preview.png > "$OUT/widget.png" 2>/dev/null || true
 case "$wg" in
   "hayati-widget:inflate ok"*) echo "✅ الودجت انرسم ($(du -h "$OUT/widget.png" | cut -f1))" ;;
-  "") echo "❌ ما وصلت لقطة للودجت خلال 30 ثانية"; exit 1 ;;
+  "") echo "❌ ما وصلت لقطة للودجت خلال 30 ثانية"
+      grep -E 'Hayati|hayati-|chromium|Capacitor|AndroidRuntime' "$OUT/logcat.txt" | tail -60 || true
+      exit 1 ;;
   *) echo "❌ $wg"; exit 1 ;;
 esac
 # DW-039: الودجت الصغير مسجّل، وانرسم من نفس اللقطة
