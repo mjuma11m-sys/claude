@@ -1,0 +1,138 @@
+{
+ "name": "football-boots-by-position",
+ "fps": 30,
+ "width": 1080,
+ "height": 1920,
+ "bpm": 120,
+ "beatsPerBar": 4,
+ "beatOffset": 0,
+ "palette": {
+  "bg": "#06120E",
+  "ink": "#F4F7F2",
+  "acc": "#C6FF3D",
+  "clay": "#7BB81A",
+  "hi": "#E4FF9A",
+  "mut": "#8FA39A"
+ },
+ "fonts": {
+  "display": "Tajawal",
+  "body": "Tajawal",
+  "num": "Inter"
+ },
+ "post": {
+  "grain": 0.03,
+  "vignette": 0.3
+ },
+ "timing": {
+  "snap": "half",
+  "startPad": 0,
+  "tail": 0
+ },
+ "music": {
+  "key": "A",
+  "scale": "minor",
+  "progression": [
+   0,
+   5,
+   2,
+   6
+  ],
+  "level": -6,
+  "duck": 0,
+  "top": {
+   "hat": 12,
+   "pluck": 5
+  }
+ },
+ "sections": [
+  {
+   "name": "intro",
+   "at": 0
+  },
+  {
+   "name": "build",
+   "at": "scene:cb"
+  },
+  {
+   "name": "drop",
+   "at": "scene:wg"
+  },
+  {
+   "name": "outro",
+   "at": "scene:end"
+  }
+ ],
+ "scenes": [
+  {
+   "id": "hook",
+   "file": "scenes/hook.js",
+   "lines": [],
+   "duration": 3.0
+  },
+  {
+   "id": "cb",
+   "file": "scenes/cb.js",
+   "lines": [],
+   "duration": 6.0,
+   "transition": {
+    "type": "push",
+    "dur": 0.35,
+    "dir": "rtl"
+   }
+  },
+  {
+   "id": "cm",
+   "file": "scenes/cm.js",
+   "lines": [],
+   "duration": 6.0,
+   "transition": {
+    "type": "push",
+    "dur": 0.35,
+    "dir": "rtl"
+   }
+  },
+  {
+   "id": "wg",
+   "file": "scenes/wg.js",
+   "lines": [],
+   "duration": 6.0,
+   "transition": {
+    "type": "push",
+    "dur": 0.35,
+    "dir": "rtl"
+   }
+  },
+  {
+   "id": "st",
+   "file": "scenes/st.js",
+   "lines": [],
+   "duration": 6.0,
+   "transition": {
+    "type": "push",
+    "dur": 0.35,
+    "dir": "rtl"
+   }
+  },
+  {
+   "id": "gk",
+   "file": "scenes/gk.js",
+   "lines": [],
+   "duration": 6.0,
+   "transition": {
+    "type": "push",
+    "dur": 0.35,
+    "dir": "rtl"
+   }
+  },
+  {
+   "id": "end",
+   "file": "scenes/end.js",
+   "lines": [],
+   "duration": 4.0,
+   "transition": {
+    "type": "zoom",
+    "dur": 0.4
+   }
+  }
+ ]
+}
