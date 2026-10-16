@@ -1,0 +1,122 @@
+/* إداراتي — design tokens (DW-008)
+   مصدر واحد للألوان: لا تكتب hex داخل أي component، استخدم var(--…) أو كلاسات Tailwind من tailwind.preset.js */
+
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Readex+Pro:wght@500;600;700&display=swap");
+
+:root {
+  color-scheme: light;
+
+  /* الهوية */
+  --night: #14213A;      /* ليل المحرق: الهيدر، البطاقة الرئيسية، الشعار */
+  --brand: #1E3A5F;      /* الأزرار، التبويب المختار، الروابط */
+  --gold: #C9963A;       /* زر الإضافة فقط + نقطة الشعار */
+  --on-brand: #FFFFFF;
+  --on-gold: #14213A;
+
+  /* الأسطح */
+  --bg: #F5F2EB;         /* حجر */
+  --surface: #FFFFFF;
+  --surface-2: #EDE8DD;
+  --line: #DDD6C8;
+  --text: #14213A;
+  --muted: #5B6578;
+
+  /* حالات الإيجار والمال — نفس المعنى بكل الأقسام */
+  --paid: #1E7A4C;       /* مدفوع / دخل */
+  --due: #965F00;        /* مستحق قريب */
+  --late: #B83A2B;       /* متأخر / صرف / حذف */
+  --paid-soft: #E3F1E8;
+  --due-soft: #F7ECD6;
+  --late-soft: #F8E2DE;
+
+  /* الشكل */
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 20px;
+  --shadow: 0 1px 2px rgb(20 33 58 / 0.06), 0 4px 16px rgb(20 33 58 / 0.06);
+
+  /* الحركة */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur: 200ms;
+
+  /* المقاسات */
+  --nav-h: 64px;
+  --sidebar-w: 248px;
+  --font-display: "Readex Pro", "IBM Plex Sans Arabic", "SF Arabic", "Segoe UI", Tahoma, sans-serif; /* العناوين، الشعار، الأرقام الكبيرة */
+  --font: "IBM Plex Sans Arabic", -apple-system, BlinkMacSystemFont, "SF Arabic", "Segoe UI", Tahoma, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --night: #0A1120;
+    --brand: #8FB3E8;
+    --gold: #E2B866;
+    --on-brand: #0D1524;
+    --on-gold: #0D1524;
+    --bg: #0D1524;
+    --surface: #152036;
+    --surface-2: #1C2942;
+    --line: #26344F;
+    --text: #ECE7DC;
+    --muted: #9AA4B6;
+    --paid: #5FCB91;
+    --due: #F0B54A;
+    --late: #FF8A78;
+    --paid-soft: #16352A;
+    --due-soft: #3A2E14;
+    --late-soft: #3D1F1C;
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --night: #0A1120;
+  --brand: #8FB3E8;
+  --gold: #E2B866;
+  --on-brand: #0D1524;
+  --on-gold: #0D1524;
+  --bg: #0D1524;
+  --surface: #152036;
+  --surface-2: #1C2942;
+  --line: #26344F;
+  --text: #ECE7DC;
+  --muted: #9AA4B6;
+  --paid: #5FCB91;
+  --due: #F0B54A;
+  --late: #FF8A78;
+  --paid-soft: #16352A;
+  --due-soft: #3A2E14;
+  --late-soft: #3D1F1C;
+  --shadow: none;
+}
+
+/* أساسيات كل الأجهزة */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;               /* 16px يمنع iOS من تكبير الصفحة عند الضغط على حقل */
+  line-height: 1.6;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+h1, h2, h3, .display { font-family: var(--font-display); font-weight: 600; letter-spacing: 0; }
+button { -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+/* الأرقام والمبالغ: دايماً LTR وبعرض ثابت */
+.num { direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; }
+.bhd::after { content: " د.ب"; font-size: 0.62em; color: var(--muted); }
+
+@media (hover: hover) { .hoverable:hover { background: var(--surface-2); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+}

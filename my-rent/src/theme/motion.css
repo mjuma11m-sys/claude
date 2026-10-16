@@ -1,0 +1,62 @@
+/* إداراتي — الحركة (ديوانية الموشن). transform/opacity بس. المدد من tokens.css */
+
+/* 1. الضغط: أكثر حركة تنحس */
+.press, .btn, .card.tappable, .side-item, .sheet-item, .bottom-item {
+  transition: transform 100ms var(--ease-out), background-color 150ms var(--ease-out), color 150ms var(--ease-out);
+}
+.press:active, .btn:active, .card.tappable:active, .sheet-item:active { transform: scale(0.97); }
+.bottom-item:active { transform: scale(0.92); }
+
+/* أيقونة التبويب المختار ترتفع شوي */
+.bottom-item svg { transition: transform 200ms var(--ease-out); }
+.bottom-item[aria-current="page"] svg { transform: translateY(-2px) scale(1.08); }
+
+/* 2. تبديل القسم: fade + 4px، بدون اتجاه أفقي (RTL) */
+.page-enter { animation: page-in 160ms var(--ease-out); }
+@keyframes page-in { from { opacity: 0; transform: translateY(4px); } }
+
+/* 3. القوائم: stagger بعد التحميل بس (useStagger) */
+.stagger { animation: rise 300ms var(--ease-out) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+
+/* skeleton وقت التحميل من Supabase */
+.skeleton {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--surface-2) 0%, var(--line) 50%, var(--surface-2) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* 4. الـ sheet: يطلع ويرجع */
+.sheet[data-state="enter"] { animation: sheet-in 320ms var(--ease-drawer); }
+.sheet[data-state="exit"] { animation: sheet-out 220ms var(--ease-out) forwards; }
+.sheet-backdrop[data-state="enter"] { animation: fade-in 220ms var(--ease-out); }
+.sheet-backdrop[data-state="exit"] { animation: fade-out 220ms var(--ease-out) forwards; }
+@keyframes sheet-in { from { transform: translateY(100%); } }
+@keyframes sheet-out { to { transform: translateY(100%); } }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes fade-out { to { opacity: 0; } }
+
+/* الـ FAB: يدخل بـ scale أول مرة، ويختفي وقت ما الـ sheet مفتوح */
+.fab { animation: pop 260ms var(--ease-out) 120ms both; transition: transform 160ms var(--ease-out), opacity 160ms var(--ease-out); }
+.fab[data-hidden="true"] { transform: scale(0.6); opacity: 0; pointer-events: none; }
+@keyframes pop { from { transform: scale(0.6); opacity: 0; } }
+
+/* 5. العدّاد: عرض ثابت عشان ما يرجف */
+.money { font-variant-numeric: tabular-nums; }
+
+/* 6. «مدفوع»: نبضة مرة وحدة */
+.pill-pulse { animation: pulse 400ms var(--ease-out); }
+@keyframes pulse {
+  40% { transform: scale(1.12); box-shadow: 0 0 0 6px var(--paid-soft); }
+  to { transform: scale(1); box-shadow: 0 0 0 0 transparent; }
+}
+
+/* الشارة (badge) لما يتغيّر رقمها */
+.badge { animation: pop 220ms var(--ease-out); }
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+  .bottom-item[aria-current="page"] svg { transform: none; }
+}

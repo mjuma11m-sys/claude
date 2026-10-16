@@ -1,0 +1,329 @@
+<title>هوية إداراتي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Readex+Pro:wght@500;600;700&display=swap">
+<style>
+/* Layout: لوحة هوية عمودية، كل قسم = قرار واحد من DW-009 */
+:root {
+  --night: #14213A; --brand: #1E3A5F; --gold: #C9963A; --stone: #F5F2EB;
+  --bg: #F5F2EB; --surface: #FFFFFF; --surface-2: #EDE8DD; --line: #DDD6C8;
+  --text: #14213A; --muted: #5B6578;
+  --paid: #1E7A4C; --due: #965F00; --late: #B83A2B;
+  --paid-soft: #E3F1E8; --due-soft: #F7ECD6; --late-soft: #F8E2DE;
+  --display: "Readex Pro", "IBM Plex Sans Arabic", Tahoma, sans-serif;
+  --body: "IBM Plex Sans Arabic", -apple-system, "SF Arabic", "Segoe UI", Tahoma, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0D1524; --surface: #152036; --surface-2: #1C2942; --line: #26344F; --text: #ECE7DC; --muted: #9AA4B6;
+  --brand: #8FB3E8; --paid: #5FCB91; --due: #F0B54A; --late: #FF8A78;
+  --paid-soft: #16352A; --due-soft: #3A2E14; --late-soft: #3D1F1C; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0D1524; --surface: #152036; --surface-2: #1C2942; --line: #26344F; --text: #ECE7DC; --muted: #9AA4B6;
+  --brand: #8FB3E8; --paid: #5FCB91; --due: #F0B54A; --late: #FF8A78;
+  --paid-soft: #16352A; --due-soft: #3A2E14; --late-soft: #3D1F1C; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.7 var(--body); }
+.wrap { max-width: 1040px; margin: 0 auto; padding-inline: 20px; padding-block: 0 64px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; text-wrap: balance; margin: 0; }
+h2 { font-size: 26px; margin-bottom: 6px; }
+.lead { color: var(--muted); margin: 0 0 20px; max-width: 62ch; }
+section { padding-block: 48px; border-top: 1px solid var(--line); }
+.eyebrow { font-size: 12px; letter-spacing: .08em; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+.num { direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; }
+
+/* الهيرو: الشعار على ليل المحرق */
+.hero { background: var(--night); color: var(--stone); margin-inline: -20px; padding: 56px 20px 48px; }
+.hero-in { max-width: 1040px; margin: 0 auto; display: flex; gap: 40px; align-items: center; flex-wrap: wrap; }
+.hero .logo { width: min(520px, 100%); height: auto; }
+.hero h1 { font-size: clamp(48px, 9vw, 88px); line-height: 1.45; font-weight: 700; }
+.hero p { margin: 4px 0 0; color: rgb(245 242 235 / .75); max-width: 44ch; }
+.hero .tag { display: inline-block; margin-top: 16px; font-size: 13px; color: var(--gold); }
+
+/* المفاهيم */
+.concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.concept { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.concept svg { width: 100%; max-width: 160px; aspect-ratio: 1; border-radius: 22%; align-self: center; }
+.concept.win { outline: 2px solid var(--gold); outline-offset: -1px; }
+.verdict { font-size: 13px; font-weight: 600; }
+.verdict.ok { color: var(--paid); } .verdict.no { color: var(--late); }
+.concept p { margin: 0; font-size: 14px; color: var(--muted); }
+
+/* الأيقونة بالأحجام */
+.sizes { display: flex; gap: 28px; align-items: end; flex-wrap: wrap; }
+.sizes figure { margin: 0; text-align: center; font-size: 12px; color: var(--muted); }
+.sizes svg { display: block; margin-bottom: 6px; }
+.phone { background: linear-gradient(160deg, #2b3d63, #0e1830); border-radius: 28px; padding: 22px 18px; display: grid; grid-template-columns: repeat(4, 60px); gap: 18px 16px; width: max-content; max-width: 100%; }
+.phone div { text-align: center; font-size: 11px; color: #fff; line-height: 1.3; }
+.phone .app { display: block; width: 60px; height: 60px; border-radius: 14px; background: rgb(255 255 255 / .14); margin-bottom: 4px; }
+.phone svg { width: 60px; height: 60px; border-radius: 14px; display: block; margin-bottom: 4px; }
+
+/* الألوان */
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.sw { border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: var(--surface); }
+.sw .chip { height: 84px; display: flex; align-items: end; padding: 8px 10px; font-family: var(--display); font-weight: 600; font-size: 22px; }
+.sw .meta { padding: 8px 10px; font-size: 13px; }
+.sw .meta b { display: block; }
+.sw .meta span { color: var(--muted); font-size: 12px; }
+.rule { margin-top: 16px; padding: 12px 14px; background: var(--surface-2); border-radius: 10px; font-size: 14px; max-width: 70ch; }
+
+.status { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.pill { padding: 3px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+
+/* الخط */
+.type { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.spec { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; min-width: 0; }
+.spec .big { font-size: 56px; line-height: 1.2; margin: 6px 0 10px; }
+.spec .d { font-family: var(--display); }
+.spec .weights { display: flex; gap: 14px; flex-wrap: wrap; font-size: 18px; }
+.scale { margin-top: 16px; display: grid; gap: 6px; }
+.scale div { display: flex; gap: 14px; align-items: baseline; border-bottom: 1px dashed var(--line); padding-bottom: 6px; }
+.scale small { color: var(--muted); font-size: 12px; min-width: 64px; }
+
+/* القرارات */
+.table { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 14px; }
+th, td { text-align: start; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: .04em; }
+.dos { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.dos ul { margin: 0; padding-inline-start: 18px; font-size: 15px; }
+.dos h3 { font-size: 17px; margin-bottom: 6px; }
+.note { font-size: 12px; color: var(--muted); margin-top: 24px; }
+</style>
+<style>
+.lock { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.lock > div { border-radius: 14px; padding: 28px; display: grid; place-items: center; min-height: 170px; border: 1px solid var(--line); }
+.lock svg { max-width: 100%; height: auto; }
+.on-stone { background: #F5F2EB; } .on-night { background: #14213A; } .on-white { background: #fff; }
+.cap { font-size: 12px; color: var(--muted); margin-top: 8px; text-align: center; }
+.story { display: grid; grid-template-columns: auto 1fr; gap: 24px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 24px; }
+.story .word { font: 700 clamp(34px, 7vw, 56px)/1.4 var(--display); }
+.story .word b { color: var(--gold); font-weight: 700; }
+@media (max-width: 560px) { .story { grid-template-columns: 1fr; } }
+.apps { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; align-items: start; }
+.receipt { background: #fff; color: #14213A; border-radius: 10px; padding: 22px; box-shadow: 0 2px 20px rgb(20 33 58 / .12); font-size: 14px; position: relative; overflow: hidden; }
+.receipt .top { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #14213A; padding-bottom: 12px; margin-bottom: 12px; }
+.receipt dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 0; }
+.receipt dt { color: #5B6578; } .receipt dd { margin: 0; font-weight: 600; }
+.receipt .amt { margin-top: 14px; padding: 12px; background: #F5F2EB; border-radius: 8px; display: flex; justify-content: space-between; align-items: baseline; }
+.receipt .amt b { font: 700 26px var(--display); }
+.receipt .seal { position: absolute; inset-inline-start: 16px; bottom: 14px; opacity: .14; width: 92px; height: 92px; color: #C9963A; }
+.splash { background: #14213A; border-radius: 34px; aspect-ratio: 9 / 19.5; max-width: 260px; width: 100%; margin-inline: auto; display: grid; place-items: center; position: relative; border: 8px solid #0A1120; }
+.splash .s { width: 38%; } .splash small { position: absolute; bottom: 8%; color: rgb(245 242 235 / .55); font-size: 11px; }
+.reject { color: var(--late); font-weight: 600; font-size: 13px; }
+</style>
+
+<div class="wrap" dir="rtl" lang="ar">
+
+<header class="hero">
+  <div class="hero-in">
+    <svg class="logo" role="img" aria-label="إداراتي" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 837 368">
+<g transform="translate(469.3 0) translate(-72 -72)"><path d="M256.0 83.5 L306.5 134.0 L378.0 134.0 L378.0 205.5 L428.5 256.0 L378.0 306.5 L378.0 378.0 L306.5 378.0 L256.0 428.5 L205.5 378.0 L134.0 378.0 L134.0 306.5 L83.5 256.0 L134.0 205.5 L134.0 134.0 L205.5 134.0Z" fill="#C9963A" stroke="#C9963A" stroke-width="22" stroke-linejoin="round"/><path d="M107 256Q62 256 9.5 239.0Q-43 222 -91 179L-41 78Q-7 91 23.0 95.0Q53 99 77 99Q134 99 175.0 79.0Q216 59 238.5 21.0Q261 -17 261 -70Q261 -96 248.5 -121.5Q236 -147 206.0 -184.5Q176 -222 125 -283L253 -440Q306 -367 339.0 -305.0Q372 -243 387.5 -188.5Q403 -134 403 -81Q403 -44 394.0 1.0Q385 46 364.5 90.5Q344 135 310.0 172.5Q276 210 225.5 233.0Q175 256 107 256ZM521 -740H682V0H521ZM808 0 780 -157H1059Q1049 -180 1027.0 -211.5Q1005 -243 972.0 -281.0Q939 -319 894 -358L1018 -518Q1095 -431 1141.0 -350.5Q1187 -270 1200.5 -185.5Q1214 -101 1191 0Z" transform="translate(256.0 262.0) scale(0.1512) translate(-557.2 242.0)" fill="#14213A"/></g>
+<path d="M360 230Q284 230 221.5 215.0Q159 200 113.5 168.0Q68 136 43.5 85.5Q19 35 19 -36Q19 -77 30.5 -133.0Q42 -189 67 -241L205 -198Q193 -163 186.5 -133.0Q180 -103 180 -74Q180 -39 192.0 -11.5Q204 16 229.0 35.0Q254 54 292.0 63.5Q330 73 382 73Q454 73 500.0 64.5Q546 56 572.0 42.0Q598 28 608.0 12.0Q618 -4 618 -19Q618 -28 612.0 -35.5Q606 -43 586.0 -55.0Q566 -67 524 -87L589 -223Q648 -186 682.5 -161.0Q717 -136 734.0 -118.0Q751 -100 756.5 -83.5Q762 -67 762 -47Q762 -14 751.0 24.0Q740 62 714.0 98.5Q688 135 642.0 164.5Q596 194 527.0 212.0Q458 230 360 230ZM814 0Q803 0 777.0 -5.0Q751 -10 718.0 -20.0Q685 -30 651.0 -44.5Q617 -59 590 -78L589 -223Q634 -201 668.5 -187.5Q703 -174 728.5 -167.5Q754 -161 771.5 -159.0Q789 -157 800 -157H818V0ZM275 499 170 392 269 286 374 392ZM451 499 346 392 446 286 551 392ZM818 0V-157H1014Q1006 -192 983.0 -235.0Q960 -278 925 -322L1069 -469Q1099 -412 1121.0 -344.0Q1143 -276 1143.0 -191.5Q1143 -107 1106 0ZM818 -157H828V0H818Q788 0 788 -78Q788 -157 818 -157ZM915 -524 810 -630 909 -737 1014 -630ZM1091 -524 986 -630 1086 -737 1191 -630ZM1270 -740H1431V0H1270ZM1607 256Q1562 256 1509.5 239.0Q1457 222 1409 179L1459 78Q1493 91 1523.0 95.0Q1553 99 1577 99Q1634 99 1675.0 79.0Q1716 59 1738.5 21.0Q1761 -17 1761 -70Q1761 -96 1748.5 -121.5Q1736 -147 1706.0 -184.5Q1676 -222 1625 -283L1753 -440Q1806 -367 1839.0 -305.0Q1872 -243 1887.5 -188.5Q1903 -134 1903 -81Q1903 -44 1894.0 1.0Q1885 46 1864.5 90.5Q1844 135 1810.0 172.5Q1776 210 1725.5 233.0Q1675 256 1607 256ZM2021 -740H2182V0H2021ZM2308 0 2280 -157H2559Q2549 -180 2527.0 -211.5Q2505 -243 2472.0 -281.0Q2439 -319 2394 -358L2518 -518Q2595 -431 2641.0 -350.5Q2687 -270 2700.5 -185.5Q2714 -101 2691 0ZM2823 -740H2984V0H2823ZM2796 269V186H2820Q2817 181 2814.5 172.0Q2812 163 2812 152Q2812 110 2841.5 85.0Q2871 60 2921 60Q2942 60 2961.0 65.0Q2980 70 2995 78L2964 152Q2955 148 2946.5 146.0Q2938 144 2929 144Q2914 144 2906.5 150.0Q2899 156 2899 165Q2899 170 2902.5 175.0Q2906 180 2915.0 183.0Q2924 186 2942 186H3002V269Z" transform="translate(204.6 192.0) scale(0.1372) translate(-1510.5 120.5)" fill="#F5F2EB"/>
+</svg>
+    <div>
+      <p>نظام العائلة لإدارة الأملاك والإيجارات والميزانية. الشعار خاتم بثمان رؤوس، وداخله «دار»: الكلمة اللي داخل اسم إداراتي نفسه.</p>
+      <span class="tag">DW-010 · قيد التطوير · نسخة تجريبية</span>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="eyebrow">الفكرة</div>
+  <h2>البيت مكتوب داخل الاسم</h2>
+  <div class="story">
+    <div style="width:120px"><svg width="120" height="120" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="72 72 368 368">
+<path d="M256.0 83.5 L306.5 134.0 L378.0 134.0 L378.0 205.5 L428.5 256.0 L378.0 306.5 L378.0 378.0 L306.5 378.0 L256.0 428.5 L205.5 378.0 L134.0 378.0 L134.0 306.5 L83.5 256.0 L134.0 205.5 L134.0 134.0 L205.5 134.0Z" fill="#C9963A" stroke="#C9963A" stroke-width="22" stroke-linejoin="round"/><path d="M107 256Q62 256 9.5 239.0Q-43 222 -91 179L-41 78Q-7 91 23.0 95.0Q53 99 77 99Q134 99 175.0 79.0Q216 59 238.5 21.0Q261 -17 261 -70Q261 -96 248.5 -121.5Q236 -147 206.0 -184.5Q176 -222 125 -283L253 -440Q306 -367 339.0 -305.0Q372 -243 387.5 -188.5Q403 -134 403 -81Q403 -44 394.0 1.0Q385 46 364.5 90.5Q344 135 310.0 172.5Q276 210 225.5 233.0Q175 256 107 256ZM521 -740H682V0H521ZM808 0 780 -157H1059Q1049 -180 1027.0 -211.5Q1005 -243 972.0 -281.0Q939 -319 894 -358L1018 -518Q1095 -431 1141.0 -350.5Q1187 -270 1200.5 -185.5Q1214 -101 1191 0Z" transform="translate(256.0 262.0) scale(0.1512) translate(-557.2 242.0)" fill="#14213A"/>
+</svg></div>
+    <div>
+      <div class="word">إ<b>دار</b>اتي</div>
+      <p class="lead" style="margin:0">«دار» يعني البيت، وهي مكتوبة حرفياً داخل «إداراتي». حولها <b>الخاتم</b>: النجمة الثمانية اللي بزخارف بيوت المحرق والمساجد، واسمها بالعربي «خاتم» لأنها شكل الختم اللي يعتمد العقود. الرمز يقول: بيتنا، وأوراقه مختومة ومرتبة.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">الشعار</div>
+  <h2>الأشكال الرسمية</h2>
+  <p class="lead">الاسم مرسوم كمسارات من خط Readex Pro بوزن 700، فيطلع نفس الشكل بأي جهاز حتى لو الخط مو منزّل.</p>
+  <div class="lock">
+    <div class="on-stone"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 837 368">
+<g transform="translate(469.3 0) translate(-72 -72)"><path d="M256.0 83.5 L306.5 134.0 L378.0 134.0 L378.0 205.5 L428.5 256.0 L378.0 306.5 L378.0 378.0 L306.5 378.0 L256.0 428.5 L205.5 378.0 L134.0 378.0 L134.0 306.5 L83.5 256.0 L134.0 205.5 L134.0 134.0 L205.5 134.0Z" fill="#C9963A" stroke="#C9963A" stroke-width="22" stroke-linejoin="round"/><path d="M107 256Q62 256 9.5 239.0Q-43 222 -91 179L-41 78Q-7 91 23.0 95.0Q53 99 77 99Q134 99 175.0 79.0Q216 59 238.5 21.0Q261 -17 261 -70Q261 -96 248.5 -121.5Q236 -147 206.0 -184.5Q176 -222 125 -283L253 -440Q306 -367 339.0 -305.0Q372 -243 387.5 -188.5Q403 -134 403 -81Q403 -44 394.0 1.0Q385 46 364.5 90.5Q344 135 310.0 172.5Q276 210 225.5 233.0Q175 256 107 256ZM521 -740H682V0H521ZM808 0 780 -157H1059Q1049 -180 1027.0 -211.5Q1005 -243 972.0 -281.0Q939 -319 894 -358L1018 -518Q1095 -431 1141.0 -350.5Q1187 -270 1200.5 -185.5Q1214 -101 1191 0Z" transform="translate(256.0 262.0) scale(0.1512) translate(-557.2 242.0)" fill="#14213A"/></g>
+<path d="M360 230Q284 230 221.5 215.0Q159 200 113.5 168.0Q68 136 43.5 85.5Q19 35 19 -36Q19 -77 30.5 -133.0Q42 -189 67 -241L205 -198Q193 -163 186.5 -133.0Q180 -103 180 -74Q180 -39 192.0 -11.5Q204 16 229.0 35.0Q254 54 292.0 63.5Q330 73 382 73Q454 73 500.0 64.5Q546 56 572.0 42.0Q598 28 608.0 12.0Q618 -4 618 -19Q618 -28 612.0 -35.5Q606 -43 586.0 -55.0Q566 -67 524 -87L589 -223Q648 -186 682.5 -161.0Q717 -136 734.0 -118.0Q751 -100 756.5 -83.5Q762 -67 762 -47Q762 -14 751.0 24.0Q740 62 714.0 98.5Q688 135 642.0 164.5Q596 194 527.0 212.0Q458 230 360 230ZM814 0Q803 0 777.0 -5.0Q751 -10 718.0 -20.0Q685 -30 651.0 -44.5Q617 -59 590 -78L589 -223Q634 -201 668.5 -187.5Q703 -174 728.5 -167.5Q754 -161 771.5 -159.0Q789 -157 800 -157H818V0ZM275 499 170 392 269 286 374 392ZM451 499 346 392 446 286 551 392ZM818 0V-157H1014Q1006 -192 983.0 -235.0Q960 -278 925 -322L1069 -469Q1099 -412 1121.0 -344.0Q1143 -276 1143.0 -191.5Q1143 -107 1106 0ZM818 -157H828V0H818Q788 0 788 -78Q788 -157 818 -157ZM915 -524 810 -630 909 -737 1014 -630ZM1091 -524 986 -630 1086 -737 1191 -630ZM1270 -740H1431V0H1270ZM1607 256Q1562 256 1509.5 239.0Q1457 222 1409 179L1459 78Q1493 91 1523.0 95.0Q1553 99 1577 99Q1634 99 1675.0 79.0Q1716 59 1738.5 21.0Q1761 -17 1761 -70Q1761 -96 1748.5 -121.5Q1736 -147 1706.0 -184.5Q1676 -222 1625 -283L1753 -440Q1806 -367 1839.0 -305.0Q1872 -243 1887.5 -188.5Q1903 -134 1903 -81Q1903 -44 1894.0 1.0Q1885 46 1864.5 90.5Q1844 135 1810.0 172.5Q1776 210 1725.5 233.0Q1675 256 1607 256ZM2021 -740H2182V0H2021ZM2308 0 2280 -157H2559Q2549 -180 2527.0 -211.5Q2505 -243 2472.0 -281.0Q2439 -319 2394 -358L2518 -518Q2595 -431 2641.0 -350.5Q2687 -270 2700.5 -185.5Q2714 -101 2691 0ZM2823 -740H2984V0H2823ZM2796 269V186H2820Q2817 181 2814.5 172.0Q2812 163 2812 152Q2812 110 2841.5 85.0Q2871 60 2921 60Q2942 60 2961.0 65.0Q2980 70 2995 78L2964 152Q2955 148 2946.5 146.0Q2938 144 2929 144Q2914 144 2906.5 150.0Q2899 156 2899 165Q2899 170 2902.5 175.0Q2906 180 2915.0 183.0Q2924 186 2942 186H3002V269Z" transform="translate(204.6 192.0) scale(0.1372) translate(-1510.5 120.5)" fill="#14213A"/>
+</svg><div class="cap">أفقي · على الحجر</div></div>
+    <div class="on-night"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 837 368">
+<g transform="translate(469.3 0) translate(-72 -72)"><path d="M256.0 83.5 L306.5 134.0 L378.0 134.0 L378.0 205.5 L428.5 256.0 L378.0 306.5 L378.0 378.0 L306.5 378.0 L256.0 428.5 L205.5 378.0 L134.0 378.0 L134.0 306.5 L83.5 256.0 L134.0 205.5 L134.0 134.0 L205.5 134.0Z" fill="#C9963A" stroke="#C9963A" stroke-width="22" stroke-linejoin="round"/><path d="M107 256Q62 256 9.5 239.0Q-43 222 -91 179L-41 78Q-7 91 23.0 95.0Q53 99 77 99Q134 99 175.0 79.0Q216 59 238.5 21.0Q261 -17 261 -70Q261 -96 248.5 -121.5Q236 -147 206.0 -184.5Q176 -222 125 -283L253 -440Q306 -367 339.0 -305.0Q372 -243 387.5 -188.5Q403 -134 403 -81Q403 -44 394.0 1.0Q385 46 364.5 90.5Q344 135 310.0 172.5Q276 210 225.5 233.0Q175 256 107 256ZM521 -740H682V0H521ZM808 0 780 -157H1059Q1049 -180 1027.0 -211.5Q1005 -243 972.0 -281.0Q939 -319 894 -358L1018 -518Q1095 -431 1141.0 -350.5Q1187 -270 1200.5 -185.5Q1214 -101 1191 0Z" transform="translate(256.0 262.0) scale(0.1512) translate(-557.2 242.0)" fill="#14213A"/></g>
+<path d="M360 230Q284 230 221.5 215.0Q159 200 113.5 168.0Q68 136 43.5 85.5Q19 35 19 -36Q19 -77 30.5 -133.0Q42 -189 67 -241L205 -198Q193 -163 186.5 -133.0Q180 -103 180 -74Q180 -39 192.0 -11.5Q204 16 229.0 35.0Q254 54 292.0 63.5Q330 73 382 73Q454 73 500.0 64.5Q546 56 572.0 42.0Q598 28 608.0 12.0Q618 -4 618 -19Q618 -28 612.0 -35.5Q606 -43 586.0 -55.0Q566 -67 524 -87L589 -223Q648 -186 682.5 -161.0Q717 -136 734.0 -118.0Q751 -100 756.5 -83.5Q762 -67 762 -47Q762 -14 751.0 24.0Q740 62 714.0 98.5Q688 135 642.0 164.5Q596 194 527.0 212.0Q458 230 360 230ZM814 0Q803 0 777.0 -5.0Q751 -10 718.0 -20.0Q685 -30 651.0 -44.5Q617 -59 590 -78L589 -223Q634 -201 668.5 -187.5Q703 -174 728.5 -167.5Q754 -161 771.5 -159.0Q789 -157 800 -157H818V0ZM275 499 170 392 269 286 374 392ZM451 499 346 392 446 286 551 392ZM818 0V-157H1014Q1006 -192 983.0 -235.0Q960 -278 925 -322L1069 -469Q1099 -412 1121.0 -344.0Q1143 -276 1143.0 -191.5Q1143 -107 1106 0ZM818 -157H828V0H818Q788 0 788 -78Q788 -157 818 -157ZM915 -524 810 -630 909 -737 1014 -630ZM1091 -524 986 -630 1086 -737 1191 -630ZM1270 -740H1431V0H1270ZM1607 256Q1562 256 1509.5 239.0Q1457 222 1409 179L1459 78Q1493 91 1523.0 95.0Q1553 99 1577 99Q1634 99 1675.0 79.0Q1716 59 1738.5 21.0Q1761 -17 1761 -70Q1761 -96 1748.5 -121.5Q1736 -147 1706.0 -184.5Q1676 -222 1625 -283L1753 -440Q1806 -367 1839.0 -305.0Q1872 -243 1887.5 -188.5Q1903 -134 1903 -81Q1903 -44 1894.0 1.0Q1885 46 1864.5 90.5Q1844 135 1810.0 172.5Q1776 210 1725.5 233.0Q1675 256 1607 256ZM2021 -740H2182V0H2021ZM2308 0 2280 -157H2559Q2549 -180 2527.0 -211.5Q2505 -243 2472.0 -281.0Q2439 -319 2394 -358L2518 -518Q2595 -431 2641.0 -350.5Q2687 -270 2700.5 -185.5Q2714 -101 2691 0ZM2823 -740H2984V0H2823ZM2796 269V186H2820Q2817 181 2814.5 172.0Q2812 163 2812 152Q2812 110 2841.5 85.0Q2871 60 2921 60Q2942 60 2961.0 65.0Q2980 70 2995 78L2964 152Q2955 148 2946.5 146.0Q2938 144 2929 144Q2914 144 2906.5 150.0Q2899 156 2899 165Q2899 170 2902.5 175.0Q2906 180 2915.0 183.0Q2924 186 2942 186H3002V269Z" transform="translate(204.6 192.0) scale(0.1372) translate(-1510.5 120.5)" fill="#F5F2EB"/>
+</svg><div class="cap" style="color:#9AA4B6">أفقي · على الليل</div></div>
+    <div class="on-white"><svg style="max-height:220px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 409 598">
+<g transform="translate(20.6 0) translate(-72 -72)"><path d="M256.0 83.5 L306.5 134.0 L378.0 134.0 L378.0 205.5 L428.5 256.0 L378.0 306.5 L378.0 378.0 L306.5 378.0 L256.0 428.5 L205.5 378.0 L134.0 378.0 L134.0 306.5 L83.5 256.0 L134.0 205.5 L134.0 134.0 L205.5 134.0Z" fill="#C9963A" stroke="#C9963A" stroke-width="22" stroke-linejoin="round"/><path d="M107 256Q62 256 9.5 239.0Q-43 222 -91 179L-41 78Q-7 91 23.0 95.0Q53 99 77 99Q134 99 175.0 79.0Q216 59 238.5 21.0Q261 -17 261 -70Q261 -96 248.5 -121.5Q236 -147 206.0 -184.5Q176 -222 125 -283L253 -440Q306 -367 339.0 -305.0Q372 -243 387.5 -188.5Q403 -134 403 -81Q403 -44 394.0 1.0Q385 46 364.5 90.5Q344 135 310.0 172.5Q276 210 225.5 233.0Q175 256 107 256ZM521 -740H682V0H521ZM808 0 780 -157H1059Q1049 -180 1027.0 -211.5Q1005 -243 972.0 -281.0Q939 -319 894 -358L1018 -518Q1095 -431 1141.0 -350.5Q1187 -270 1200.5 -185.5Q1214 -101 1191 0Z" transform="translate(256.0 262.0) scale(0.1512) translate(-557.2 242.0)" fill="#14213A"/></g>
+<path d="M360 230Q284 230 221.5 215.0Q159 200 113.5 168.0Q68 136 43.5 85.5Q19 35 19 -36Q19 -77 30.5 -133.0Q42 -189 67 -241L205 -198Q193 -163 186.5 -133.0Q180 -103 180 -74Q180 -39 192.0 -11.5Q204 16 229.0 35.0Q254 54 292.0 63.5Q330 73 382 73Q454 73 500.0 64.5Q546 56 572.0 42.0Q598 28 608.0 12.0Q618 -4 618 -19Q618 -28 612.0 -35.5Q606 -43 586.0 -55.0Q566 -67 524 -87L589 -223Q648 -186 682.5 -161.0Q717 -136 734.0 -118.0Q751 -100 756.5 -83.5Q762 -67 762 -47Q762 -14 751.0 24.0Q740 62 714.0 98.5Q688 135 642.0 164.5Q596 194 527.0 212.0Q458 230 360 230ZM814 0Q803 0 777.0 -5.0Q751 -10 718.0 -20.0Q685 -30 651.0 -44.5Q617 -59 590 -78L589 -223Q634 -201 668.5 -187.5Q703 -174 728.5 -167.5Q754 -161 771.5 -159.0Q789 -157 800 -157H818V0ZM275 499 170 392 269 286 374 392ZM451 499 346 392 446 286 551 392ZM818 0V-157H1014Q1006 -192 983.0 -235.0Q960 -278 925 -322L1069 -469Q1099 -412 1121.0 -344.0Q1143 -276 1143.0 -191.5Q1143 -107 1106 0ZM818 -157H828V0H818Q788 0 788 -78Q788 -157 818 -157ZM915 -524 810 -630 909 -737 1014 -630ZM1091 -524 986 -630 1086 -737 1191 -630ZM1270 -740H1431V0H1270ZM1607 256Q1562 256 1509.5 239.0Q1457 222 1409 179L1459 78Q1493 91 1523.0 95.0Q1553 99 1577 99Q1634 99 1675.0 79.0Q1716 59 1738.5 21.0Q1761 -17 1761 -70Q1761 -96 1748.5 -121.5Q1736 -147 1706.0 -184.5Q1676 -222 1625 -283L1753 -440Q1806 -367 1839.0 -305.0Q1872 -243 1887.5 -188.5Q1903 -134 1903 -81Q1903 -44 1894.0 1.0Q1885 46 1864.5 90.5Q1844 135 1810.0 172.5Q1776 210 1725.5 233.0Q1675 256 1607 256ZM2021 -740H2182V0H2021ZM2308 0 2280 -157H2559Q2549 -180 2527.0 -211.5Q2505 -243 2472.0 -281.0Q2439 -319 2394 -358L2518 -518Q2595 -431 2641.0 -350.5Q2687 -270 2700.5 -185.5Q2714 -101 2691 0ZM2823 -740H2984V0H2823ZM2796 269V186H2820Q2817 181 2814.5 172.0Q2812 163 2812 152Q2812 110 2841.5 85.0Q2871 60 2921 60Q2942 60 2961.0 65.0Q2980 70 2995 78L2964 152Q2955 148 2946.5 146.0Q2938 144 2929 144Q2914 144 2906.5 150.0Q2899 156 2899 165Q2899 170 2902.5 175.0Q2906 180 2915.0 183.0Q2924 186 2942 186H3002V269Z" transform="translate(204.6 488.0) scale(0.1372) translate(-1510.5 120.5)" fill="#14213A"/>
+</svg><div class="cap">مكدّس · للإيصالات وشاشة البداية</div></div>
+    <div class="on-white" style="display:flex;gap:22px;flex-wrap:wrap;align-items:center;justify-content:center">
+      <span style="color:#14213A"><svg width="84" height="84" xmlns="http://www.w3.org/2000/svg" viewBox="72 72 368 368">
+<mask id="m"><rect x="0" y="0" width="512" height="512" fill="#fff"/><path d="M256.0 83.5 L306.5 134.0 L378.0 134.0 L378.0 205.5 L428.5 256.0 L378.0 306.5 L378.0 378.0 L306.5 378.0 L256.0 428.5 L205.5 378.0 L134.0 378.0 L134.0 306.5 L83.5 256.0 L134.0 205.5 L134.0 134.0 L205.5 134.0Z" fill="#fff"/><path d="M107 256Q62 256 9.5 239.0Q-43 222 -91 179L-41 78Q-7 91 23.0 95.0Q53 99 77 99Q134 99 175.0 79.0Q216 59 238.5 21.0Q261 -17 261 -70Q261 -96 248.5 -121.5Q236 -147 206.0 -184.5Q176 -222 125 -283L253 -440Q306 -367 339.0 -305.0Q372 -243 387.5 -188.5Q403 -134 403 -81Q403 -44 394.0 1.0Q385 46 364.5 90.5Q344 135 310.0 172.5Q276 210 225.5 233.0Q175 256 107 256ZM521 -740H682V0H521ZM808 0 780 -157H1059Q1049 -180 1027.0 -211.5Q1005 -243 972.0 -281.0Q939 -319 894 -358L1018 -518Q1095 -431 1141.0 -350.5Q1187 -270 1200.5 -185.5Q1214 -101 1191 0Z" transform="translate(256.0 262.0) scale(0.1512) translate(-557.2 242.0)" fill="#000"/></mask>
+<path d="M256.0 83.5 L306.5 134.0 L378.0 134.0 L378.0 205.5 L428.5 256.0 L378.0 306.5 L378.0 378.0 L306.5 378.0 L256.0 428.5 L205.5 378.0 L134.0 378.0 L134.0 306.5 L83.5 256.0 L134.0 205.5 L134.0 134.0 L205.5 134.0Z" fill="currentColor" stroke="currentColor" stroke-width="22" stroke-linejoin="round" mask="url(#m)"/>
+</svg></span>
+      <span style="color:#B83A2B"><svg width="60" height="60" xmlns="http://www.w3.org/2000/svg" viewBox="72 72 368 368">
+<mask id="m"><rect x="0" y="0" width="512" height="512" fill="#fff"/><path d="M256.0 83.5 L306.5 134.0 L378.0 134.0 L378.0 205.5 L428.5 256.0 L378.0 306.5 L378.0 378.0 L306.5 378.0 L256.0 428.5 L205.5 378.0 L134.0 378.0 L134.0 306.5 L83.5 256.0 L134.0 205.5 L134.0 134.0 L205.5 134.0Z" fill="#fff"/><path d="M107 256Q62 256 9.5 239.0Q-43 222 -91 179L-41 78Q-7 91 23.0 95.0Q53 99 77 99Q134 99 175.0 79.0Q216 59 238.5 21.0Q261 -17 261 -70Q261 -96 248.5 -121.5Q236 -147 206.0 -184.5Q176 -222 125 -283L253 -440Q306 -367 339.0 -305.0Q372 -243 387.5 -188.5Q403 -134 403 -81Q403 -44 394.0 1.0Q385 46 364.5 90.5Q344 135 310.0 172.5Q276 210 225.5 233.0Q175 256 107 256ZM521 -740H682V0H521ZM808 0 780 -157H1059Q1049 -180 1027.0 -211.5Q1005 -243 972.0 -281.0Q939 -319 894 -358L1018 -518Q1095 -431 1141.0 -350.5Q1187 -270 1200.5 -185.5Q1214 -101 1191 0Z" transform="translate(256.0 262.0) scale(0.1512) translate(-557.2 242.0)" fill="#000"/></mask>
+<path d="M256.0 83.5 L306.5 134.0 L378.0 134.0 L378.0 205.5 L428.5 256.0 L378.0 306.5 L378.0 378.0 L306.5 378.0 L256.0 428.5 L205.5 378.0 L134.0 378.0 L134.0 306.5 L83.5 256.0 L134.0 205.5 L134.0 134.0 L205.5 134.0Z" fill="currentColor" stroke="currentColor" stroke-width="22" stroke-linejoin="round" mask="url(#m)"/>
+</svg></span>
+      <svg width="32" height="32" xmlns="http://www.w3.org/2000/svg" viewBox="72 72 368 368">
+<path d="M256.0 83.5 L306.5 134.0 L378.0 134.0 L378.0 205.5 L428.5 256.0 L378.0 306.5 L378.0 378.0 L306.5 378.0 L256.0 428.5 L205.5 378.0 L134.0 378.0 L134.0 306.5 L83.5 256.0 L134.0 205.5 L134.0 134.0 L205.5 134.0Z" fill="#C9963A" stroke="#C9963A" stroke-width="22" stroke-linejoin="round"/><path d="M107 256Q62 256 9.5 239.0Q-43 222 -91 179L-41 78Q-7 91 23.0 95.0Q53 99 77 99Q134 99 175.0 79.0Q216 59 238.5 21.0Q261 -17 261 -70Q261 -96 248.5 -121.5Q236 -147 206.0 -184.5Q176 -222 125 -283L253 -440Q306 -367 339.0 -305.0Q372 -243 387.5 -188.5Q403 -134 403 -81Q403 -44 394.0 1.0Q385 46 364.5 90.5Q344 135 310.0 172.5Q276 210 225.5 233.0Q175 256 107 256ZM521 -740H682V0H521ZM808 0 780 -157H1059Q1049 -180 1027.0 -211.5Q1005 -243 972.0 -281.0Q939 -319 894 -358L1018 -518Q1095 -431 1141.0 -350.5Q1187 -270 1200.5 -185.5Q1214 -101 1191 0Z" transform="translate(256.0 262.0) scale(0.1512) translate(-557.2 242.0)" fill="#14213A"/>
+</svg><svg width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="72 72 368 368">
+<path d="M256.0 83.5 L306.5 134.0 L378.0 134.0 L378.0 205.5 L428.5 256.0 L378.0 306.5 L378.0 378.0 L306.5 378.0 L256.0 428.5 L205.5 378.0 L134.0 378.0 L134.0 306.5 L83.5 256.0 L134.0 205.5 L134.0 134.0 L205.5 134.0Z" fill="#C9963A" stroke="#C9963A" stroke-width="22" stroke-linejoin="round"/><path d="M107 256Q62 256 9.5 239.0Q-43 222 -91 179L-41 78Q-7 91 23.0 95.0Q53 99 77 99Q134 99 175.0 79.0Q216 59 238.5 21.0Q261 -17 261 -70Q261 -96 248.5 -121.5Q236 -147 206.0 -184.5Q176 -222 125 -283L253 -440Q306 -367 339.0 -305.0Q372 -243 387.5 -188.5Q403 -134 403 -81Q403 -44 394.0 1.0Q385 46 364.5 90.5Q344 135 310.0 172.5Q276 210 225.5 233.0Q175 256 107 256ZM521 -740H682V0H521ZM808 0 780 -157H1059Q1049 -180 1027.0 -211.5Q1005 -243 972.0 -281.0Q939 -319 894 -358L1018 -518Q1095 -431 1141.0 -350.5Q1187 -270 1200.5 -185.5Q1214 -101 1191 0Z" transform="translate(256.0 262.0) scale(0.1512) translate(-557.2 242.0)" fill="#14213A"/>
+</svg>
+      <div class="cap" style="width:100%">لون واحد (للختم والطباعة) · وأصغر حجم 20px</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">ليش تغيّر الشعار</div>
+  <h2>المحاولات اللي انرفضت</h2>
+  <div class="concepts">
+    <div class="concept"><svg viewBox="0 0 512 512"><rect width="512" height="512" fill="#14213A"/><g transform="translate(-38.4 -83.25) scale(1.15)"><path d="M166 372V232a90 90 0 0 1 180 0v140z" fill="#F5F2EB"/><rect x="243" y="196" width="26" height="136" rx="13" fill="#14213A"/><path d="M256 400l24 24-24 24-24-24z" fill="#C9963A"/></g></svg><h3>باب فيه «إ»</h3><div class="reject">انرفض بعد الاعتماد</div><p>الألف ونقطة تحتها تنقرا «!» بحجم الأيقونة. شكل تحذير، ومو مناسب لتطبيق فلوس.</p></div>
+    <div class="concept"><svg viewBox="0 0 512 512"><rect width="512" height="512" fill="#14213A"/><path d="M256.0 89.1 L304.9 138.0 L374.0 138.0 L374.0 207.1 L422.9 256.0 L374.0 304.9 L374.0 374.0 L304.9 374.0 L256.0 422.9 L207.1 374.0 L138.0 374.0 L138.0 304.9 L89.1 256.0 L138.0 207.1 L138.0 138.0 L207.1 138.0Z" fill="#F5F2EB" stroke="#F5F2EB" stroke-width="22" stroke-linejoin="round"/><path d="M69 -740H230V0H69ZM42 269V186H66Q63 181 60.5 172.0Q58 163 58 152Q58 110 87.5 85.0Q117 60 167 60Q188 60 207.0 65.0Q226 70 241 78L210 152Q201 148 192.5 146.0Q184 144 175 144Q160 144 152.5 150.0Q145 156 145 165Q145 170 148.5 175.0Q152 180 161.0 183.0Q170 186 188 186H248V269Z" transform="translate(256 256) scale(0.1982) translate(-145.0 235.5)" fill="#14213A"/></svg><h3>خاتم فيه «إ»</h3><div class="reject">انرفض</div><p>نفس المشكلة: أي ألف بروحها وتحتها علامة تصير «!»، حتى لو كانت همزة.</p></div>
+    <div class="concept win"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<!-- إداراتي: خاتم (نجمة ثمانية) فيه «دار» — الكلمة اللي داخل اسم إداراتي -->
+<rect width="512" height="512" fill="#14213A"/>
+<path d="M256.0 83.5 L306.5 134.0 L378.0 134.0 L378.0 205.5 L428.5 256.0 L378.0 306.5 L378.0 378.0 L306.5 378.0 L256.0 428.5 L205.5 378.0 L134.0 378.0 L134.0 306.5 L83.5 256.0 L134.0 205.5 L134.0 134.0 L205.5 134.0Z" fill="#C9963A" stroke="#C9963A" stroke-width="22" stroke-linejoin="round"/><path d="M107 256Q62 256 9.5 239.0Q-43 222 -91 179L-41 78Q-7 91 23.0 95.0Q53 99 77 99Q134 99 175.0 79.0Q216 59 238.5 21.0Q261 -17 261 -70Q261 -96 248.5 -121.5Q236 -147 206.0 -184.5Q176 -222 125 -283L253 -440Q306 -367 339.0 -305.0Q372 -243 387.5 -188.5Q403 -134 403 -81Q403 -44 394.0 1.0Q385 46 364.5 90.5Q344 135 310.0 172.5Q276 210 225.5 233.0Q175 256 107 256ZM521 -740H682V0H521ZM808 0 780 -157H1059Q1049 -180 1027.0 -211.5Q1005 -243 972.0 -281.0Q939 -319 894 -358L1018 -518Q1095 -431 1141.0 -350.5Q1187 -270 1200.5 -185.5Q1214 -101 1191 0Z" transform="translate(256.0 262.0) scale(0.1512) translate(-557.2 242.0)" fill="#14213A"/>
+</svg><h3>خاتم فيه «دار»</h3><div class="verdict ok">انعتمد</div><p>ثلاث حروف ما تنقرا غلط، وتبين بحجم 48px. الذهب صار الخاتم كله، فهو أول شي تشوفه العين.</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">الأيقونة</div>
+  <h2>بكل الأحجام</h2>
+  <p class="lead">PNG جاهزة في <code>public/icons</code>: ‏512 و192 للـ PWA، و180 لآيفون، و48 و32 للمتصفح. الخاتم داخل الدائرة الآمنة، فما ينقص لو أندرويد قصّ الأيقونة دائرة.</p>
+  <div class="sizes">
+    <figure><svg width="120" height="120" style="border-radius:26px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<!-- إداراتي: خاتم (نجمة ثمانية) فيه «دار» — الكلمة اللي داخل اسم إداراتي -->
+<rect width="512" height="512" fill="#14213A"/>
+<path d="M256.0 83.5 L306.5 134.0 L378.0 134.0 L378.0 205.5 L428.5 256.0 L378.0 306.5 L378.0 378.0 L306.5 378.0 L256.0 428.5 L205.5 378.0 L134.0 378.0 L134.0 306.5 L83.5 256.0 L134.0 205.5 L134.0 134.0 L205.5 134.0Z" fill="#C9963A" stroke="#C9963A" stroke-width="22" stroke-linejoin="round"/><path d="M107 256Q62 256 9.5 239.0Q-43 222 -91 179L-41 78Q-7 91 23.0 95.0Q53 99 77 99Q134 99 175.0 79.0Q216 59 238.5 21.0Q261 -17 261 -70Q261 -96 248.5 -121.5Q236 -147 206.0 -184.5Q176 -222 125 -283L253 -440Q306 -367 339.0 -305.0Q372 -243 387.5 -188.5Q403 -134 403 -81Q403 -44 394.0 1.0Q385 46 364.5 90.5Q344 135 310.0 172.5Q276 210 225.5 233.0Q175 256 107 256ZM521 -740H682V0H521ZM808 0 780 -157H1059Q1049 -180 1027.0 -211.5Q1005 -243 972.0 -281.0Q939 -319 894 -358L1018 -518Q1095 -431 1141.0 -350.5Q1187 -270 1200.5 -185.5Q1214 -101 1191 0Z" transform="translate(256.0 262.0) scale(0.1512) translate(-557.2 242.0)" fill="#14213A"/>
+</svg><span class="num">512</span></figure>
+    <figure><svg width="76" height="76" style="border-radius:17px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<!-- إداراتي: خاتم (نجمة ثمانية) فيه «دار» — الكلمة اللي داخل اسم إداراتي -->
+<rect width="512" height="512" fill="#14213A"/>
+<path d="M256.0 83.5 L306.5 134.0 L378.0 134.0 L378.0 205.5 L428.5 256.0 L378.0 306.5 L378.0 378.0 L306.5 378.0 L256.0 428.5 L205.5 378.0 L134.0 378.0 L134.0 306.5 L83.5 256.0 L134.0 205.5 L134.0 134.0 L205.5 134.0Z" fill="#C9963A" stroke="#C9963A" stroke-width="22" stroke-linejoin="round"/><path d="M107 256Q62 256 9.5 239.0Q-43 222 -91 179L-41 78Q-7 91 23.0 95.0Q53 99 77 99Q134 99 175.0 79.0Q216 59 238.5 21.0Q261 -17 261 -70Q261 -96 248.5 -121.5Q236 -147 206.0 -184.5Q176 -222 125 -283L253 -440Q306 -367 339.0 -305.0Q372 -243 387.5 -188.5Q403 -134 403 -81Q403 -44 394.0 1.0Q385 46 364.5 90.5Q344 135 310.0 172.5Q276 210 225.5 233.0Q175 256 107 256ZM521 -740H682V0H521ZM808 0 780 -157H1059Q1049 -180 1027.0 -211.5Q1005 -243 972.0 -281.0Q939 -319 894 -358L1018 -518Q1095 -431 1141.0 -350.5Q1187 -270 1200.5 -185.5Q1214 -101 1191 0Z" transform="translate(256.0 262.0) scale(0.1512) translate(-557.2 242.0)" fill="#14213A"/>
+</svg><span class="num">180</span></figure>
+    <figure><svg width="48" height="48" style="border-radius:11px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<!-- إداراتي: خاتم (نجمة ثمانية) فيه «دار» — الكلمة اللي داخل اسم إداراتي -->
+<rect width="512" height="512" fill="#14213A"/>
+<path d="M256.0 83.5 L306.5 134.0 L378.0 134.0 L378.0 205.5 L428.5 256.0 L378.0 306.5 L378.0 378.0 L306.5 378.0 L256.0 428.5 L205.5 378.0 L134.0 378.0 L134.0 306.5 L83.5 256.0 L134.0 205.5 L134.0 134.0 L205.5 134.0Z" fill="#C9963A" stroke="#C9963A" stroke-width="22" stroke-linejoin="round"/><path d="M107 256Q62 256 9.5 239.0Q-43 222 -91 179L-41 78Q-7 91 23.0 95.0Q53 99 77 99Q134 99 175.0 79.0Q216 59 238.5 21.0Q261 -17 261 -70Q261 -96 248.5 -121.5Q236 -147 206.0 -184.5Q176 -222 125 -283L253 -440Q306 -367 339.0 -305.0Q372 -243 387.5 -188.5Q403 -134 403 -81Q403 -44 394.0 1.0Q385 46 364.5 90.5Q344 135 310.0 172.5Q276 210 225.5 233.0Q175 256 107 256ZM521 -740H682V0H521ZM808 0 780 -157H1059Q1049 -180 1027.0 -211.5Q1005 -243 972.0 -281.0Q939 -319 894 -358L1018 -518Q1095 -431 1141.0 -350.5Q1187 -270 1200.5 -185.5Q1214 -101 1191 0Z" transform="translate(256.0 262.0) scale(0.1512) translate(-557.2 242.0)" fill="#14213A"/>
+</svg><span class="num">48</span></figure>
+    <figure><svg width="32" height="32" style="border-radius:7px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<!-- إداراتي: خاتم (نجمة ثمانية) فيه «دار» — الكلمة اللي داخل اسم إداراتي -->
+<rect width="512" height="512" fill="#14213A"/>
+<path d="M256.0 83.5 L306.5 134.0 L378.0 134.0 L378.0 205.5 L428.5 256.0 L378.0 306.5 L378.0 378.0 L306.5 378.0 L256.0 428.5 L205.5 378.0 L134.0 378.0 L134.0 306.5 L83.5 256.0 L134.0 205.5 L134.0 134.0 L205.5 134.0Z" fill="#C9963A" stroke="#C9963A" stroke-width="22" stroke-linejoin="round"/><path d="M107 256Q62 256 9.5 239.0Q-43 222 -91 179L-41 78Q-7 91 23.0 95.0Q53 99 77 99Q134 99 175.0 79.0Q216 59 238.5 21.0Q261 -17 261 -70Q261 -96 248.5 -121.5Q236 -147 206.0 -184.5Q176 -222 125 -283L253 -440Q306 -367 339.0 -305.0Q372 -243 387.5 -188.5Q403 -134 403 -81Q403 -44 394.0 1.0Q385 46 364.5 90.5Q344 135 310.0 172.5Q276 210 225.5 233.0Q175 256 107 256ZM521 -740H682V0H521ZM808 0 780 -157H1059Q1049 -180 1027.0 -211.5Q1005 -243 972.0 -281.0Q939 -319 894 -358L1018 -518Q1095 -431 1141.0 -350.5Q1187 -270 1200.5 -185.5Q1214 -101 1191 0Z" transform="translate(256.0 262.0) scale(0.1512) translate(-557.2 242.0)" fill="#14213A"/>
+</svg><span class="num">32</span></figure>
+    <div class="phone" aria-label="الأيقونة على شاشة الجوال">
+      <div><span class="app"></span>الصور</div><div><span class="app"></span>البنك</div><div><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<!-- إداراتي: خاتم (نجمة ثمانية) فيه «دار» — الكلمة اللي داخل اسم إداراتي -->
+<rect width="512" height="512" fill="#14213A"/>
+<path d="M256.0 83.5 L306.5 134.0 L378.0 134.0 L378.0 205.5 L428.5 256.0 L378.0 306.5 L378.0 378.0 L306.5 378.0 L256.0 428.5 L205.5 378.0 L134.0 378.0 L134.0 306.5 L83.5 256.0 L134.0 205.5 L134.0 134.0 L205.5 134.0Z" fill="#C9963A" stroke="#C9963A" stroke-width="22" stroke-linejoin="round"/><path d="M107 256Q62 256 9.5 239.0Q-43 222 -91 179L-41 78Q-7 91 23.0 95.0Q53 99 77 99Q134 99 175.0 79.0Q216 59 238.5 21.0Q261 -17 261 -70Q261 -96 248.5 -121.5Q236 -147 206.0 -184.5Q176 -222 125 -283L253 -440Q306 -367 339.0 -305.0Q372 -243 387.5 -188.5Q403 -134 403 -81Q403 -44 394.0 1.0Q385 46 364.5 90.5Q344 135 310.0 172.5Q276 210 225.5 233.0Q175 256 107 256ZM521 -740H682V0H521ZM808 0 780 -157H1059Q1049 -180 1027.0 -211.5Q1005 -243 972.0 -281.0Q939 -319 894 -358L1018 -518Q1095 -431 1141.0 -350.5Q1187 -270 1200.5 -185.5Q1214 -101 1191 0Z" transform="translate(256.0 262.0) scale(0.1512) translate(-557.2 242.0)" fill="#14213A"/>
+</svg>إداراتي</div><div><span class="app"></span>الخرائط</div>
+    </div>
+  </div>
+</section>
+<section>
+  <div class="eyebrow">الألوان</div>
+  <h2>ثلاث ألوان للهوية، وثلاث للحالة</h2>
+  <p class="lead">كل لون له وظيفة وحدة. الأقسام الثمانية كلها بنفس الألوان، واللي يفرّقها الأيقونة والعنوان.</p>
+  <div class="swatches">
+    <div class="sw"><div class="chip" style="background:#14213A;color:#F5F2EB">ليل</div><div class="meta"><b class="num">#14213A</b><span>الشعار، الهيدر، الشريط الجانبي</span></div></div>
+    <div class="sw"><div class="chip" style="background:#F5F2EB;color:#14213A">حجر</div><div class="meta"><b class="num">#F5F2EB</b><span>الخلفية، حرف الشعار</span></div></div>
+    <div class="sw"><div class="chip" style="background:#C9963A;color:#14213A">ذهب</div><div class="meta"><b class="num">#C9963A</b><span>الخاتم وزر الإضافة بس</span></div></div>
+    <div class="sw"><div class="chip" style="background:#1E3A5F;color:#FFFFFF">بحري</div><div class="meta"><b class="num">#1E3A5F · #8FB3E8</b><span>الأزرار والروابط · فاتح · داكن</span></div></div>
+  </div>
+  <div class="status">
+    <span class="pill" style="background:var(--paid-soft);color:var(--paid)">مدفوع</span>
+    <span class="pill" style="background:var(--due-soft);color:var(--due)">مستحق</span>
+    <span class="pill" style="background:var(--late-soft);color:var(--late)">متأخر</span>
+  </div>
+  <div class="rule"><b>القاعدة:</b> الذهبي للخاتم وزر الإضافة بس، ومرة وحدة بالشاشة. ألوان الحالة لها معنى وحد بكل التطبيق، ودايماً معاها كلمة. كل النصوص تباينها فوق 4.5 بالوضعين.</div>
+</section>
+
+<section>
+  <div class="eyebrow">الخط</div>
+  <h2>عائلتين، كل وحدة لها شغل</h2>
+  <p class="lead">الاثنين مجانيين (رخصة SIL OFL) ومن Google Fonts. Readex Pro يفرّق إداراتي عن «حياتي» بالعناوين، وIBM Plex Sans Arabic يبقى للنص والجداول لأن أرقامه بعرض ثابت.</p>
+  <div class="type">
+    <div class="spec">
+      <div class="eyebrow">العناوين والأرقام الكبيرة</div>
+      <div class="big d">إداراتي <span class="num">2,450</span></div>
+      <div class="weights d"><span style="font-weight:500">Readex Pro 500</span><span style="font-weight:600">600</span><span style="font-weight:700">700</span></div>
+    </div>
+    <div class="spec">
+      <div class="eyebrow">النص والجداول</div>
+      <div class="big" style="font-size:40px">عقد شقة 3 · المالكية</div>
+      <div class="weights"><span>IBM Plex Sans Arabic 400</span><span style="font-weight:500">500</span><span style="font-weight:600">600</span></div>
+    </div>
+  </div>
+  <div class="scale">
+    <div><small class="num">32 · 700</small><span style="font:700 32px/1.3 var(--display)">مبلغ التحصيل</span></div>
+    <div><small class="num">22 · 600</small><span style="font:600 22px/1.4 var(--display)">عنوان الصفحة</span></div>
+    <div><small class="num">17 · 600</small><span style="font-weight:600;font-size:17px">عنوان البطاقة</span></div>
+    <div><small class="num">16 · 400</small><span>نص عادي وحقول الإدخال</span></div>
+    <div><small class="num">13 · 500</small><span style="font-size:13px;font-weight:500;color:var(--muted)">نص ثانوي وتواريخ</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">التطبيق على الواقع</div>
+  <h2>إيصال الإيجار وشاشة البداية</h2>
+  <p class="lead">أكثر ورقة بتطلع من التطبيق للناس هي إيصال الإيجار. لو الهوية ما تنفع عليها، ما تنفع.</p>
+  <div class="apps">
+    <div class="receipt">
+      <div class="top"><svg height="34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 837 368">
+<g transform="translate(469.3 0) translate(-72 -72)"><path d="M256.0 83.5 L306.5 134.0 L378.0 134.0 L378.0 205.5 L428.5 256.0 L378.0 306.5 L378.0 378.0 L306.5 378.0 L256.0 428.5 L205.5 378.0 L134.0 378.0 L134.0 306.5 L83.5 256.0 L134.0 205.5 L134.0 134.0 L205.5 134.0Z" fill="#C9963A" stroke="#C9963A" stroke-width="22" stroke-linejoin="round"/><path d="M107 256Q62 256 9.5 239.0Q-43 222 -91 179L-41 78Q-7 91 23.0 95.0Q53 99 77 99Q134 99 175.0 79.0Q216 59 238.5 21.0Q261 -17 261 -70Q261 -96 248.5 -121.5Q236 -147 206.0 -184.5Q176 -222 125 -283L253 -440Q306 -367 339.0 -305.0Q372 -243 387.5 -188.5Q403 -134 403 -81Q403 -44 394.0 1.0Q385 46 364.5 90.5Q344 135 310.0 172.5Q276 210 225.5 233.0Q175 256 107 256ZM521 -740H682V0H521ZM808 0 780 -157H1059Q1049 -180 1027.0 -211.5Q1005 -243 972.0 -281.0Q939 -319 894 -358L1018 -518Q1095 -431 1141.0 -350.5Q1187 -270 1200.5 -185.5Q1214 -101 1191 0Z" transform="translate(256.0 262.0) scale(0.1512) translate(-557.2 242.0)" fill="#14213A"/></g>
+<path d="M360 230Q284 230 221.5 215.0Q159 200 113.5 168.0Q68 136 43.5 85.5Q19 35 19 -36Q19 -77 30.5 -133.0Q42 -189 67 -241L205 -198Q193 -163 186.5 -133.0Q180 -103 180 -74Q180 -39 192.0 -11.5Q204 16 229.0 35.0Q254 54 292.0 63.5Q330 73 382 73Q454 73 500.0 64.5Q546 56 572.0 42.0Q598 28 608.0 12.0Q618 -4 618 -19Q618 -28 612.0 -35.5Q606 -43 586.0 -55.0Q566 -67 524 -87L589 -223Q648 -186 682.5 -161.0Q717 -136 734.0 -118.0Q751 -100 756.5 -83.5Q762 -67 762 -47Q762 -14 751.0 24.0Q740 62 714.0 98.5Q688 135 642.0 164.5Q596 194 527.0 212.0Q458 230 360 230ZM814 0Q803 0 777.0 -5.0Q751 -10 718.0 -20.0Q685 -30 651.0 -44.5Q617 -59 590 -78L589 -223Q634 -201 668.5 -187.5Q703 -174 728.5 -167.5Q754 -161 771.5 -159.0Q789 -157 800 -157H818V0ZM275 499 170 392 269 286 374 392ZM451 499 346 392 446 286 551 392ZM818 0V-157H1014Q1006 -192 983.0 -235.0Q960 -278 925 -322L1069 -469Q1099 -412 1121.0 -344.0Q1143 -276 1143.0 -191.5Q1143 -107 1106 0ZM818 -157H828V0H818Q788 0 788 -78Q788 -157 818 -157ZM915 -524 810 -630 909 -737 1014 -630ZM1091 -524 986 -630 1086 -737 1191 -630ZM1270 -740H1431V0H1270ZM1607 256Q1562 256 1509.5 239.0Q1457 222 1409 179L1459 78Q1493 91 1523.0 95.0Q1553 99 1577 99Q1634 99 1675.0 79.0Q1716 59 1738.5 21.0Q1761 -17 1761 -70Q1761 -96 1748.5 -121.5Q1736 -147 1706.0 -184.5Q1676 -222 1625 -283L1753 -440Q1806 -367 1839.0 -305.0Q1872 -243 1887.5 -188.5Q1903 -134 1903 -81Q1903 -44 1894.0 1.0Q1885 46 1864.5 90.5Q1844 135 1810.0 172.5Q1776 210 1725.5 233.0Q1675 256 1607 256ZM2021 -740H2182V0H2021ZM2308 0 2280 -157H2559Q2549 -180 2527.0 -211.5Q2505 -243 2472.0 -281.0Q2439 -319 2394 -358L2518 -518Q2595 -431 2641.0 -350.5Q2687 -270 2700.5 -185.5Q2714 -101 2691 0ZM2823 -740H2984V0H2823ZM2796 269V186H2820Q2817 181 2814.5 172.0Q2812 163 2812 152Q2812 110 2841.5 85.0Q2871 60 2921 60Q2942 60 2961.0 65.0Q2980 70 2995 78L2964 152Q2955 148 2946.5 146.0Q2938 144 2929 144Q2914 144 2906.5 150.0Q2899 156 2899 165Q2899 170 2902.5 175.0Q2906 180 2915.0 183.0Q2924 186 2942 186H3002V269Z" transform="translate(204.6 192.0) scale(0.1372) translate(-1510.5 120.5)" fill="#14213A"/>
+</svg><div style="text-align:end"><div style="font:600 15px var(--display)">إيصال استلام إيجار</div><div class="num" style="color:#5B6578;font-size:12px">R-2026-0142</div></div></div>
+      <dl>
+        <dt>المستأجر</dt><dd>أحمد عبدالله</dd>
+        <dt>العقار</dt><dd>شقة 1 · المالكية</dd>
+        <dt>عن شهر</dt><dd>أكتوبر 2026</dd>
+        <dt>الطريقة</dt><dd>BenefitPay</dd>
+      </dl>
+      <div class="amt"><span>المبلغ المستلم</span><b class="num">180.000 <span style="font-size:.55em;color:#5B6578">د.ب</span></b></div>
+      <span class="seal"><svg width="92" height="92" xmlns="http://www.w3.org/2000/svg" viewBox="72 72 368 368">
+<mask id="m"><rect x="0" y="0" width="512" height="512" fill="#fff"/><path d="M256.0 83.5 L306.5 134.0 L378.0 134.0 L378.0 205.5 L428.5 256.0 L378.0 306.5 L378.0 378.0 L306.5 378.0 L256.0 428.5 L205.5 378.0 L134.0 378.0 L134.0 306.5 L83.5 256.0 L134.0 205.5 L134.0 134.0 L205.5 134.0Z" fill="#fff"/><path d="M107 256Q62 256 9.5 239.0Q-43 222 -91 179L-41 78Q-7 91 23.0 95.0Q53 99 77 99Q134 99 175.0 79.0Q216 59 238.5 21.0Q261 -17 261 -70Q261 -96 248.5 -121.5Q236 -147 206.0 -184.5Q176 -222 125 -283L253 -440Q306 -367 339.0 -305.0Q372 -243 387.5 -188.5Q403 -134 403 -81Q403 -44 394.0 1.0Q385 46 364.5 90.5Q344 135 310.0 172.5Q276 210 225.5 233.0Q175 256 107 256ZM521 -740H682V0H521ZM808 0 780 -157H1059Q1049 -180 1027.0 -211.5Q1005 -243 972.0 -281.0Q939 -319 894 -358L1018 -518Q1095 -431 1141.0 -350.5Q1187 -270 1200.5 -185.5Q1214 -101 1191 0Z" transform="translate(256.0 262.0) scale(0.1512) translate(-557.2 242.0)" fill="#000"/></mask>
+<path d="M256.0 83.5 L306.5 134.0 L378.0 134.0 L378.0 205.5 L428.5 256.0 L378.0 306.5 L378.0 378.0 L306.5 378.0 L256.0 428.5 L205.5 378.0 L134.0 378.0 L134.0 306.5 L83.5 256.0 L134.0 205.5 L134.0 134.0 L205.5 134.0Z" fill="currentColor" stroke="currentColor" stroke-width="22" stroke-linejoin="round" mask="url(#m)"/>
+</svg></span>
+      <p style="font-size:11px;color:#5B6578;margin:12px 0 0">* بيانات تجريبية</p>
+    </div>
+    <div>
+      <div class="splash"><div class="s"><svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="72 72 368 368">
+<path d="M256.0 83.5 L306.5 134.0 L378.0 134.0 L378.0 205.5 L428.5 256.0 L378.0 306.5 L378.0 378.0 L306.5 378.0 L256.0 428.5 L205.5 378.0 L134.0 378.0 L134.0 306.5 L83.5 256.0 L134.0 205.5 L134.0 134.0 L205.5 134.0Z" fill="#C9963A" stroke="#C9963A" stroke-width="22" stroke-linejoin="round"/><path d="M107 256Q62 256 9.5 239.0Q-43 222 -91 179L-41 78Q-7 91 23.0 95.0Q53 99 77 99Q134 99 175.0 79.0Q216 59 238.5 21.0Q261 -17 261 -70Q261 -96 248.5 -121.5Q236 -147 206.0 -184.5Q176 -222 125 -283L253 -440Q306 -367 339.0 -305.0Q372 -243 387.5 -188.5Q403 -134 403 -81Q403 -44 394.0 1.0Q385 46 364.5 90.5Q344 135 310.0 172.5Q276 210 225.5 233.0Q175 256 107 256ZM521 -740H682V0H521ZM808 0 780 -157H1059Q1049 -180 1027.0 -211.5Q1005 -243 972.0 -281.0Q939 -319 894 -358L1018 -518Q1095 -431 1141.0 -350.5Q1187 -270 1200.5 -185.5Q1214 -101 1191 0Z" transform="translate(256.0 262.0) scale(0.1512) translate(-557.2 242.0)" fill="#14213A"/>
+</svg></div><small>إداراتي</small></div>
+      <div class="cap">شاشة البداية (PWA): خلفية الليل والخاتم بالنص</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">الاستخدام</div>
+  <h2>يصير وما يصير</h2>
+  <div class="dos">
+    <div><h3 style="color:var(--paid)">يصير</h3><ul><li>الخاتم ذهبي والحروف ليلية، أو لون واحد كامل</li><li>مساحة فاضية حوله بعرض رأس واحد من النجمة</li><li>الشعار الأفقي بالهيدر، والمكدّس بالإيصال وشاشة البداية</li><li>أصغر حجم: 20px للرمز، و96px عرض للشعار الأفقي</li></ul></div>
+    <div><h3 style="color:var(--late)">ما يصير</h3><ul><li>تدوير الخاتم أو مطّه أو ظل عليه</li><li>كتابة «دار» بخط ثاني</li><li>الخاتم الذهبي على خلفية ذهبية أو صفراء</li><li>ذهبي ثاني بنفس الشاشة غير الخاتم وزر الإضافة</li></ul></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">اجتماع الشركة · DW-010</div>
+  <h2>القرارات</h2>
+  <div class="table"><table>
+    <thead><tr><th>القرار</th><th>القسم</th><th>ليش</th><th>مين اعترض</th></tr></thead>
+    <tbody>
+      <tr><td>الرمز: خاتم ذهبي ثماني فيه «دار»</td><td>التصميم</td><td>قصة حقيقية من الاسم، ويتقرا صح بكل حجم</td><td>المنتج سأل: «دار» توحي بالعقار بس؟ الجواب: «دار» = البيت والعائلة، تغطي الميزانية والبنك</td></tr>
+      <tr><td>إلغاء شعار DW-009</td><td>الجودة</td><td>يتقرا «!» بحجم الأيقونة</td><td>—</td></tr>
+      <tr><td>الاسم مسارات SVG من Readex Pro 700</td><td>الهندسة</td><td>ما يعتمد على تحميل الخط</td><td>—</td></tr>
+      <tr><td>الألوان والخطوط تبقى من DW-008/008</td><td>الرئيس التنفيذي</td><td>مقاسة ومبني عليها الكود</td><td>التصميم اقترح ذهبي أفتح، وانرفض: تباينه أقل</td></tr>
+      <tr><td>استخدام الخاتم كختم على الإيصال مسموح؛ الإيصال مو مستند رسمي</td><td>القانونية</td><td>ختم شكلي لعائلة، مو ختم شركة مسجلة</td><td>—</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">* الأسماء والمبالغ بالأمثلة بيانات تجريبية.</p>
+</section>
+
+</div>

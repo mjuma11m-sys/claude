@@ -1,0 +1,122 @@
+/* إداراتي — layout لكل الأجهزة. كل الألوان من tokens.css */
+
+.shell { min-height: 100dvh; }
+
+/* ===== الجوال (الافتراضي) ===== */
+.shell-side { display: none; }
+
+.shell-header {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: calc(env(safe-area-inset-top) + 12px) 16px 12px;
+  background: var(--night); color: #F5F2EB;
+}
+.shell-header h1 { margin: 0; font-size: 20px; font-weight: 700; }
+.shell-actions { display: flex; gap: 8px; }
+
+.shell-content {
+  padding: 16px;
+  padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 88px); /* مساحة للشريط + زر الإضافة */
+  max-width: 1280px; margin-inline: auto;
+}
+
+.shell-bottom {
+  position: fixed; inset-inline: 0; bottom: 0; z-index: 20;
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+  height: calc(var(--nav-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--surface); border-top: 1px solid var(--line);
+}
+.bottom-item {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  min-height: 44px; border: 0; background: none; color: var(--muted);
+  font-size: 11px; font-weight: 500; cursor: pointer;
+}
+.bottom-item[aria-current="page"] { color: var(--brand); font-weight: 700; }
+.bottom-item:active { transform: scale(0.96); transition: transform 100ms var(--ease-out); }
+
+.fab {
+  position: fixed; z-index: 21;
+  inset-inline-start: 16px;               /* RTL: يطلع يمين الشاشة تحت إبهام اليد اليمنى */
+  bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);
+  width: 56px; height: 56px; border-radius: 50%; border: 0;
+  display: grid; place-items: center;
+  background: var(--gold); color: var(--on-gold); box-shadow: var(--shadow);
+  cursor: pointer; transition: transform 160ms var(--ease-out);
+}
+.fab:active { transform: scale(0.94); }
+
+.badge {
+  min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+  background: var(--late); color: #fff; font-size: 11px; line-height: 18px; text-align: center;
+}
+.bottom-item .badge { position: absolute; top: 6px; inset-inline-end: calc(50% - 22px); }
+
+/* «المزيد» bottom sheet */
+.sheet-backdrop { position: fixed; inset: 0; z-index: 30; background: rgb(10 17 32 / 0.45); animation: fade var(--dur) var(--ease-out); }
+.sheet {
+  position: fixed; inset-inline: 0; bottom: 0; z-index: 31;
+  padding: 8px 12px calc(env(safe-area-inset-bottom) + 16px);
+  background: var(--surface); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  animation: up 320ms var(--ease-drawer);
+}
+.sheet-grip { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 4px auto 12px; }
+.sheet-item {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  min-height: 52px; padding: 0 12px; border: 0; border-radius: var(--radius-sm);
+  background: none; font-size: 16px; text-align: start; cursor: pointer;
+}
+.sheet-item[aria-current="page"] { color: var(--brand); font-weight: 700; }
+@keyframes up { from { transform: translateY(100%); } }
+@keyframes fade { from { opacity: 0; } }
+
+/* ===== مكونات موحدة ===== */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
+.pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.pill-paid { background: var(--paid-soft); color: var(--paid); }
+.pill-due { background: var(--due-soft); color: var(--due); }
+.pill-late { background: var(--late-soft); color: var(--late); }
+.money { font-weight: 600; }
+.money-in { color: var(--paid); }
+.money-out { color: var(--late); }
+.btn { min-height: 44px; padding: 0 18px; border: 0; border-radius: var(--radius-sm); background: var(--brand); color: var(--on-brand); font-weight: 600; cursor: pointer; }
+.btn-ghost { background: transparent; color: var(--brand); border: 1px solid var(--line); }
+.grid-cards { display: grid; gap: 12px; grid-template-columns: 1fr; }
+
+/* ===== تابلت ≥ 768: شريط جانبي أيقونات ===== */
+@media (min-width: 768px) {
+  .shell { display: grid; grid-template-columns: 76px 1fr; }
+  .shell-bottom, .sheet, .sheet-backdrop { display: none; }
+  .shell-side {
+    display: flex; flex-direction: column; gap: 16px;
+    position: sticky; top: 0; height: 100dvh; overflow-y: auto;
+    padding: calc(env(safe-area-inset-top) + 16px) 10px 16px;
+    background: var(--night); color: #F5F2EB;
+  }
+  .shell-logo { display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700; font-size: 18px; }
+  .shell-logo span, .side-label { display: none; }
+  .shell-side nav { display: flex; flex-direction: column; gap: 4px; }
+  .side-item {
+    position: relative; display: flex; align-items: center; justify-content: center; gap: 12px;
+    min-height: 48px; padding: 0 12px; border: 0; border-radius: var(--radius-sm);
+    background: none; color: rgb(245 242 235 / 0.7); cursor: pointer; text-align: start;
+  }
+  .side-item.hoverable:hover { background: rgb(255 255 255 / 0.06); }
+  .side-item[aria-current="page"] { background: rgb(255 255 255 / 0.1); color: #fff; box-shadow: inset -3px 0 0 var(--gold); }
+  .side-item .badge { position: absolute; top: 4px; inset-inline-start: 4px; }
+  .shell-header { background: var(--bg); color: var(--text); padding: 20px 24px 12px; border-bottom: 1px solid var(--line); }
+  .shell-content { padding: 24px; padding-bottom: 104px; }
+  .fab { bottom: 24px; inset-inline-start: auto; inset-inline-end: 24px; }
+  .grid-cards { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ===== ديسكتوب ≥ 1200: شريط جانبي كامل ===== */
+@media (min-width: 1200px) {
+  .shell { grid-template-columns: var(--sidebar-w) 1fr; }
+  .shell-logo { justify-content: flex-start; padding: 0 8px; }
+  .shell-logo span, .side-label { display: inline; }
+  .side-item { justify-content: flex-start; }
+  .side-item .badge { position: static; margin-inline-start: auto; }
+  .grid-cards { grid-template-columns: repeat(3, 1fr); }
+}

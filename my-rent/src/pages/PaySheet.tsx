@@ -1,0 +1,232 @@
+import { useEffect, useState } from "react";
+import type { Method, Payment, Unit } from "../data/types";
+import { useStore } from "../data/store";
+import { arrears, billsDue, contractAlerts, fmt, monthKey, rentAt, upcomingRent, monthLabel, monthName, nextUnpaid, owedMonths, paidThrough, parseBHD, prepaid, unitStatus } from "../data/logic";
+import { Chips, Sheet, useToast } from "../ui/kit";
+import { Money, StatusPill } from "../theme/AppShell";
+import { Icon } from "../ui/icons";
+import { BillsBox } from "./Bills";
+import { ChequesBox } from "./Cheques";
+
+const METHODS: Method[] = ["BenefitPay", "تحويل", "نقد", "شيك"];
+
+/** رسالة تذكير صريحة: المبلغ والأشهر، بدون تهديد */
+function reminderUrl(unit: Unit, months: string[], amount: number) {
+  const text = `السلام عليكم ${unit.tenant?.name ?? ""}، تذكير بإيجار ${unit.name} (${months.map(monthName).join("، ")}): ${fmt(amount)} د.ب. إذا تم الدفع تجاهل الرسالة، وشكراً.`;
+  const digits = (unit.tenant?.phone ?? "").replace(/\D/g, "");
+  const to = digits.length === 8 ? `973${digits}` : ""; // رقم بحريني كامل، وإلا يختار المستخدم المحادثة
+  return `https://wa.me/${to}?text=${encodeURIComponent(text)}`;
+}
+
+/** تفاصيل الوحدة + المتأخرات + تسجيل دفعة + الإيصالات */
+export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onContract, onRenew }: { unit: Unit | null; onClose: () => void; onReceipt: (p: Payment, u: Unit) => void; onEdit: (u: Unit) => void; onStatement: (u: Unit) => void; onContract: (u: Unit) => void; onRenew: (u: Unit) => void }) {
+  const { data, pay, unpay, payAhead, vacate, undeposit, deleteUnit, saveUnit } = useStore();
+  const [confirmVacate, setConfirmVacate] = useState(false);
+  const toast = useToast();
+  const [shown, setShown] = useState<Unit | null>(unit);
+  const [month, setMonth] = useState("");
+  const [amount, setAmount] = useState("");
+  const [method, setMethod] = useState<Method>("BenefitPay");
+  const [error, setError] = useState("");
+  const [done, setDone] = useState(false);
+  const [ahead, setAhead] = useState<"0" | "1" | "3" | "6" | "12">("0");
+
+  const owed = shown ? owedMonths(data, shown) : [];
+
+  // أول ما تنفتح: أقدم شهر ما اندفع، والمبلغ الباقي منه
+  useEffect(() => {
+    if (!unit) return;
+    setShown(unit);
+    const first = owedMonths(data, unit)[0];
+    setMonth(first?.month ?? "");
+    setAmount(first ? fmt(first.left) : "");
+    setMethod("BenefitPay");
+    setError("");
+    setDone(false);
+    setConfirmVacate(false);
+    setAhead("0");
+  }, [unit]);
+
+  const u = shown;
+  const status = u ? unitStatus(data, u) : "due";
+  const arr = u ? arrears(data, u) : { months: [], amount: 0 };
+  const history = u ? data.payments.filter((p) => p.unitId === u.id).sort((a, b) => b.month.localeCompare(a.month) || b.date.localeCompare(a.date)).slice(0, 6) : [];
+
+  // الإخلاء + سجل التأمين (رجع أو انخصم). التراجع يرجّع المستأجر ويمسح سجل التأمين
+  const doVacate = (returned?: boolean) => {
+    if (!u) return;
+    const before = u;
+    const log = vacate(u.id, returned);
+    onClose();
+    const dep = log ? ` · التأمين ${fmt(log.amount)} د.ب ${log.returned ? "رجع" : "انخصم"}` : "";
+    toast({ text: `${u.name} صارت شاغرة${dep}`, undo: () => { saveUnit(before); if (log) undeposit(log.id); } });
+  };
+
+  const pickMonth = (m: string) => {
+    setMonth(m);
+    const o = owed.find((x) => x.month === m);
+    if (o) setAmount(fmt(o.left));
+  };
+
+  const submit = () => {
+    if (!u || !month) return;
+    const fils = parseBHD(amount);
+    if (fils === null) { setError("اكتب المبلغ بالدينار، مثل 180 أو 180.500"); return; }
+    const p = pay(u.id, month, fils, method);
+    setDone(true); // الزر يصير ✓ لحظة قبل ما تنسكّر النافذة
+    window.setTimeout(onClose, 260);
+    toast({ text: `انسجلت دفعة ${u.name} · ${monthName(month)} · ${fmt(fils)} د.ب`, undo: () => unpay(p.id), stamp: true });
+  };
+
+  // DW-022: دفعة مقدمة — كل شهر بمبلغ الإيجار كامل، والتراجع يمسح الكل
+  const submitAhead = () => {
+    if (!u || ahead === "0") return;
+    const r = payAhead(u.id, Number(ahead), method);
+    if (!r) return;
+    onClose();
+    toast({ text: `انسجلت دفعة مقدمة ${u.name} · ${r.months.length} ${r.months.length > 10 || r.months.length < 3 ? "شهر" : "أشهر"} لين ${monthLabel(r.months[r.months.length - 1])}`, undo: r.undo, stamp: true });
+  };
+  const thru = u ? paidThrough(data, u) : null;
+  const renewSoon = !!u?.tenant?.until && contractAlerts(data).some((c) => c.unit.id === u.id);
+  const up = u ? upcomingRent(u) : null;
+  const pre = u ? prepaid(data, u) : { months: [], amount: 0 };
+
+  return (
+    <Sheet open={!!unit} onClose={onClose} title={u ? `${u.name} · ${u.building}` : ""}>
+      {u && (
+        <div className="stack">
+          <div className="kv-row">
+            <div>
+              <div className="muted small">المستأجر</div>
+              <div className="strong">{u.tenant?.name ?? "شاغرة"}</div>
+              {u.tenant && <div className="muted small num" style={{ display: "flex", gap: 4, alignItems: "center" }}>{Icon.phone}{u.tenant.phone}</div>}
+            </div>
+            <StatusPill status={status} />
+          </div>
+          <div className="kv-grid">
+            <div><div className="muted small">الإيجار الشهري</div><Money fils={rentAt(u, monthKey(new Date()))} />{up && <div className="small muted" id="rent-up">يصير <span className="num">{fmt(up.rent)}</span> من {monthLabel(up.from)}</div>}</div>
+            <div><div className="muted small">يستحق يوم</div><span className="num strong">{u.dueDay}</span></div>
+            {u.tenant && <div><div className="muted small">من</div><span className="num strong">{u.tenant.since}</span></div>}
+            {!!u.tenant?.deposit && <div><div className="muted small">التأمين</div><Money fils={u.tenant.deposit} /></div>}
+          </div>
+
+          {u.notes && <p className="unit-notes small" id="unit-notes">📝 {u.notes}</p>}
+
+          {arr.amount > 0 && (
+            <div className="arrears">
+              <div>
+                <div className="strong">متأخرات {arr.months.length === 1 ? "شهر" : arr.months.length === 2 ? "شهرين" : <><span className="num">{arr.months.length}</span> أشهر</>}</div>
+                <div className="small">{arr.months.map((m) => monthName(m.month)).join("، ")}</div>
+              </div>
+              <Money fils={arr.amount} tone="out" />
+              <a className="btn btn-wa press" href={reminderUrl(u, arr.months.map((m) => m.month), arr.amount)} target="_blank" rel="noreferrer">ذكّره بالواتساب</a>
+            </div>
+          )}
+
+          {u.tenant && owed.length > 0 && (
+            <form className="pay-form" onSubmit={(e) => { e.preventDefault(); submit(); }}>
+              <span className="strong">تسجيل دفعة</span>
+              <Chips label="عن شهر" value={month} onChange={pickMonth} options={owed.map((o) => ({ id: o.month, label: monthName(o.month) }))} />
+              <label htmlFor="pay-amount" className="sr-only">المبلغ</label>
+              <div className="money-input">
+                <input id="pay-amount" inputMode="decimal" dir="ltr" value={amount} onChange={(e) => { setAmount(e.target.value); setError(""); }} aria-invalid={!!error} aria-describedby="pay-err" />
+                <span>د.ب</span>
+              </div>
+              {error && <div id="pay-err" className="field-error">{error}</div>}
+              <Chips label="طريقة الدفع" value={method} onChange={setMethod} options={METHODS.map((m) => ({ id: m, label: m }))} />
+              <button type="submit" className={`btn btn-block press${done ? " btn-done" : ""}`} disabled={done}>{done ? <>{Icon.check} انسجلت</> : "سجّل الدفعة"}</button>
+            </form>
+          )}
+
+          {u.tenant && (
+            <form className="pay-form ahead-form" onSubmit={(e) => { e.preventDefault(); submitAhead(); }}>
+              <span className="strong">دفعة مقدمة</span>
+              <span className="muted small">{thru ? <>مدفوع لين <b>{monthLabel(thru)}</b>{pre.months.length > 0 && <> · مقدم <span className="num">{pre.months.length}</span> {pre.months.length > 10 || pre.months.length < 3 ? "شهر" : "أشهر"}</>}</> : "فيه أشهر ما اندفعت — المقدم يسددها أول"}</span>
+              <Chips label="كم شهر" value={ahead} onChange={setAhead} options={[{ id: "1", label: "شهر" }, { id: "3", label: "3 أشهر" }, { id: "6", label: "6 أشهر" }, { id: "12", label: "سنة" }]} />
+              {ahead !== "0" && (() => { const ms = nextUnpaid(data, u, Number(ahead)); const past = !!u.tenant?.until && ms[ms.length - 1] > u.tenant.until.slice(0, 7); return <><div className="small ahead-sum">من {monthLabel(ms[0])} لين {monthLabel(ms[ms.length - 1])} · <Money fils={ms.reduce((s, m) => s + rentAt(u, m), 0)} /></div>{past && <div className="small field-warn" id="ahead-warn">⚠️ فيها أشهر بعد نهاية العقد ({u.tenant!.until}). جدّد العقد لو اتفقتوا.</div>}</>; })()}
+              {owed.length === 0 && <Chips label="طريقة الدفع" value={method} onChange={setMethod} options={METHODS.map((m) => ({ id: m, label: m }))} />}
+              <button type="submit" id="ahead-btn" className="btn btn-ghost btn-block press" disabled={ahead === "0"}>احفظ الدفعة المقدمة</button>
+            </form>
+          )}
+
+          {u.tenant && <BillsBox unit={u} />}
+          {u.tenant && <ChequesBox unit={u} />}
+
+          {history.length > 0 && (
+            <div>
+              <div className="muted small" style={{ marginBottom: 6 }}>الدفعات والإيصالات</div>
+              <ul className="rows rows-tap card-list">
+                {history.map((p) => (
+                  <li key={p.id}>
+                    <button className="row-btn press" onClick={() => onReceipt(p, u)} aria-label={`إيصال ${monthName(p.month)}`}>
+                      <span>{monthName(p.month)} <span className="muted small">· {p.method}</span></span>
+                      <span style={{ display: "flex", gap: 8, alignItems: "center" }}><Money fils={p.amount} tone="in" /><span className="receipt-tag">إيصال</span></span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="unit-actions">
+            {u.tenant && <button type="button" className="btn btn-ghost press" onClick={() => onStatement(u)}>كشف حساب</button>}
+            {u.tenant && <button type="button" className="btn btn-ghost press" onClick={() => onContract(u)}>العقد{u.contractFile ? " ✓" : ""}</button>}
+            {u.tenant?.until && <button type="button" className={`btn press ${renewSoon ? "" : "btn-ghost"}`} onClick={() => onRenew(u)}>جدّد العقد</button>}
+            <button type="button" className="btn btn-ghost press" onClick={() => onEdit(u)}>{u.tenant ? "تعديل" : "أضف مستأجر"}</button>
+            {u.tenant && !confirmVacate && <button type="button" className="btn btn-ghost press danger-text" onClick={() => setConfirmVacate(true)}>إخلاء الوحدة</button>}
+            {!u.tenant && !data.payments.some((p) => p.unitId === u.id) && (
+              <button type="button" className="btn btn-ghost press danger-text" onClick={() => { if (deleteUnit(u.id)) { onClose(); toast({ text: `انحذفت ${u.name}`, undo: () => saveUnit(u) }); } }}>حذف الوحدة</button>
+            )}
+          </div>
+          {confirmVacate && u.tenant && (
+            <div className="confirm-box" role="alert">
+              <div className="strong">إخلاء {u.name} من {u.tenant.name}؟</div>
+              {billsDue(data, u).amount > 0 && <div className="small" id="vacate-bills">عليه فواتير كهرباء وماء غير مسددة <Money fils={billsDue(data, u).amount} /> — اخصمها من التأمين لو اتفقتوا.</div>}
+              {arr.amount > 0 && <div className="small">عليه متأخرات <Money fils={arr.amount} /> — بعد الإخلاء ما تبين بالمتأخرات. سجّلها أو اطبع كشف قبل.</div>}
+              <div className="small muted">الدفعات السابقة تبقى بالسجل والتقارير.</div>
+              {u.tenant.deposit ? (
+                <>
+                  <div className="small">التأمين <Money fils={u.tenant.deposit} />: رجّعته له؟</div>
+                  <div className="grid-2">
+                    <button type="button" className="btn btn-danger press" onClick={() => doVacate(true)}>رجّعته، أخلِها</button>
+                    <button type="button" className="btn btn-danger press" onClick={() => doVacate(false)}>انخصم، أخلِها</button>
+                  </div>
+                  <button type="button" className="btn btn-ghost press" onClick={() => setConfirmVacate(false)}>إلغاء</button>
+                </>
+              ) : (
+                <div className="grid-2">
+                  <button type="button" className="btn btn-danger press" onClick={() => doVacate()}>أكيد، أخلِها</button>
+                  <button type="button" className="btn btn-ghost press" onClick={() => setConfirmVacate(false)}>إلغاء</button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </Sheet>
+  );
+}
+
+/** زر الإضافة: اختار الوحدة اللي بتسجّل دفعتها */
+export function PickUnitSheet({ open, onClose, onPick }: { open: boolean; onClose: () => void; onPick: (u: Unit) => void }) {
+  const { data } = useStore();
+  const unpaid = data.units.filter((u) => u.tenant && owedMonths(data, u).length > 0);
+  return (
+    <Sheet open={open} onClose={onClose} title="دفعة جديدة · اختر الوحدة">
+      {unpaid.length === 0 ? (
+        <p className="muted">كل الوحدات مدفوعة.</p>
+      ) : (
+        <ul className="rows rows-tap">
+          {unpaid.map((u) => (
+            <li key={u.id}>
+              <button className="row-btn press" onClick={() => onPick(u)}>
+                <span><span className="strong">{u.name}</span> <span className="muted small">· {u.tenant?.name}</span></span>
+                <span style={{ display: "flex", gap: 8, alignItems: "center" }}><StatusPill status={unitStatus(data, u)} />{Icon.chevron}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Sheet>
+  );
+}
