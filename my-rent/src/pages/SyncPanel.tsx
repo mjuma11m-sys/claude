@@ -4,7 +4,7 @@ import { useStore } from "../data/store";
 import { checkKey, checkUrl, loadSyncConfig, saveSyncConfig, type SyncConfig } from "../data/sync";
 import { useToast } from "../ui/kit";
 
-const CONSENT = "أوافق إن أسماء المستأجرين وأرقامهم والدفعات والمصاريف تنحفظ بالسحابة (Supabase، سيرفر برا البحرين)، ويشوفها بس حسابي واللي أدعيهم من العائلة.";
+const CONSENT = "أوافق إن أسماء المستأجرين وأرقامهم والدفعات والمصاريف والملفات تنحفظ بالسحابة (Supabase، سيرفر باليابان — برا البحرين)، ويشوفها بس حسابي واللي أدعيهم من العائلة.";
 const STATUS = { synced: "متزامن", pending: "يرفع…", offline: "بدون نت · ينرفع لما يرجع", error: "فيه مشكلة" } as const;
 
 /** busy + error لكل زر يتصل بالسيرفر */
@@ -99,7 +99,7 @@ function SignIn({ sb, needConsent, onConsent }: { sb: SupabaseClient | null; nee
       </div>
       <label className="field"><span>الإيميل</span><input id="sync-email" className="input" type="email" dir="ltr" autoComplete="email" value={addr} onChange={(e) => setAddr(e.target.value)} placeholder="name@example.com" /></label>
       <label className="field"><span>كلمة السر</span><input id="sync-pass" className="input" type="password" dir="ltr" autoComplete={mode === "up" ? "new-password" : "current-password"} value={pass} onChange={(e) => setPass(e.target.value)} placeholder="8 حروف أو أكثر" /></label>
-      {needConsent && <label className="check-row consent"><input id="sync-consent" type="checkbox" checked={ok} onChange={(e) => setOk(e.target.checked)} /> <span>{CONSENT}</span></label>}
+      {needConsent && <label className="check-row consent"><input id="sync-consent" type="checkbox" checked={ok} onChange={(e) => setOk(e.target.checked)} /> <span>{CONSENT} <a href="#privacy" className="link">اقرأ السياسة والشروط</a></span></label>}
       {note && <div className="backup-state" role="status">{note}</div>}
       <button className="btn press" disabled={busy || (needConsent && !ok)}>{mode === "up" ? "سوّ الحساب" : "دخول"}</button>
       {error && <div className="field-error" role="alert">{error}</div>}
@@ -222,7 +222,7 @@ function Setup({ onSaved }: { onSaved: (c: SyncConfig) => void }) {
       <form className="stack" onSubmit={(e) => { e.preventDefault(); save(); }}>
         <label className="field"><span>رابط المشروع (Project URL)</span><input id="sync-url" className="input" dir="ltr" value={url} onChange={(e) => { setUrl(e.target.value); setError(""); }} placeholder="https://xxxx.supabase.co" /></label>
         <label className="field"><span>المفتاح العام (anon public)</span><input id="sync-key" className="input" dir="ltr" value={key} onChange={(e) => { setKey(e.target.value); setError(""); }} placeholder="eyJ… أو sb_publishable_…" /></label>
-        <label className="check-row consent"><input id="sync-consent" type="checkbox" checked={ok} onChange={(e) => { setOk(e.target.checked); setError(""); }} /> <span>{CONSENT}</span></label>
+        <label className="check-row consent"><input id="sync-consent" type="checkbox" checked={ok} onChange={(e) => { setOk(e.target.checked); setError(""); }} /> <span>{CONSENT} <a href="#privacy" className="link">اقرأ السياسة والشروط</a></span></label>
         {error && <div className="field-error" role="alert">{error}</div>}
         <button className="btn press" disabled={!ok}>احفظ وكمّل</button>
       </form>

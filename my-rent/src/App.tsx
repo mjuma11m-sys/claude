@@ -19,6 +19,7 @@ import { UnitForm } from "./pages/UnitForm";
 import { Reports } from "./pages/Reports";
 import { SearchSheet } from "./pages/Search";
 import { Tracker } from "./pages/Tracker";
+import { Privacy } from "./pages/Privacy";
 import { RenewSheet } from "./pages/Renew";
 import { DocSheet, Docs } from "./pages/Docs";
 import type { Doc } from "./data/types";
@@ -27,15 +28,17 @@ import "./app.css";
 import symbolUrl from "../brand/symbol.svg";
 
 const PAGES = ["home", "tenants", "budget", "bank", "reports", "track", "docs", "house", "vendors", "settings"] as const;
-type Page = (typeof PAGES)[number];
+const HIDDEN = ["privacy"] as const; // صفحات بدون تبويب (DW-028)
+type Page = (typeof PAGES)[number] | (typeof HIDDEN)[number];
 const TITLES: Record<Page, string> = {
+  privacy: "الخصوصية والشروط",
   home: "الرئيسية", tenants: "المستأجرين", budget: "الميزانية", bank: "بنك العائلة",
   reports: "التقارير", track: "متابعة الإيجار", docs: "الوثائق", house: "الصيانة", vendors: "الموردين", settings: "الإعدادات",
 };
 
 const fromHash = (): Page => {
   const h = location.hash.slice(1) as Page;
-  return PAGES.includes(h) ? h : "home";
+  return (PAGES as readonly string[]).includes(h) || (HIDDEN as readonly string[]).includes(h) ? h : "home";
 };
 
 function Idarati() {
@@ -91,7 +94,7 @@ function Idarati() {
   return (
     <AppShell
       items={items}
-      active={page}
+      active={page === "privacy" ? "settings" : page}
       onNavigate={go}
       title={page === "home" ? <span className="brand-title"><img src={symbolUrl} alt="" width={28} height={28} />إداراتي</span> : TITLES[page]}
       onAdd={onAdd}
@@ -114,6 +117,7 @@ function Idarati() {
       {page === "house" && <Maintenance />}
       {page === "vendors" && <Vendors />}
       {page === "settings" && <Settings />}
+      {page === "privacy" && <Privacy />}
 
       <PaySheet unit={unit} onClose={closeUnit} onReceipt={(payment, u) => { setUnit(null); setReceipt({ payment, unit: u }); }} onEdit={(u) => { setUnit(null); setEditing({ unit: u }); }} onStatement={(u) => { setUnit(null); setStmt(u); }} onContract={(u) => { setUnit(null); setContract(u); }} onRenew={(u) => { setUnit(null); setRenew(u); }} />
       <SearchSheet open={searching} onClose={closeSearch} onPick={(u) => { setSearching(false); setUnit(u); }} />

@@ -560,6 +560,30 @@ try {
     await e.close();
   }
 
+  // 21) DW-028: صفحة الخصوصية والشروط + CSP من vercel.json ما يكسر التطبيق
+  {
+    const pv = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    await pv.goto(URL + "#settings"); await pv.evaluate(() => localStorage.clear()); await pv.reload(); await pv.waitForTimeout(800);
+    await pv.locator("#privacy-link").click(); await pv.waitForTimeout(500);
+    const txt = await pv.locator("#privacy").innerText();
+    ok(pv.url().endsWith("#privacy") && txt.includes("طوكيو") && txt.includes("CPR") && txt.includes("30 لسنة 2018") && txt.includes("شروط الاستخدام") && txt.includes("البحرين"), "صفحة الخصوصية والشروط: المكان والقانون والشروط");
+    ok(!(await pv.locator(".bottom-item, .side-item").allInnerTexts()).some((t) => t.includes("الخصوصية")), "الخصوصية ما تطلع كتبويب");
+    ok(!(await pv.locator("body").innerText()).includes("مومباي"), "ما فيه «مومباي» (الصح طوكيو)");
+    await pv.close();
+    // CSP: نفس الهيدر اللي بـ vercel.json على كل الصفحات
+    const vj = JSON.parse(fs.readFileSync(path.resolve("../vercel.json"), "utf8"));
+    const csp = vj.headers.find((h) => h.source.startsWith("/idarati-app")).headers.find((h) => h.key === "Content-Security-Policy").value;
+    const cp = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const viol = []; cp.on("console", (m) => { if (/Content Security Policy|Refused to/.test(m.text())) viol.push(m.text().slice(0, 120)); });
+    const cErr = []; cp.on("pageerror", (e) => cErr.push(e.message));
+    await cp.route("**/*", async (route) => { const r = await route.fetch(); const h = r.headers(); if ((h["content-type"] ?? "").includes("text/html")) h["content-security-policy"] = csp; await route.fulfill({ response: r, headers: h }); });
+    await cp.goto(URL + "#home"); await cp.evaluate(() => localStorage.clear()); await cp.reload(); await cp.waitForTimeout(1000);
+    for (const id of ["tenants", "track", "docs", "reports", "settings", "privacy"]) { await cp.goto(URL + "#" + id); await cp.waitForTimeout(500); }
+    await cp.goto(URL + "#tenants"); await cp.waitForTimeout(400); await cp.locator(".unit-card").first().click(); await cp.waitForTimeout(500);
+    ok(viol.length === 0 && cErr.length === 0, "CSP: كل الصفحات بدون أي مخالفة", viol.concat(cErr).join(" | "));
+    await cp.close();
+  }
+
   if (process.env.SHOTS) {
     for (const [n, w, h, s] of [["home-phone", 390, 844, "light"], ["home-dark", 390, 844, "dark"], ["home-desk", 1280, 800, "light"], ["tenants-tab", 820, 1180, "light"], ["budget-phone", 390, 844, "light"]]) {
       const q = await browser.newPage({ viewport: { width: w, height: h }, colorScheme: s });
