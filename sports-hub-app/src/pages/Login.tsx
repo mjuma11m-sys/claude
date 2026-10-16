@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link, Navigate, useLocation } from 'react-router'
 import { useAuth } from '../auth/AuthProvider'
 import { Icon } from '../components/Icon'
@@ -8,6 +8,7 @@ import { PRIVACY_CONTACT } from '../lib/legal'
 import { supabase } from '../lib/supabase'
 import type { IconName } from '../components/Icon'
 import { DEMO_ROLES, ROLE_LABEL, type Role } from '../lib/roles'
+import { cooldownLeft, looksLikeEmail, mapAuthError, normalizeEmail } from '../lib/auth-form'
 
 const ROLE_ICON: Record<Role, IconName> = { club_admin: 'club', bfa_admin: 'hub', medical: 'pulse', fan: 'vote', player: 'vote' }
 
@@ -15,22 +16,30 @@ export function Login() {
   const { user, demo, signInDemo } = useAuth()
   const location = useLocation()
   const [email, setEmail] = useState('')
-  const [sent, setSent] = useState(false)
+  const [sentAt, setSentAt] = useState<number | null>(null)
+  const [now, setNow] = useState(() => Date.now())
+  const sent = sentAt !== null
+  const wait = cooldownLeft(sentAt, now)
+  useEffect(() => { if (sentAt === null || wait === 0) return; const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t) }, [sentAt, wait])
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
   if (user) return <Navigate to={(location.state as { from?: string } | null)?.from ?? '/'} replace />
 
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault()
+  async function send() {
     if (!supabase) return
+    const address = normalizeEmail(email)
+    if (!looksLikeEmail(address)) { setError('البريد غير صالح. تأكد من كتابته.'); return }
     setBusy(true)
     setError(null)
-    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } })
-    if (error) setError('ما قدرنا نرسل الرابط، جرّب مرة ثانية')
-    else setSent(true)
+    // The link lands back on this origin; the address is sent as typed once trimmed, so the same person always reaches the same account.
+    const { error } = await supabase.auth.signInWithOtp({ email: address, options: { shouldCreateUser: true, emailRedirectTo: window.location.origin } })
+    const msg = mapAuthError(error)
+    if (msg) setError(msg)
+    else { setEmail(address); setNow(Date.now()); setSentAt(Date.now()) }
     setBusy(false)
   }
+  const onSubmit = (e: FormEvent) => { e.preventDefault(); void send() }
 
   return (
     <main className="relative grid min-h-dvh place-items-center overflow-hidden p-4">
@@ -63,7 +72,14 @@ export function Login() {
         ) : !PRIVACY_CONTACT ? (
           <p role="status" className="text-sm text-mute">التسجيل مقفول حالياً: النسخة تجريبية.</p>
         ) : sent ? (
-          <p role="status" className="text-sm">أرسلنا رابط الدخول إلى <bdi dir="ltr">{email}</bdi>. افتحه من نفس الجهاز.</p>
+          <div className="space-y-3">
+            <p role="status" className="text-sm">أرسلنا رابط الدخول إلى <bdi dir="ltr">{email}</bdi>. افتحه من نفس الجهاز وبنفس المتصفح. لو ما وصل، شوف مجلد الرسائل غير المرغوبة.</p>
+            {error && <p role="alert" className="text-sm text-crimson-ink">{error}</p>}
+            <div className="flex flex-wrap gap-2">
+              <button type="button" disabled={busy || wait > 0} onClick={() => void send()} className="min-h-11 rounded-xl border border-white/15 px-4 text-sm disabled:opacity-60">{wait > 0 ? <>أعد الإرسال بعد <span className="num">{wait}</span> ثانية</> : 'أعد إرسال الرابط'}</button>
+              <button type="button" onClick={() => { setSentAt(null); setError(null) }} className="min-h-11 rounded-xl px-4 text-sm text-mute underline underline-offset-4">غيّر البريد</button>
+            </div>
+          </div>
         ) : (
           <form onSubmit={onSubmit} className="space-y-4">
             <label className="block space-y-1">

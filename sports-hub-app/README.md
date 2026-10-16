@@ -140,6 +140,7 @@ SUPABASE_ACCESS_TOKEN=sbp_… npm run setup:supabase -- <project-ref>           
 - **ما انبنى** (قرار الجلسة): 2FA (إعداد بلوحة Supabase)، طابور كتابة بدون اتصال، وضع «ملعب»، ملاحظات خصم.
 
 ## الأمان والنشر
+- **قبل أول دخول حقيقي**: ضع `VITE_PRIVACY_CONTACT` (إيميل تواصل للخصوصية) مع `VITE_SUPABASE_URL` و`VITE_SUPABASE_ANON_KEY`. بدونه شاشة الدخول تقول «التسجيل مقفول» بقصد (لا نجمع بيانات قبل وجود قناة تواصل للمستخدم). فحص شاشة الدخول الحقيقية: `npm run test:login-real` (Supabase مزيّف محلياً).
 - **الرؤوس** (`vercel.json`): CSP صارمة (`script-src 'self'`، اتصال بـ`*.supabase.co` فقط)، `X-Frame-Options: DENY`، `nosniff`، `Referrer-Policy`، `Permissions-Policy`. مفحوصة على كل الشاشات بدون مخالفات. لو تغيّرت استضافة Supabase (نطاق مخصص) عدّل `connect-src`.
 - **خصوصية اللاعبين** (مهاجرة `0016`): جدول `players` ما يقرأه إلا مدير النادي والطبي بناديهما، والمرشحون لرجل المباراة عامون. **طبّقها قبل استيراد أي لاعبين حقيقيين.**
 - المراجعة الكاملة والمفتوح عليك: `docs/company/SECURITY-REVIEW.md`؛ الخطة: `docs/company/ROADMAP.md`.
