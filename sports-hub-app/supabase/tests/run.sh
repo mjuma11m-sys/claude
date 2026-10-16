@@ -22,4 +22,5 @@ run tests/match_reports.test.sql
 run tests/development.test.sql
 run tests/player_rights.test.sql
 run tests/audit_log.test.sql
+run tests/admin_provision.test.sql
 echo "RLS: all checks passed"
