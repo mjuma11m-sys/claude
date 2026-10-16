@@ -43,6 +43,22 @@
 > 🔢 **رقم النسخة (DW-011):** `versionCode` بـ `android/app/build.gradle` = رقم `APP_VERSION` بـ `js/core/app.js` (مثلاً `v16` ← `16` و`0.16`)، وفيه اختبار يمنع يختلفون. Google Play ترفض أي رفع برقم استخدمته قبل، فكل تحديث: `git pull` ← `npm run cap:sync:android` ← Generate Signed Bundle بنفس المفتاح.
 > 📴 **بدون نت:** الخط وقارئ PDF ومكتبة Supabase داخل التطبيق (`vendor/`)، فنسخة المتجر ما تتصل بأي جهة خارجية (فيه اختبار يمنع أي رابط برّا يرجع).
 
+### 2ب) أو خلّ GitHub يبني النسخة الموقّعة (DW-046)
+بدال Android Studio كل مرة: تحط المفتاح مرة وحدة كـ «سر» بإعدادات الريبو، وGitHub يبني `app-release.aab` موقّع.
+1. بجهازك (Terminal، بنفس مكان ملف `.jks`): `base64 -i hayati-upload.jks | pbcopy` (ماك؛ ينسخ النص بدون ما يطلع على الشاشة).
+2. GitHub ← الريبو ← **Settings ← Secrets and variables ← Actions ← New repository secret**، وأضف أربعة:
+   | الاسم | القيمة |
+   |---|---|
+   | `HAYATI_KEYSTORE_B64` | الصق اللي نسخته بالخطوة 1 |
+   | `HAYATI_KEYSTORE_PASSWORD` | كلمة سر الملف |
+   | `HAYATI_KEY_ALIAS` | اسم المفتاح (Key alias، الافتراضي `key0`) |
+   | `HAYATI_KEY_PASSWORD` | كلمة سر المفتاح |
+3. **Actions ← Hayati Release ← Run workflow**. لما يخلص، نزّل `hayati-release-aab` من أسفل الصفحة وارفعه على Play Console.
+
+> 🔐 الأسرار ما تبين لأي أحد بعد ما تحطها (ولا لي)، وما تنطبع باللوق، والملف ينمسح بآخر كل تشغيل. **لا ترسلها بالشات.**
+> بدون الأسرار، نفس الـ workflow يبني نسخة بدون توقيع (يثبت إن البناء سليم بس، ما ينرفع).
+> GitHub ما يرفع للمتجر: الرفع يظل يدوي منك.
+
 ### 3) Google Play Console
 1. **play.google.com/console** ← سجّل (حساب شخصي) ← ادفع 25$ ← تحقق من الهوية (البطاقة الذكية).
 2. **Create app**: الاسم `حياتي - Hayati` · اللغة الافتراضية: العربية · App · Free.
@@ -162,6 +178,7 @@ Expenses, studies, prayer times and tasks in one place. A Bahraini app (beta).
 | المساعد الذكي (DW-037) | **Financial info** + **Other user-generated content** (ملخص أرقام، بدون أسماء) · Collected, **processed ephemerally** · Optional · App functionality |
 | ملفات PDF (DW-036) | **Files and docs** · Collected, **processed ephemerally** (تنرسل لـ Anthropic وما تنحفظ) · Optional · App functionality |
 | الرحلات (DW-035) | ضمن **Other user-generated content** (تتزامن مع الحساب). رحلات العمرة على الجهاز بس |
+| سجل الأخطاء (DW-046) | **Not collected** — يظل على الجهاز؛ المستخدم بنفسه يقدر ينسخه داخل رسالة «بلّغ عن مشكلة» على إنستقرام (مو إرسال من التطبيق). بـ App Store Connect: **Diagnostics → Not collected** |
 | Security | **Encrypted in transit: Yes** · **Users can request deletion: Yes** (الإعدادات ← احذف كل بياناتي) |
 | Privacy policy URL | `https://<رابط-Production>/privacy.html` |
 | Terms of use / EULA URL | `https://<رابط-Production>/terms.html` (بـ App Store Connect: App Information ← License Agreement ← Custom، أو خلّه Standard Apple EULA) |

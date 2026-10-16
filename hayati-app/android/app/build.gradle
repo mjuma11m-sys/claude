@@ -7,8 +7,8 @@ android {
         applicationId "bh.hayati.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 22
-        versionName "0.22"
+        versionCode 23
+        versionName "0.23"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +16,21 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // DW-046: توقيع الإصدار من CI بس لو الأسرار موجودة (hayati-release.yml). بدونها Android Studio يوقّع بنفسه.
+    def ks = System.getenv('HAYATI_KEYSTORE_FILE')
+    if (ks && file(ks).exists()) {
+        signingConfigs {
+            release {
+                storeFile file(ks)
+                storePassword System.getenv('HAYATI_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('HAYATI_KEY_ALIAS')
+                keyPassword System.getenv('HAYATI_KEY_PASSWORD')
+            }
+        }
+    }
     buildTypes {
         release {
+            if (ks && file(ks).exists()) signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }

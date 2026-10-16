@@ -1865,5 +1865,17 @@ window.HAYATI_EN = {
 "نخليها": "Move them to",
 "تعدّلت": "Updated",
 // DW-044: ودجت الآيفون
-"ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← «+» فوق ← حياتي. فيه حجمين: الصغير يعرض كم باقي من الميزانية وزر «+ مصروف»، والمتوسط يعرض الجاي اليوم وبكرة والميزانية مع «+ مصروف» و«الصق رسالة».": "Add it from the home screen: long-press an empty spot → «+» at the top → Hayati. There are two sizes: the small one shows how much budget is left and a «+ Expense» button; the medium one shows what's next today and tomorrow and your budget, with «+ Expense» and «Paste message»."
+"ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← «+» فوق ← حياتي. فيه حجمين: الصغير يعرض كم باقي من الميزانية وزر «+ مصروف»، والمتوسط يعرض الجاي اليوم وبكرة والميزانية مع «+ مصروف» و«الصق رسالة».": "Add it from the home screen: long-press an empty spot → «+» at the top → Hayati. There are two sizes: the small one shows how much budget is left and a «+ Expense» button; the medium one shows what's next today and tomorrow and your budget, with «+ Expense» and «Paste message».",
+// DW-046: جديد v23 + سجل الأخطاء بالبلاغ
+"سجّل من التنبيه": "Log from the notification",
+"اكتب «1.200 قهوة» بتنبيه «سكّر يومك» وينحفظ": "Type «1.200 coffee» in the «Close your day» notification and it's saved",
+"هدف بصورة": "Goal with a photo",
+"صورة الشي اللي توفّر له، على جوالك بس": "A photo of what you're saving for, on your phone only",
+"تقرير الشهر كصورة": "Month report as an image",
+"احفظه أو شاركه، والمبالغ مخفية إلا لو تبيها": "Save or share it; amounts stay hidden unless you want them",
+"يتعلّم تصنيفاتك": "Learns your categories",
+"صحّح تصنيف محل مرة، والرسايل الجاية منه تتصنّف مثله": "Fix a shop's category once, and its next messages follow",
+"ودجت أصغر": "Smaller widget",
+"2×2 بالأندرويد: كم باقي من الميزانية و«+ مصروف»": "2×2 on Android: budget left and «+ Expense»",
+"أرفق آخر الأخطاء التقنية (بدون أرقام ولا أسماء)": "Attach the latest technical errors (no numbers or names)"
 };

@@ -166,15 +166,21 @@
   }
   function bugText(root) {
     const what = root.querySelector('#bugWhat').value.trim(), where = root.querySelector('#bugWhere').value.trim();
-    return ['🐞 مشكلة في «حياتي»', 'وش صار: ' + what, where ? 'وين: ' + where : '', 'النسخة: ' + A.APP_VERSION, 'الجهاز: ' + deviceInfo()].filter(Boolean).join('\n');
+    const box = root.querySelector('#bugLog'), log = box && box.checked && window.HayatiErrLog ? window.HayatiErrLog.text(5) : '';
+    return ['🐞 مشكلة في «حياتي»', 'وش صار: ' + what, where ? 'وين: ' + where : '', 'النسخة: ' + A.APP_VERSION, 'الجهاز: ' + deviceInfo(), log ? 'أخطاء تقنية:\n' + log : ''].filter(Boolean).join('\n');
   }
   function bugSheet() {
+    // DW-046: آخر الأخطاء التقنية تنرفق بس لو المستخدم اختار (مطفّي افتراضياً)، ويشوف وش بيطلع قبل
+    const errs = window.HayatiErrLog ? window.HayatiErrLog.text(5) : '';
+    const logBox = errs ? '<label class="check-row" style="display:flex;gap:8px;align-items:flex-start;margin:0 0 8px"><input type="checkbox" id="bugLog"><span class="small">أرفق آخر الأخطاء التقنية (بدون أرقام ولا أسماء)</span></label>' +
+      '<pre id="bugLogText" class="small muted" dir="ltr" style="white-space:pre-wrap;word-break:break-word;max-height:110px;overflow:auto;margin:0 0 12px;padding:8px;border-radius:10px;background:var(--surface-2,rgba(0,0,0,.04))" data-noi18n>' + h(errs) + '</pre>' : '';
     A.openSheet({
       title: '🐞 بلّغ عن مشكلة',
       saveLabel: 'انسخ وأرسل',
       body: '<p class="small muted" style="margin:0 0 12px">نجهّز رسالة فيها وصفك + رقم النسخة ونوع الجهاز بس (بدون أي مبلغ أو اسم أو بيانات). تنسخها وترسلها لنا على إنستقرام.</p>' +
         '<div class="field"><label for="bugWhat">وش صار؟</label><textarea id="bugWhat" maxlength="800" placeholder="مثلاً: لصقت رسالة البنك وما طلع المبلغ"></textarea></div>' +
         '<div class="field"><label for="bugWhere">وين؟ (اختياري)</label><input id="bugWhere" maxlength="80" placeholder="مثلاً: المصاريف ← لصق رسالة"></div>' +
+        logBox +
         '<p class="small muted" style="margin:0">بيوصلنا: <span class="num" dir="ltr">' + h(A.APP_VERSION + ' · ' + deviceInfo()) + '</span></p>',
       async onSave(root) {
         if (!root.querySelector('#bugWhat').value.trim()) throw new Error('اكتب وش صار');

@@ -150,3 +150,21 @@ test('iPhone widget (DW-044): WidgetKit target embedded in the app, files and pl
   // الروابط اللي يفتحها الودجت يعرفها native.js
   for (const u of ['add-tx', 'paste-sms']) assert.ok(widget.includes('bh.hayati.app://widget/' + u), u);
 });
+
+// DW-046: نسخة المتجر من GitHub
+test('release bundle is signed only from CI secrets, and no key material lives in the repo', () => {
+  const g = read('app/build.gradle');
+  assert.match(g, /System\.getenv\('HAYATI_KEYSTORE_FILE'\)/);
+  assert.match(g, /storePassword System\.getenv\('HAYATI_KEYSTORE_PASSWORD'\)/);
+  assert.doesNotMatch(g, /storePassword ['"]/);   // ولا كلمة سر مكتوبة
+  const wf = fs.readFileSync(path.join(W, '../.github/workflows/hayati-release.yml'), 'utf8');
+  assert.match(wf, /secrets\.HAYATI_KEYSTORE_B64/);
+  assert.match(wf, /bash scripts\/android-release\.sh/);
+  assert.doesNotMatch(wf, /upload-google-play|r0adkll|fastlane/);   // ما يرفع للمتجر بروحه
+  const sh = fs.readFileSync(path.join(W, 'scripts/android-release.sh'), 'utf8');
+  assert.match(sh, /trap cleanup EXIT/);
+  assert.doesNotMatch(sh, /set -x|echo "\$KS_B64|cat "\$KS"/);   // المفتاح ما ينطبع
+  const ign = fs.readFileSync(path.join(W, '.gitignore'), 'utf8');
+  assert.match(ign, /\*\.jks/);
+  assert.match(ign, /\*\.keystore/);
+});

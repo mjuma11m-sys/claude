@@ -8,3 +8,6 @@ test-results/
 playwright-report/
 node_modules/
 android-smoke/
+android-release/
+*.jks
+*.keystore

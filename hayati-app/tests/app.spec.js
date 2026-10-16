@@ -1563,7 +1563,7 @@ const seedOld = (page) => store(page, () => { App.S.setSettings({ onboarded: tru
 test('«جديد بحياتي»: an existing user sees what is new once after the update, and «تمام» keeps it away', async ({ page }) => {
   await open(page);
   await seedOld(page);
-  await store(page, () => localStorage.setItem('hayati-seen-version', 'v21'));   // كان على النسخة اللي قبل
+  await store(page, () => localStorage.setItem('hayati-seen-version', 'v22'));   // كان على النسخة اللي قبل
   await open(page);
   await expect(page.locator('#sheetTitle')).toHaveText('جديد بحياتي ✨', { timeout: 5000 });
   await expect(page.locator('#sheetBody .news-item')).toHaveCount(5);
@@ -2489,4 +2489,33 @@ test('«اسأل حياتي» (DW-037): signed in, the assistant answers through
   await store(page, () => { App.S.invokeFn = async () => { throw new Error('limit'); }; });
   await page.fill('#chatForm [name=q]', 'سؤال ثالث'); await page.click('#chatForm [type=submit]');
   await expect(page.locator('#chat .msg.assistant').last()).toContainText('خلصت محاولات اليوم');
+});
+
+// ================= DW-046: سجل أخطاء على الجهاز =================
+test('error log (DW-046): keeps technical errors on the device without numbers, names or emails, and the bug report attaches them only when ticked', async ({ page }) => {
+  await open(page);
+  // أحداث مصطنعة (مو أخطاء حقيقية) عشان فحص «ولا خطأ JS» يظل شغّال
+  await store(page, () => {
+    window.dispatchEvent(new ErrorEvent('error', { message: 'Uncaught TypeError: Cannot read properties of undefined (reading \'amount\') 92.325 سارة a.b@mail.com', filename: 'http://localhost/js/core/app.js?v=1', lineno: 120, colno: 7, error: new TypeError('x') }));
+    window.dispatchEvent(new PromiseRejectionEvent('unhandledrejection', { promise: Promise.resolve(), reason: new Error('fetch failed for "لولو" 380') }));
+  });
+  const log = await store(page, () => window.HayatiErrLog.list());
+  expect(log).toHaveLength(2);
+  expect(log[0].at).toBe('app.js:120:7');
+  expect(JSON.stringify(log)).not.toMatch(/92|325|380|سارة|لولو|mail\.com|amount/);
+  expect(log[1].m).toMatch(/^Promise: Error: fetch failed/);
+
+  await store(page, () => window.Extras.settingsAction('bug'));
+  await expect(page.locator('#bugLog')).not.toBeChecked();   // مطفّي افتراضياً
+  await expect(page.locator('#bugLogText')).toContainText('app.js:120:7');
+  await page.fill('#bugWhat', 'التطبيق علّق');
+  const text = () => page.evaluate(() => window.HayatiFeedback.bugText(document.getElementById('sheetBody')));
+  expect(await text()).not.toContain('أخطاء تقنية');
+  await page.check('#bugLog');
+  expect(await text()).toContain('أخطاء تقنية:');
+  expect(await text()).toContain('app.js:120:7');
+
+  // «احذف كل بياناتي» يمسحه (كل مفاتيح hayati)
+  await store(page, () => { for (const k of Object.keys(localStorage)) if (k.startsWith('hayati')) localStorage.removeItem(k); });
+  expect(await store(page, () => window.HayatiErrLog.list())).toEqual([]);
 });
