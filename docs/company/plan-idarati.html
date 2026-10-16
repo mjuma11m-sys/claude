@@ -1,0 +1,171 @@
+<title>خطة تطوير إداراتي</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Readex+Pro:wght@500;600;700&display=swap">
+<style>
+/* Layout: عمود قراءة واحد؛ كل مرحلة شريط فيه البنود كصفوف (الجهد · يحتاج منك) — نفس هوية التطبيق */
+:root {
+  --bg: #F5F2EB; --surface: #FFFFFF; --line: #E2DCCF; --ink: #17243A; --muted: #5E6878;
+  --brand: #1E3A5F; --gold: #A8772A; --gold-soft: #F3E7CF;
+  --ok: #1F7A52; --ok-soft: #DCEFE4; --warn: #8A6400; --warn-soft: #F6EBC8; --bad: #B23434; --bad-soft: #F6DEDC;
+  --display: "Readex Pro", "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+  --body: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0D1524; --surface: #152036; --line: #26334C; --ink: #E7ECF4; --muted: #9AA4B6;
+  --brand: #8FB3E8; --gold: #E2B866; --gold-soft: #33291A;
+  --ok: #6FD3A1; --ok-soft: #173327; --warn: #F0C75A; --warn-soft: #362C12; --bad: #F08A8A; --bad-soft: #3A1F20; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0D1524; --surface: #152036; --line: #26334C; --ink: #E7ECF4; --muted: #9AA4B6;
+  --brand: #8FB3E8; --gold: #E2B866; --gold-soft: #33291A;
+  --ok: #6FD3A1; --ok-soft: #173327; --warn: #F0C75A; --warn-soft: #362C12; --bad: #F08A8A; --bad-soft: #3A1F20; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 400 16px/1.75 var(--body); direction: rtl; }
+.wrap { max-width: 860px; margin: 0 auto; padding-block: 40px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 36px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; text-wrap: balance; margin: 0; line-height: 1.35; }
+h1 { font-size: clamp(28px, 6vw, 40px); }
+h2 { font-size: 22px; }
+h3 { font-size: 17px; }
+p { margin: 0; max-width: 65ch; }
+.eyebrow { font-size: 13px; color: var(--muted); letter-spacing: .02em; display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.tag { display: inline-block; font-size: 12px; padding: 2px 10px; border-radius: 999px; background: var(--gold-soft); color: var(--gold); font-weight: 600; }
+header { display: grid; gap: 12px; }
+.lede { color: var(--muted); font-size: 17px; }
+.num { font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; }
+section { display: grid; gap: 14px; }
+.built { display: flex; flex-wrap: wrap; gap: 8px; }
+.built span { font-size: 13px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); }
+.phase { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px; display: grid; gap: 14px; }
+.phase-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+.phase-no { font-family: var(--display); font-weight: 700; color: var(--gold); font-size: 15px; }
+.phase-goal { color: var(--muted); font-size: 15px; }
+.items { list-style: none; margin: 0; padding: 0; display: grid; }
+.items li { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; padding: 12px 0; border-top: 1px solid var(--line); }
+.items li:first-child { border-top: 0; }
+.items b { font-weight: 600; }
+.items .why { grid-column: 1; color: var(--muted); font-size: 14px; }
+.meta { grid-column: 2; grid-row: 1 / span 2; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+.effort { font: 600 12px var(--display); padding: 2px 10px; border-radius: 6px; background: var(--bg); border: 1px solid var(--line); }
+.you { font-size: 12px; padding: 2px 10px; border-radius: 999px; background: var(--warn-soft); color: var(--warn); white-space: nowrap; }
+.new { font-size: 11px; padding: 1px 8px; border-radius: 999px; background: var(--ok-soft); color: var(--ok); margin-inline-start: 6px; vertical-align: 2px; }
+.tbl-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+table { width: 100%; border-collapse: collapse; font-size: 15px; min-width: 520px; }
+th, td { text-align: start; padding: 10px 14px; border-top: 1px solid var(--line); }
+thead th { border-top: 0; font-weight: 500; font-size: 13px; color: var(--muted); }
+td.num { text-align: end; }
+.decide { display: grid; gap: 10px; counter-reset: q; list-style: none; padding: 0; margin: 0; }
+.decide li { counter-increment: q; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; }
+.decide li::before { content: counter(q); grid-row: span 2; font: 700 18px var(--display); color: var(--brand); }
+.decide .rec { color: var(--muted); font-size: 14px; }
+.rejected { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.rejected li { display: grid; grid-template-columns: auto 1fr; gap: 10px; }
+.rejected li::before { content: "✕"; color: var(--bad); font-weight: 700; }
+.rejected span { color: var(--muted); }
+footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 16px; }
+@media (max-width: 520px) { .items li { grid-template-columns: 1fr; } .meta { grid-column: 1; grid-row: auto; flex-direction: row; align-items: center; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow"><span>شركة الديوانية · <span class="num">DW-027</span></span><span class="num">2026-10-16</span><span class="tag">قيد التطوير · نسخة تجريبية</span></div>
+    <h1>خطة تطوير إداراتي</h1>
+    <p class="lede">أربع مراحل بالترتيب: نثبّت الأساس، بعدين نوفّر وقتك اليومي، بعدين العائلة والمحلات، وآخر شي نجرّبه مع ناس. كل بند يمر على اجتماع شركة قبل التنفيذ، وما يبدأ إلا بموافقتك.</p>
+  </header>
+
+  <section aria-labelledby="h-built">
+    <h2 id="h-built">وين وصلنا (<span class="num">26</span> تذكرة)</h2>
+    <div class="built">
+      <span>التحصيل والمتأخرات</span><span>الدفعات والإيصالات</span><span>كشف الحساب</span><span>التأمين</span><span>الميزانية وبنك العائلة</span><span>المصاريف الثابتة</span><span>الصيانة والموردين</span><span>العقود: نموذج + ملف موقّع</span><span>تجديد العقد وسجل الإيجار</span><span>متابعة الإيجار والمقدم</span><span>نوع العقار</span><span>الوثائق وانتهاؤها</span><span>فواتير الكهرباء والماء</span><span>استيراد وتصدير Excel</span><span>المزامنة بين الأجهزة</span>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-phases">
+    <h2 id="h-phases">المراحل</h2>
+
+    <article class="phase">
+      <div class="phase-head"><span class="phase-no">المرحلة ١</span><h3>ثبّت الأساس</h3><span class="phase-goal">قبل ما يلمس التطبيق أحد غيرك</span></div>
+      <ul class="items">
+        <li><b>نشر ثابت على Vercel</b><span class="why">وصلنا حد النشر المجاني مرتين. الحل المجاني: مجلد المشروع = <span class="num">my-rent</span> ونشر واحد لكل تذكرة.</span><span class="meta"><span class="effort">S</span><span class="you">إعداد بلوحة Vercel</span></span></li>
+        <li><b>تجربة حقيقية على جوالك</b><span class="why">حساب جديد، تأكيد الإيميل، دفعة، رفع عقد للسحابة — على آيفون وأندرويد.</span><span class="meta"><span class="effort">S</span><span class="you">10 دقايق منك</span></span></li>
+        <li><b>سياسة خصوصية وشروط داخل التطبيق</b><span class="why">شنو ينحفظ، ووين (سيرفر طوكيو)، ومين يشوفه، وشلون تحذف حسابك. شرط قبل أي مستخدم برا العائلة.</span><span class="meta"><span class="effort">M</span><span class="you">مراجعة محامي</span></span></li>
+        <li><b>إعدادات Supabase</b><span class="why">Site URL = رابط التطبيق، وتغيير كلمة سر قاعدة البيانات.</span><span class="meta"><span class="effort">S</span><span class="you">من لوحة Supabase</span></span></li>
+      </ul>
+    </article>
+
+    <article class="phase">
+      <div class="phase-head"><span class="phase-no">المرحلة ٢</span><h3>راحة يومية</h3><span class="phase-goal">أقل ضغطات، وتذكير قبل ما يفوت شي</span></div>
+      <ul class="items">
+        <li><b>متابعة الشيكات المؤجلة<span class="new">جديد</span></b><span class="why">المحلات تدفع بشيكات مؤجلة: الرقم، البنك، تاريخ الاستحقاق، والحالة (عندي / مودع / مرتجع). الشيك يصير دفعة بس لما يتحصّل.</span><span class="meta"><span class="effort">M</span></span></li>
+        <li><b>تذكيرات بتقويم الجوال</b><span class="why">ملف تقويم فيه مواعيد الإيجار، ونهاية العقود، وانتهاء الوثائق — ينضاف لتقويم الآيفون بدون سيرفر.</span><span class="meta"><span class="effort">S</span></span></li>
+        <li><b>تقرير شهري PDF</b><span class="why">صفحة وحدة: التحصيل، المتأخرات، المصاريف، الوثائق القريبة. تطبعه أو ترسله للعائلة.</span><span class="meta"><span class="effort">M</span></span></li>
+        <li><b>بحث شامل وملاحظات</b><span class="why">البحث يشمل الوثائق والموردين، وملاحظة نصية لكل وحدة («المكيف تبدّل 2026»).</span><span class="meta"><span class="effort">S</span></span></li>
+      </ul>
+    </article>
+
+    <article class="phase">
+      <div class="phase-head"><span class="phase-no">المرحلة ٣</span><h3>العائلة والمحلات</h3><span class="phase-goal">أكثر من شخص بنفس الحساب، ومحلات تجارية</span></div>
+      <ul class="items">
+        <li><b>صلاحيات العائلة</b><span class="why">«يشوف بس» أو «يعدّل» لكل عضو. تعديل على حماية قاعدة البيانات (RLS).</span><span class="meta"><span class="effort">M</span></span></li>
+        <li><b>سجل النشاط</b><span class="why">مين سجّل الدفعة ومتى — يحل «منو استلم من شقة 3؟».</span><span class="meta"><span class="effort">S</span></span></li>
+        <li><b>فاتورة ضريبية للمحلات</b><span class="why">ضريبة القيمة المضافة <span class="num">10%</span> بصيغة الفاتورة الرسمية — بس لو أنت مسجّل ضريبياً.</span><span class="meta"><span class="effort">M</span><span class="you">هل أنت مسجّل VAT؟</span></span></li>
+      </ul>
+    </article>
+
+    <article class="phase">
+      <div class="phase-head"><span class="phase-no">المرحلة ٤</span><h3>التجربة مع ناس</h3><span class="phase-goal">بدون تاريخ إطلاق ولا إعلان</span></div>
+      <ul class="items">
+        <li><b>5–10 عائلات تجريبية</b><span class="why">من معارفك، كل وحدة بحسابها. أسبوعين استخدام، بعدين أسئلة قصيرة.</span><span class="meta"><span class="effort">S</span><span class="you">تختار العائلات</span></span></li>
+        <li><b>صفحة تعريف + نطاق</b><span class="why">بعد التجربة مو قبلها، وبكلام صريح: «قيد التطوير · نسخة تجريبية».</span><span class="meta"><span class="effort">M</span><span class="you">اسم النطاق</span></span></li>
+        <li><b>قرار التسعير</b><span class="why">مجاني للعائلة أو اشتراك بسيط — بعد ما نعرف تكلفة كل مستخدم الفعلية.</span><span class="meta"><span class="effort">S</span><span class="you">قرارك</span></span></li>
+      </ul>
+    </article>
+  </section>
+
+  <section aria-labelledby="h-kpi">
+    <h2 id="h-kpi">شلون نعرف إنها نجحت</h2>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>المؤشر</th><th>الهدف</th><th>المرحلة</th></tr></thead>
+      <tbody>
+        <tr><td>نشر بدون رفض من Vercel</td><td>ولا رفض بشهر</td><td>١</td></tr>
+        <tr><td>تسجيل دفعة من فتح التطبيق</td><td>أقل من <span class="num">5</span> ثواني</td><td>٢</td></tr>
+        <tr><td>عقد أو وثيقة تنتهي بدون ما تدري</td><td><span class="num">0</span></td><td>٢</td></tr>
+        <tr><td>شيك يفوت تاريخه بدون إيداع</td><td><span class="num">0</span></td><td>٢</td></tr>
+        <tr><td>عائلات تجريبية تكمّل أسبوعين</td><td><span class="num">7</span> من <span class="num">10</span></td><td>٤</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="h-cost">
+    <h2 id="h-cost">التكلفة (تقدير — الأسعار تتغيّر)</h2>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>البند</th><th>متى</th><th>التكلفة</th></tr></thead>
+      <tbody>
+        <tr><td>Supabase (الحالي)</td><td>الحين</td><td class="num">≈ 3.8 BHD / شهر</td></tr>
+        <tr><td>Vercel Pro — بس لو الحل المجاني ما نفع</td><td>المرحلة ١</td><td class="num">≈ 7.5 BHD / شهر</td></tr>
+        <tr><td>مراجعة محامي لسياسة الخصوصية</td><td>المرحلة ١</td><td class="num">≈ 100–300 BHD مرة وحدة</td></tr>
+        <tr><td>نطاق .com</td><td>المرحلة ٤</td><td class="num">≈ 4.5 BHD / سنة</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="h-no">
+    <h2 id="h-no">انرفض أو تأجّل</h2>
+    <ul class="rejected">
+      <li><b>إشعارات push</b><span>تحتاج سيرفر وتكلفة شهرية. تذكيرات التقويم تغطيها الحين.</span></li>
+      <li><b>ربط مع البنك أو BenefitPay</b><span>يحتاج حساب تاجر وAPI رسمي. التسجيل بضغطة يكفي.</span></li>
+      <li><b>جلب فواتير الهيئة أوتوماتيك</b><span>ما فيه واجهة رسمية مضمونة.</span></li>
+      <li><b>تطبيق آيفون من المتجر</b><span>الموقع ينحفظ على الشاشة الرئيسية ويشتغل بدون نت. المتجر بعد التجربة لو احتجناه.</span></li>
+      <li><b>توقعات بالذكاء الاصطناعي</b><span>عشر وحدات ما تحتاج تنبؤ.</span></li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="h-you">
+    <h2 id="h-you">يحتاج قرارك</h2>
+    <ol class="decide">
+      <li><b>نبدأ المرحلة ١ الحين؟</b><span class="rec">التوصية: نعم — نبدأ بالنشر الثابت وسياسة الخصوصية.</span></li>
+      <li><b>المحلات تدفع لك بشيكات مؤجلة؟</b><span class="rec">لو نعم، الشيكات أول بند بالمرحلة ٢.</span></li>
+      <li><b>أنت مسجّل بضريبة القيمة المضافة؟</b><span class="rec">لو لا، الفاتورة الضريبية تنشال من الخطة.</span></li>
+    </ol>
+  </section>
+
+  <footer>الخطة نفسها محفوظة بالمشروع: <span class="num">docs/company/ROADMAP.md</span>. أي تغيير عليها يمر على اجتماع شركة.</footer>
+</div>
