@@ -642,6 +642,25 @@ try {
     await q.close();
   }
 
+  // 23) DW-030: حساب «مشاهدة بس» — التطبيق يمنع التعديل (والسيرفر يرفض بـ RLS)
+  {
+    const v = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const vErr = []; v.on("pageerror", (x) => vErr.push(x.message));
+    await v.goto(URL + "#home"); await v.evaluate(() => localStorage.clear()); await v.reload(); await v.waitForTimeout(700);
+    const n0 = await v.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")).payments.length);
+    await v.evaluate(() => localStorage.setItem("idarati:syncConfig", JSON.stringify({ url: "https://example.supabase.co", key: "x", consentAt: "2026-10-16", familyId: "00000000-0000-0000-0000-000000000001", familyName: "عائلة", role: "member", canEdit: false })));
+    await v.reload(); await v.waitForTimeout(1200);
+    ok(await v.locator("#ro-banner").count() === 1, "مشاهدة بس: الشريط يطلع");
+    await v.goto(URL + "#tenants"); await v.waitForTimeout(500);
+    await v.locator(".fab").click(); await v.waitForTimeout(400);
+    await v.locator("#u-name").fill("شقة تجربة"); await v.locator("#u-rent").fill("100");
+    await v.getByRole("button", { name: "أضف الوحدة" }).click(); await v.waitForTimeout(500);
+    ok((await v.locator(".toast-zone").innerText().catch(() => "")).includes("مشاهدة بس"), "مشاهدة بس: الإضافة تطلع تنبيه");
+    ok(await v.locator(".unit-card", { hasText: "شقة تجربة" }).count() === 0 && await v.evaluate(() => !Object.keys(localStorage).some((k) => (localStorage.getItem(k) ?? "").includes("شقة تجربة"))), "مشاهدة بس: الوحدة ما انضافت", String(n0));
+    await v.evaluate(() => localStorage.clear());
+    await v.close();
+  }
+
   if (process.env.SHOTS) {
     for (const [n, w, h, s] of [["home-phone", 390, 844, "light"], ["home-dark", 390, 844, "dark"], ["home-desk", 1280, 800, "light"], ["tenants-tab", 820, 1180, "light"], ["budget-phone", 390, 844, "light"]]) {
       const q = await browser.newPage({ viewport: { width: w, height: h }, colorScheme: s });

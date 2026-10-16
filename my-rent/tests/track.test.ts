@@ -1,5 +1,5 @@
 // منطق ملف متابعة الإيجار (DW-022): npm run test:track
-import { buildIcs, chequeSeries, chequesDue, billsDue, collection, monthlyReport, addMonthsDay, renewUnit, rentAt, upcomingRent, owedMonths, docStatus, docsList, docAlerts, kindOf, nextUnpaid, paidThrough, prepaid, rentTracker, statement, trackerTotals, monthKey } from "../src/data/logic";
+import { describeAction, buildIcs, chequeSeries, chequesDue, billsDue, collection, monthlyReport, addMonthsDay, renewUnit, rentAt, upcomingRent, owedMonths, docStatus, docsList, docAlerts, kindOf, nextUnpaid, paidThrough, prepaid, rentTracker, statement, trackerTotals, monthKey } from "../src/data/logic";
 import { reducer } from "../src/data/store";
 import { demoData } from "../src/data/demo";
 import { planImport, trackerSheet, TRACK_HEAD } from "../src/data/excel";
@@ -117,6 +117,10 @@ ok(m77?.elec === "123456" && m77?.water === "987", "استيراد العداد�
   ok(lines.every((l) => new TextEncoder().encode(l).length <= 75), "ICS: كل سطر ≤ 75 بايت");
   ok(ics.text.includes("RRULE:FREQ=MONTHLY") && ics.text.includes("TRIGGER:-P30D") && ics.text.includes("TRIGGER:-P1D"), "ICS: تكرار شهري + تنبيهات 30 يوم ويوم");
 }
+
+// 12) DW-030: وصف أحداث سجل النشاط
+ok(describeAction({ type: "pay", payment: { unitId: "u2", month: "2026-10", amount: 220000 } }, d) === "سجّل دفعة شقة 2 · أكتوبر · 220.000 د.ب", "سجل النشاط: دفعة", describeAction({ type: "pay", payment: { unitId: "u2", month: "2026-10", amount: 220000 } }, d));
+ok(describeAction({ type: "cheque", cheque: { number: "000101", unitId: "u6", state: "deposited" } }, d).includes("مودع") && describeAction({ type: "something-new" }, d) === "تعديل", "سجل النشاط: شيك + حدث مجهول");
 
 console.log(failed ? `\n${failed} فشل` : "\nكل اختبارات المتابعة نجحت");
 process.exit(failed ? 1 : 0);

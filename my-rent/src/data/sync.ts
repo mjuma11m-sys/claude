@@ -146,7 +146,7 @@ export class SyncEngine {
 
 // ── إعداد المزامنة (يحطه المالك بالإعدادات) ─────────────────────────
 
-export type SyncConfig = { url: string; key: string; consentAt: string; familyId?: string; familyName?: string; role?: "owner" | "member" };
+export type SyncConfig = { url: string; key: string; consentAt: string; familyId?: string; familyName?: string; role?: "owner" | "member"; canEdit?: boolean };
 const CONFIG_KEY = "idarati:syncConfig";
 
 export function loadSyncConfig(): SyncConfig | null {

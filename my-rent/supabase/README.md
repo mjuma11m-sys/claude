@@ -8,6 +8,10 @@
 - **Authentication ← URL Configuration ← Site URL** = رابط التطبيق على Vercel (رابط تأكيد الإيميل يرجع له؛ بدونه يفتح localhost بعد التأكيد، والحساب يتأكد عادي).
 - **SQL Editor:** الصق دالتي `delete_family` و `leave_family` من `setup.sql` (أداة الربط تطلب تأكيد يدوي لأي أمر فيه حذف، فما انطبقت). الباقي كله منطبق ومفحوص.
 
+### الصلاحيات (DW-030)
+- `can_edit` بـ `family_members` و `family_invites` (افتراضه true). المشاهد (`false`) يقرأ بس: سياسة restrictive على `events` و `storage.objects` (bucket contracts).
+- `create_invite_as(f, edit)` · `set_member_access` (المالك بس) · `set_my_name`. منطبق على المشروع ومفحوص (32 فحص محلي + تحقق على السيرفر داخل transaction ملغية).
+
 ## مشروع خاص (اختياري، لو بتنقل لمشروع ثاني)
 
 | # | وين | شنو تسوي |

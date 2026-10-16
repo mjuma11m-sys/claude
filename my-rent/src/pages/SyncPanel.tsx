@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { FamilyMembers } from "./Family";
 import { useStore } from "../data/store";
 import { checkKey, checkUrl, loadSyncConfig, saveSyncConfig, type SyncConfig } from "../data/sync";
-import { useToast } from "../ui/kit";
+import { Chips, useToast } from "../ui/kit";
 
 const CONSENT = "أوافق إن أسماء المستأجرين وأرقامهم والدفعات والمصاريف والملفات تنحفظ بالسحابة (Supabase، سيرفر باليابان — برا البحرين)، ويشوفها بس حسابي واللي أدعيهم من العائلة.";
 const STATUS = { synced: "متزامن", pending: "يرفع…", offline: "بدون نت · ينرفع لما يرجع", error: "فيه مشكلة" } as const;
@@ -113,12 +114,12 @@ function Family({ sb, cfg }: { sb: SupabaseClient; cfg: SyncConfig }) {
   const { busy, error, run } = useRunner();
   const [name, setName] = useState("بياناتي");
   const [code, setCode] = useState("");
-  const [existing, setExisting] = useState<{ id: string; name: string; role: "owner" | "member" } | null | undefined>(undefined);
+  const [existing, setExisting] = useState<{ id: string; name: string; role: "owner" | "member"; canEdit: boolean } | null | undefined>(undefined);
   useEffect(() => { if (sb) import("../data/supabase").then(({ myFamily }) => myFamily(sb)).then(setExisting).catch(() => setExisting(null)); }, []);
   if (existing === undefined) return <p className="muted small">يتحقق…</p>;
   if (existing) return (
     <button className="btn press" disabled={busy} onClick={() => run(async () => {
-      await connectSync({ ...cfg, familyId: existing.id, familyName: existing.name, role: existing.role }, "join");
+      await connectSync({ ...cfg, familyId: existing.id, familyName: existing.name, role: existing.role, canEdit: existing.canEdit }, "join");
       toast({ text: `انربط الجهاز بـ${existing.name}` });
     })}>اربط هالجهاز بـ«{existing.name}»</button>
   );
@@ -132,7 +133,7 @@ function Family({ sb, cfg }: { sb: SupabaseClient; cfg: SyncConfig }) {
           <button key={mode} className={`btn press${mode === "fresh" ? " btn-ghost" : ""}`} disabled={busy || !name.trim()} onClick={() => run(async () => {
             const { createFamily } = await import("../data/supabase");
             const id = await createFamily(sb, name.trim());
-            await connectSync({ ...cfg, familyId: id, familyName: name.trim(), role: "owner" }, mode);
+            await connectSync({ ...cfg, familyId: id, familyName: name.trim(), role: "owner", canEdit: true }, mode);
             toast({ text: mode === "create" ? "انحفظت بياناتك بالسحابة" : "بدأت حسابك فاضي" });
           })}>{mode === "create" ? "ابدأ وارفع بيانات هالجهاز" : "ابدأ فاضي (بدون البيانات التجريبية)"}</button>
         ))}
@@ -142,9 +143,10 @@ function Family({ sb, cfg }: { sb: SupabaseClient; cfg: SyncConfig }) {
         <p className="muted small" style={{ margin: 0 }}>بيانات هالجهاز تتبدل ببيانات العائلة. خذ نسخة احتياطية قبل لو تحتاجها.</p>
         <input id="sync-code" className="input num" dir="ltr" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ABC234" maxLength={6} />
         <button className="btn btn-ghost press" disabled={busy || code.trim().length !== 6} onClick={() => run(async () => {
-          const { joinFamily } = await import("../data/supabase");
+          const { joinFamily, myFamily } = await import("../data/supabase");
           const id = await joinFamily(sb, code.trim());
-          await connectSync({ ...cfg, familyId: id, familyName: "العائلة", role: "member" }, "join");
+          const fam = await myFamily(sb).catch(() => null);
+          await connectSync({ ...cfg, familyId: id, familyName: fam?.name ?? "العائلة", role: "member", canEdit: fam?.canEdit !== false }, "join");
           toast({ text: "انضميت للعائلة" });
         })}>انضم</button>
       </div>
@@ -159,19 +161,21 @@ function Connected() {
   const { busy, error, run } = useRunner();
   const s = sync!;
   const [invite, setInvite] = useState("");
+  const [inviteEdit, setInviteEdit] = useState<"edit" | "view">("edit");
   const [confirm, setConfirm] = useState(false);
-  const waText = `كود الانضمام لإداراتي: ${invite} (صالح 48 ساعة). الإعدادات ← المزامنة ← عندك كود دعوة؟`;
+  const waText = `كود الانضمام لإداراتي: ${invite} (صالح 48 ساعة${inviteEdit === "view" ? "، مشاهدة بس" : ""}). الإعدادات ← المزامنة ← عندك كود دعوة؟`;
   const withClient = async () => { const c = loadSyncConfig()!; const m = await import("../data/supabase"); return { m, c: await m.getClient(c.url, c.key) }; };
   return (
     <section className="card stack" aria-labelledby="sync-h">
       <h2 className="set-title" id="sync-h">المزامنة بين الأجهزة</h2>
       <div className="set-row">
-        <span className="strong">{s.familyName || "العائلة"} <span className="muted small">· {s.role === "owner" ? "المالك" : "عضو"}</span></span>
+        <span className="strong">{s.familyName || "العائلة"} <span className="muted small">· {s.role === "owner" ? "المالك" : s.canEdit ? "عضو يعدّل" : "مشاهدة بس"}</span></span>
         <span className={`sync-chip sync-${s.status}`} role="status">{STATUS[s.status]}{s.queued > 0 && <> · <span className="num">{s.queued}</span></>}</span>
       </div>
       {s.status === "error" && s.error && <div className="field-error">{s.error}</div>}
+      {s.canEdit && <Chips<"edit" | "view"> label="صلاحية المدعو" value={inviteEdit} onChange={setInviteEdit} options={[{ id: "edit", label: "يعدّل" }, { id: "view", label: "مشاهدة بس" }]} />}
       <div className="grid-2">
-        <button className="btn press" disabled={busy} onClick={() => run(async () => { const { m, c } = await withClient(); setInvite(await m.createInvite(c, s.familyId)); })}>كود دعوة لجهاز ثاني</button>
+        {s.canEdit && <button className="btn press" id="invite-btn" disabled={busy} onClick={() => run(async () => { const { m, c } = await withClient(); setInvite(await m.createInvite(c, s.familyId, inviteEdit === "edit")); })}>كود دعوة لجهاز ثاني</button>}
         <button className="btn btn-ghost press" onClick={syncNow}>زامن الحين</button>
       </div>
       {invite && (
@@ -180,6 +184,7 @@ function Connected() {
           <a className="btn btn-wa press" href={`https://wa.me/?text=${encodeURIComponent(waText)}`} target="_blank" rel="noreferrer">أرسله بالواتساب</a>
         </div>
       )}
+      <FamilyMembers />
       <button className="btn btn-ghost press" onClick={() => { disconnectSync(); toast({ text: "توقفت المزامنة على هالجهاز. البيانات تبقى عليه" }); }}>أوقف المزامنة على هالجهاز</button>
       {!confirm ? (
         <button className="btn btn-ghost press danger-text" onClick={() => setConfirm(true)}>{s.role === "owner" ? "احذف بيانات العائلة من السيرفر" : "اطلع من العائلة"}</button>

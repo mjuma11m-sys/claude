@@ -41,7 +41,8 @@ export function supabaseRemote(sb: SupabaseClient): Remote {
 
 const rpcError = (m: string) =>
   /invalid or expired/.test(m) ? "الكود غلط أو انتهى (صالح 48 ساعة). اطلب كود جديد"
-  : /owner only/.test(m) ? "المالك بس يقدر يحذف العائلة"
+  : /owner only/.test(m) ? "المالك بس يقدر يسوي هالشي"
+  : /editors only/.test(m) ? "صلاحيتك مشاهدة بس"
   : /not signed in/.test(m) ? "سجّل دخول أول"
   : m;
 
@@ -52,17 +53,35 @@ async function rpc<T>(sb: SupabaseClient, fn: string, args: Record<string, unkno
 }
 
 export const createFamily = (sb: SupabaseClient, name: string) => rpc<string>(sb, "create_family", { family_name: name });
-export const createInvite = (sb: SupabaseClient, familyId: string) => rpc<string>(sb, "create_invite", { f: familyId });
+export const createInvite = (sb: SupabaseClient, familyId: string, canEdit = true) => rpc<string>(sb, "create_invite_as", { f: familyId, edit: canEdit });
+export const setMyName = (sb: SupabaseClient, familyId: string, name: string) => rpc<void>(sb, "set_my_name", { f: familyId, n: name });
+export const setMemberAccess = (sb: SupabaseClient, familyId: string, member: string, canEdit: boolean) => rpc<void>(sb, "set_member_access", { f: familyId, member, edit: canEdit });
+
+export type Member = { user_id: string; role: "owner" | "member"; can_edit: boolean; display_name: string | null };
+/** DW-030: أعضاء العائلة (RLS: الأعضاء بس يشوفونهم) + مين أنا */
+export async function listMembers(sb: SupabaseClient, familyId: string): Promise<{ me: string; members: Member[] }> {
+  const { data: u } = await sb.auth.getUser();
+  const { data, error } = await sb.from("family_members").select("user_id, role, can_edit, display_name").eq("family_id", familyId).order("joined_at", { ascending: true });
+  if (error) throw new Error(error.message);
+  return { me: u.user?.id ?? "", members: (data ?? []) as Member[] };
+}
+export type ActivityRow = { id: number; user_id: string; action: { type: string; [k: string]: unknown }; created_at: string };
+/** DW-030: آخر الأحداث مع صاحبها (جدول events يحفظ user_id أصلاً) */
+export async function recentEvents(sb: SupabaseClient, familyId: string, limit = 50): Promise<ActivityRow[]> {
+  const { data, error } = await sb.from("events").select("id, user_id, action, created_at").eq("family_id", familyId).order("id", { ascending: false }).limit(limit);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as ActivityRow[];
+}
 export const joinFamily = (sb: SupabaseClient, code: string) => rpc<string>(sb, "join_family", { invite_code: code });
 export const deleteFamily = (sb: SupabaseClient, familyId: string) => rpc<void>(sb, "delete_family", { f: familyId });
 export const leaveFamily = (sb: SupabaseClient, familyId: string) => rpc<void>(sb, "leave_family", { f: familyId });
 
 /** العائلة اللي المستخدم عضو فيها (أول وحدة) */
-export async function myFamily(sb: SupabaseClient): Promise<{ id: string; name: string; role: "owner" | "member" } | null> {
+export async function myFamily(sb: SupabaseClient): Promise<{ id: string; name: string; role: "owner" | "member"; canEdit: boolean } | null> {
   const { data: u } = await sb.auth.getUser();
   if (!u.user) return null;
-  const { data, error } = await sb.from("family_members").select("role, families(id, name)").eq("user_id", u.user.id).limit(1);
+  const { data, error } = await sb.from("family_members").select("role, can_edit, families(id, name)").eq("user_id", u.user.id).limit(1);
   if (error) throw new Error(error.message);
-  const row = data?.[0] as unknown as { role: "owner" | "member"; families: { id: string; name: string } } | undefined;
-  return row ? { id: row.families.id, name: row.families.name, role: row.role } : null;
+  const row = data?.[0] as unknown as { role: "owner" | "member"; can_edit?: boolean; families: { id: string; name: string } } | undefined;
+  return row ? { id: row.families.id, name: row.families.name, role: row.role, canEdit: row.role === "owner" || row.can_edit !== false } : null;
 }

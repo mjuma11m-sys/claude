@@ -432,3 +432,34 @@ export function buildIcs(data: Data, now = new Date()) {
   const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Idarati//AR", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:إداراتي", ...ev.flat(), "END:VCALENDAR"];
   return { text: lines.map(fold).join("\r\n") + "\r\n", count: ev.length };
 }
+
+// ── DW-030: وصف حدث بسجل النشاط ────────────────────────
+export function describeAction(a: { type: string; [k: string]: unknown }, data: Data): string {
+  const unit = (id: unknown) => data.units.find((u) => u.id === id)?.name ?? "وحدة";
+  const money = (f: unknown) => (typeof f === "number" ? `${fmt(f)} د.ب` : "");
+  const o = a as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  switch (a.type) {
+    case "pay": return `سجّل دفعة ${unit(o.payment?.unitId)} · ${monthName(o.payment?.month ?? "2000-01")} · ${money(o.payment?.amount)}`;
+    case "unpay": return "تراجع عن دفعة";
+    case "expense": return `سجّل مصروف «${o.expense?.label ?? ""}» · ${money(o.expense?.amount)}`;
+    case "expenses": return `سجّل ${o.items?.length ?? 0} مصاريف ثابتة`;
+    case "unexpense": case "unexpenses": return "تراجع عن مصروف";
+    case "unit": return `عدّل ${o.unit?.name ?? "وحدة"}`;
+    case "vacate": return `أخلى ${unit(o.id)}`;
+    case "delunit": return "حذف وحدة";
+    case "task": return "أشّر مهمة صيانة";
+    case "replace": return "رفع بيانات الجهاز (بداية السجل)";
+    case "deposit": return `سجّل تأمين ${money(o.log?.amount)}`;
+    case "contract": return "عدّل نموذج العقد";
+    case "import": return `استورد Excel (${o.units?.length ?? 0} وحدات، ${o.payments?.length ?? 0} دفعات)`;
+    case "unimport": return "تراجع عن استيراد Excel";
+    case "doc": return `حفظ وثيقة «${o.doc?.title ?? ""}»`;
+    case "undoc": return "حذف وثيقة";
+    case "bill": return `فاتورة ${unit(o.bill?.unitId)} · ${o.bill?.paid ? "مسددة" : "غير مسددة"}`;
+    case "unbill": return "حذف فاتورة";
+    case "cheque": return `شيك ${o.cheque?.number ?? ""} · ${unit(o.cheque?.unitId)} · ${CHEQUE_LABEL[o.cheque?.state as ChequeState] ?? ""}`;
+    case "uncheque": return "حذف شيك";
+    case "recurring": case "unrecurring": return "عدّل المصاريف الثابتة";
+    default: return "تعديل";
+  }
+}

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { AppShell, type NavItem } from "./theme/AppShell";
-import { StoreProvider, useStore } from "./data/store";
+import { READONLY_EVENT, StoreProvider, useStore } from "./data/store";
 import { collection } from "./data/logic";
 import type { Unit } from "./data/types";
-import { ToastProvider } from "./ui/kit";
+import { ToastProvider, useToast } from "./ui/kit";
 import { Icon } from "./ui/icons";
 import { Home } from "./pages/Home";
 import { Tenants } from "./pages/Tenants";
@@ -42,7 +42,7 @@ const fromHash = (): Page => {
 };
 
 function Idarati() {
-  const { data } = useStore();
+  const { data, sync } = useStore();
   const [page, setPage] = useState<Page>(fromHash);
   const [unit, setUnit] = useState<Unit | null>(null);
   const [picking, setPicking] = useState(false);
@@ -60,6 +60,15 @@ function Idarati() {
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
+
+  // DW-030: المشاهد حاول يعدّل
+  const toastRO = useToast();
+  useEffect(() => {
+    // بعد تنبيه الشاشة نفسها («انضافت…») عشان يحل محله — ما انحفظ شي
+    const on = () => window.setTimeout(() => toastRO({ text: "ما انحفظ: صلاحيتك مشاهدة بس — اطلب من المالك يغيّرها" }), 0);
+    window.addEventListener(READONLY_EVENT, on);
+    return () => window.removeEventListener(READONLY_EVENT, on);
+  }, [toastRO]);
 
   const go = useCallback((id: string) => {
     if (location.hash.slice(1) !== id) location.hash = id;
@@ -100,6 +109,7 @@ function Idarati() {
       onAdd={onAdd}
       actions={<button className="hdr-btn press" onClick={() => setSearching(true)} aria-label="بحث">{Icon.search}</button>}
     >
+      {sync && !sync.canEdit && <div className="ro-banner" id="ro-banner" role="status">مشاهدة بس — تشوف كل شي، والتعديل للمالك واللي يعطيهم صلاحية</div>}
       {page === "home" && (
         <Home onOpenUnit={setUnit} go={go} onQuick={(a) => {
           if (a === "pay") setPicking(true);

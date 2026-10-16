@@ -441,3 +441,9 @@ select.input { appearance: auto; }
 .month-report h4 { margin: 14px 0 4px; font-size: 14px; }
 .mr-table td.num { text-align: end; }
 .unit-notes { margin: 0; padding: 8px 12px; border-radius: 10px; background: var(--surface-2); white-space: pre-wrap; }
+
+/* DW-030: صلاحيات العائلة */
+.ro-banner { margin-bottom: 12px; padding: 8px 12px; border-radius: 10px; font-size: 13px; background: color-mix(in srgb, var(--brand) 10%, transparent); color: var(--text); }
+.family-box summary { cursor: pointer; padding: 6px 0; }
+.activity ul { margin-top: 8px; }
+.activity .bill-row { align-items: flex-start; }

@@ -155,9 +155,13 @@ type Store = {
   connectSync: (cfg: SyncConfig, mode: "create" | "fresh" | "join") => Promise<void>;
   disconnectSync: () => void;      // يوقف المزامنة على هالجهاز بس — بيانات السيرفر تبقى
   syncNow: () => void;
+  /** DW-030: صلاحية هالحساب من السيرفر (المالك يقدر يغيّرها) */
+  setAccess: (canEdit: boolean) => void;
 };
 
-export type SyncState = { status: SyncStatus; queued: number; familyId: string; familyName: string; role: "owner" | "member"; error: string };
+export type SyncState = { status: SyncStatus; queued: number; familyId: string; familyName: string; role: "owner" | "member"; canEdit: boolean; error: string };
+/** DW-030: الحدث اللي يطلع لما المشاهد يحاول يعدّل (App يعرض تنبيه) */
+export const READONLY_EVENT = "idarati:readonly";
 
 const Ctx = createContext<Store | null>(null);
 
@@ -169,7 +173,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   // كل تعديل يمر من هني: محلي، أو عن طريق محرّك المزامنة لو مفعّلة
   const early = useRef<Action[] | null>(loadSyncConfig()?.familyId ? [] : null); // تعديلات قبل ما يجهز المحرّك
+  const readOnly = useRef(loadSyncConfig()?.canEdit === false); // DW-030: المشاهد — السيرفر يرفض بعد (RLS)
   const dispatch = useCallback((a: Action) => {
+    if (readOnly.current) { window.dispatchEvent(new CustomEvent(READONLY_EVENT)); return; }
     if (engine.current) engine.current.local(a as SyncAction);
     else { early.current?.push(a); setData((s) => reducer(s, a)); }
   }, []);
@@ -192,7 +198,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const { getClient, supabaseRemote } = await import("./supabase");
     const sb = await getClient(cfg.url, cfg.key);
     engine.current?.stop();
-    const meta = { familyId: cfg.familyId!, familyName: cfg.familyName ?? "", role: cfg.role ?? "member" };
+    const meta = { familyId: cfg.familyId!, familyName: cfg.familyName ?? "", role: cfg.role ?? "member", canEdit: cfg.canEdit !== false };
+    readOnly.current = !meta.canEdit;
     const e = new SyncEngine(supabaseRemote(sb), cfg.familyId!, reducer as (s: Data, a: SyncAction) => Data, emptyData(), (view, status) => {
       setData(view);
       setSync({ ...meta, status, queued: e.queued, error: e.lastError });
@@ -226,6 +233,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     engine.current?.clearCache();
     engine.current = null;
     early.current = null;
+    readOnly.current = false;
     saveSyncConfig(null);
     setSync(null);
   }, []);
@@ -360,6 +368,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     connectSync,
     disconnectSync,
     syncNow: () => void engine.current?.sync(),
+    setAccess: (canEdit) => {
+      readOnly.current = !canEdit;
+      const cfg = loadSyncConfig();
+      if (cfg && cfg.canEdit !== canEdit) saveSyncConfig({ ...cfg, canEdit });
+      setSync((s) => s && { ...s, canEdit });
+    },
   };
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
 }
