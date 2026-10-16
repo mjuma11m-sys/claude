@@ -49,14 +49,19 @@
     const budget = Number(st.settings.budget) || 0;
     const spent = A.sums(A.txInMonth(A.monthKey(now))).exp;
     let line = labels.noBudget, pct = -1;
+    // الودجت الصغير (DW-039): رقم واحد كبير وتحته سطر
+    let small = { big: '+', cap: labels.noBudget, pct: -1 };
     if (budget) {
       const left = budget - spent;
       pct = Math.max(0, Math.min(100, Math.round((left / budget) * 100)));
       const amt = (n) => A.fmt(n) + (en ? ' BHD' : ' د.ب');
       if (left < 0) line = (en ? 'Over budget' : 'تجاوزت الميزانية') + (p.amounts ? (en ? ' by ' : ' بـ ') + amt(-left) : '');
       else line = en ? (p.amounts ? amt(left) : pct + '%') + ' of budget left' : 'باقي ' + (p.amounts ? amt(left) : pct + '%') + ' من الميزانية';
+      small = left < 0
+        ? { big: p.amounts ? '−' + A.fmt(-left) : '0%', cap: en ? 'Over budget' : 'تجاوزت الميزانية', pct: 0 }
+        : { big: p.amounts ? A.fmt(left) : pct + '%', cap: p.amounts ? (en ? 'BHD left this month' : 'د.ب باقي هالشهر') : (en ? 'of budget left' : 'باقي من الميزانية'), pct };
     }
-    return Object.assign(base, { locked: false, budget: { line, pct }, items: items(now) });
+    return Object.assign(base, { locked: false, budget: { line, pct }, small, items: items(now) });
   }
 
   // نرسل اللقطة بعد ما تهدا الشاشة، ولما التطبيق يروح للخلفية
@@ -96,7 +101,7 @@
     A.openSheet({
       title: '📱 ودجت حياتي',
       saveLabel: 'حفظ',
-      body: '<p class="small muted" style="margin:0 0 12px">ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← الأدوات (Widgets) ← حياتي. يعرض الجاي اليوم وبكرة والميزانية، وفيه زر «+ مصروف» و«الصق رسالة».</p>' +
+      body: '<p class="small muted" style="margin:0 0 12px">ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← الأدوات (Widgets) ← حياتي. فيه حجمين: الكبير (4×2) يعرض الجاي اليوم وبكرة والميزانية مع «+ مصروف» و«الصق رسالة»، والصغير (2×2) يعرض كم باقي من الميزانية وزر «+ مصروف».</p>' +
         '<label style="display:flex;gap:10px;align-items:center;margin:0 0 10px"><input id="wgAmounts" type="checkbox"' + (p.amounts ? ' checked' : '') + '><span>اعرض المبالغ بالودجت</span></label>' +
         '<p class="small muted" style="margin:0">الشاشة الرئيسية يشوفها أي أحد يمسك جوالك، فالمبالغ مخفية إلا لو فعّلتها (يطلع بس كم % باقي). ولو قفل التطبيق شغّال، الودجت ما يعرض أي بيانات.</p>',
       onSave(root) {

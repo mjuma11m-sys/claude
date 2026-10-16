@@ -111,3 +111,22 @@ test('the store build reaches no outside server: fonts and libraries are local',
     assert.ok(fs.existsSync(path.join(W, f)), f);
   assert.match(fs.readFileSync(path.join(W, 'scripts/cap-www.js'), 'utf8'), /cpSync\(path\.join\(D, 'vendor'\)/);
 });
+
+test('small widget (DW-039): its own receiver and 2×2 info, RemoteViews-safe layout, ids and strings match', () => {
+  const m = read('app/src/main/AndroidManifest.xml');
+  assert.match(m, /<receiver[\s\S]*?android:name="\.HayatiWidgetSmall"[\s\S]*?android.appwidget.action.APPWIDGET_UPDATE[\s\S]*?android:resource="@xml\/hayati_widget_small_info"/);
+  const info = read('app/src/main/res/xml/hayati_widget_small_info.xml');
+  assert.match(info, /android:initialLayout="@layout\/hayati_widget_small"/);
+  assert.match(info, /targetCellWidth="2"/);
+  assert.ok(Number(/updatePeriodMillis="(\d+)"/.exec(info)[1]) >= 1800000);
+  const x = read('app/src/main/res/layout/hayati_widget_small.xml');
+  for (const t of [...x.matchAll(/<([A-Za-z.]+)[\s>]/g)].map((t) => t[1])) assert.ok(['LinearLayout', 'TextView', 'ProgressBar'].includes(t), '<' + t + '> is not allowed in a widget');
+  const ids = [...x.matchAll(/@\+id\/(\w+)/g)].map((t) => t[1]);
+  const java = read('app/src/main/java/bh/hayati/app/HayatiWidgetSmall.java');
+  for (const used of java.matchAll(/R\.id\.(\w+)/g)) assert.ok(ids.includes(used[1]), 'layout has no id ' + used[1]);
+  const strings = read('app/src/main/res/values/strings.xml');
+  for (const s of (x + info + m).matchAll(/@string\/(\w+)/g)) assert.ok(strings.includes('name="' + s[1] + '"'), 'missing string ' + s[1]);
+  // الكبير يحدّث الصغير من نفس اللقطة
+  assert.match(read('app/src/main/java/bh/hayati/app/HayatiWidget.java'), /HayatiWidgetSmall\.refresh\(ctx\)/);
+  for (const c of (x + info).matchAll(/<!--([\s\S]*?)-->/g)) assert.ok(!c[1].includes('--'), 'no -- inside XML comments');
+});

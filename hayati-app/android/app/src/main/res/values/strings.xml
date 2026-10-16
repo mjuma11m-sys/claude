@@ -10,4 +10,7 @@
     <string name="widget_next">الجاي</string>
     <string name="widget_add">+ مصروف</string>
     <string name="widget_paste">الصق رسالة</string>
+    <string name="widget_small_desc">كم باقي من الميزانية، وزر «+ مصروف»</string>
+    <string name="widget_small_open">افتح حياتي مرة</string>
+    <string name="widget_small_label">حياتي · صغير</string>
 </resources>

@@ -52,6 +52,19 @@
                 android:resource="@xml/hayati_widget_info" />
         </receiver>
 
+        <!-- DW-039: الودجت الصغير 2×2، نفس البيانات -->
+        <receiver
+            android:name=".HayatiWidgetSmall"
+            android:label="@string/widget_small_label"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/hayati_widget_small_info" />
+        </receiver>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

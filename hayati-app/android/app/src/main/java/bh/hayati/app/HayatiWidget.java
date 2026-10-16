@@ -31,46 +31,55 @@ public class HayatiWidget extends AppWidgetProvider {
         preview(ctx, views);
     }
 
+    /** يحدّث الودجتين (الكبير والصغير DW-039) من نفس اللقطة */
     static void refresh(Context ctx) {
         AppWidgetManager mgr = AppWidgetManager.getInstance(ctx);
         int[] ids = mgr.getAppWidgetIds(new ComponentName(ctx, HayatiWidget.class));
         RemoteViews views = build(ctx);
         for (int id : ids) mgr.updateAppWidget(id, views);
         preview(ctx, views);
+        HayatiWidgetSmall.refresh(ctx);
+    }
+
+    static void preview(Context ctx, RemoteViews views) {
+        preview(ctx, views, "widget-preview.png", "hayati-widget", 320, 170);
     }
 
     /**
      * نسخة الاختبار (debug) بس: نرسم الودجت داخل التطبيق ونحفظه صورة، عشان فحص المحاكي يتأكد إن التصميم
      * ينفتح بدون خطأ (غلط بالـ layout يطلع بس بالشاشة الرئيسية: «ما قدرنا نحمّل الودجت») ويصوّره.
      */
-    static void preview(Context ctx, RemoteViews views) {
+    static void preview(Context ctx, RemoteViews views, String file, String tag, int wDp, int hDp) {
         if ((ctx.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) == 0) return;
         try {
             Context app = ctx.getApplicationContext();
             View view = views.apply(app, null);
             float d = app.getResources().getDisplayMetrics().density;
-            int w = (int) (320 * d), h = (int) (170 * d);
+            int w = (int) (wDp * d), h = (int) (hDp * d);
             view.measure(View.MeasureSpec.makeMeasureSpec(w, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(h, View.MeasureSpec.EXACTLY));
             view.layout(0, 0, w, h);
             Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
             view.draw(new Canvas(bmp));
-            try (FileOutputStream out = new FileOutputStream(new File(app.getFilesDir(), "widget-preview.png"))) {
+            try (FileOutputStream out = new FileOutputStream(new File(app.getFilesDir(), file))) {
                 bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
             }
-            Log.i("Hayati", "hayati-widget:inflate ok");
+            Log.i("Hayati", tag + ":inflate ok");
         } catch (Exception e) {
-            Log.e("Hayati", "hayati-widget:inflate fail " + e);
+            Log.e("Hayati", tag + ":inflate fail " + e);
+        }
+    }
+
+    static JSONObject snap(Context ctx) {
+        try {
+            String raw = ctx.getSharedPreferences(WidgetPlugin.PREFS, Context.MODE_PRIVATE).getString("data", null);
+            return raw == null ? null : new JSONObject(raw);
+        } catch (Exception e) {
+            return null;
         }
     }
 
     static RemoteViews build(Context ctx) {
-        JSONObject snap = null;
-        try {
-            String raw = ctx.getSharedPreferences(WidgetPlugin.PREFS, Context.MODE_PRIVATE).getString("data", null);
-            if (raw != null) snap = new JSONObject(raw);
-        } catch (Exception e) {
-            snap = null;
-        }
+        JSONObject snap = snap(ctx);
         boolean rtl = snap == null || snap.optBoolean("rtl", true);
         RemoteViews v = new RemoteViews(ctx.getPackageName(), rtl ? R.layout.hayati_widget : R.layout.hayati_widget_ltr);
 

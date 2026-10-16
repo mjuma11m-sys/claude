@@ -135,8 +135,8 @@
     const exam = st.tasks.filter((t) => !t.done && t.kind === 'exam' && t.due_at && new Date(t.due_at) >= now).sort((a, b) => new Date(a.due_at) - new Date(b.due_at))[0];
     const allow = dailyAllowance();
     const lines = [];
-    if (lec.length) lines.push(['📚', lec.length + (lec.length === 1 ? ' محاضرة' : ' محاضرات') + '، أولها ' + A.time12(A.hhmm(lec[0].start)) + ' (' + h(lec[0].name) + ')']);
-    if (gym) lines.push(['💪', 'تمرين ' + h(gym.workout ? gym.workout.focus : gym.name) + ' الساعة ' + A.time12(A.hhmm(gym.start))]);
+    if (lec.length) lines.push(['📚', lec.length + (lec.length === 1 ? ' محاضرة' : ' محاضرات') + '، أولها ' + A.time12(A.hhmm(lec[0].start)) + ' (<bdi data-noi18n>' + h(lec[0].name) + '</bdi>)']);
+    if (gym) lines.push(['💪', 'تمرين <bdi data-noi18n>' + h(gym.workout ? gym.workout.focus : gym.name) + '</bdi> الساعة ' + A.time12(A.hhmm(gym.start))]);
     if (dueToday.length) lines.push(['✅', dueToday.length + (dueToday.length === 1 ? ' مهمة' : ' مهام') + ' موعدها اليوم']);
     if (exam) { const d = A.daysBetween(now, new Date(exam.due_at)); lines.push(['📝', 'أقرب اختبار: <bdi>' + h(exam.title) + '</bdi>' + (d === 0 ? ' اليوم!' : ' بعد ' + A.nDays(d))]); }
     if (allow != null) lines.push(['💸', allow > 0 ? 'تقدر تصرف اليوم ' + fmt(allow) + ' د.ب' : 'تعدّيت ميزانية الشهر، خفّف الصرف']);

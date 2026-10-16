@@ -80,6 +80,15 @@ case "$wg" in
   "") echo "❌ ما وصلت لقطة للودجت خلال 30 ثانية"; exit 1 ;;
   *) echo "❌ $wg"; exit 1 ;;
 esac
+# DW-039: الودجت الصغير مسجّل، وانرسم من نفس اللقطة
+grep -q "bh.hayati.app/bh.hayati.app.HayatiWidgetSmall\|bh.hayati.app/.HayatiWidgetSmall" "$OUT/appwidget.txt" \
+  || { echo "❌ الودجت الصغير مو مسجّل"; exit 1; }
+ws=$(grep -o 'hayati-widget-small:inflate [a-z]*.*' "$OUT/logcat.txt" | head -1 || true)
+adb exec-out run-as "$PKG" cat files/widget-small-preview.png > "$OUT/widget-small.png" 2>/dev/null || true
+case "$ws" in
+  "hayati-widget-small:inflate ok"*) echo "✅ الودجت الصغير انرسم" ;;
+  *) echo "❌ الودجت الصغير: ${ws:-ما انرسم}"; exit 1 ;;
+esac
 # ملاحظة: التحديث الدوري (APPWIDGET_UPDATE) ما نقدر نرسله من adb (بث محمي بالنظام)، وهو يمر على نفس build() اللي فوق
 if grep -q 'FATAL EXCEPTION' "$OUT/logcat.txt"; then echo "❌ طيحة بعد رسم الودجت"; exit 1; fi
 

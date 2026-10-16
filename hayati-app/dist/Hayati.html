@@ -2544,7 +2544,9 @@ window.HAYATI_EN = {
 "✓ حضرت": "✓ Attended",
 "✗ غبت": "✗ Absent",
 "ما لقيت المبلغ، كمّل هني": "Couldn't find the amount, finish here",
-"بالليل، بس لو ما سجلت ولا مصروف بيومك. تقدر تسجّل من التنبيه نفسه": "At night, only if you logged no expense that day. You can log right from the notification"
+"بالليل، بس لو ما سجلت ولا مصروف بيومك. تقدر تسجّل من التنبيه نفسه": "At night, only if you logged no expense that day. You can log right from the notification",
+// DW-039: الودجت الصغير
+"ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← الأدوات (Widgets) ← حياتي. فيه حجمين: الكبير (4×2) يعرض الجاي اليوم وبكرة والميزانية مع «+ مصروف» و«الصق رسالة»، والصغير (2×2) يعرض كم باقي من الميزانية وزر «+ مصروف».": "Add it from the home screen: long-press an empty spot → Widgets → Hayati. There are two sizes: the large one (4×2) shows what's next today and tomorrow and your budget, with «+ Expense» and «Paste message»; the small one (2×2) shows how much budget is left and a «+ Expense» button."
 };
 
 </script>
@@ -6201,8 +6203,8 @@ window.HAYATI_CONFIG = {
     const exam = st.tasks.filter((t) => !t.done && t.kind === 'exam' && t.due_at && new Date(t.due_at) >= now).sort((a, b) => new Date(a.due_at) - new Date(b.due_at))[0];
     const allow = dailyAllowance();
     const lines = [];
-    if (lec.length) lines.push(['📚', lec.length + (lec.length === 1 ? ' محاضرة' : ' محاضرات') + '، أولها ' + A.time12(A.hhmm(lec[0].start)) + ' (' + h(lec[0].name) + ')']);
-    if (gym) lines.push(['💪', 'تمرين ' + h(gym.workout ? gym.workout.focus : gym.name) + ' الساعة ' + A.time12(A.hhmm(gym.start))]);
+    if (lec.length) lines.push(['📚', lec.length + (lec.length === 1 ? ' محاضرة' : ' محاضرات') + '، أولها ' + A.time12(A.hhmm(lec[0].start)) + ' (<bdi data-noi18n>' + h(lec[0].name) + '</bdi>)']);
+    if (gym) lines.push(['💪', 'تمرين <bdi data-noi18n>' + h(gym.workout ? gym.workout.focus : gym.name) + '</bdi> الساعة ' + A.time12(A.hhmm(gym.start))]);
     if (dueToday.length) lines.push(['✅', dueToday.length + (dueToday.length === 1 ? ' مهمة' : ' مهام') + ' موعدها اليوم']);
     if (exam) { const d = A.daysBetween(now, new Date(exam.due_at)); lines.push(['📝', 'أقرب اختبار: <bdi>' + h(exam.title) + '</bdi>' + (d === 0 ? ' اليوم!' : ' بعد ' + A.nDays(d))]); }
     if (allow != null) lines.push(['💸', allow > 0 ? 'تقدر تصرف اليوم ' + fmt(allow) + ' د.ب' : 'تعدّيت ميزانية الشهر، خفّف الصرف']);
@@ -10540,14 +10542,19 @@ window.HAYATI_CONFIG = {
     const budget = Number(st.settings.budget) || 0;
     const spent = A.sums(A.txInMonth(A.monthKey(now))).exp;
     let line = labels.noBudget, pct = -1;
+    // الودجت الصغير (DW-039): رقم واحد كبير وتحته سطر
+    let small = { big: '+', cap: labels.noBudget, pct: -1 };
     if (budget) {
       const left = budget - spent;
       pct = Math.max(0, Math.min(100, Math.round((left / budget) * 100)));
       const amt = (n) => A.fmt(n) + (en ? ' BHD' : ' د.ب');
       if (left < 0) line = (en ? 'Over budget' : 'تجاوزت الميزانية') + (p.amounts ? (en ? ' by ' : ' بـ ') + amt(-left) : '');
       else line = en ? (p.amounts ? amt(left) : pct + '%') + ' of budget left' : 'باقي ' + (p.amounts ? amt(left) : pct + '%') + ' من الميزانية';
+      small = left < 0
+        ? { big: p.amounts ? '−' + A.fmt(-left) : '0%', cap: en ? 'Over budget' : 'تجاوزت الميزانية', pct: 0 }
+        : { big: p.amounts ? A.fmt(left) : pct + '%', cap: p.amounts ? (en ? 'BHD left this month' : 'د.ب باقي هالشهر') : (en ? 'of budget left' : 'باقي من الميزانية'), pct };
     }
-    return Object.assign(base, { locked: false, budget: { line, pct }, items: items(now) });
+    return Object.assign(base, { locked: false, budget: { line, pct }, small, items: items(now) });
   }
 
   // نرسل اللقطة بعد ما تهدا الشاشة، ولما التطبيق يروح للخلفية
@@ -10587,7 +10594,7 @@ window.HAYATI_CONFIG = {
     A.openSheet({
       title: '📱 ودجت حياتي',
       saveLabel: 'حفظ',
-      body: '<p class="small muted" style="margin:0 0 12px">ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← الأدوات (Widgets) ← حياتي. يعرض الجاي اليوم وبكرة والميزانية، وفيه زر «+ مصروف» و«الصق رسالة».</p>' +
+      body: '<p class="small muted" style="margin:0 0 12px">ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← الأدوات (Widgets) ← حياتي. فيه حجمين: الكبير (4×2) يعرض الجاي اليوم وبكرة والميزانية مع «+ مصروف» و«الصق رسالة»، والصغير (2×2) يعرض كم باقي من الميزانية وزر «+ مصروف».</p>' +
         '<label style="display:flex;gap:10px;align-items:center;margin:0 0 10px"><input id="wgAmounts" type="checkbox"' + (p.amounts ? ' checked' : '') + '><span>اعرض المبالغ بالودجت</span></label>' +
         '<p class="small muted" style="margin:0">الشاشة الرئيسية يشوفها أي أحد يمسك جوالك، فالمبالغ مخفية إلا لو فعّلتها (يطلع بس كم % باقي). ولو قفل التطبيق شغّال، الودجت ما يعرض أي بيانات.</p>',
       onSave(root) {

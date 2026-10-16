@@ -2072,6 +2072,10 @@ test('Android widget (DW-031): snapshot hides amounts by default, shows nothing 
   expect(snap.hidden.rtl).toBe(true);
   expect(snap.locked).toMatchObject({ locked: true, items: [] });
   expect(snap.locked.budget).toBeUndefined();
+  // الودجت الصغير (DW-039): نفس الإخفاء، ولا شي وقت القفل
+  expect(snap.hidden.small).toEqual({ big: '75%', cap: 'باقي من الميزانية', pct: 75 });
+  expect(snap.shown.small).toEqual({ big: '150.000', cap: 'د.ب باقي هالشهر', pct: 75 });
+  expect(snap.locked.small).toBeUndefined();
 });
 
 test('Android widget (DW-031): the app sends the snapshot to the native plugin, and the widget buttons open «+ مصروف»', async ({ page }) => {
