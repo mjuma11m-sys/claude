@@ -135,8 +135,8 @@
     const exam = st.tasks.filter((t) => !t.done && t.kind === 'exam' && t.due_at && new Date(t.due_at) >= now).sort((a, b) => new Date(a.due_at) - new Date(b.due_at))[0];
     const allow = dailyAllowance();
     const lines = [];
-    if (lec.length) lines.push(['📚', lec.length + (lec.length === 1 ? ' محاضرة' : ' محاضرات') + '، أولها ' + A.time12(A.hhmm(lec[0].start)) + ' (' + h(lec[0].name) + ')']);
-    if (gym) lines.push(['💪', 'تمرين ' + h(gym.workout ? gym.workout.focus : gym.name) + ' الساعة ' + A.time12(A.hhmm(gym.start))]);
+    if (lec.length) lines.push(['📚', lec.length + (lec.length === 1 ? ' محاضرة' : ' محاضرات') + '، أولها ' + A.time12(A.hhmm(lec[0].start)) + ' (<bdi data-noi18n>' + h(lec[0].name) + '</bdi>)']);
+    if (gym) lines.push(['💪', 'تمرين <bdi data-noi18n>' + h(gym.workout ? gym.workout.focus : gym.name) + '</bdi> الساعة ' + A.time12(A.hhmm(gym.start))]);
     if (dueToday.length) lines.push(['✅', dueToday.length + (dueToday.length === 1 ? ' مهمة' : ' مهام') + ' موعدها اليوم']);
     if (exam) { const d = A.daysBetween(now, new Date(exam.due_at)); lines.push(['📝', 'أقرب اختبار: <bdi>' + h(exam.title) + '</bdi>' + (d === 0 ? ' اليوم!' : ' بعد ' + A.nDays(d))]); }
     if (allow != null) lines.push(['💸', allow > 0 ? 'تقدر تصرف اليوم ' + fmt(allow) + ' د.ب' : 'تعدّيت ميزانية الشهر، خفّف الصرف']);
@@ -150,8 +150,8 @@
     const budget = Number(set().budget) || 0;
     if (!budget) return null;
     const now = new Date();
-    const exp = A.sums(A.txInMonth(A.monthKey(now))).exp;
-    const daysLeft = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate() + 1;
+    const mk = A.monthKey(now), exp = A.sums(A.txInMonth(mk)).exp;
+    const daysLeft = Math.max(1, A.daysBetween(now, A.monthRange(mk).end));   // لين يوم الراتب الجاي (أو آخر الشهر)
     return (budget - exp) / daysLeft;
   }
   function budgetBanner() {
@@ -272,7 +272,7 @@
       const lim = Number(cc.absence_limit) || 0;
       const warn = lim && abs.length >= lim - 1;
       return '<div class="hero" style="margin-top:4px;padding:16px 18px;background:linear-gradient(135deg,' + h(cc.color || '#1A8A8F') + ',#0E3B43)"><span class="eyebrow">' + I('book') + 'محاضرة · ' +
-        (cc.days || []).slice().sort().map((d) => A.DAYS_SHORT[d]).join('، ') + '</span><div class="big" style="font-size:24px;margin:8px 0 2px">' + h(cc.name) + '</div>' +
+        (cc.days || []).slice().sort().map((d) => A.DAYS_SHORT[d]).join('، ') + '</span><div class="big" style="font-size:24px;margin:8px 0 2px"><bdi>' + h(cc.name) + '</bdi></div>' +
         '<div class="meta"><span>' + I('clock') + A.time12(cc.start_time) + ' — ' + A.time12(cc.end_time) + '</span>' + (cc.room ? '<span>' + I('pin') + h(cc.room) + '</span>' : '') + '</div></div>' +
         // الغياب
         '<div class="group-title">' + I('user') + 'الغياب</div><div class="card"><div style="display:flex;align-items:center;gap:12px">' +
@@ -572,7 +572,7 @@
   window.Extras = {
     agenda: (date) => prayersOn(date),
     todayTop: () => morningCard() + budgetBanner() + incomeCard(),
-    todayMid: () => dailyCard(),
+    todayMid: () => '<section data-tk="health">' + dailyCard() + '</section>',
     allowance: () => { const a = dailyAllowance(); return a != null && a > 0 ? '<div class="meta" style="margin-top:4px"><span>💸 تقدر تصرف ' + fmt(a) + ' باليوم لين آخر الشهر</span></div>' : ''; },
     catBudget, catBudgetsForm, courseSheet, gpaNeed, viewHealth, exExtra, wkMount, wkClick, settingsExtra, settingsAction, action,
     afterTx: (tx) => { if (tx && tx.kind === 'income' && !tx.save_handled && st.goals.some((g) => !g.done)) saveIncomeSheet(tx); },

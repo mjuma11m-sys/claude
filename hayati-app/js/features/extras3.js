@@ -150,7 +150,8 @@
     };
   }
 
-  const resultOf = (m) => (Number(m.for) > Number(m.against) ? ['ف', '#2F9E7A'] : Number(m.for) < Number(m.against) ? ['خ', '#D63A3A'] : ['ت', '#8A9A9B']);
+  const WDL = (window.HayatiLang && HayatiLang.lang === 'en') ? ['W', 'L', 'D'] : ['ف', 'خ', 'ت'];
+  const resultOf = (m) => (Number(m.for) > Number(m.against) ? [WDL[0], '#2F9E7A'] : Number(m.for) < Number(m.against) ? [WDL[1], '#D63A3A'] : [WDL[2], '#8A9A9B']);
 
   function keeperSection() {
     if (A.has && !A.has('keeper')) return '';

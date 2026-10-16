@@ -189,7 +189,7 @@
     const lec = A.lectures();
     A.openSheet({
       title: 'بطاقة مراجعة', saveLabel: 'أضف',
-      body: '<div class="field"><label>المادة</label><select name="course"><option value="">عام</option>' + lec.map((c) => '<option value="' + c.id + '">' + h(c.name) + '</option>').join('') + '</select></div>' +
+      body: '<div class="field"><label>المادة</label><select name="course"><option value="">عام</option>' + lec.map((c) => '<option data-noi18n value="' + c.id + '">' + h(c.name) + '</option>').join('') + '</select></div>' +
         '<div class="field"><label>السؤال</label><textarea name="q" placeholder="مثلاً: What is a function?"></textarea></div>' +
         '<div class="field"><label>الجواب</label><textarea name="a"></textarea></div>' +
         '<label class="switch"><input type="checkbox" name="more" checked> أضيف بطاقة ثانية بعدها</label>',
@@ -459,19 +459,27 @@
   }
 
   // ================= المساعد الذكي =================
+  // DW-037: يشتغل بطريقتين: داخل Claude (sample)، أو بالتطبيق نفسه لما تكون مسجّل دخول (دالة lecture-ai بـ Supabase)
   let sampleFn = null, chatTurns = [], chatCtl = null;
-  (async () => {
-    if (!window.claude || typeof window.claude.use !== 'function') return;
-    sampleFn = await window.claude.use('sample');
+  const viaServer = () => !sampleFn && !!(S && S.status && S.status.signedIn && S.invokeFn);
+  function showBtn() {
     const btn = document.getElementById('assistBtn');
-    if (sampleFn && btn) { btn.innerHTML = I('sparkle'); btn.classList.remove('hidden'); btn.onclick = assistantSheet; }
+    if (!btn) return;
+    const on = !!sampleFn || viaServer();
+    btn.classList.toggle('hidden', !on);
+    if (on && !btn.onclick) { btn.innerHTML = I('sparkle'); btn.onclick = assistantSheet; }
+  }
+  (async () => {
+    if (window.claude && typeof window.claude.use === 'function') sampleFn = await window.claude.use('sample');
+    showBtn();
   })();
+  if (S && S.subscribe) S.subscribe(showBtn);
   function dataSnapshot() {
     const now = new Date(), mk = A.monthKey(now);
     const monthTx = A.txInMonth(mk);
     const byCat = {}, byMer = {};
     for (const t of monthTx) if (t.kind === 'expense') { byCat[t.category] = +((byCat[t.category] || 0) + Number(t.amount)).toFixed(3); const k = t.merchant || t.category; byMer[k] = +((byMer[k] || 0) + Number(t.amount)).toFixed(3); }
-    const months = []; for (let i = 0; i < 4; i++) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); const s = A.sums(A.txInMonth(A.monthKey(d))); months.push({ month: A.monthKey(d), spent: +s.exp.toFixed(3), income: +s.inc.toFixed(3) }); }
+    const months = []; for (let i = 0; i < 4; i++) { const k = A.shiftKey(mk, -i); const s = A.sums(A.txInMonth(k)); months.push({ month: k, spent: +s.exp.toFixed(3), income: +s.inc.toFixed(3) }); }
     const cum = A.cumulative();
     return {
       today: dateKey() + ' ' + A.DAYS[now.getDay()] + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()),
@@ -480,7 +488,8 @@
       weekly_schedule: st.courses.map((c) => ({ name: c.name, type: c.type || 'lecture', days: (c.days || []).map((d) => A.DAYS[d]), time: c.start_time + '-' + c.end_time, room: c.room || '', absences: (c.absences || []).length })),
       open_tasks: st.tasks.filter((t) => !t.done).map((t) => ({ title: t.title, kind: t.kind, due: t.due_at ? t.due_at.slice(0, 16) : null })).slice(0, 30),
       goals: st.goals.map((g) => ({ name: g.name, target: g.target, saved: g.saved, deadline: g.deadline || null })),
-      debts_open: st.debts.filter((d) => !d.settled).map((d) => ({ person: d.person, amount: d.amount, direction: d.direction === 'lent' ? 'owes me' : 'I owe' })),
+      // أسماء الناس ما تطلع للخدمة (DW-037): المبلغ والاتجاه بس
+      debts_open: st.debts.filter((d) => !d.settled).map((d) => (Object.assign(viaServer() ? {} : { person: d.person }, { amount: d.amount, direction: d.direction === 'lent' ? 'owes me' : 'I owe' }))),
       subscriptions: st.subscriptions.filter((s) => s.active !== false).map((s) => ({ name: s.name, amount: s.amount, cycle: s.cycle })),
       gpa: { cumulative: cum.gpa != null ? +cum.gpa.toFixed(2) : null, credits: cum.credits },
       study_minutes_last_7_days: st.study_sessions.filter((x) => Date.now() - new Date(x.started_at) < 7 * 86400000).reduce((s, x) => s + Number(x.minutes), 0),
@@ -498,11 +507,11 @@
       body: '<div class="chat" id="chat">' + (chatTurns.length ? drawMsgs() : '<div class="empty"><div class="ico">' + I('sparkle') + '</div><b>اسألني عن يومك</b><p>أجاوبك من بياناتك: صرفك، جدولك، مهامك، وأهدافك</p></div>') + '</div>' +
         '<div class="chips quick" style="margin:10px 0">' + QUICK.map((q) => '<button type="button" class="chip" data-q="' + h(q) + '">' + h(q) + '</button>').join('') + '</div>' +
         '<form class="chat-form" id="chatForm"><input name="q" placeholder="اكتب سؤالك…" autocomplete="off"><button class="btn primary" type="submit" aria-label="إرسال">' + I('arrowUp') + '</button></form>' +
-        '<p class="small muted" style="margin:8px 4px 0">يستخدم حسابك في Claude. أول مرة بيطلب إذنك.</p>',
+        '<p class="small muted" style="margin:8px 4px 0">' + (viaServer() ? 'سؤالك وملخص أرقامك (بدون أسماء الناس) يروحون لـ Claude عشان الجواب، وما ينحفظون. كل سؤال يحسب من محاولات اليوم.' : 'يستخدم حسابك في Claude. أول مرة بيطلب إذنك.') + '</p>',
       mount(root) {
         const chat = root.querySelector('#chat');
         const ask = async (q) => {
-          if (!q || !sampleFn) return;
+          if (!q || (!sampleFn && !viaServer())) return;
           if (chatCtl) chatCtl.abort();
           chatTurns.push({ role: 'user', content: q });
           chat.innerHTML = drawMsgs() + '<div class="msg assistant typing">يفكّر…</div>';
@@ -511,12 +520,22 @@
           chatCtl = new AbortController();
           try {
             const turns = chatTurns.slice(-8);
+            if (viaServer()) {
+              const r = await S.invokeFn('lecture-ai', { mode: 'ask', messages: turns, data: JSON.stringify(dataSnapshot()) });
+              const text = String((r && r.text) || '').trim();
+              if (!text) throw { code: 'empty' };
+              bubble.classList.remove('typing'); bubble.innerHTML = h(text).replace(/\n/g, '<br>');
+              chatTurns.push({ role: 'assistant', content: text });
+              chat.scrollTop = chat.scrollHeight;
+              return;
+            }
             const { text } = await sampleFn([{ role: 'user', content: RULES() }].concat(turns[0].role === 'assistant' ? turns.slice(1) : turns), {
               cache: false, signal: chatCtl.signal, onText: ({ text: t }) => { bubble.classList.remove('typing'); bubble.innerHTML = h(t).replace(/\n/g, '<br>'); chat.scrollTop = chat.scrollHeight; },
             });
             chatTurns.push({ role: 'assistant', content: text });
           } catch (e) {
-            const msg = { not_granted: 'ما انسمح للمساعد يستخدم Claude.', rate_limited: 'وصلت الحد المسموح حالياً، جرّب بعد شوي.', cancelled: '' }[e && e.code];
+            const code = (e && e.code) || (e && e.message);
+            const msg = { not_granted: 'ما انسمح للمساعد يستخدم Claude.', rate_limited: 'وصلت الحد المسموح حالياً، جرّب بعد شوي.', limit: 'خلصت محاولات اليوم ✨ · جرّب بكرة', signin: 'سجّل دخول أول', cancelled: '' }[code];
             if (e && e.text) chatTurns.push({ role: 'assistant', content: e.text });
             bubble.classList.remove('typing');
             bubble.textContent = e && e.text ? e.text : msg != null ? msg : 'صار خلل، جرّب مرة ثانية.';
@@ -531,8 +550,8 @@
   }
 
   // ================= الربط =================
-  wrap('todayTop', (prev) => prev() + eventsCard());
-  wrap('todayMid', (prev) => prev() + journalCard());
+  wrap('todayTop', (prev) => prev() + '<section data-tk="events">' + eventsCard() + '</section>');
+  wrap('todayMid', (prev) => prev() + '<section data-tk="journal">' + journalCard() + '</section>');
   wrap('viewHealth', (prev) => prev() + moodSection());
   E.goalsTop = goalsTop;
   E.moneyActions = () => '<button class="btn ghost block" style="margin:10px 0 4px" data-action="year">' + I('chart') + 'ملخص السنة</button>';

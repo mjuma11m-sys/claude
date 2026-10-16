@@ -1,0 +1,55 @@
+name: Hayati Android
+
+# «حياتي» يختبر نفسه على محاكي أندرويد (DW-008): يبني APK بـ Capacitor، يثبّته، يفتح التطبيق،
+# يصوّر الشاشة، ويفشل لو البناء انكسر أو التطبيق طاح أو الشاشة سودا. الصورة تنحفظ مع كل تشغيل.
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: hayati-android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - name: Build debug APK
+        run: bash scripts/android-build.sh
+      - name: Enable KVM (emulator acceleration)
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Launch on Android emulator, check the screen
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: bash scripts/android-smoke.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-screenshot
+          path: |
+            android-smoke/launch.png
+            android-smoke/share.png
+            android-smoke/widget.png
+            android-smoke/widget-action.png
+            android-smoke/build.log
+            android-smoke/logcat.txt
+          retention-days: 14

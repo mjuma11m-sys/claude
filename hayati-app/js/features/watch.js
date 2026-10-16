@@ -87,7 +87,7 @@
     const last = nights.slice(0, 7).reverse();
     if (last.length >= 2) {
       const max = Math.max(goal + 1, ...last.map((x) => x.sleep));
-      const DAYS = ['ح', 'ن', 'ث', 'ر', 'خ', 'ج', 'س'];
+      const DAYS = (window.HayatiLang && HayatiLang.lang === 'en') ? ['S', 'M', 'T', 'W', 'T', 'F', 'S'] : ['ح', 'ن', 'ث', 'ر', 'خ', 'ج', 'س'];
       out += '<div class="mini-chart" style="margin:14px 0 0"><b>آخر ' + last.length + ' ليالي</b><div class="mini-bars" style="grid-template-columns:repeat(' + last.length + ',1fr);height:84px">' +
         last.map((x) => '<div><small class="num">' + x.sleep + '</small><i style="height:' + Math.round((x.sleep / max) * 100) + '%;background:' + (x.sleep >= goal ? 'var(--income)' : x.sleep >= goal - 1 ? '#f59e0b' : 'var(--expense)') + '"></i><small>' + DAYS[new Date(x.date + 'T12:00').getDay()] + '</small></div>').join('') + '</div></div>';
     }

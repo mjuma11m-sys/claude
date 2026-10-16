@@ -4,8 +4,11 @@
 
   const KEY = 'hayati-v1';
   const CFG_KEY = 'hayati-supabase';
-  const TABLES = ['transactions', 'courses', 'tasks', 'subscriptions', 'goals', 'grades', 'study_sessions', 'debts', 'habits', 'daily', 'lifts', 'body', 'cards', 'events', 'shopping', 'journal', 'matches'];
-  const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges', 'name', 'roles', 'onboarded'];
+  const TABLES = ['transactions', 'courses', 'tasks', 'subscriptions', 'goals', 'grades', 'study_sessions', 'debts', 'habits', 'daily', 'lifts', 'body', 'cards', 'events', 'shopping', 'journal', 'matches', 'lectures', 'trips'];
+  const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges', 'name', 'roles', 'onboarded', 'payday', 'gold_price', 'today_hide'];
+  // على الجهاز بس (ما تروح لجدول settings بالسيرفر) بس تدخل بالنسخة الاحتياطية (DW-012)
+  //   DW-035: يوم الراتب وسعر الذهب وترتيب «اليوم» صارت تتزامن؛ إعدادات العبادة تظل على الجهاز (خصوصية)
+  const LOCAL_SETTINGS = ['madhhab', 'khums_start', 'wird', 'hijri_offset', 'tasbih'];
   const NUMERIC = ['amount', 'target', 'saved', 'credits', 'minutes', 'day', 'month', 'duration', 'remind_days', 'weight', 'waist', 'water', 'sleep', 'absence_limit'];
 
   const listeners = new Set();
@@ -44,7 +47,10 @@
     try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* تجاهل */ }
   }
 
+  // رقم يزيد مع كل تغيير بالبيانات: الواجهة تعيد حساب الفهارس (عمليات الشهر/اليوم) بس لما يتغيّر (DW-042)
+  let rev = 0;
   function emit() {
+    rev++;
     for (const fn of listeners) fn(state, status);
   }
 
@@ -103,9 +109,17 @@
     state.pending = state.pending.filter((p) => !(p.table === op.table && (p.row ? p.row.id : p.id) === (op.row ? op.row.id : op.id) && op.table !== 'settings'));
     if (op.table === 'settings') state.pending = state.pending.filter((p) => p.table !== 'settings');
     state.pending.push(op);
-    save();
-    emit();
-    flush();
+    rev++;
+    commitSoon();
+  }
+
+  // DW-042: تعديلات ورا بعض (استيراد، استرجاع، قبول عدة رسائل) تنكتب وترسم مرة وحدة بآخر الدفعة بدال كل سجل.
+  // microtask: تخلص قبل أي حدث ثاني وقبل ما تنقفل الصفحة، فما يضيع شي.
+  let commitQueued = false;
+  function commitSoon() {
+    if (commitQueued) return;
+    commitQueued = true;
+    queueMicrotask(() => { commitQueued = false; save(); emit(); flush(); });
   }
 
   // ---------- Supabase ----------
@@ -356,10 +370,23 @@
     if (error) throw new Error(arabicAuthError(error.message));
     status.recovery = false; emit();
   }
-  // المزودين المفعّلين بلوحة Supabase (صاحب التطبيق يكتبهم بـ config.js لما يفعّلهم)
+  // المزودين المفعّلين: نسأل Supabase نفسه (/auth/v1/settings)، فأول ما يتفعّل Google أو Apple بلوحة Supabase تطلع أزرارهم
+  //   بدون تعديل بالكود. نسأل بس لما تفتح صفحة «حسابك» (بدون حساب ما يطلع أي اتصال، DW-011). PROVIDERS بـ config.js يظل يضيف
+  let detected = [], checkedAt = 0;
+  async function checkProviders() {
+    const cfg = getConfig();
+    if (!sb || !cfg || typeof fetch !== 'function' || Date.now() - checkedAt < 10 * 60e3) return providers();
+    try {
+      const r = await fetch(cfg.url.replace(/\/$/, '') + '/auth/v1/settings', { headers: { apikey: cfg.key } });
+      const j = r.ok ? await r.json() : null, ext = (j && j.external) || {};
+      if (j) { detected = ['apple', 'google'].filter((p) => ext[p] === true); checkedAt = Date.now(); }
+    } catch (e) { /* بدون نت: نكمل بالإيميل */ }
+    return providers();
+  }
   function providers() {
     const p = (global.HAYATI_CONFIG || {}).PROVIDERS;
-    return sb && Array.isArray(p) ? p.filter((x) => x === 'apple' || x === 'google') : [];
+    const list = detected.concat(Array.isArray(p) ? p : []);
+    return sb ? ['apple', 'google'].filter((x) => list.includes(x)) : [];
   }
 
   function arabicAuthError(msg) {
@@ -577,7 +604,7 @@
   function exportJSON() {
     const out = { exported_at: new Date().toISOString(), settings: {} };
     for (const t of TABLES) out[t] = state[t];
-    for (const f of SETTINGS_FIELDS) if (f !== 'ingest_token') out.settings[f] = state.settings[f];
+    for (const f of SETTINGS_FIELDS.concat(LOCAL_SETTINGS)) if (f !== 'ingest_token') out.settings[f] = state.settings[f];
     return JSON.stringify(out, null, 2);
   }
 
@@ -589,7 +616,7 @@
     }
     if (data.settings) {
       const patch = {};
-      for (const f of SETTINGS_FIELDS) if (f !== 'ingest_token' && data.settings[f] != null) patch[f] = data.settings[f];
+      for (const f of SETTINGS_FIELDS.concat(LOCAL_SETTINGS)) if (f !== 'ingest_token' && data.settings[f] != null) patch[f] = data.settings[f];
       if (Object.keys(patch).length) setSettings(patch);
     }
     return n;
@@ -598,12 +625,24 @@
   global.addEventListener('online', sync);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) sync(); });
 
+  // DW-021: server functions (AI) — only for a signed-in account; the API key lives in Supabase secrets, never here.
+  async function invokeFn(name, body) {
+    if (!sb || !status.signedIn) throw new Error('signin');
+    const { data, error } = await sb.functions.invoke(name, { body });
+    if (error) {
+      let msg = error.message || 'error';
+      try { const j = await error.context.json(); if (j && j.error) msg = j.error; } catch (e) { /* no body */ }
+      throw new Error(msg);
+    }
+    return data;
+  }
+
   global.Store = {
-    state, status, uuid, stableId,
+    state, status, uuid, stableId, invokeFn, rev: () => rev,
     subscribe: (fn) => { listeners.add(fn); return () => listeners.delete(fn); },
     upsert, remove, setSettings,
     init, getConfig, saveConfig, clearConfig,
-    signIn, signUp, signOut, sync, resolveMerge, signInWithProvider, exchangeCode, resetPassword, updatePassword, providers, localCount, getSeed, processInbox, smsToTransaction,
+    signIn, signUp, signOut, sync, resolveMerge, signInWithProvider, exchangeCode, resetPassword, updatePassword, providers, checkProviders, localCount, getSeed, processInbox, smsToTransaction,
     ensureIngestToken, rotateIngestToken, exportJSON, importJSON, wipeAll,
   };
 })(window);

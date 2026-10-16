@@ -10,7 +10,8 @@
   const pad = (n) => String(n).padStart(2, '0');
   const DAY_NAMES = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
   const KINDS = { training: ['تمرين', '#16a34a', '⚽'], match: ['مباراة', '#13636B', '🏟️'], gym: ['جيم', '#10b981', '💪'], other: ['نشاط', '#64748b', '📌'] };
-  const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+  // محلي (vendor/) عشان نسخة المتجر ما تتصل بأي جهة؛ ملف dist الواحد (file://) بس يرجع للـ CDN
+  const PDFJS = location.protocol === 'file:' ? 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/' : 'vendor/pdfjs/';
 
   let samplePromise = null;
   const getSample = () => (samplePromise = samplePromise || (window.claude && typeof window.claude.use === 'function' ? window.claude.use('sample').catch(() => null) : Promise.resolve(null)));

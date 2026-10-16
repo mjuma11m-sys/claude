@@ -12,7 +12,8 @@
   if (lang !== 'en' || !window.HAYATI_EN) return;
 
   const D = window.HAYATI_EN;
-  const AR = '؀-ۿ';
+  // حدود الكلمة: حروف عربية بس (بدون «،» و«؛» و«؟» و«٪» اللي كانت تمنع ترجمة الكلمة اللي قبلها)
+  const AR = 'ء-ٟٮ-ۓ';
   const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   // الأطول أول، وما نترجم جزء من كلمة عربية أطول
   const keys = Object.keys(D).sort((a, b) => b.length - a.length);
@@ -20,15 +21,16 @@
   const hasAr = (s) => /[؀-ۿ]/.test(s);
   function tr(s) {
     if (!s || !hasAr(s)) return s;
-    return s.replace(RE, (m) => D[m])
-      .replace(/(\d)\s*م(?![؀-ۿ])/g, '$1 pm').replace(/(\d)\s*ص(?![؀-ۿ])/g, '$1 am')
+    // «حضرت X؟» سؤال (مو «Attended»)، والاسم يظل مثل ما هو
+    return s.replace(/^حضرت\s+(.+)؟$/, 'Did you attend $1?').replace(RE, (m) => D[m])
+      .replace(/(\d)\s*م(?![ء-ٟٮ-ۓ])/g, '$1 pm').replace(/(\d)\s*ص(?![ء-ٟٮ-ۓ])/g, '$1 am')
       .replace(/(^|[\s\d.])من(?=$|[\s\d])/g, '$1of')
       // أرقام بوحدات عربية: «بعد 3 أيام»، «49 دقيقة»، «30 د»، «1.5 س»، «3 مرات»
-      .replace(/قبل\s+(\d+)\s*(?:أيام|days)(?![؀-ۿ])/g, '$1 days ago').replace(/قبل\s+(?:يومين|two days|2 days)(?![؀-ۿ])/g, '2 days ago').replace(/قبل\s+(?:يوم|a day|1 day|Day)(?![؀-ۿ\w])/g, 'a day ago')
-      .replace(/بعد\s+(\d+)\s*(?:أيام|يوم|days)(?![؀-ۿ])/g, 'in $1 days').replace(/(\d+)\s*أيام(?![؀-ۿ])/g, '$1 days')
-      .replace(/(\d+)\s*(?:دقيقة|دقايق|دقائق)(?![؀-ۿ])/g, '$1 min').replace(/(\d+(?:\.\d+)?)\s*س(?![؀-ۿ.])/g, '$1 h')
-      .replace(/(\d+)\s*د(?![؀-ۿ.])/g, '$1 min').replace(/(\d+)\s*مرات(?![؀-ۿ])/g, '$1 times')
-      .replace(/(^|\s)يا\s+(?=\S)/g, ', ')
+      .replace(/قبل\s+(\d+)\s*(?:أيام|يوم|days)(?![ء-ٟٮ-ۓ])/g, '$1 days ago').replace(/قبل\s+(?:يومين|two days|2 days)(?![ء-ٟٮ-ۓ])/g, '2 days ago').replace(/قبل\s+(?:يوم|a day|1 day|Day)(?![ء-ٟٮ-ۓ\w])/g, 'a day ago')
+      .replace(/بعد\s+(\d+)\s*(?:أيام|يوم|days)(?![ء-ٟٮ-ۓ])/g, 'in $1 days').replace(/(\d+)\s*(?:أيام|يوم)(?![ء-ٟٮ-ۓ])/g, '$1 days')
+      .replace(/(\d+)\s*(?:دقيقة|دقايق|دقائق)(?![ء-ٟٮ-ۓ])/g, '$1 min').replace(/(\d+(?:\.\d+)?)\s*س(?![ء-ٟٮ-ۓ.])/g, '$1 h')
+      .replace(/(\d+)\s*د(?![ء-ٟٮ-ۓ.])/g, '$1 min').replace(/(\d+)\s*مرات(?![ء-ٟٮ-ۓ])/g, '$1 times').replace(/(\d)\s*كم(?![ء-ٟٮ-ۓ])/g, '$1 km')
+      .replace(/(^|\s)يا\s+(?=\S)/g, ', ').replace(/\s+يا\s*$/, ', ').replace(/(^|\s)و(?=\s|$)/g, '$1and')
       .replace(/(^|\s)بعد(?=\s)/g, '$1in').replace(/(\s)و(?=\d)/g, '$1and ')
       .replace(/،/g, ',').replace(/؟/g, '?').replace(/٪/g, '%');
   }
@@ -42,10 +44,21 @@
       if (D[k]) n.nodeValue = n.nodeValue.replace(k, D[k]);
       return;
     }
-    const v = tr(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v;
+    const o = n.nodeValue, w = WHOLE[o.trim()], v = w ? o.replace(o.trim(), w) : tr(o); if (v !== o) n.nodeValue = v;
+    if (hasAr(v) && !OUT.has(o)) { MISS.add(o.trim()); OUT.add(v); }
+  }
+  // النص اللي ظل فيه عربي بعد الترجمة (للاختبار: tests/tools/i18n-audit.js)
+  const MISS = new Set(), OUT = new Set();
+  // حرف لحاله بعنصر (وحدة بجنب رقم): نترجمه بس لو هو النص كله، عشان «د.ب» و«30 د» ما يتأثرون
+  const WHOLE = { 'د': 'min', 'س': 'h', 'هـ': 'AH', 'لك': 'Owed to you', 'عليك': 'You owe', 'ص': 'am', 'م': 'pm' };
+  function trAttr(el, a) {
+    const v = el.getAttribute(a);
+    if (!v || !hasAr(v)) return;
+    const t = tr(v); if (t !== v) el.setAttribute(a, t);
+    if (hasAr(t) && !OUT.has(v)) { MISS.add(v); OUT.add(t); }
   }
   const ATTRS = ['placeholder', 'aria-label', 'title'];
-  const SKIP = /^(SCRIPT|STYLE|TEXTAREA|INPUT|CODE)$/;
+  const SKIP = /^(SCRIPT|STYLE|TEXTAREA|INPUT|CODE)$/, FIELD = /^(TEXTAREA|INPUT)$/;
   function walk(root) {
     if (root.nodeType === 3) {
       // نص داخل <script> أو حقل إدخال ما نلمسه أبداً
@@ -53,8 +66,11 @@
       if (!p || SKIP.test(p.tagName) || p.closest('[data-noi18n]')) return;
       trText(root); return;
     }
-    if (root.nodeType !== 1 || SKIP.test(root.tagName) || root.closest('[data-noi18n]')) return;
-    for (const a of ATTRS) { const v = root.getAttribute(a); if (v && hasAr(v)) root.setAttribute(a, tr(v)); }
+    if (root.nodeType !== 1 || root.closest('[data-noi18n]')) return;
+    if (FIELD.test(root.tagName)) { for (const a of ATTRS) trAttr(root, a); return; }
+    if (SKIP.test(root.tagName)) return;
+    // نكتب بس لو تغيّر: نص عربي بدون ترجمة كان يرجع يطلق المراقب للأبد
+    for (const a of ATTRS) trAttr(root, a);
     const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
     let n;
     while ((n = tw.nextNode())) {
@@ -62,8 +78,8 @@
         const p = n.parentElement;
         if (p && (SKIP.test(p.tagName) || p.closest('[data-noi18n]'))) continue;
         trText(n);
-      } else if (!SKIP.test(n.tagName)) {
-        for (const a of ATTRS) { const v = n.getAttribute(a); if (v && hasAr(v)) n.setAttribute(a, tr(v)); }
+      } else if (!SKIP.test(n.tagName) || FIELD.test(n.tagName)) {
+        for (const a of ATTRS) trAttr(n, a);
       }
     }
   }
@@ -88,4 +104,5 @@
   };
   if (document.body) go(); else addEventListener('DOMContentLoaded', go);
   window.HayatiLang.tr = tr;
+  window.HayatiLang.missing = () => [...MISS];
 })();

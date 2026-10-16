@@ -10,6 +10,8 @@ fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(path.join(OUT, 'icons'), { recursive: true });
 for (const f of files) { fs.mkdirSync(path.dirname(path.join(OUT, f)), { recursive: true }); fs.copyFileSync(path.join(D, f), path.join(OUT, f)); }
 for (const f of fs.readdirSync(path.join(D, 'icons'))) fs.copyFileSync(path.join(D, 'icons', f), path.join(OUT, 'icons', f));
+// المكتبات والخطوط المحلية (pdf.js والخطوط ما تنذكر كـ <script>)
+fs.cpSync(path.join(D, 'vendor'), path.join(OUT, 'vendor'), { recursive: true });
 // مكتبة Capacitor (registerPlugin) لنسخة الآيفون بس، قبل native.js. نسخة الويب ما تحتاجها
 fs.copyFileSync(path.join(D, 'node_modules/@capacitor/core/dist/capacitor.js'), path.join(OUT, 'capacitor.js'));
 const page = fs.readFileSync(path.join(OUT, 'index.html'), 'utf8');

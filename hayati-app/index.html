@@ -11,9 +11,9 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="icon" type="image/png" href="icons/icon-192.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preload" href="vendor/fonts/plex-arabic-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="vendor/fonts/plex-arabic-600.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="vendor/fonts/fonts.css">
   <style>
     html { direction: rtl; }
     header.top { top: env(safe-area-inset-top, 0px) !important; padding-top: 14px !important; }
@@ -54,7 +54,7 @@
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme="light"]) {
         --bg: #0A1A1E; --surface: #10262B; --surface-2: #163238; --border: #1F3D43;
-        --text: #EFE8DA; --text-2: #C9C2B4; --muted: #8A9A9B;
+        --text: #EFE8DA; --text-2: #C9C2B4; --muted: #9EAEAF;
         --brand: #6EC5C0; --brand-2: #8FD6D1; --brand-soft: #133A3E; --on-brand: #0A1A1E;
         --expense: #FF7A6B; --income: #4FC79E; --warn: #F2B84B; --warn-soft: #3A2C10; --danger-soft: #3B1A18;
         --hero: linear-gradient(140deg, #0F4A52 0%, #0E3B43 58%, #0B2E34 100%);
@@ -65,7 +65,7 @@
     }
     :root[data-theme="dark"] {
       --bg: #0A1A1E; --surface: #10262B; --surface-2: #163238; --border: #1F3D43;
-      --text: #EFE8DA; --text-2: #C9C2B4; --muted: #8A9A9B;
+      --text: #EFE8DA; --text-2: #C9C2B4; --muted: #9EAEAF;
       --brand: #6EC5C0; --brand-2: #8FD6D1; --brand-soft: #133A3E; --on-brand: #0A1A1E;
       --expense: #FF7A6B; --income: #4FC79E; --warn: #F2B84B; --warn-soft: #3A2C10; --danger-soft: #3B1A18;
       --hero: linear-gradient(140deg, #0F4A52 0%, #0E3B43 58%, #0B2E34 100%);
@@ -170,6 +170,10 @@
     .tile .lbl { font-size: 12px; color: var(--muted); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .tile .val { font-size: clamp(13px, 3.9vw, 17px); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .tile .val .cur { margin-inline-start: 2px; }
+    /* DW-025 أسوأ بيانات: المبالغ الكبيرة تصغر لين تركب (fit.js)، والأسماء الطويلة سطرين */
+    .hero .split > div { min-width: 0; }
+    .hero .amount-big, .hero .split b:has(.cur), .fit { display: block; white-space: nowrap; overflow: hidden; }
+    .hero .split b:not(:has(.cur)), .goal-top b:not(.fit) { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
 
     /* حلقة الميزانية */
     .ring { position: relative; width: 68px; height: 68px; flex: none; }
@@ -242,6 +246,7 @@
     .slot .when { width: 64px; flex: none; text-align: center; padding-top: 12px; white-space: nowrap; }
     .slot .when b { display: block; font-size: 14px; font-weight: 700; }
     .slot .when small { font-size: 11px; color: var(--muted); }
+    .slot.past .when small { color: var(--text-2); }   /* ♿ مع شفافية «فات» يظل فوق 4.5:1 */
     .slot .box {
       flex: 1; min-width: 0; border-radius: 16px; padding: 12px 14px; border: 1px solid var(--border);
       background: var(--surface); box-shadow: var(--shadow-sm); border-inline-start: 4px solid var(--c);
@@ -250,7 +255,7 @@
     .slot .box .where { font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 4px; margin-top: 2px; }
     .slot .box .where svg.i { width: 13px; height: 13px; }
     .slot.now .box { background: color-mix(in srgb, var(--c) 10%, var(--surface)); border-color: color-mix(in srgb, var(--c) 35%, transparent); }
-    .slot.past { opacity: .55; }
+    .slot.past { opacity: .8; }   /* ♿ .55 كانت تنزل التباين تحت 4.5:1 (WCAG AA) */
     .slot .prog { height: 4px; background: color-mix(in srgb, var(--c) 18%, transparent); border-radius: 99px; margin-top: 10px; overflow: hidden; }
     .slot .prog > span { display: block; height: 100%; background: var(--c); border-radius: 99px; }
 
@@ -526,6 +531,11 @@
     .stepper { display: flex; align-items: center; gap: 8px; }
     .stepper button { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); font-size: 18px; font-weight: 700; }
     .stepper b { min-width: 34px; text-align: center; }
+    /* DW-026 إمكانية الوصول: مساحة لمس 44px على الأقل بدون ما يتغير الشكل (WCAG 2.5.5 / Apple HIG) */
+    :where(.check, .icon-x, .link, .icon-btn, .chip, .seg button, .stepper button, #sheetCancel, #sheetSave, .undo-bar button) { position: relative; }
+    :where(.check, .icon-x, .link, .icon-btn, .chip, .seg button, .stepper button, #sheetCancel, #sheetSave, .undo-bar button)::after { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%); }
+    .cup { position: relative; }
+    .cup::after { content: ""; position: absolute; left: -4px; right: -4px; top: 50%; height: 44px; transform: translateY(-50%); }   /* بالعرض بس لين نص الفراغ عشان ما ياخذ الكوب اللي جنبه */
     .habits { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
     .habit { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--surface); border-radius: 99px; padding: 7px 14px; font-weight: 600; font-size: 14px; }
     .habit small { color: #f97316; font-weight: 700; }
@@ -689,8 +699,10 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-  <script src="js/i18n/i18n-en.js"></script>
+  <script src="js/core/errlog.js"></script>
+  <script src="vendor/supabase/supabase.min.js"></script>
+  <!-- DW-046: قاموس الإنقليزي (120KB) ينحمل بس لو اللغة إنقليزي؛ document.write يخليه بنفس الترتيب قبل i18n.js -->
+  <script id="enLoader">try { if (localStorage.getItem('hayati-lang') === 'en') document.write('<script src="js/i18n/i18n-en.js"><\/script>'); } catch (e) { /* تجاهل */ }</script>
   <script src="js/i18n/i18n.js"></script>
   <script src="js/core/config.js"></script>
   <script src="js/core/sms.js"></script>
@@ -708,6 +720,21 @@
   <script src="js/features/motion.js"></script>
   <script src="js/features/pwa.js"></script>
   <script src="js/features/find.js"></script>
+  <script src="js/features/payday.js"></script>
+  <script src="js/features/worship.js"></script>
+  <script src="js/features/ibada.js"></script>
+  <script src="js/features/qibla.js"></script>
+  <script src="js/features/travel.js"></script>
+  <script src="js/features/tools.js"></script>
+  <script src="js/features/lectures.js"></script>
+  <script src="js/features/firstmin.js"></script>
+  <script src="js/features/fit.js"></script>
+  <script src="js/features/goalphoto.js"></script>
+  <script src="js/features/reportimg.js"></script>
+  <script src="js/features/backup.js"></script>
+  <script src="js/features/widget.js"></script>
+  <script src="js/features/account.js"></script>
+  <script src="js/features/whatsnew.js"></script>
   <script src="js/features/insights.js"></script>
   <script src="js/features/community.js"></script>
   <script src="js/features/privacy.js"></script>

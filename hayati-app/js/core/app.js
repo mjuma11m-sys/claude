@@ -5,7 +5,7 @@
   const S = window.Store;
   const st = S.state;
   const I = window.icon;
-  const APP_VERSION = 'v15';   // نفس رقم sw.js (فيه اختبار يتأكد)
+  const APP_VERSION = 'v23';   // نفس رقم sw.js (فيه اختبار يتأكد)
 
   // ---------- ثوابت ----------
   const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
@@ -57,7 +57,7 @@
 
   const GRADE_POINTS = { 'A': 4, 'A-': 3.67, 'B+': 3.33, 'B': 3, 'B-': 2.67, 'C+': 2.33, 'C': 2, 'C-': 1.67, 'D+': 1.33, 'D': 1, 'F': 0 };
   const MONEY_SEGS = [['tx', 'العمليات'], ['subs', 'اشتراكات'], ['goals', 'أهداف'], ['debts', 'لي وعلي']];
-  const STUDY_SEGS = [['schedule', 'الجدول'], ['focus', 'المذاكرة'], ['gpa', 'المعدل'], ['health', 'صحتي']];
+  const STUDY_SEGS = [['schedule', 'الجدول'], ['lectures', 'المحاضرات'], ['focus', 'المذاكرة'], ['gpa', 'المعدل'], ['health', 'صحتي']];
   const SUB_PRESETS = [
     ['نتفليكس', 'ترفيه'], ['شاهد', 'ترفيه'], ['سبوتيفاي', 'ترفيه'], ['iCloud', 'فواتير واتصالات'],
     ['باقة الجوال', 'فواتير واتصالات'], ['الإنترنت', 'فواتير واتصالات'], ['النادي الرياضي', 'صحة'], ['ChatGPT', 'جامعة ودراسة'],
@@ -154,7 +154,20 @@
   function catIcon(c, kind) { const [ic, col] = catMeta(c, kind); return '<div class="ico" style="' + tint(col) + '">' + I(ic) + '</div>'; }
 
   function pad(n) { return String(n).padStart(2, '0'); }
-  function monthKey(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1); }
+  // «شهر الراتب» (DW-012): لو المستخدم حدد يوم الراتب (2–28)، الشهر يبدأ منه لين اليوم اللي قبله بالشهر الجاي،
+  // ومفتاحه شهر البداية (25 أكتوبر – 24 نوفمبر = 2026-10). بدونه = الشهر الميلادي
+  function payday() { const p = Math.round(Number(st.settings && st.settings.payday) || 1); return p >= 2 && p <= 28 ? p : 1; }
+  function monthKey(d) {
+    const x = d.getDate() < payday() ? new Date(d.getFullYear(), d.getMonth() - 1, 1) : d;
+    return x.getFullYear() + '-' + pad(x.getMonth() + 1);
+  }
+  function shiftKey(key, n) { const [y, m] = key.split('-').map(Number); const d = new Date(y, m - 1 + n, 1); return d.getFullYear() + '-' + pad(d.getMonth() + 1); }
+  // من بداية الدورة لين بداية اللي بعدها (end ما ينحسب)
+  function monthRange(key) { const [y, m] = key.split('-').map(Number), p = payday(); return { start: new Date(y, m - 1, p), end: new Date(y, m, p) }; }
+  function monthLabel(key) {
+    const [y, m] = key.split('-').map(Number), p = payday();
+    return p === 1 ? MONTHS[m - 1] + ' ' + y : p + ' ' + MONTHS[m - 1] + ' – ' + (p - 1) + ' ' + MONTHS[m % 12];
+  }
   function sameDay(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
   function startOfDay(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
   function daysBetween(a, b) { return Math.round((startOfDay(b) - startOfDay(a)) / 86400000); }
@@ -179,7 +192,7 @@
     if (diff === 1) return 'بكرة';
     return DAYS[d.getDay()] + '، ' + d.getDate() + ' ' + MONTHS[d.getMonth()];
   }
-  function nDays(n) { return n === 1 ? 'يوم' : n === 2 ? 'يومين' : n + ' أيام'; }
+  function nDays(n) { return n === 1 ? 'يوم' : n === 2 ? 'يومين' : n <= 10 ? n + ' أيام' : n + ' يوم'; }   // 3–10 أيام، 11+ يوم
   function relDue(d) {
     const diff = daysBetween(new Date(), d);
     if (diff < 0) return 'متأخر ' + nDays(-diff);
@@ -274,9 +287,25 @@
     return items.sort((a, b) => a.start - b.start);
   }
   function hhmm(m) { return pad(Math.floor(m / 60) % 24) + ':' + pad(m % 60); }
-  function txInMonth(key) {
-    return st.transactions.filter((t) => monthKey(new Date(t.occurred_at)) === key).sort((a, b) => new Date(b.occurred_at) - new Date(a.occurred_at));
+  // فهرس العمليات حسب الشهر واليوم، يتبنى مرة وحدة لكل تغيير بالبيانات بدال ما نقرا كل التواريخ بكل رسمة (DW-042)
+  let txIdx = null;
+  function txIndex() {
+    const rev = S.rev ? S.rev() : -1;
+    if (txIdx && txIdx.rev === rev && txIdx.list === st.transactions && rev !== -1) return txIdx;
+    const byMonth = new Map(), byDay = new Map();
+    const sorted = st.transactions.map((t) => ({ t, ms: new Date(t.occurred_at).getTime() })).sort((a, b) => b.ms - a.ms);
+    for (const { t, ms } of sorted) {
+      const d = new Date(ms), mk = monthKey(d), dk = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+      if (!byMonth.has(mk)) byMonth.set(mk, []);
+      byMonth.get(mk).push(t);
+      if (!byDay.has(dk)) byDay.set(dk, []);
+      byDay.get(dk).push(t);
+    }
+    txIdx = { rev, list: st.transactions, byMonth, byDay };
+    return txIdx;
   }
+  function txInMonth(key) { return (txIndex().byMonth.get(key) || []).slice(); }
+  function txOnDay(d) { return (txIndex().byDay.get(d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate()) || []).slice(); }
   function sums(list) {
     let exp = 0, inc = 0;
     for (const t of list) { if (t.kind === 'income') inc += Number(t.amount) || 0; else exp += Number(t.amount) || 0; }
@@ -389,28 +418,29 @@
       '<button class="tile" data-action="' + (budget ? 'go' : 'budget') + '" data-tab="money"><div class="ti" style="' + tint('#1A8A8F') + '">' + I('target') + '</div><div class="lbl">' + (budget ? 'باقي بالميزانية' : 'الميزانية') + '</div><div class="val">' + (budget ? money(budget - month.exp) : '<span style="font-size:13px;color:var(--brand)">حدّدها</span>') + '</div></button>' +
       '<button class="tile" data-action="go" data-tab="tasks"><div class="ti" style="' + tint('#0d9488') + '">' + I('tasks') + '</div><div class="lbl">مهام اليوم</div><div class="val num">' + dueToday + '</div></button></div>';
 
-    // جدول اليوم
-    out += secHead('جدول اليوم', '<span class="count">' + today.length + '</span><button class="link" data-action="go" data-tab="schedule">الجدول</button>');
+    // جدول اليوم (كل قسم بـ data-tk عشان «رتّب اليوم» يقدر يخفيه)
+    out += '<section data-tk="schedule">' + secHead('جدول اليوم', '<span class="count">' + today.length + '</span><button class="link" data-action="go" data-tab="schedule">الجدول</button>');
     if (today.length) {
       out += '<div class="timeline">' + today.map((c) => slot(c, nm >= c.end ? 'past' : nm >= c.start ? 'now' : '', ((nm - c.start) / (c.end - c.start)) * 100)).join('') + '</div>';
     } else {
       out += '<div class="card">' + (st.courses.length ? empty('sparkle', 'ما فيه شي بجدولك اليوم', 'استمتع بيومك') :
         empty('calendar', 'رتّب أسبوعك', '<button class="link" data-action="add-course">أضف محاضرة أو تمرين</button> عشان يقولك «الحين وقت…»')) + '</div>';
     }
+    out += '</section>';
 
     out += X('todayMid');
 
     // المهام
     const soon = st.tasks.filter((t) => !t.done && t.due_at && daysBetween(now, new Date(t.due_at)) <= 3)
       .sort((a, b) => new Date(a.due_at) - new Date(b.due_at));
-    out += secHead('مهام قريبة', '<span class="count">' + soon.length + '</span><button class="link" data-action="go" data-tab="tasks">الكل</button>');
-    out += '<div class="card flush">' + (soon.length ? '<ul class="list">' + soon.map(taskRow).join('') + '</ul>' : empty('check', 'ما فيه شي مستعجل', 'لا مهام خلال ٣ أيام')) + '</div>';
+    out += '<section data-tk="tasks">' + secHead('مهام قريبة', '<span class="count">' + soon.length + '</span><button class="link" data-action="go" data-tab="tasks">الكل</button>');
+    out += '<div class="card flush">' + (soon.length ? '<ul class="list">' + soon.map(taskRow).join('') + '</ul>' : empty('check', 'ما فيه شي مستعجل', 'لا مهام خلال ٣ أيام')) + '</div></section>';
 
     // آخر العمليات
     const recent = st.transactions.slice().sort((a, b) => new Date(b.occurred_at) - new Date(a.occurred_at)).slice(0, 4);
     const review = st.transactions.filter((t) => t.needs_review).length;
-    out += secHead('آخر العمليات', (review ? '<span class="tag warn">' + review + ' تحتاج مراجعة</span>' : '') + '<button class="link" data-action="go" data-tab="money">الكل</button>');
-    out += '<div class="card flush">' + (recent.length ? '<ul class="list">' + recent.map(txRow).join('') + '</ul>' : empty('wallet', 'ما فيه عمليات', 'سجّل أول مصروف من زر +')) + '</div>';
+    out += '<section data-tk="recent">' + secHead('آخر العمليات', (review ? '<span class="tag warn">' + review + ' تحتاج مراجعة</span>' : '') + '<button class="link" data-action="go" data-tab="money">الكل</button>');
+    out += '<div class="card flush">' + (recent.length ? '<ul class="list">' + recent.map(txRow).join('') + '</ul>' : empty('wallet', 'ما فيه عمليات', 'سجّل أول مصروف من زر +')) + '</div></section>';
     return out;
   }
 
@@ -422,7 +452,7 @@
     const isThisMonth = ui.month === monthKey(new Date());
 
     let out = '<div class="month-nav"><button class="icon-btn" data-action="month" data-d="-1" aria-label="الشهر السابق">' + I('chevR') + '</button>' +
-      '<b>' + MONTHS[m - 1] + ' ' + y + '</b>' +
+      '<b>' + monthLabel(ui.month) + '</b>' +
       '<button class="icon-btn" data-action="month" data-d="1" aria-label="الشهر الجاي"' + (isThisMonth ? ' disabled' : '') + '>' + I('chevL') + '</button></div>';
 
     // البطاقة الرئيسية
@@ -443,7 +473,7 @@
       const end = isThisMonth ? new Date() : new Date(y, m, 0);
       const days = [];
       for (let i = 6; i >= 0; i--) { const d = new Date(end); d.setDate(end.getDate() - i); days.push(d); }
-      const vals = days.map((d) => sums(st.transactions.filter((t) => sameDay(new Date(t.occurred_at), d))).exp);
+      const vals = days.map((d) => sums(txOnDay(d)).exp);
       const max = Math.max(...vals, 1);
       const total = vals.reduce((a, b) => a + b, 0);
       out += secHead('آخر ٧ أيام', '<span class="small muted">المجموع ' + money(total) + '</span>');
@@ -502,7 +532,7 @@
     const draw = () => {
       const done = wkDone(c.id);
       return '<div class="hero" style="margin-top:4px;padding:16px 18px"><span class="eyebrow">' + I('dumbbell') + (wk.focus || 'تمرين') + '</span>' +
-        '<div class="big" style="font-size:22px;margin:8px 0 2px">' + h(c.name) + '</div>' +
+        '<div class="big" style="font-size:22px;margin:8px 0 2px"><bdi>' + h(c.name) + '</bdi></div>' +
         '<div class="meta"><span>' + I('clock') + time12(c.start_time) + ' — ' + time12(c.end_time) + '</span><span>' + done.length + ' من ' + wk.exercises.length + ' خلصت</span></div>' +
         '<div class="track"><span style="width:' + (done.length / wk.exercises.length) * 100 + '%"></span></div></div>' +
         '<div class="card flush"><ul class="list">' + wk.exercises.map((x, i) =>
@@ -669,10 +699,10 @@
         hint = daysBetween(new Date(), dl) < 0 ? '<span class="late">فات الموعد</span>' : 'وفّر ' + money(left / months) + ' بالشهر عشان توصل قبل ' + dl.getDate() + ' ' + MONTHS[dl.getMonth()];
       }
       const col = g.color || COLORS[0];
-      out += '<div class="card goal" data-action="edit-goal" data-id="' + g.id + '">' +
+      out += '<div class="card goal" data-action="edit-goal" data-id="' + g.id + '">' + X('goalBanner', g) +
         '<div class="goal-top"><div class="ico" style="' + tint(col) + (g.emoji ? ';font-size:20px' : '') + '">' + (g.emoji ? h(g.emoji) : I(g.done ? 'award' : 'piggy')) + '</div><div style="flex:1;min-width:0"><b>' + h(g.name) + '</b>' +
         '<div class="small muted">' + (g.done || sv >= t ? '🎉 تحقق الهدف' : 'باقي ' + money(left)) + '</div></div>' +
-        '<div style="text-align:left"><b>' + money(sv) + '</b><div class="small muted num">' + Math.round(pct) + '%</div></div></div>' +
+        '<div style="text-align:left;flex:none;max-width:45%"><b class="fit">' + money(sv) + '</b><div class="small muted num">' + Math.round(pct) + '%</div></div></div>' +
         '<div class="meter" style="height:10px;margin:12px 0 10px"><span style="width:' + pct + '%;background:' + col + '"></span></div>' +
         (hint ? '<div class="small muted" style="margin-bottom:10px">' + hint + '</div>' : '') +
         goalItems(g) +
@@ -700,17 +730,18 @@
   // ================= لي وعلي =================
   function viewDebts() {
     const open = st.debts.filter((d) => !d.settled);
-    const lent = open.filter((d) => d.direction === 'lent').reduce((a, d) => a + Number(d.amount), 0);
-    const borrowed = open.filter((d) => d.direction === 'borrowed').reduce((a, d) => a + Number(d.amount), 0);
+    const lent = open.filter((d) => d.direction === 'lent').reduce((a, d) => a + (Number(d.amount) || 0), 0);
+    const borrowed = open.filter((d) => d.direction !== 'lent').reduce((a, d) => a + (Number(d.amount) || 0), 0);
     let out = '<div class="duo"><div class="tile"><div class="ti" style="' + tint('#059669') + '">' + I('arrowDown') + '</div><div class="lbl">لي (عند الناس)</div><div class="val" style="color:var(--income)">' + money(lent) + '</div></div>' +
       '<div class="tile"><div class="ti" style="' + tint('#e11d48') + '">' + I('arrowUp') + '</div><div class="lbl">علي (للناس)</div><div class="val" style="color:var(--expense)">' + money(borrowed) + '</div></div></div>';
 
     // الصافي لكل شخص
     const people = {};
     for (const d of open) {
-      people[d.person] = people[d.person] || { net: 0, items: [] };
-      people[d.person].net += (d.direction === 'lent' ? 1 : -1) * Number(d.amount);
-      people[d.person].items.push(d);
+      const who = String(d.person || '').trim() || 'بدون اسم';   // بيانات ناقصة (استيراد قديم) ما تطلع «undefined»
+      people[who] = people[who] || { net: 0, items: [] };
+      people[who].net += (d.direction === 'lent' ? 1 : -1) * (Number(d.amount) || 0);
+      people[who].items.push(d);
     }
     const names = Object.keys(people).sort((a, b) => Math.abs(people[b].net) - Math.abs(people[a].net));
     out += secHead('مفتوحة', '<span class="count">' + open.length + '</span><button class="link" data-action="add-debt">إضافة</button>');
@@ -734,16 +765,16 @@
     const lent = d.direction === 'lent';
     return '<li class="row' + (d.settled ? ' done' : '') + '" data-action="edit-debt" data-id="' + d.id + '">' +
       '<button class="check' + (d.settled ? ' on' : '') + '" data-action="toggle-debt" data-id="' + d.id + '" aria-label="تم السداد">' + I('check') + '</button>' +
-      '<div class="main"><div class="title"><span class="t">' + (lent ? 'سلّفت ' : 'استلفت من ') + h(d.person) + '</span></div>' +
-      '<div class="sub">' + dayLabel(new Date(d.occurred_at)) + (d.note ? ' · ' + h(d.note) : '') + '</div></div>' +
+      '<div class="main"><div class="title"><span class="t">' + (lent ? 'سلّفت ' : 'استلفت من ') + h(d.person || 'بدون اسم') + '</span></div>' +
+      '<div class="sub">' + [isNaN(new Date(d.occurred_at)) ? '' : dayLabel(new Date(d.occurred_at)), d.note ? h(d.note) : ''].filter(Boolean).join(' · ') + '</div></div>' +
       '<div class="amount ' + (lent ? 'income' : '') + '" style="' + (lent ? '' : 'color:var(--expense)') + '">' + money(d.amount) + '</div></li>';
   }
 
   // ================= الجدول/المذاكرة/المعدل =================
   function viewStudy() {
-    const segs = has('student') ? STUDY_SEGS : STUDY_SEGS.filter((x) => x[0] !== 'gpa');
+    const segs = has('student') ? STUDY_SEGS : STUDY_SEGS.filter((x) => x[0] !== 'gpa' && x[0] !== 'lectures');
     if (!segs.some((x) => x[0] === ui.studySeg)) ui.studySeg = 'schedule';
-    return segBar(segs, ui.studySeg, 'study-seg') + ({ schedule: viewSchedule, focus: viewFocus, gpa: viewGpa, health: () => X('viewHealth') })[ui.studySeg]();
+    return segBar(segs, ui.studySeg, 'study-seg') + ({ schedule: viewSchedule, lectures: () => X('viewLectures'), focus: viewFocus, gpa: viewGpa, health: () => X('viewHealth') })[ui.studySeg]();
   }
 
   // جدول فاضي = بداية: كل عميل يبني أسبوعه، والأزرار على حسب ملفه
@@ -855,7 +886,7 @@
     if (!t) {
       out += '<div class="chips" style="margin-bottom:12px;flex-wrap:nowrap;overflow-x:auto">' +
         '<button class="chip' + (!ui.focusCourse ? ' on' : '') + '" data-action="focus-course" data-id="">عام</button>' +
-        lec.map((c) => '<button class="chip' + (ui.focusCourse === c.id ? ' on' : '') + '" data-action="focus-course" data-id="' + c.id + '">' + h(c.name) + '</button>').join('') + '</div>';
+        lec.map((c) => '<button class="chip' + (ui.focusCourse === c.id ? ' on' : '') + '" data-action="focus-course" data-id="' + c.id + '"><bdi>' + h(c.name) + '</bdi></button>').join('') + '</div>';
     }
     const course = t ? (t.course_id && courseById(t.course_id)) : (ui.focusCourse && courseById(ui.focusCourse));
     out += '<div class="card timer-card"><div class="small muted" style="text-align:center;margin-bottom:6px">' + (course ? h(course.name) : 'مذاكرة عامة') + '</div>' +
@@ -986,24 +1017,24 @@
   // ================= تقرير الشهر =================
   function reportSheet() {
     const [y, m] = ui.month.split('-').map(Number);
-    const prevKey = monthKey(new Date(y, m - 2, 1));
+    const prevKey = shiftKey(ui.month, -1), rg = monthRange(ui.month);
     const cur = txInMonth(ui.month), prev = txInMonth(prevKey);
     const a = sums(cur), b = sums(prev);
     const diff = b.exp ? ((a.exp - b.exp) / b.exp) * 100 : null;
     const isNow = ui.month === monthKey(new Date());
-    const daysCount = isNow ? new Date().getDate() : new Date(y, m, 0).getDate();
+    const daysCount = Math.max(1, daysBetween(rg.start, isNow ? new Date() : new Date(rg.end - 1)) + 1);
     const exps = cur.filter((t) => t.kind === 'expense');
     // «COSTA SEEF» و «Costa Coffee» = محل واحد
     const topM = window.SmsParser.groupByBrand(exps).slice(0, 3).map((g) => [g.label, g]);
     const biggest = exps.slice().sort((p, q) => q.amount - p.amount)[0];
     let noSpend = 0;
-    for (let d = 1; d <= daysCount; d++) if (!exps.some((t) => new Date(t.occurred_at).getDate() === d)) noSpend++;
+    for (let i = 0; i < daysCount; i++) { const d = new Date(rg.start.getFullYear(), rg.start.getMonth(), rg.start.getDate() + i); if (!exps.some((t) => sameDay(new Date(t.occurred_at), d))) noSpend++; }
     const catOf = (list) => { const o = {}; for (const t of list) if (t.kind === 'expense') o[t.category || 'أخرى'] = (o[t.category || 'أخرى'] || 0) + Number(t.amount); return o; };
     const ca = catOf(cur), cb = catOf(prev);
     const cats = Object.keys(Object.assign({}, ca, cb)).sort((p, q) => (ca[q] || 0) - (ca[p] || 0)).slice(0, 7);
     const subsTotal = cur.filter((t) => t.source === 'subscription').reduce((s2, t) => s2 + Number(t.amount), 0);
 
-    let body = '<div class="hero dark" style="margin-top:4px"><span class="eyebrow">' + I('chart') + MONTHS[m - 1] + ' ' + y + '</span>' +
+    let body = '<div class="hero dark" style="margin-top:4px"><span class="eyebrow">' + I('chart') + monthLabel(ui.month) + '</span>' +
       '<div class="amount-big">' + money(a.exp) + '</div><div class="meta"><span>' +
       (diff == null ? 'ما فيه بيانات للشهر اللي قبله' : (diff > 0 ? '▲ أكثر بـ ' : '▼ أقل بـ ') + Math.abs(Math.round(diff)) + '% من ' + MONTHS[(m + 10) % 12] + ' (' + fmt(b.exp) + ')') + '</span></div>' +
       '<div class="split"><div><small>متوسط اليوم</small><b>' + money(a.exp / daysCount) + '</b></div><div><small>أيام بدون صرف</small><b class="num">' + noSpend + ' / ' + daysCount + '</b></div></div></div>';
@@ -1027,13 +1058,15 @@
       (st.settings.budget ? '<li class="row" style="cursor:default"><div class="main">الميزانية</div><b class="' + (a.exp > st.settings.budget ? 'neg' : 'pos') + '">' + (a.exp > st.settings.budget ? 'تعدّيت بـ ' + fmt(a.exp - st.settings.budget) : 'باقي ' + fmt(st.settings.budget - a.exp)) + '</b></li>' : '') +
       '</ul></div>';
     // بالآيفون: ملخص نصي يروح لقائمة المشاركة (واتساب، ملاحظات…)
+    body += X('reportExtra', ui.month);   // 🖼️ صورة التقرير (DW-041)
     const share = window.HayatiNative && window.HayatiNative.shareText;
     if (share) body += '<button class="btn block" type="button" id="shareReport">' + I('upload') + 'شارك الملخص</button>';
     openSheet({
       title: 'تقرير الشهر', cancelLabel: 'تم', body,
       mount(root) {
+        X('reportMount', root, ui.month);
         const b = root.querySelector('#shareReport');
-        if (b) b.onclick = () => share('تقرير ' + MONTHS[m - 1] + ' ' + y + ' · «حياتي»\n' +
+        if (b) b.onclick = () => share('تقرير ' + monthLabel(ui.month) + ' · «حياتي»\n' +
           'الصرف: ' + fmt(a.exp) + ' د.ب\nالدخل: ' + fmt(a.inc) + ' د.ب\n' +
           (topM.length ? 'أكثر مكان: ' + topM.map(([k, v]) => k + ' (' + fmt(v.sum) + ')').join('، ') + '\n' : '') +
           'أيام بدون صرف: ' + noSpend + ' / ' + daysCount);
@@ -1067,7 +1100,7 @@
     out += '<div class="summary">' +
       '<span class="pill">' + I('tasks') + '<span class="num">' + open.length + '</span> مفتوحة</span>' +
       (groups[0][2].length ? '<span class="pill late">' + I('alert') + '<span class="num">' + groups[0][2].length + '</span> متأخرة</span>' : '') +
-      (exams[0] ? '<span class="pill" style="color:#e11d48">' + I('pen') + 'أقرب اختبار ' + (daysBetween(now, new Date(exams[0].due_at)) === 0 ? 'اليوم' : 'بعد ' + nDays(daysBetween(now, new Date(exams[0].due_at)))) + '</span>' : '') +
+      (exams[0] ? '<span class="pill" style="color:var(--expense)">' + I('pen') + 'أقرب اختبار ' + (daysBetween(now, new Date(exams[0].due_at)) === 0 ? 'اليوم' : 'بعد ' + nDays(daysBetween(now, new Date(exams[0].due_at)))) + '</span>' : '') +
       '</div>';
 
     let any = false;
@@ -1105,18 +1138,25 @@
     if (ui.tab === 'today') {
       const hr = n.getHours();
       const nm = (st.settings.name || '').trim();
-      return (hr < 12 ? 'صباح الخير' : 'مساء الخير') + (nm ? ' يا ' + nm : '') + ' · ' + DAYS[n.getDay()] + ' ' + n.getDate() + ' ' + MONTHS[n.getMonth()];
+      return (hr < 12 ? 'صباح الخير' : 'مساء الخير') + (nm ? ' يا <bdi>' + h(nm) + '</bdi>' : '') + ' · ' + DAYS[n.getDay()] + ' ' + n.getDate() + ' ' + MONTHS[n.getMonth()];
     }
     if (ui.tab === 'money') return { tx: 'تتبّع صرفك ودخلك', subs: 'اشتراكاتك ومصاريفك الثابتة', goals: 'وفّر لأحلامك', debts: 'الفلوس اللي لك واللي عليك' }[ui.moneySeg];
-    if (ui.tab === 'schedule') return { schedule: has('student') ? 'محاضراتك وتمرينك ومواعيدك' : 'شغلك وتمرينك ومواعيدك', focus: 'ركّز وذاكر', gpa: 'معدلك الفصلي والتراكمي' }[ui.studySeg];
+    if (ui.tab === 'schedule') return { schedule: has('student') ? 'محاضراتك وتمرينك ومواعيدك' : 'شغلك وتمرينك ومواعيدك', lectures: 'ملف لكل محاضرة: تسجيل، ملخص، وأسئلة', focus: 'ركّز وذاكر', gpa: 'معدلك الفصلي والتراكمي' }[ui.studySeg];
     return 'واجبات واختبارات ومشاوير';
   }
 
   let lastTab = null;
+  // وقت الفتح: كل ملف ميزة ينادي render() بعد ما يركّب نفسه (8 رسمات ورا بعض).
+  // نأجلها كلها لرسمة وحدة بعد ما تخلص الملفات (DOMContentLoaded)
+  let bootHold = document.readyState === 'loading';
+  if (bootHold) document.addEventListener('DOMContentLoaded', () => { bootHold = false; render(); }, { once: true });
+  // اللي يفتح نافذة وقت الفتح (مشاركة رسالة بنك) يستنى هالرسمة الأولى
+  const firstRender = bootHold ? new Promise((done) => document.addEventListener('DOMContentLoaded', () => done(), { once: true })) : Promise.resolve();
   function render() {
+    if (bootHold) return;
     const tabInfo = tabOf(TABS.find((t) => t[0] === ui.tab));
     document.getElementById('title').textContent = tabInfo[1];
-    document.getElementById('subtitle').textContent = subtitle();
+    document.getElementById('subtitle').innerHTML = ui.tab === 'today' ? subtitle() : h(subtitle());
     renderTabbar();
     const y = window.scrollY;
     view.innerHTML = { today: viewToday, money: viewMoney, schedule: viewStudy, tasks: viewTasks }[ui.tab]();
@@ -1157,6 +1197,20 @@
     if (mount) mount(sheetBody);
   }
   function closeSheet() { sheet.close(); sheetHandler = null; }
+  // ♿ قارئ الشاشة: «.field» فيها <label> ورا <input> بدون ربط، فنعطي الحقل اسم العنوان (aria-label) أول ما ينرسم
+  const labelFields = (root) => {
+    for (const f of root.querySelectorAll('.field')) {
+      const lab = f.querySelector(':scope > label');
+      const txt = lab && lab.textContent.trim();
+      if (!txt) continue;
+      for (const c of f.querySelectorAll('input:not([type=hidden]):not([type=checkbox]):not([type=radio]), select, textarea')) {
+        if (!c.hasAttribute('aria-label') && !c.id && !c.closest('label')) c.setAttribute('aria-label', txt);
+      }
+    }
+  };
+  let labelQueued = false;
+  new MutationObserver(() => { if (labelQueued) return; labelQueued = true; queueMicrotask(() => { labelQueued = false; labelFields(document); }); })
+    .observe(document.body, { subtree: true, childList: true });
   document.getElementById('sheetCancel').onclick = closeSheet;
   sheetSave.onclick = async () => {
     if (!sheetHandler) return;
@@ -1208,6 +1262,7 @@
           const b = e.target.closest('.cat-pick');
           if (!b) return;
           root.dataset.cat = b.dataset.c;
+          root.dataset.catTouched = '1';
           root.querySelectorAll('.cat-pick').forEach((x) => x.classList.toggle('on', x === b));
         };
         const del = root.querySelector('#delTx');
@@ -1230,14 +1285,32 @@
           needs_review: false,
         }));
         toast(tx ? 'تم التعديل' : 'انضافت ✓');
+        if (root.dataset.catTouched) learnCategory(savedTx, tx && tx.category);
         if (!tx) setTimeout(() => X('afterTx', savedTx), 450);
       },
     });
   }
 
+  // DW-043: لو اخترت تصنيف لمحل بنفسك، نتذكره للرسايل الجاية، ونعرض نطبّقه على عملياته القديمة اللي بنفس التصنيف القديم
+  function learnCategory(t, oldCat) {
+    const P = window.SmsParser;
+    if (!P || !P.learn || !t || !t.merchant || !t.category) return;
+    const before = P.learnedFor(t.kind, t.merchant);
+    P.learn(t.kind, t.merchant, t.category);
+    if (!oldCat || oldCat === t.category) return;
+    const key = P.brand(t.merchant).key, name = '\u2068' + P.brand(t.merchant).label + '\u2069';   // الاسم الإنقليزي ما يقلب الجملة العربية
+    const others = st.transactions.filter((x) => x.id !== t.id && x.kind === t.kind && x.category === oldCat && x.merchant && P.brand(x.merchant).key === key);
+    if (!others.length) { if (before !== t.category) toast('تمام، «' + name + '» صار ' + t.category + ' للرسايل الجاية'); return; }
+    setTimeout(async () => {
+      if (!(await ask('فيه ' + others.length + ' عمليات ثانية من «' + name + '» تصنيفها ' + oldCat + '. نخليها ' + t.category + ' بعد؟', 'غيّرها'))) return;
+      for (const x of others) S.upsert('transactions', Object.assign({}, x, { category: t.category }));
+      toast('تعدّلت ' + others.length + ' عمليات ✓');
+    }, 500);
+  }
+
   // --- لصق رسالة ---
   // موافقة صريحة مرة وحدة قبل أول رسالة بنك (بيانات مالية حساسة — قانون حماية البيانات الشخصية البحريني).
-  function smsConsentForm() {
+  function smsConsentForm(prefill) {
     openSheet({
       title: 'قبل أول رسالة بنك',
       saveLabel: 'أوافق وأكمل',
@@ -1250,17 +1323,20 @@
         '<a class="small" href="privacy.html" target="_blank" rel="noopener" style="margin:0 4px">اقرأ سياسة الخصوصية كاملة</a></div>',
       onSave() {
         S.setSettings({ sms_consent_at: new Date().toISOString() });
-        setTimeout(pasteSmsForm, 350);
+        setTimeout(() => pasteSmsForm(prefill), 350);
       },
     });
   }
 
-  function pasteSmsForm() {
-    if (!st.settings.sms_consent_at) return smsConsentForm();
+  // prefill: نص وصل من «شارك ← حياتي» (أندرويد، آيفون، أو نسخة الويب المثبّتة). ما ينحفظ شي إلا بـ «إضافة».
+  function pasteSmsForm(prefill) {
+    const shared = typeof prefill === 'string' && prefill.trim() ? prefill.trim().slice(0, SHARE_MAX) : '';
+    if (!st.settings.sms_consent_at) return smsConsentForm(shared);
     openSheet({
       title: 'لصق رسالة بنك',
       saveLabel: 'إضافة',
-      body: '<p class="small muted" style="margin:0 4px 12px">انسخ رسالة البنك أو BenefitPay والصقها هنا، والتطبيق يطلّع المبلغ والمحل لحاله.</p>' +
+      body: (shared ? '<p class="small muted" id="smsShared" style="margin:0 4px 12px">وصلت من المشاركة. راجع المبلغ والمحل، وبعدين اضغط «إضافة».</p>'
+        : '<p class="small muted" style="margin:0 4px 12px">انسخ رسالة البنك أو BenefitPay والصقها هنا، والتطبيق يطلّع المبلغ والمحل لحاله.</p>') +
         '<div class="field"><textarea name="sms" placeholder="مثال: Purchase of BHD 3.500 at TALABAT using card XXXX1234"></textarea></div>' +
         '<div id="smsPreview"></div>',
       mount(root) {
@@ -1276,7 +1352,7 @@
             (p.needs_review ? '<p class="small" style="color:var(--warn);margin:4px 0 0">مو متأكد ١٠٠٪، بتنضاف وعليها علامة «راجعها»</p>' : '<p class="small" style="color:var(--income);margin:4px 0 0">' + I('check') + ' فهمتها</p>') + '</div>';
         };
         ta.addEventListener('input', update);
-        setTimeout(() => autoFocus(ta), 300);
+        if (shared) { ta.value = shared; update(); } else setTimeout(() => autoFocus(ta), 300);
       },
       onSave(root) {
         const tx = S.smsToTransaction(val(root, 'sms'), new Date().toISOString());
@@ -1286,6 +1362,39 @@
         toast('انضافت ✓');
       },
     });
+  }
+
+  // «شارك ← حياتي»: يستنى لين تنقرا البيانات (عشان نعرف هل وافق قبل)، ويسكّر أي نافذة مفتوحة
+  const SHARE_MAX = 2000;
+  let booted = null;
+  function sharedSms(text) {
+    const t = String(text == null ? '' : text).trim();
+    if (!t) return Promise.resolve(null);
+    return (booted || Promise.resolve()).catch(() => {}).then(() => firstRender).then(whenUnlocked).then(() => {
+      if (document.querySelector('#sheet[open]')) closeSheet();
+      return new Promise((done) => setTimeout(() => {
+        const kind = st.settings.sms_consent_at ? 'form' : 'consent';
+        pasteSmsForm(t);
+        done(kind);
+      }, 60));
+    });
+  }
+  // التطبيق مقفول برمز؟ النافذة ما تنفتح فوق القفل، تستنى لين يفتح
+  function whenUnlocked() {
+    if (!document.body.classList.contains('locked')) return Promise.resolve();
+    return new Promise((done) => {
+      const mo = new MutationObserver(() => { if (!document.body.classList.contains('locked')) { mo.disconnect(); done(); } });
+      mo.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    });
+  }
+  // نسخة الويب المثبّتة: manifest share_target يفتح ./?share_text=…
+  function sharedFromUrl() {
+    let q;
+    try { q = new URLSearchParams(location.search); } catch (e) { return; }
+    const t = [q.get('share_title'), q.get('share_text'), q.get('share_url')].filter(Boolean).join('\n');
+    if (!q.has('share_text') && !q.has('share_title')) return;
+    try { history.replaceState(null, '', location.pathname); } catch (e) { /* تجاهل */ }
+    if (t) sharedSms(t);
   }
 
   function budgetForm() {
@@ -1383,7 +1492,7 @@
           [30, 60, 90, 120].map((m) => '<button type="button" data-k="' + m + '" class="' + ((Number(x.duration) || 60) === m ? 'on' : '') + '">' + (m < 60 ? m + ' د' : m / 60 + ' س') + '</button>').join('') + '</div></div>' +
         '<div class="field"><label>المكان</label><input name="place" value="' + h(x.place || '') + '" placeholder="اختياري"></div></div>' +
         (st.courses.length ? '<div class="field"><label>المادة (اختياري)</label><select name="course_id"><option value="">—</option>' +
-          st.courses.map((c) => '<option value="' + c.id + '"' + (c.id === x.course_id ? ' selected' : '') + '>' + h(c.name) + '</option>').join('') + '</select></div>' : '') +
+          st.courses.map((c) => '<option data-noi18n value="' + c.id + '"' + (c.id === x.course_id ? ' selected' : '') + '>' + h(c.name) + '</option>').join('') + '</select></div>' : '') +
         '<div class="field"><label>ملاحظات</label><textarea name="notes" placeholder="اختياري">' + h(x.notes || '') + '</textarea></div>' +
         (t ? '<button class="btn danger block" type="button" id="delTask">' + I('trash') + 'حذف المهمة</button>' : ''),
       mount(root) {
@@ -1524,6 +1633,7 @@
         '<div class="amount-box"><input name="target" inputmode="decimal" placeholder="0.000" value="' + (v.target !== '' ? Number(v.target).toFixed(3) : '') + '"><small id="targetHint">المبلغ المطلوب (د.ب)</small></div>' +
         (g ? '' : '<div class="field"><label>وفّرت منه للحين (اختياري)</label><input name="saved" inputmode="decimal" placeholder="0.000"></div>') +
         '<div class="field"><label>متى تبي توصل له؟ (اختياري)</label><input type="date" name="deadline" value="' + h(v.deadline || '') + '"></div>' +
+        X('goalFormExtra', g) +
         '<div class="field"><label>اللون</label><div class="colors" id="colorPick">' + COLORS.concat(['#ec4899']).filter((c, i, a) => a.indexOf(c) === i).map((col) =>
           '<button type="button" style="background:' + col + '" data-c="' + col + '" class="' + (col === v.color ? 'on' : '') + '" aria-label="لون"></button>').join('') + '</div></div>' +
         (g ? '<button class="btn danger block" type="button" id="delGoal">' + I('trash') + 'حذف الهدف</button>' : ''),
@@ -1561,7 +1671,8 @@
           if (b) root.querySelectorAll('#colorPick button').forEach((y) => y.classList.toggle('on', y === b));
         };
         const del = root.querySelector('#delGoal');
-        if (del) del.onclick = async () => { if (await ask('تحذف الهدف؟')) { S.remove('goals', g.id); closeSheet(); toast('انحذف'); } };
+        if (del) del.onclick = async () => { if (await ask('تحذف الهدف؟')) { S.remove('goals', g.id); X('goalDeleted', g.id); closeSheet(); toast('انحذف'); } };
+        X('goalFormMount', root, g);
         sync();
       },
       onSave(root) {
@@ -1574,10 +1685,11 @@
         if (!(target > 0)) throw new Error(items.length ? 'اكتب مبالغ البنود' : 'اكتب المبلغ المطلوب');
         const col = root.querySelector('#colorPick .on');
         const saved = g ? Number(g.saved) || 0 : parseAmount(val(root, 'saved')) || 0;
-        S.upsert('goals', Object.assign({}, g || {}, {
+        const savedGoal = S.upsert('goals', Object.assign({}, g || {}, {
           name, emoji: root.dataset.emoji || null, items, target: Math.round(target * 1000) / 1000, saved,
           deadline: val(root, 'deadline') || null, color: col ? col.dataset.c : COLORS[0], done: saved >= target,
         }));
+        X('goalSaved', savedGoal, root);
         toast(g ? 'تم التعديل' : 'انضاف الهدف 🎯 بالتوفيق!');
       },
     });
@@ -1708,7 +1820,7 @@
     const lec = lectures();
     openSheet({
       title: 'تسجيل مذاكرة',
-      body: '<div class="field"><label>المادة</label><select name="course"><option value="">عام</option>' + lec.map((c) => '<option value="' + c.id + '"' + (ui.focusCourse === c.id ? ' selected' : '') + '>' + h(c.name) + '</option>').join('') + '</select></div>' +
+      body: '<div class="field"><label>المادة</label><select name="course"><option value="">عام</option>' + lec.map((c) => '<option data-noi18n value="' + c.id + '"' + (ui.focusCourse === c.id ? ' selected' : '') + '>' + h(c.name) + '</option>').join('') + '</select></div>' +
         '<div class="field"><label>كم دقيقة ذاكرت؟</label><div class="seg" id="minSeg">' + [15, 30, 45, 60, 90, 120].map((m) => '<button type="button" data-k="' + m + '" class="' + (m === 60 ? 'on' : '') + '">' + m + '</button>').join('') + '</div></div>' +
         '<div class="field"><label>متى؟</label><input type="datetime-local" name="when" value="' + toLocalInput(new Date(Date.now() - 3600000)) + '"></div>',
       mount(root) { root.dataset.min = 60; segPick(root, '#minSeg', (k) => { root.dataset.min = k; }); },
@@ -1771,13 +1883,11 @@
     });
   }
 
-  // --- الإعدادات ---
-  function settingsSheet() {
+  // --- صفحة الحساب (DW-035): دخول، حساب جديد، Apple/Google، ووش يتزامن بين الأجهزة ---
+  function accountCard() {
     const s = S.status;
     const cfg = S.getConfig();
-    let body = '';
-
-    body += '<div class="group-title">' + I('user') + 'حسابك</div><div class="card account-card">';
+    let body = '<div class="card account-card">';
     if (s.mode === 'artifact') {
       body += '<div class="status-line"><div class="ico">' + I('check') + '</div><div style="flex:1;min-width:0"><b style="display:block">محفوظ في حسابك على Claude</b>' +
         '<span class="small ' + (s.error ? 'late' : 'muted') + '">' + (s.error ? h(s.error) : 'افتح نفس الرابط من الجوال أو الماك وتلقى نفس بياناتك' + (s.lastSync ? ' · آخر تحديث ' + timeOf(s.lastSync) : '')) +
@@ -1808,6 +1918,55 @@
         '<div class="btn-row" style="margin-top:14px"><button class="btn" data-set="sync">' + I('refresh') + 'زامن</button><button class="btn" data-set="signout">' + I('logout') + 'خروج</button></div>';
     }
     body += '</div>';
+    return body;
+  }
+  // اللي يتزامن مع الحساب واللي يظل على الجهاز بس (DW-035)
+  function syncInfo() {
+    const row = (ok, t) => '<li style="display:flex;gap:10px;align-items:flex-start;margin:6px 0"><span aria-hidden="true">' + (ok ? '✅' : '📱') + '</span><span>' + t + '</span></li>';
+    return '<div class="group-title">' + I('refresh') + 'وش يوصل لكل أجهزتك؟</div><div class="card"><ul style="list-style:none;margin:0;padding:0" class="small">' +
+      row(true, 'الفلوس والميزانية والاشتراكات والأهداف والديون') +
+      row(true, 'الجدول والمهام والدرجات والمحاضرات (الملاحظات والأسئلة)') +
+      row(true, 'الرحلات وقوائم الأغراض، والصحة والعادات واليوميات') +
+      row(true, 'إعداداتك: الميزانية، يوم الراتب، ترتيب «اليوم»') +
+      '</ul><p class="small muted" style="margin:10px 0 4px">يظل على هالجهاز بس:</p><ul style="list-style:none;margin:0;padding:0" class="small">' +
+      row(false, 'تسجيلات المحاضرات الصوتية (حجمها كبير) · تنقلها بـ «نسخة مشفّرة»') +
+      row(false, 'إعدادات العبادة (المذهب، الورد، المسبحة): خصوصية') +
+      row(false, 'رحلات العمرة تظل على هالجهاز بس') +
+      row(false, 'رمز القفل واللغة والمظهر') +
+      '</ul></div>';
+  }
+  function accountSheet() {
+    const s = S.status;
+    const hero = s.signedIn ? '' :
+      '<div class="hero dark" style="margin-bottom:12px"><span class="eyebrow">' + I('user') + 'حساب واحد</span><div class="big" style="font-size:24px">نفس بياناتك على كل أجهزتك</div>' +
+      '<div class="meta"><span>سجّل من جوالك والآيباد والماك، وأي شي تضيفه يوصل للثاني</span></div></div>';
+    openSheet({
+      title: 'حسابك',
+      cancelLabel: 'تم',
+      body: '<div class="account-page">' + hero + accountCard() + syncInfo() + '</div>',
+      mount(root) {
+        root.onclick = onSettingsClick;
+        // Google/Apple: لو انفعّلوا بلوحة Supabase، الأزرار تطلع (نعيد رسم الصفحة لو تغيّر شي)
+        if (!s.signedIn && S.checkProviders) {
+          const had = S.providers().join();
+          S.checkProviders().then((now) => { if (now.join() !== had && sheetBody.querySelector('.account-page')) accountSheet(); }).catch(() => {});
+        }
+      },
+    });
+  }
+
+  // --- الإعدادات ---
+  function settingsSheet() {
+    const s = S.status;
+    const cfg = S.getConfig();
+    let body = '';
+
+    body += '<div class="group-title">' + I('user') + 'حسابك</div><div class="menu">' +
+      (s.signedIn
+        ? '<button data-set="account"><div class="ico" style="' + tint('#13636B') + '">' + I('user') + '</div><div style="flex:1;min-width:0"><b style="overflow:hidden;text-overflow:ellipsis">' + h(s.email || 'حسابك') + '</b><small>' + (s.error ? 'فيه مشكلة بالمزامنة' : 'بياناتك متزامنة بين أجهزتك' + (st.pending.length ? ' · ' + st.pending.length + ' بانتظار الرفع' : '')) + '</small></div>' + I('chevL') + '</button>'
+        : s.mode === 'artifact' ? '<button data-set="account"><div class="ico" style="' + tint('#13636B') + '">' + I('check') + '</div><div style="flex:1;min-width:0"><b>محفوظ في حسابك على Claude</b><small>نفس الرابط على كل أجهزتك</small></div>' + I('chevL') + '</button>'
+        : '<button data-set="account"><div class="ico" style="' + tint('#13636B') + '">' + I('user') + '</div><div style="flex:1;min-width:0"><b>سجّل دخول أو أنشئ حساب</b><small>نفس بياناتك على جوالك وأي جهاز ثاني</small></div>' + I('chevL') + '</button>') +
+      '</div>';
 
     body += '<div class="group-title">' + I('message') + 'تسجيل رسايل البنك تلقائياً</div><div class="card">';
     if (s.mode === 'artifact') {
@@ -1861,7 +2020,9 @@
         if (imp) imp.onchange = async () => {
           const f = imp.files[0];
           if (!f) return;
-          try { const n = S.importJSON(await f.text()); toast('استوردت ' + n + ' عنصر'); render(); } catch (e) { toast('الملف غير صالح'); }
+          const txt = await f.text();
+          if (window.HayatiBackup && HayatiBackup.isEncrypted(txt)) { imp.value = ''; closeSheet(); setTimeout(() => HayatiBackup.restoreSheet(txt), 280); return; }
+          try { const n = S.importJSON(txt); toast('استوردت ' + n + ' عنصر'); render(); } catch (e) { toast('الملف غير صالح'); }
         };
       },
     });
@@ -1877,7 +2038,10 @@
     if (!b) return;
     const root = sheetBody;
     const act = b.dataset.set;
+    // بعد الدخول/الخروج نرجع لنفس الصفحة اللي كان فيها (الحساب أو الإعدادات)
+    const back = () => (sheetBody.querySelector('.account-page') ? accountSheet() : settingsSheet());
     try {
+      if (act === 'account') { closeSheet(); setTimeout(accountSheet, 280); return; }
       if (window.Extras && window.Extras.settingsAction && await window.Extras.settingsAction(act, root, b)) return;
       if (act === 'connect') {
         const url = val(root, 'sb_url'), key = val(root, 'sb_key');
@@ -1885,7 +2049,7 @@
         if (key.length < 30) throw new Error('المفتاح ناقص');
         await S.saveConfig(url, key);
         toast('انربط ✓ سجّل دخول الحين');
-        settingsSheet();
+        back();
       } else if (act === 'signin' || act === 'signup') {
         const email = val(root, 'email'), pw = root.querySelector('[name=password]').value;
         if (!email || !pw) throw new Error('اكتب الإيميل وكلمة المرور');
@@ -1895,11 +2059,11 @@
           const confirmNeeded = await S.signUp(email, pw);
           toast(confirmNeeded ? 'أرسلنا لك إيميل تأكيد، أكّده وارجع سجّل دخول' : 'تم إنشاء الحساب ✓');
         }
-        setTimeout(settingsSheet, 300);
+        setTimeout(back, 300);
       } else if (act === 'sso') {
         b.disabled = true;
         // بالآيفون: متصفح النظام (Google يمنع الدخول من داخل التطبيق). بالمتصفح: تحويل ورجوع
-        if (window.HayatiNative && window.HayatiNative.oauth) { await window.HayatiNative.oauth(b.dataset.p); setTimeout(settingsSheet, 300); }
+        if (window.HayatiNative && window.HayatiNative.oauth) { await window.HayatiNative.oauth(b.dataset.p); setTimeout(back, 300); }
         else await S.signInWithProvider(b.dataset.p);
       } else if (act === 'forgot') {
         const email = val(root, 'email');
@@ -1914,11 +2078,11 @@
           if (!(await ask('فيه ' + err.count + ' تعديل ما انرفع (يمكن ما فيه نت). لو طلعت الحين تضيع. تطلع؟'))) return;
           await S.signOut({ force: true });
         }
-        toast('طلعت ✓'); settingsSheet();
+        toast('طلعت ✓'); back();
       } else if (act === 'disconnect') {
-        S.clearConfig(); settingsSheet();
+        S.clearConfig(); back();
       } else if (act === 'sync') {
-        await S.sync(); toast(S.status.error || 'تمت المزامنة ✓'); settingsSheet();
+        await S.sync(); toast(S.status.error || 'تمت المزامنة ✓'); back();
       } else if (act === 'rotate') {
         if (await ask('بعد التغيير لازم تحدّث الرمز في الاختصار. أكمل؟')) { S.rotateIngestToken(); settingsSheet(); toast('تغيّر الرمز'); }
       } else if (act === 'notify') {
@@ -1949,7 +2113,7 @@
   tabbar.onclick = (e) => {
     if (e.target.closest('#addBtn')) {
       if (ui.tab === 'money') ({ tx: () => txForm(), subs: () => subForm(), goals: () => goalForm(), debts: () => debtForm() })[ui.moneySeg]();
-      else if (ui.tab === 'schedule') ({ schedule: () => courseForm(), focus: sessionForm, gpa: () => gradeForm() })[ui.studySeg]();
+      else if (ui.tab === 'schedule') ({ schedule: () => courseForm(), lectures: () => X('lectureForm'), focus: sessionForm, gpa: () => gradeForm() })[ui.studySeg]();
       else if (ui.tab === 'tasks' && X('tasksFab')) return;
       else ({ today: addChooser, tasks: () => taskForm() })[ui.tab]();
       return;
@@ -1982,9 +2146,8 @@
       }
       case 'calendar': calendarForm(); break;
       case 'month': {
-        const [y, m] = ui.month.split('-').map(Number);
-        const d = new Date(y, m - 1 + Number(el.dataset.d), 1);
-        if (d <= new Date()) { ui.month = monthKey(d); render(); }
+        const k = shiftKey(ui.month, Number(el.dataset.d));
+        if (k <= monthKey(new Date())) { ui.month = k; render(); }
         break;
       }
       case 'day': ui.day = Number(el.dataset.d); render(); break;
@@ -2069,19 +2232,21 @@
   }
   // واجهة للإضافات
   window.App = {
-    S, st, I, ui, h, fmt, money, tint, catMeta, catIcon, pad, monthKey, sameDay, startOfDay, daysBetween, time12, timeOf, minutesOf,
+    S, st, I, ui, h, fmt, money, tint, catMeta, catIcon, pad, monthKey, shiftKey, monthRange, monthLabel, payday, sameDay, startOfDay, daysBetween, time12, timeOf, minutesOf,
     nowMinutes, toLocalInput, dayLabel, nDays, toast, ask, courseById, lectures, lecturesOn, agendaOn, empty, secHead, ring, openSheet,
-    closeSheet, val, parseAmount, segPick, render, go, txInMonth, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, courseForm, taskForm,
-    notify, has, nextRenewal, expensesCSV, lastBackup, markBackup, backupNow, APP_VERSION, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
+    closeSheet, accountSheet, val, parseAmount, segPick, render, go, txForm, pasteSmsForm, txInMonth, txOnDay, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, courseForm, taskForm,
+    notify, has, nextRenewal, sharedSms, expensesCSV, lastBackup, markBackup, backupNow, APP_VERSION, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
   };
   setInterval(timerTickUI, 1000);
   timerCheck();
   postSubscriptions();
   render();
-  S.init().then(async () => {
+  booted = S.init().then(async () => {
+    ui.month = monthKey(new Date());   // يوم الراتب ما كان محمّل لما انحسب أول مرة
     postSubscriptions();
     render();
     ui.seed = await S.getSeed();
     if (ui.seed) render();
   });
+  sharedFromUrl();
 })();

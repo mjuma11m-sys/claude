@@ -14,7 +14,7 @@ create table if not exists public.transactions (
 alter table public.transactions enable row level security;
 drop policy if exists "own rows" on public.transactions;
 create policy "own rows" on public.transactions for all to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 create table if not exists public.courses (
   user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
   id         uuid not null,
@@ -25,7 +25,7 @@ create table if not exists public.courses (
 alter table public.courses enable row level security;
 drop policy if exists "own rows" on public.courses;
 create policy "own rows" on public.courses for all to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 create table if not exists public.tasks (
   user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
   id         uuid not null,
@@ -36,7 +36,7 @@ create table if not exists public.tasks (
 alter table public.tasks enable row level security;
 drop policy if exists "own rows" on public.tasks;
 create policy "own rows" on public.tasks for all to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 create table if not exists public.subscriptions (
   user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
   id         uuid not null,
@@ -47,7 +47,7 @@ create table if not exists public.subscriptions (
 alter table public.subscriptions enable row level security;
 drop policy if exists "own rows" on public.subscriptions;
 create policy "own rows" on public.subscriptions for all to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 create table if not exists public.goals (
   user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
   id         uuid not null,
@@ -58,7 +58,7 @@ create table if not exists public.goals (
 alter table public.goals enable row level security;
 drop policy if exists "own rows" on public.goals;
 create policy "own rows" on public.goals for all to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 create table if not exists public.grades (
   user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
   id         uuid not null,
@@ -69,7 +69,7 @@ create table if not exists public.grades (
 alter table public.grades enable row level security;
 drop policy if exists "own rows" on public.grades;
 create policy "own rows" on public.grades for all to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 create table if not exists public.study_sessions (
   user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
   id         uuid not null,
@@ -80,7 +80,7 @@ create table if not exists public.study_sessions (
 alter table public.study_sessions enable row level security;
 drop policy if exists "own rows" on public.study_sessions;
 create policy "own rows" on public.study_sessions for all to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 create table if not exists public.debts (
   user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
   id         uuid not null,
@@ -91,7 +91,7 @@ create table if not exists public.debts (
 alter table public.debts enable row level security;
 drop policy if exists "own rows" on public.debts;
 create policy "own rows" on public.debts for all to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 create table if not exists public.habits (
   user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
   id         uuid not null,
@@ -102,7 +102,7 @@ create table if not exists public.habits (
 alter table public.habits enable row level security;
 drop policy if exists "own rows" on public.habits;
 create policy "own rows" on public.habits for all to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 create table if not exists public.daily (
   user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
   id         uuid not null,
@@ -113,7 +113,7 @@ create table if not exists public.daily (
 alter table public.daily enable row level security;
 drop policy if exists "own rows" on public.daily;
 create policy "own rows" on public.daily for all to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 create table if not exists public.lifts (
   user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
   id         uuid not null,
@@ -124,7 +124,7 @@ create table if not exists public.lifts (
 alter table public.lifts enable row level security;
 drop policy if exists "own rows" on public.lifts;
 create policy "own rows" on public.lifts for all to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 create table if not exists public.body (
   user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
   id         uuid not null,
@@ -135,7 +135,7 @@ create table if not exists public.body (
 alter table public.body enable row level security;
 drop policy if exists "own rows" on public.body;
 create policy "own rows" on public.body for all to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 create table if not exists public.cards (
   user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
   id         uuid not null,
@@ -146,7 +146,7 @@ create table if not exists public.cards (
 alter table public.cards enable row level security;
 drop policy if exists "own rows" on public.cards;
 create policy "own rows" on public.cards for all to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 create table if not exists public.events (
   user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
   id         uuid not null,
@@ -157,7 +157,7 @@ create table if not exists public.events (
 alter table public.events enable row level security;
 drop policy if exists "own rows" on public.events;
 create policy "own rows" on public.events for all to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 create table if not exists public.shopping (
   user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
   id         uuid not null,
@@ -168,7 +168,7 @@ create table if not exists public.shopping (
 alter table public.shopping enable row level security;
 drop policy if exists "own rows" on public.shopping;
 create policy "own rows" on public.shopping for all to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 create table if not exists public.journal (
   user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
   id         uuid not null,
@@ -179,7 +179,7 @@ create table if not exists public.journal (
 alter table public.journal enable row level security;
 drop policy if exists "own rows" on public.journal;
 create policy "own rows" on public.journal for all to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 create table if not exists public.matches (
   user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
   id         uuid not null,
@@ -190,7 +190,53 @@ create table if not exists public.matches (
 alter table public.matches enable row level security;
 drop policy if exists "own rows" on public.matches;
 create policy "own rows" on public.matches for all to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+
+create table if not exists public.lectures (
+  user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  id         uuid not null,
+  data       jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.lectures enable row level security;
+drop policy if exists "own rows" on public.lectures;
+create policy "own rows" on public.lectures for all to authenticated
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+
+-- DW-035: الرحلات (تخطيط السفر) تتزامن بين الأجهزة. رحلات العمرة تظل على الجهاز بس وما توصل هني
+create table if not exists public.trips (
+  user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  id         uuid not null,
+  data       jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.trips enable row level security;
+drop policy if exists "own rows" on public.trips;
+create policy "own rows" on public.trips for all to authenticated
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+
+-- DW-021 phase 2: per-user daily AI quota (lecture-ai Edge Function). No client policies: only bump_ai_usage touches it.
+create table if not exists public.ai_usage (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  day date not null default current_date,
+  calls int not null default 0,
+  primary key (user_id, day)
+);
+alter table public.ai_usage enable row level security;
+create or replace function public.bump_ai_usage(lim int) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare n int;
+begin
+  if auth.uid() is null then return false; end if;
+  insert into ai_usage (user_id, day, calls) values (auth.uid(), current_date, 1)
+  on conflict (user_id, day) do update set calls = ai_usage.calls + 1
+  returning calls into n;
+  return n <= lim;
+end $$;
+revoke all on function public.bump_ai_usage(int) from public, anon;
+grant execute on function public.bump_ai_usage(int) to authenticated;
 
 -- الإعدادات: سطر واحد لكل مستخدم
 create table if not exists public.settings (
@@ -201,7 +247,7 @@ create table if not exists public.settings (
 alter table public.settings enable row level security;
 drop policy if exists "own row" on public.settings;
 create policy "own row" on public.settings for all to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 create unique index if not exists settings_ingest_token on public.settings ((data->>'ingest_token'))
   where data ? 'ingest_token';
 
@@ -216,12 +262,12 @@ create table if not exists public.sms_inbox (
 create index if not exists sms_inbox_pending on public.sms_inbox (user_id, processed, received_at);
 alter table public.sms_inbox enable row level security;
 drop policy if exists "own inbox read" on public.sms_inbox;
-create policy "own inbox read" on public.sms_inbox for select to authenticated using (user_id = auth.uid());
+create policy "own inbox read" on public.sms_inbox for select to authenticated using (user_id = (select auth.uid()));
 drop policy if exists "own inbox update" on public.sms_inbox;
 create policy "own inbox update" on public.sms_inbox for update to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
 drop policy if exists "own inbox delete" on public.sms_inbox;
-create policy "own inbox delete" on public.sms_inbox for delete to authenticated using (user_id = auth.uid());
+create policy "own inbox delete" on public.sms_inbox for delete to authenticated using (user_id = (select auth.uid()));
 -- ما فيه insert مباشر: الرسايل تدخل بس عن طريق ingest_sms تحت
 
 -- الاختصار يرسل {token, body}. الرمز يحدد المستخدم، وما يقدر أحد يقرا أي شي بهالدالة.
@@ -251,7 +297,7 @@ grant execute on function public.ingest_sms(text, text) to anon, authenticated;
 do $$
 declare t text;
 begin
-  foreach t in array array['transactions','courses','tasks','subscriptions','goals','grades','study_sessions','debts','habits','daily','lifts','body','cards','events','shopping','journal','matches','settings','sms_inbox'] loop
+  foreach t in array array['transactions','courses','tasks','subscriptions','goals','grades','study_sessions','debts','habits','daily','lifts','body','cards','events','shopping','journal','matches','lectures','trips','settings','sms_inbox'] loop
     begin
       execute format('alter publication supabase_realtime add table public.%I', t);
     exception when duplicate_object then null;
@@ -266,5 +312,5 @@ begin
   if auth.uid() is null then raise exception 'not signed in' using errcode = '28000'; end if;
   delete from auth.users where id = auth.uid();
 end $$;
-revoke all on function public.delete_my_account() from public;
+revoke all on function public.delete_my_account() from public, anon;
 grant execute on function public.delete_my_account() to authenticated;

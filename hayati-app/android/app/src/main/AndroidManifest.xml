@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        <activity
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
+            android:name=".MainActivity"
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBarLaunch"
+            android:launchMode="singleTask"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- رابط الرجوع بعد الدخول بـ Apple أو Google: bh.hayati.app://auth (DW-008) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="bh.hayati.app" android:host="auth" />
+            </intent-filter>
+
+            <!-- «شارك ← حياتي»: رسالة البنك من تطبيق الرسائل (DW-009). نص بس، وبدون صلاحية قراءة الرسايل -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+
+        </activity>
+
+        <!-- DW-031: ودجت الشاشة الرئيسية. البيانات من SharedPreferences الخاصة بالتطبيق، بدون صلاحيات إضافية -->
+        <receiver
+            android:name=".HayatiWidget"
+            android:label="@string/app_name"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/hayati_widget_info" />
+        </receiver>
+
+        <!-- DW-039: الودجت الصغير 2×2، نفس البيانات -->
+        <receiver
+            android:name=".HayatiWidgetSmall"
+            android:label="@string/widget_small_label"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/hayati_widget_small_info" />
+        </receiver>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"></meta-data>
+        </provider>
+    </application>
+
+    <!-- Permissions -->
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- DW-021: تسجيل المحاضرات (المايك يتطلب إذن المستخدم وقت التسجيل) -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- DW-023: القبلة، الموقع التقريبي مرة وحدة لما تضغط «استخدم موقعي»، ما ينحفظ -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+</manifest>

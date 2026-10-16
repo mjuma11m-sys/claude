@@ -46,11 +46,24 @@
 | `hayati-last-backup`، `hayati-backup-snooze` | آخر نسخة احتياطية، و«بعدين» |
 | `hayati-notif-prefs`، `hayati-snoozes`، `hayati-notif-asked` | تنبيهات الآيفون: المفاتيح، «بعد ساعة»، وهل طلبنا الإذن |
 | `hayati-timer`، `hayati-morning`، `hayati-weekly-seen`، `hayati-budget-alert`، `hayati-badge`، `hayati-cal`، `hayati-gpa-target`، `hayati-open` | حالة بطاقات وأدوات صغيرة |
+| `hayati-payday-seen` | آخر شهر راتب انفتح ملخصه «راتبك وين راح؟» (DW-012) |
+| `hayati-loop-ask`، `hayati-first-day` | بطاقة «خل حياتي يرتب يومك»: انسألت ولا لا، وأول يوم استخدام (DW-013). `hayati-notif-prefs` فيه `checkin` و`checkinAt` |
+| `settings.wird` | ورد القرآن: شغّال ولا لا، صفحات أو أجزاء، الهدف، مكانك بالختمة، عدد الختمات، سجل آخر 60 يوم، ورابط «اقرأ». **على الجهاز بس** ويدخل بالنسخة الاحتياطية (DW-014). وتذكير الأذكار `adhkar` بـ `hayati-notif-prefs` |
+| `settings.hijri_offset`، `settings.tasbih` | تعديل التاريخ الهجري للرؤية (±2)، وعدد تسبيحات اليوم. **على الجهاز بس** ويدخلون بالنسخة الاحتياطية (DW-015) |
+| `settings.today_hide` | بطاقات «اليوم» اللي المستخدم خفاها من «رتّب اليوم». **على الجهاز بس** ويدخل بالنسخة الاحتياطية (DW-016) |
+| `settings.payday`، `settings.madhhab`، `settings.gold_price`، `settings.khums_start` | يوم الراتب، المذهب، سعر غرام الذهب، ورأس السنة الخمسية: **على الجهاز بس**، ما تنرفع لجدول `settings` بالسيرفر (DW-012) |
 | `hayati-sync`، `hayati-supabase` | إعداد المزامنة |
 
 ## التصدير والحذف
 | | وين | الصيغة |
 |---|---|---|
 | نسخة احتياطية | الإعدادات ← نسخة احتياطية | JSON، كل الجداول (`S.exportJSON()`) |
+| ودجت أندرويد (DW-031) | الشاشة الرئيسية ← الأدوات ← حياتي | `widget.js` يرسل لقطة JSON (الجاي 8 عناصر لمدة يومين + سطر الميزانية) لـ `HayatiWidget.update` ← SharedPreferences `hayati_widget` (خاصة بالتطبيق). `localStorage` «hayati-widget» = `{amounts}` (افتراضي مخفية). القفل شغّال ← `locked:true` بدون بيانات |
+| نسخة مشفّرة (DW-029) | الإعدادات ← نسخة مشفّرة بكلمة سر | JSON مغلّف: `{app,v,kdf:{PBKDF2,SHA-256,250000,salt},cipher:AES-GCM,iv,data}`. بداخله `S.exportJSON()` + مفاتيح الجهاز (`HayatiBackup.LOCAL`) + تسجيلات `hayati-audio` اختياري. بدون `hayati-supabase` ولا `hayati-lock`. الاستيراد العادي يتعرّف عليه ويطلب كلمة السر |
 | المصاريف | الإعدادات ← صدّر مصاريفك (Excel) | CSV، بدون `raw` (`App.expensesCSV()`) |
 | الحذف | الإعدادات ← احذف كل بياناتي | الجهاز + db + Supabase + الحساب (`js/features/privacy.js`) |
+
+| `hayati-seen-version` | localStorage | آخر نسخة شاف فيها المستخدم «جديد بحياتي» (DW-019) | الجهاز بس |
+| `hayati-first-step` | localStorage | وين وصل المستخدم بـ«أول دقيقة» (`step` / `done`) (DW-024) | الجهاز بس |
+| `trips` (جدول) + `hayati-trips` | Supabase / localStorage | DW-035: الرحلات بجدول `trips` (تتزامن مع الحساب، RLS لصاحبها). `hayati-trips` بالجهاز فيه **رحلات العمرة بس**؛ رحلات قديمة غير العمرة تنتقل للجدول أول ما تنقرى. `payday` و`gold_price` و`today_hide` صارت بجدول `settings` (تتزامن)؛ `madhhab` و`khums_start` و`wird` و`hijri_offset` و`tasbih` تظل بالجهاز |
+| `hayati-trips[].cur` (DW-032) | `{code, rate}`: كم وحدة = 1 د.ب. المصروف بعملة البلد ينحفظ `amount` بالدينار + `orig: {code, value, rate}` |

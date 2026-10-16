@@ -10,7 +10,7 @@
   // Capacitor 8: الإضافة ما تبين بـ Capacitor.Plugins إلا بعد registerPlugin (من capacitor.js اللي يحطه cap-www.js)
   const plug = (n) => (Cap.Plugins && Cap.Plugins[n]) || (typeof Cap.registerPlugin === 'function' ? Cap.registerPlugin(n) : null);
   const LN = plug('LocalNotifications'), Hap = plug('Haptics'), Share = plug('Share'), FS = plug('Filesystem');
-  const Browser = plug('Browser'), AppP = plug('App');
+  const Browser = plug('Browser'), AppP = plug('App'), ShareIn = plug('ShareIn');
 
   const DAYS = 7;      // iOS يسمح بـ 64 تنبيه مجدول بالكثير، فنجدول أسبوع بس
   const MAX = 60;
@@ -19,12 +19,12 @@
   const TEST_ID = 990001;
   // ⚙️ التنبيهات: كل نوع له مفتاح، وملخص الصباح مقفل افتراضياً (ما نزعج)
   const PREFS = 'hayati-notif-prefs';
-  const DEF = { lectures: true, attend: true, exams: true, homework: true, subs: true, brief: false, briefAt: '07:00' };
+  const DEF = { lectures: true, attend: true, exams: true, homework: true, subs: true, trips: true, brief: false, briefAt: '07:00', checkin: false, checkinAt: '21:30', adhkar: false };
   function prefs() {
     try { return Object.assign({}, DEF, JSON.parse(localStorage.getItem(PREFS) || '{}')); } catch (e) { return Object.assign({}, DEF); }
   }
   function savePrefs(p) { try { localStorage.setItem(PREFS, JSON.stringify(p)); } catch (e) { /* تجاهل */ } }
-  const TASK_ACTIONS = 'HAYATI_TASK', ATTEND_ACTIONS = 'HAYATI_ATTEND';
+  const TASK_ACTIONS = 'HAYATI_TASK', ATTEND_ACTIONS = 'HAYATI_ATTEND', LOG_ACTIONS = 'HAYATI_LOG';
   const ATTEND_DAYS = 2, ATTEND_AFTER = 5;   // سؤال الحضور: يومين بس (حد iOS)، بعد المحاضرة بـ 5 دقايق
   const pad = (n) => String(n).padStart(2, '0');
   const dayKey = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
@@ -55,8 +55,11 @@
     const out = [];
     const add = (key, when, title, body, extra) => {
       if (!(when > now)) return;
+      // التنبيه يطلع من النظام مو من الصفحة، فنترجمه هني لو التطبيق بالإنقليزي (DW-030)
+      const L = window.HayatiLang;
+      if (L && L.lang === 'en' && typeof L.tr === 'function') { title = L.tr(title); body = L.tr(body || ''); }
       const n = { id: nid(key), title, body: body || '', schedule: { at: when, allowWhileIdle: true }, extra: extra || { kind: 'today' } };
-      if (extra && extra.act) n.actionTypeId = extra.act === 'attend' ? ATTEND_ACTIONS : TASK_ACTIONS;   // «حضرت/غبت» أو «خلصته/بعد ساعة»
+      if (extra && extra.act) n.actionTypeId = extra.act === 'attend' ? ATTEND_ACTIONS : extra.act === 'log' ? LOG_ACTIONS : TASK_ACTIONS;   // «حضرت/غبت» أو «خلصته/بعد ساعة» أو «سجّل»
       out.push(n);
     };
     const today = midnight(now);
@@ -126,6 +129,11 @@
       }
     }
 
+    // 🧳 قبل السفر بـ 3 أيام والليلة اللي قبله، مع كم غرض باقي (DW-033)
+    if (p.trips && window.Extras && window.Extras.Travel && window.Extras.Travel.reminders) {
+      for (const r of window.Extras.Travel.reminders()) add(r.key, r.at, r.title, r.body, r.extra);
+    }
+
     // ☀️ ملخص الصباح (اختياري): محاضرات اليوم واختباراته وتسليماته
     if (p.brief) {
       const [bh, bm] = String(p.briefAt || '07:00').split(':').map(Number);
@@ -138,6 +146,28 @@
         if (items.length) parts.push((items.length === 1 ? 'شي واحد بجدولك' : items.length === 2 ? 'شيئين بجدولك' : items.length + ' أشياء بجدولك') + '، أولها ' + A.time12(A.hhmm(items[0].start)));
         for (const tk of dueToday) parts.push((tk.kind === 'exam' ? 'اختبار ' : 'تسليم ') + tk.title);
         add('brief:' + day.toDateString(), at(day, (bh || 0) * 60 + (bm || 0)), 'صباح الخير ☀️ هذا يومك', parts.join(' · '));
+      }
+    }
+
+    // 🌙 «سكّر يومك» (اختياري، DW-013): بس لو ما سجلت ولا عملية ذاك اليوم. الأيام الجاية تنعاد جدولتها كل ما تفتح التطبيق
+    if (p.checkin) {
+      const [ch, cm] = String(p.checkinAt || '21:30').split(':').map(Number);
+      const logged = (day) => (A.st.transactions || []).some((t) => t.occurred_at && midnight(new Date(t.occurred_at)).getTime() === day.getTime());
+      for (let d = 0; d < DAYS; d++) {
+        const day = new Date(today.getFullYear(), today.getMonth(), today.getDate() + d);
+        if (logged(day)) continue;
+        add('checkin:' + day.toDateString(), at(day, (ch || 0) * 60 + (cm || 0)), 'سكّر يومك 🌙', 'صرفت شي اليوم؟ سجّله بدقيقة عشان شهرك يطلع صح', { kind: 'checkin', act: 'log' });
+      }
+    }
+
+    // 📿 تذكير الأذكار (اختياري، DW-014): بعد الفجر والعصر بنص ساعة، من أوقات الصلاة نفسها. بدون أي نص أذكار
+    if (p.adhkar && window.Extras && window.Extras.prayerTimes) {
+      const pm = (A.st.settings && A.st.settings.prayer_method) || 'jafari';
+      for (let d = 0; d < DAYS; d++) {
+        const day = new Date(today.getFullYear(), today.getMonth(), today.getDate() + d);
+        const t = window.Extras.prayerTimes(day, pm);
+        add('adhkar-am:' + day.toDateString(), at(day, t.fajr + 30), 'وقت أذكار الصباح ☀️', '', { kind: 'today' });
+        add('adhkar-pm:' + day.toDateString(), at(day, t.asr + 30), 'وقت أذكار المساء 🌙', '', { kind: 'today' });
       }
     }
 
@@ -190,11 +220,25 @@
     const t = extra.kind === 'task' && (A.st.tasks || []).find((x) => x.id === extra.id);
     if (extra.kind === 'task') { A.go('tasks'); if (t) setTimeout(() => A.taskForm(t), 50); else A.toast('ما لقيت المهمة، يمكن انحذفت'); return; }
     if (extra.kind === 'sub') { A.ui.moneySeg = 'subs'; A.go('money'); return; }
+    if (extra.kind === 'trip' && window.Extras && window.Extras.Travel) { window.Extras.Travel.tripSheet(extra.id); return; }
+    if (extra.kind === 'checkin') { A.ui.moneySeg = 'tx'; A.go('money'); setTimeout(() => A.txForm(), 50); return; }
     A.go('today');
+  }
+  // ✍️ «سجّل» من تنبيه «سكّر يومك» (DW-038): تكتب «1.200 قهوة» بالتنبيه نفسه وتنحفظ. لو السطر ما فيه مبلغ واضح، يفتح النموذج
+  function quickLog(text) {
+    const q = window.SmsParser && window.SmsParser.quick ? window.SmsParser.quick(text) : null;
+    if (!q) { A.ui.moneySeg = 'tx'; A.go('money'); setTimeout(() => A.txForm(), 50); if (String(text || '').trim()) A.toast('ما لقيت المبلغ، كمّل هني'); return; }
+    S.upsert('transactions', {
+      kind: q.kind, amount: q.amount, category: q.category, merchant: q.merchant || null, note: null,
+      occurred_at: new Date().toISOString(), source: 'manual', needs_review: false,
+    });
+    A.ui.moneySeg = 'tx'; A.go('money');
+    A.toast('انحفظ ✓ ' + A.fmt(q.amount) + ' د.ب · ' + q.category);
   }
   function onAction(ev) {
     const n = (ev && ev.notification) || {};
     const extra = n.extra || { kind: 'today' };
+    if (ev.actionId === 'log') { quickLog(ev.inputValue); return; }
     if (ev.actionId === 'done') {
       const t = (A.st.tasks || []).find((x) => x.id === extra.id);
       if (!t) { A.toast('ما لقيت المهمة، يمكن انحذفت'); return; }
@@ -220,13 +264,18 @@
   }
   if (LN && typeof LN.registerActionTypes === 'function') {
     try {
+      // أزرار التنبيه من النظام: نترجمها مرة وحدة بلغة التطبيق وقت التشغيل
+      const L = window.HayatiLang, en = L && L.lang === 'en' && typeof L.tr === 'function';
+      const tr = (t) => { if (en) ['title', 'inputButtonTitle', 'inputPlaceholder'].forEach((k) => { if (t[k]) t[k] = L.tr(t[k]); }); return t; };
       Promise.resolve(LN.registerActionTypes({ types: [{ id: TASK_ACTIONS, actions: [
         { id: 'done', title: '✓ خلصته', foreground: true },
         { id: 'snooze', title: '⏰ ذكّرني بعد ساعة', foreground: true },
       ] }, { id: ATTEND_ACTIONS, actions: [
         { id: 'present', title: '✓ حضرت', foreground: true },
         { id: 'absent', title: '✗ غبت', foreground: true },
-      ] }] })).catch(() => {});
+      ] }, { id: LOG_ACTIONS, actions: [
+        { id: 'log', title: '✍️ سجّل مصروف', input: true, inputButtonTitle: 'سجّل', inputPlaceholder: 'مثلاً: 1.200 قهوة', foreground: true },
+      ] }].map((x) => Object.assign(x, { actions: x.actions.map(tr) })) })).catch(() => {});
     } catch (e) { /* نسخة قديمة بدون أزرار: التنبيه يشتغل عادي */ }
   }
   if (LN && typeof LN.addListener === 'function') {
@@ -252,6 +301,18 @@
     }
   }
 
+  // صورة (تقرير الشهر DW-041): نكتبها PNG بالكاش ونفتح قائمة المشاركة (حفظ بالصور، واتساب…)
+  async function saveImage(filename, b64) {
+    if (!FS || !Share) { A.toast('المشاركة مو متوفرة بهالنسخة'); return false; }
+    try {
+      const w = await FS.writeFile({ path: filename, data: b64, directory: 'CACHE' });
+      await Share.share({ title: filename, files: [w.uri] });
+      return true;
+    } catch (e) {
+      if (!/cancel/i.test(String(e && (e.message || e)))) A.toast('ما قدرت أشارك الصورة');
+      return false;
+    }
+  }
   async function shareText(text) {
     if (!Share) return;
     try { await Share.share({ text }); } catch (e) { /* المستخدم سكّر القائمة */ }
@@ -281,7 +342,8 @@
 
   // ⚙️ الإعدادات ← التنبيهات (نسخة الآيفون بس)
   const TYPES = [['lectures', '📅 الجدول والصلاة', 'قبل المحاضرة بـ 10 دقايق، والصلاة بوقتها'], ['attend', '🎓 سؤال الحضور', 'بعد كل محاضرة: حضرت ولا غبت، من التنبيه نفسه'], ['exams', '📝 الاختبارات', 'الليلة اللي قبلها، وقبل الاختبار بساعتين'],
-    ['homework', '📚 الواجبات', 'الليلة اللي قبل التسليم'], ['subs', '💳 تجديد الاشتراكات', 'قبل التجديد بالأيام اللي تحددها بالاشتراك'], ['brief', '☀️ ملخص الصباح', 'جدولك واختباراتك اليوم، والأيام الفاضية ما فيها']];
+    ['homework', '📚 الواجبات', 'الليلة اللي قبل التسليم'], ['trips', '🧳 قبل السفر', 'قبله بـ 3 أيام والليلة اللي قبله: كم غرض باقي'], ['subs', '💳 تجديد الاشتراكات', 'قبل التجديد بالأيام اللي تحددها بالاشتراك'], ['brief', '☀️ ملخص الصباح', 'جدولك واختباراتك اليوم، والأيام الفاضية ما فيها'],
+    ['checkin', '🌙 سكّر يومك', 'بالليل، بس لو ما سجلت ولا مصروف بيومك. تقدر تسجّل من التنبيه نفسه'], ['adhkar', '📿 تذكير الأذكار', 'بعد الفجر والعصر بنص ساعة']];
   function prefsSheet() {
     const p = prefs();
     A.openSheet({
@@ -290,9 +352,11 @@
         '<li class="row" style="cursor:default"><label style="display:flex;align-items:center;gap:12px;width:100%;cursor:pointer"><div class="main"><div class="title"><span class="t">' + l + '</span></div><div class="sub">' + sub + '</div></div>' +
         '<input type="checkbox" data-np="' + k + '"' + (p[k] ? ' checked' : '') + ' style="width:22px;height:22px;accent-color:var(--brand)"></label></li>').join('') + '</ul></div>' +
         '<div class="field" id="briefAtF"' + (p.brief ? '' : ' hidden') + '><label>وقت ملخص الصباح</label><input type="time" name="briefAt" value="' + A.h(p.briefAt) + '"></div>' +
+        '<div class="field" id="checkinAtF"' + (p.checkin ? '' : ' hidden') + '><label>وقت «سكّر يومك»</label><input type="time" name="checkinAt" value="' + A.h(p.checkinAt) + '"></div>' +
         '<button class="btn block" type="button" id="npTest">' + A.I('bell') + 'جرّب التنبيه</button>',
       mount(root) {
         root.querySelector('[data-np="brief"]').onchange = (e) => { root.querySelector('#briefAtF').hidden = !e.target.checked; };
+        root.querySelector('[data-np="checkin"]').onchange = (e) => { root.querySelector('#checkinAtF').hidden = !e.target.checked; };
         root.querySelector('#npTest').onclick = async () => {
           A.closeSheet();
           const rows = await testNotification();
@@ -303,6 +367,7 @@
         const np = Object.assign({}, prefs());
         root.querySelectorAll('[data-np]').forEach((c) => { np[c.dataset.np] = c.checked; });
         np.briefAt = (root.querySelector('[name=briefAt]') || {}).value || DEF.briefAt;
+        np.checkinAt = (root.querySelector('[name=checkinAt]') || {}).value || DEF.checkinAt;
         savePrefs(np);
         await reschedule();
         A.toast('انحفظ ✓');
@@ -332,6 +397,34 @@
     };
   }
 
+  // 🔁 الحلقة اليومية (DW-013): بطاقة وحدة باليوم من ثاني يوم استخدام، تشغّل ملخص الصبح + «سكّر يومك» بضغطة.
+  //   «لا شكراً» تخفيها للأبد، وما تطلع لو واحد منهم شغّال أصلاً. ما فيه أي ضغط ولا عدّاد يعاقب
+  const LOOP = 'hayati-loop-ask', FIRST = 'hayati-first-day';
+  const lsg = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const lss = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* تجاهل */ } };
+  if (!lsg(FIRST)) lss(FIRST, midnight(new Date()).toISOString());
+  function loopCard() {
+    const p = prefs();
+    if (!LN || p.brief || p.checkin || lsg(LOOP)) return '';
+    if (!(midnight(new Date()) > new Date(lsg(FIRST) || Date.now()))) return '';
+    return '<div class="card loop-card"><b>خل «حياتي» يرتب يومك 🔁</b>' +
+      '<div class="small muted" style="margin:6px 0 10px">☀️ الصبح: ملخص جدولك واختباراتك<br>🌙 الليل: «سكّر يومك» بس لو نسيت تسجّل مصاريفك</div>' +
+      '<div style="display:flex;gap:8px"><button class="btn primary" style="flex:1" data-action="loop-on">شغّلها</button><button class="btn ghost" data-action="loop-no">لا شكراً</button></div>' +
+      '<div class="small muted" style="margin-top:8px">تقدر تغيّر الأوقات أو تطفيها من الإعدادات ← التنبيهات</div></div>';
+  }
+  if (E) {
+    const prevTop = E.todayTop;
+    E.todayTop = function () { return loopCard() + (prevTop ? prevTop.apply(this, arguments) : ''); };
+    const prevAct = E.action;
+    E.action = function (name) {
+      if (name === 'loop-on') { lss(LOOP, 'yes'); savePrefs(Object.assign({}, prefs(), { brief: true, checkin: true })); reschedule(); A.toast('تمام ✓ الصبح 7:00 والليل 9:30'); A.render(); return; }
+      if (name === 'loop-no') { lss(LOOP, 'no'); A.render(); return; }
+      return prevAct ? prevAct.apply(this, arguments) : undefined;
+    };
+  }
+  // اليوم ممكن انرسم قبل ما يتحمّل هالملف (آخر سكربت)، فنعيد رسمه مرة عشان البطاقة تبين
+  if (loopCard() && A.ui.tab === 'today' && !document.querySelector('#sheet[open]')) A.render();
+
   // 🍎 / G الدخول السريع: Google يمنع الدخول من داخل WebView، فنفتح متصفح النظام،
   //   والمزود يرجّعنا بـ bh.hayati.app://auth?code=… (CFBundleURLTypes بـ Info.plist) ونبدّل الكود بجلسة (PKCE)
   const AUTH_URL = 'bh.hayati.app://auth';
@@ -339,6 +432,14 @@
     if (!Browser) throw new Error('الدخول السريع يحتاج آخر نسخة من التطبيق');
     const url = await S.signInWithProvider(provider, { redirectTo: AUTH_URL, skipBrowserRedirect: true });
     await Browser.open({ url, presentationStyle: 'popover' });
+  }
+  // أزرار ودجت الآيفون (DW-044): bh.hayati.app://widget/add-tx | paste-sms | open
+  function onWidgetUrl(url) {
+    const m = /^bh\.hayati\.app:\/\/widget\/([a-z-]+)/.exec(url || '');
+    if (!m) return false;
+    const W = window.Extras && window.Extras.Widget;
+    if (W && W.onAction && m[1] !== 'open') W.onAction(m[1]);
+    return true;
   }
   async function onAuthUrl(url) {
     if (!url || url.indexOf(AUTH_URL) !== 0) return false;
@@ -351,8 +452,34 @@
     return true;
   }
   if (AppP && typeof AppP.addListener === 'function') {
-    try { const r = AppP.addListener('appUrlOpen', (ev) => onAuthUrl(ev && ev.url)); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
+    try { const r = AppP.addListener('appUrlOpen', (ev) => { if (!onWidgetUrl(ev && ev.url)) onAuthUrl(ev && ev.url); }); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
   }
 
-  window.HayatiNative = { saveFile, shareText, reschedule, upcoming, testNotification, prefs, savePrefs, oauth, onAuthUrl };
+  // ◀️ زر الرجوع بأندرويد: يسكّر النافذة المفتوحة، أو يرجع لـ «اليوم»، وبعدها بس يطلع من التطبيق
+  //   (بدونه الزر يسكّر التطبيق على طول حتى لو فيه نافذة مفتوحة)
+  function onBack() {
+    const dlg = document.querySelector('dialog[open]');
+    if (dlg) { if (dlg.id === 'sheet') A.closeSheet(); else dlg.close(); return 'closed'; }
+    if (A.ui && A.ui.tab !== 'today') { A.go('today'); return 'today'; }
+    if (AppP && typeof AppP.minimizeApp === 'function') AppP.minimizeApp();
+    else if (AppP && typeof AppP.exitApp === 'function') AppP.exitApp();
+    return 'exit';
+  }
+  if (AppP && typeof AppP.addListener === 'function') {
+    try { const r = AppP.addListener('backButton', onBack); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
+  }
+
+  // «شارك ← حياتي» (أندرويد DW-009 · آيفون DW-046 عبر امتداد المشاركة): رسالة البنك توصل من تطبيق الرسائل وتفتح نافذة اللصق معبّاة
+  function onShared(text) {
+    if (!text || typeof A.sharedSms !== 'function') return Promise.resolve(null);
+    return A.sharedSms(text).then((kind) => { console.info('hayati-share:' + kind); return kind; });
+  }
+  if (ShareIn && typeof ShareIn.take === 'function') {
+    try { const r = ShareIn.addListener('shared', (ev) => onShared(ev && ev.text)); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
+    Promise.resolve().then(() => ShareIn.take()).then((r) => onShared(r && r.text)).catch(() => {});
+  }
+
+  // رابط خارجي (زر «اقرأ»): متصفح النظام
+  async function openLink(url) { if (!/^https:\/\//.test(url)) return; if (Browser) await Browser.open({ url }); else window.open(url, '_blank', 'noopener'); }
+  window.HayatiNative = { haptic: () => tap('LIGHT'), openLink, saveFile, saveImage, shareText, reschedule, upcoming, testNotification, prefs, savePrefs, oauth, onAuthUrl, onBack, onShared };
 })();

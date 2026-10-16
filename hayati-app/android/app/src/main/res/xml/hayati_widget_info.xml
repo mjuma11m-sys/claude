@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- DW-031: 4×2، يتمدد. التحديث الدوري كل ساعة (الأقرب يتغيّر حسب الوقت)، والتطبيق يحدّثه كل ما تتغيّر بياناتك -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="250dp"
+    android:minHeight="110dp"
+    android:minResizeWidth="180dp"
+    android:minResizeHeight="110dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="2"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="3600000"
+    android:initialLayout="@layout/hayati_widget"
+    android:previewLayout="@layout/hayati_widget"
+    android:description="@string/widget_desc"
+    android:widgetCategory="home_screen" />
