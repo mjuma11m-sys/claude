@@ -2565,7 +2565,14 @@ window.HAYATI_EN = {
 "اعرض المبالغ": "Show amounts",
 "المبالغ مخفية افتراضياً (نِسَب بس)، وما فيها أسماء محلات. الصورة تنرسم بجوالك وما ترتفع لأي مكان.": "Amounts are hidden by default (percentages only), and there are no shop names. The image is drawn on your phone and isn't uploaded anywhere.",
 "انحفظت الصورة ✓": "Image saved ✓",
-"ما قدرت أشارك الصورة": "Couldn't share the image"
+"ما قدرت أشارك الصورة": "Couldn't share the image",
+// DW-043: تصنيفاتك
+"غيّرها": "Change them",
+"للرسايل الجاية": "for future messages",
+"عمليات ثانية من": "other transactions from",
+"تصنيفها": "are in",
+"نخليها": "Move them to",
+"تعدّلت": "Updated"
 };
 
 </script>
@@ -2839,7 +2846,27 @@ window.HAYATI_CONFIG = {
     return '';
   }
 
+  // DW-043: تصنيفاتك أنت. لو غيّرت تصنيف محل مرة، نتذكره (على هالجهاز بس) ويغلب القواعد العامة
+  const LEARN_KEY = 'hayati-merchant-cats', LEARN_MAX = 300;
+  let learned = {};
+  try { if (global.localStorage) learned = JSON.parse(global.localStorage.getItem(LEARN_KEY) || '{}') || {}; } catch (e) { learned = {}; }
+  const learnKey = (kind, merchant) => { const k = brand(merchant).key; return k ? (kind === 'income' ? 'i:' : 'e:') + k : ''; };
+  function learn(kind, merchant, category) {
+    const k = learnKey(kind, merchant);
+    if (!k || !category) return false;
+    delete learned[k];
+    learned[k] = category;   // الأحدث آخر شي، والأقدم ينشال لو كثرت
+    const keys = Object.keys(learned);
+    for (let i = 0; i < keys.length - LEARN_MAX; i++) delete learned[keys[i]];
+    try { if (global.localStorage) global.localStorage.setItem(LEARN_KEY, JSON.stringify(learned)); } catch (e) { /* تجاهل */ }
+    return true;
+  }
+  const learnedFor = (kind, merchant) => learned[learnKey(kind, merchant)] || null;
+  function setLearned(map) { learned = map && typeof map === 'object' ? Object.assign({}, map) : {}; }
+
   function categorize(kind, text, merchant) {
+    const mine = merchant && learnedFor(kind, merchant);
+    if (mine) return mine;
     const hay = (merchant + ' ' + text);
     const rules = kind === 'income' ? INCOME_CATEGORY_RULES : CATEGORY_RULES;
     // اسم المحل أهم من باقي الرسالة
@@ -2962,7 +2989,7 @@ window.HAYATI_CONFIG = {
       .replace(/[xX*]{2,}(?=\s|$)/g, '••');
   }
 
-  const api = { parse, quick, categorize, mask, brand, groupByBrand, BRANDS, CATEGORY_RULES, INCOME_CATEGORY_RULES };
+  const api = { parse, quick, categorize, learn, learnedFor, setLearned, LEARN_KEY, mask, brand, groupByBrand, BRANDS, CATEGORY_RULES, INCOME_CATEGORY_RULES };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else global.SmsParser = api;
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -5145,6 +5172,7 @@ window.HAYATI_CONFIG = {
           const b = e.target.closest('.cat-pick');
           if (!b) return;
           root.dataset.cat = b.dataset.c;
+          root.dataset.catTouched = '1';
           root.querySelectorAll('.cat-pick').forEach((x) => x.classList.toggle('on', x === b));
         };
         const del = root.querySelector('#delTx');
@@ -5167,9 +5195,27 @@ window.HAYATI_CONFIG = {
           needs_review: false,
         }));
         toast(tx ? 'تم التعديل' : 'انضافت ✓');
+        if (root.dataset.catTouched) learnCategory(savedTx, tx && tx.category);
         if (!tx) setTimeout(() => X('afterTx', savedTx), 450);
       },
     });
+  }
+
+  // DW-043: لو اخترت تصنيف لمحل بنفسك، نتذكره للرسايل الجاية، ونعرض نطبّقه على عملياته القديمة اللي بنفس التصنيف القديم
+  function learnCategory(t, oldCat) {
+    const P = window.SmsParser;
+    if (!P || !P.learn || !t || !t.merchant || !t.category) return;
+    const before = P.learnedFor(t.kind, t.merchant);
+    P.learn(t.kind, t.merchant, t.category);
+    if (!oldCat || oldCat === t.category) return;
+    const key = P.brand(t.merchant).key;
+    const others = st.transactions.filter((x) => x.id !== t.id && x.kind === t.kind && x.category === oldCat && x.merchant && P.brand(x.merchant).key === key);
+    if (!others.length) { if (before !== t.category) toast('تمام، «' + P.brand(t.merchant).label + '» صار ' + t.category + ' للرسايل الجاية'); return; }
+    setTimeout(async () => {
+      if (!(await ask('فيه ' + others.length + ' عمليات ثانية من «' + P.brand(t.merchant).label + '» تصنيفها ' + oldCat + '. نخليها ' + t.category + ' بعد؟', 'غيّرها'))) return;
+      for (const x of others) S.upsert('transactions', Object.assign({}, x, { category: t.category }));
+      toast('تعدّلت ' + others.length + ' عمليات ✓');
+    }, 500);
   }
 
   // --- لصق رسالة ---
@@ -10640,7 +10686,7 @@ window.HAYATI_CONFIG = {
 
   const ITER = 250000, MIN = 8;
   // مفاتيح الجهاز اللي تستاهل ترجع (بدون جلسة الدخول ولا القفل ولا أي توكن)
-  const LOCAL = ['hayati-trips', 'hayati-gpa-target', 'hayati-theme', 'hayati-lang', 'hayati-notif-prefs', 'hayati-cal', 'hayati-first-step', 'hayati-seen-version'];
+  const LOCAL = ['hayati-trips', 'hayati-gpa-target', 'hayati-theme', 'hayati-lang', 'hayati-notif-prefs', 'hayati-cal', 'hayati-first-step', 'hayati-seen-version', 'hayati-merchant-cats'];
   const enc = new TextEncoder(), dec = new TextDecoder();
 
   function b64(buf) {

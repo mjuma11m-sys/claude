@@ -75,3 +75,17 @@ test('سطر سريع من التنبيه (DW-038): المبلغ قبل أو ب�
   assert.strictEqual(P.quick('3').category, 'أخرى');
   for (const bad of ['', 'hello', '0', 'قهوة']) assert.strictEqual(P.quick(bad), null);
 });
+
+test('تصنيفاتك (DW-043): تصحيح محل مرة يغلب القواعد، بنفس المفتاح لفروعه، والدخل منفصل عن الصرف', () => {
+  P.setLearned({});
+  const msg = 'Purchase of BHD 4.000 at ALDANA STORE SEEF. Available balance BHD 100.000';
+  assert.strictEqual(P.parse(msg).category, 'أخرى');   // محل ما تعرفه القواعد
+  assert.ok(P.learn('expense', 'ALDANA STORE SEEF', 'هدايا'));
+  assert.strictEqual(P.parse(msg).category, 'هدايا');
+  assert.strictEqual(P.parse('Purchase of BHD 9.000 at ALDANA STORE MANAMA').category, 'هدايا');   // فرع ثاني = نفس المحل
+  assert.strictEqual(P.learnedFor('income', 'ALDANA STORE'), null);
+  assert.strictEqual(P.quick('aldana store 3').category, 'هدايا');
+  assert.strictEqual(P.learn('expense', '', 'x'), false);
+  P.setLearned({});
+  assert.strictEqual(P.parse(msg).category, 'أخرى');
+});

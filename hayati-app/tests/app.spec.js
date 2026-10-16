@@ -1975,6 +1975,29 @@ test('English: «21 يوم» (11+ days) translates like «3 أيام»', async (
   expect(await store(page, () => window.HayatiLang.tr('بعد 21 يوم · قبل 12 يوم · باقي 21 يوم'))).toBe('in 21 days · 12 days ago · Left 21 days');
 });
 
+test('your categories (DW-043): fix a shop once, older ones follow if you agree, and the next message from it is right', async ({ page }) => {
+  await open(page);
+  await store(page, () => {
+    const S = App.S; S.setSettings({ onboarded: true });
+    const d = new Date().toISOString();
+    for (const [id, m] of [['m1', 'ALDANA STORE SEEF'], ['m2', 'ALDANA STORE MANAMA'], ['m3', 'ALDANA STORE']]) S.upsert('transactions', { id, kind: 'expense', amount: 4, merchant: m, category: 'أخرى', occurred_at: d, source: 'sms' });
+    App.ui.moneySeg = 'tx'; App.go('money');
+  });
+  await page.click('[data-action="edit-tx"][data-id="m1"]');
+  await page.click('#sheetBody .cat-pick[data-c="بقالة وتسوق"]');
+  await page.click('#sheetSave');
+  await expect(page.locator('#askDlg')).toBeVisible();
+  await expect(page.locator('#askDlg p')).toContainText('2 عمليات');
+  await page.click('#askDlg [data-ok]');
+  await expect.poll(() => store(page, () => App.st.transactions.filter((t) => t.category === 'بقالة وتسوق').length)).toBe(3);
+  // الرسالة الجاية من نفس المحل (فرع ثاني)
+  const next = await store(page, () => App.S.smsToTransaction('Purchase of BHD 6.500 at ALDANA STORE JUFFAIR', new Date().toISOString()));
+  expect(next.category).toBe('بقالة وتسوق');
+  // تنحفظ على الجهاز وتطلع مع النسخة المشفّرة
+  expect(await store(page, () => JSON.parse(localStorage.getItem('hayati-merchant-cats'))['e:aldana'])).toBe('بقالة وتسوق');
+  expect(await store(page, async () => Object.keys((await window.HayatiBackup.pack(false)).local))).toContain('hayati-merchant-cats');
+});
+
 test('performance (DW-042): 2000 saves in a row write and redraw once, and month/day lists come from one index', async ({ page }) => {
   await open(page);
   const r = await store(page, async () => {

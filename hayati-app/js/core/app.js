@@ -1248,6 +1248,7 @@
           const b = e.target.closest('.cat-pick');
           if (!b) return;
           root.dataset.cat = b.dataset.c;
+          root.dataset.catTouched = '1';
           root.querySelectorAll('.cat-pick').forEach((x) => x.classList.toggle('on', x === b));
         };
         const del = root.querySelector('#delTx');
@@ -1270,9 +1271,27 @@
           needs_review: false,
         }));
         toast(tx ? 'تم التعديل' : 'انضافت ✓');
+        if (root.dataset.catTouched) learnCategory(savedTx, tx && tx.category);
         if (!tx) setTimeout(() => X('afterTx', savedTx), 450);
       },
     });
+  }
+
+  // DW-043: لو اخترت تصنيف لمحل بنفسك، نتذكره للرسايل الجاية، ونعرض نطبّقه على عملياته القديمة اللي بنفس التصنيف القديم
+  function learnCategory(t, oldCat) {
+    const P = window.SmsParser;
+    if (!P || !P.learn || !t || !t.merchant || !t.category) return;
+    const before = P.learnedFor(t.kind, t.merchant);
+    P.learn(t.kind, t.merchant, t.category);
+    if (!oldCat || oldCat === t.category) return;
+    const key = P.brand(t.merchant).key;
+    const others = st.transactions.filter((x) => x.id !== t.id && x.kind === t.kind && x.category === oldCat && x.merchant && P.brand(x.merchant).key === key);
+    if (!others.length) { if (before !== t.category) toast('تمام، «' + P.brand(t.merchant).label + '» صار ' + t.category + ' للرسايل الجاية'); return; }
+    setTimeout(async () => {
+      if (!(await ask('فيه ' + others.length + ' عمليات ثانية من «' + P.brand(t.merchant).label + '» تصنيفها ' + oldCat + '. نخليها ' + t.category + ' بعد؟', 'غيّرها'))) return;
+      for (const x of others) S.upsert('transactions', Object.assign({}, x, { category: t.category }));
+      toast('تعدّلت ' + others.length + ' عمليات ✓');
+    }, 500);
   }
 
   // --- لصق رسالة ---

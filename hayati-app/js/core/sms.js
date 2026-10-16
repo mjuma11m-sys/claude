@@ -138,7 +138,27 @@
     return '';
   }
 
+  // DW-043: تصنيفاتك أنت. لو غيّرت تصنيف محل مرة، نتذكره (على هالجهاز بس) ويغلب القواعد العامة
+  const LEARN_KEY = 'hayati-merchant-cats', LEARN_MAX = 300;
+  let learned = {};
+  try { if (global.localStorage) learned = JSON.parse(global.localStorage.getItem(LEARN_KEY) || '{}') || {}; } catch (e) { learned = {}; }
+  const learnKey = (kind, merchant) => { const k = brand(merchant).key; return k ? (kind === 'income' ? 'i:' : 'e:') + k : ''; };
+  function learn(kind, merchant, category) {
+    const k = learnKey(kind, merchant);
+    if (!k || !category) return false;
+    delete learned[k];
+    learned[k] = category;   // الأحدث آخر شي، والأقدم ينشال لو كثرت
+    const keys = Object.keys(learned);
+    for (let i = 0; i < keys.length - LEARN_MAX; i++) delete learned[keys[i]];
+    try { if (global.localStorage) global.localStorage.setItem(LEARN_KEY, JSON.stringify(learned)); } catch (e) { /* تجاهل */ }
+    return true;
+  }
+  const learnedFor = (kind, merchant) => learned[learnKey(kind, merchant)] || null;
+  function setLearned(map) { learned = map && typeof map === 'object' ? Object.assign({}, map) : {}; }
+
   function categorize(kind, text, merchant) {
+    const mine = merchant && learnedFor(kind, merchant);
+    if (mine) return mine;
     const hay = (merchant + ' ' + text);
     const rules = kind === 'income' ? INCOME_CATEGORY_RULES : CATEGORY_RULES;
     // اسم المحل أهم من باقي الرسالة
@@ -261,7 +281,7 @@
       .replace(/[xX*]{2,}(?=\s|$)/g, '••');
   }
 
-  const api = { parse, quick, categorize, mask, brand, groupByBrand, BRANDS, CATEGORY_RULES, INCOME_CATEGORY_RULES };
+  const api = { parse, quick, categorize, learn, learnedFor, setLearned, LEARN_KEY, mask, brand, groupByBrand, BRANDS, CATEGORY_RULES, INCOME_CATEGORY_RULES };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else global.SmsParser = api;
 })(typeof window !== 'undefined' ? window : globalThis);

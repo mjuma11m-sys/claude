@@ -1856,5 +1856,12 @@ window.HAYATI_EN = {
 "اعرض المبالغ": "Show amounts",
 "المبالغ مخفية افتراضياً (نِسَب بس)، وما فيها أسماء محلات. الصورة تنرسم بجوالك وما ترتفع لأي مكان.": "Amounts are hidden by default (percentages only), and there are no shop names. The image is drawn on your phone and isn't uploaded anywhere.",
 "انحفظت الصورة ✓": "Image saved ✓",
-"ما قدرت أشارك الصورة": "Couldn't share the image"
+"ما قدرت أشارك الصورة": "Couldn't share the image",
+// DW-043: تصنيفاتك
+"غيّرها": "Change them",
+"للرسايل الجاية": "for future messages",
+"عمليات ثانية من": "other transactions from",
+"تصنيفها": "are in",
+"نخليها": "Move them to",
+"تعدّلت": "Updated"
 };
