@@ -1975,6 +1975,20 @@ test('English: «21 يوم» (11+ days) translates like «3 أيام»', async (
   expect(await store(page, () => window.HayatiLang.tr('بعد 21 يوم · قبل 12 يوم · باقي 21 يوم'))).toBe('in 21 days · 12 days ago · Left 21 days');
 });
 
+test('accessibility (DW-045): every form field has a name for screen readers, and past schedule items keep readable contrast', async ({ page }) => {
+  await open(page);
+  const unnamed = async () => store(page, () => [...document.querySelectorAll('#sheetBody input:not([type=hidden]), #sheetBody select, #sheetBody textarea')]
+    .filter((c) => !(c.getAttribute('aria-label') || c.placeholder || c.closest('label') || (c.id && document.querySelector('label[for="' + c.id + '"]'))))
+    .map((c) => c.outerHTML.slice(0, 80)));
+  await store(page, () => App.txForm()); await page.waitForTimeout(100);
+  expect(await unnamed()).toEqual([]);
+  expect(await store(page, () => document.querySelector('#sheetBody [name=occurred_at]').getAttribute('aria-label'))).toBe('الوقت');
+  await store(page, () => App.closeSheet());
+  await page.click('#settingsBtn'); await page.waitForTimeout(100);
+  expect(await unnamed()).toEqual([]);
+  expect(await store(page, () => getComputedStyle(document.body).getPropertyValue('--text-2').trim())).toBe('#33494D');
+});
+
 test('your categories (DW-043): fix a shop once, older ones follow if you agree, and the next message from it is right', async ({ page }) => {
   await open(page);
   await store(page, () => {

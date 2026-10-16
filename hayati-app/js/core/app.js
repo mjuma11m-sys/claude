@@ -1197,6 +1197,20 @@
     if (mount) mount(sheetBody);
   }
   function closeSheet() { sheet.close(); sheetHandler = null; }
+  // ♿ قارئ الشاشة: «.field» فيها <label> ورا <input> بدون ربط، فنعطي الحقل اسم العنوان (aria-label) أول ما ينرسم
+  const labelFields = (root) => {
+    for (const f of root.querySelectorAll('.field')) {
+      const lab = f.querySelector(':scope > label');
+      const txt = lab && lab.textContent.trim();
+      if (!txt) continue;
+      for (const c of f.querySelectorAll('input:not([type=hidden]):not([type=checkbox]):not([type=radio]), select, textarea')) {
+        if (!c.hasAttribute('aria-label') && !c.id && !c.closest('label')) c.setAttribute('aria-label', txt);
+      }
+    }
+  };
+  let labelQueued = false;
+  new MutationObserver(() => { if (labelQueued) return; labelQueued = true; queueMicrotask(() => { labelQueued = false; labelFields(document); }); })
+    .observe(document.body, { subtree: true, childList: true });
   document.getElementById('sheetCancel').onclick = closeSheet;
   sheetSave.onclick = async () => {
     if (!sheetHandler) return;

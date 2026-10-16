@@ -246,6 +246,7 @@
     .slot .when { width: 64px; flex: none; text-align: center; padding-top: 12px; white-space: nowrap; }
     .slot .when b { display: block; font-size: 14px; font-weight: 700; }
     .slot .when small { font-size: 11px; color: var(--muted); }
+    .slot.past .when small { color: var(--text-2); }   /* ♿ مع شفافية «فات» يظل فوق 4.5:1 */
     .slot .box {
       flex: 1; min-width: 0; border-radius: 16px; padding: 12px 14px; border: 1px solid var(--border);
       background: var(--surface); box-shadow: var(--shadow-sm); border-inline-start: 4px solid var(--c);
@@ -254,7 +255,7 @@
     .slot .box .where { font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 4px; margin-top: 2px; }
     .slot .box .where svg.i { width: 13px; height: 13px; }
     .slot.now .box { background: color-mix(in srgb, var(--c) 10%, var(--surface)); border-color: color-mix(in srgb, var(--c) 35%, transparent); }
-    .slot.past { opacity: .55; }
+    .slot.past { opacity: .8; }   /* ♿ .55 كانت تنزل التباين تحت 4.5:1 (WCAG AA) */
     .slot .prog { height: 4px; background: color-mix(in srgb, var(--c) 18%, transparent); border-radius: 99px; margin-top: 10px; overflow: hidden; }
     .slot .prog > span { display: block; height: 100%; background: var(--c); border-radius: 99px; }
 
