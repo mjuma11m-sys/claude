@@ -21,7 +21,10 @@
       };
     });
   }
-  async function load() {
+  // ما نفتح قاعدة الصور وقت التشغيل: أول مرة تطلع شاشة الأهداف أو نموذج الهدف بس
+  let loading = null;
+  function load() { return loading || (loading = loadNow()); }
+  async function loadNow() {
     try {
       const keys = (await idb('readonly', (s) => s.getAllKeys())) || [];
       const vals = (await idb('readonly', (s) => s.getAll())) || [];
@@ -42,6 +45,7 @@
 
   // بطاقة الهدف: الصورة فوق
   E.goalBanner = (g) => {
+    load();
     const url = g && cache.get(String(g.id));
     return url ? '<div class="goal-photo" style="margin:-16px -16px 12px;height:140px;border-radius:inherit;border-bottom-left-radius:0;border-bottom-right-radius:0;overflow:hidden;background:#0002">' +
       '<img src="' + url + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></div>' : '';
@@ -49,6 +53,7 @@
 
   // نموذج الهدف: اختار صورة / شيلها
   E.goalFormExtra = (g) => {
+    load();
     const url = g && cache.get(String(g.id));
     return '<div class="field"><label>صورة للهدف (اختياري)</label>' +
       '<div id="gpPreview" style="' + (url ? '' : 'display:none;') + 'height:120px;border-radius:14px;overflow:hidden;margin-bottom:8px;background:#0002"><img alt="" style="width:100%;height:100%;object-fit:cover;display:block"' + (url ? ' src="' + url + '"' : '') + '></div>' +
@@ -83,5 +88,4 @@
   E.goalDeleted = (id) => { if (id) drop(String(id)); };
 
   E.GoalPhoto = { get: (id) => cache.get(String(id)) || null, all: () => Object.fromEntries(cache), put, drop, load, shrink };
-  load();
 })();

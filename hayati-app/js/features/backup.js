@@ -72,6 +72,7 @@
     const local = {};
     for (const k of LOCAL) { try { const v = localStorage.getItem(k); if (v != null) local[k] = v; } catch (e) { /* تجاهل */ } }
     const GP = E.GoalPhoto;   // صور الأهداف (DW-040): على الجهاز بس، فترجع مع النسخة
+    if (GP) await GP.load();
     return { store: S.exportJSON(), local, clips: withAudio ? await readClips() : [], photos: GP ? GP.all() : {} };
   }
   async function unpack(p) {

@@ -78,7 +78,7 @@ adb exec-out run-as "$PKG" cat files/widget-preview.png > "$OUT/widget.png" 2>/d
 case "$wg" in
   "hayati-widget:inflate ok"*) echo "✅ الودجت انرسم ($(du -h "$OUT/widget.png" | cut -f1))" ;;
   "") echo "❌ ما وصلت لقطة للودجت خلال 30 ثانية"
-      grep -E 'Hayati|hayati-|chromium|Capacitor|AndroidRuntime' "$OUT/logcat.txt" | tail -60 || true
+      grep -E 'Hayati|hayati-|chromium|cr_|Capacitor|AndroidRuntime|DEBUG|libc|has died|crash' "$OUT/logcat.txt" | grep -v 'Handling local request' | tail -80 || true
       exit 1 ;;
   *) echo "❌ $wg"; exit 1 ;;
 esac
