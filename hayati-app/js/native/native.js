@@ -24,7 +24,7 @@
     try { return Object.assign({}, DEF, JSON.parse(localStorage.getItem(PREFS) || '{}')); } catch (e) { return Object.assign({}, DEF); }
   }
   function savePrefs(p) { try { localStorage.setItem(PREFS, JSON.stringify(p)); } catch (e) { /* تجاهل */ } }
-  const TASK_ACTIONS = 'HAYATI_TASK', ATTEND_ACTIONS = 'HAYATI_ATTEND';
+  const TASK_ACTIONS = 'HAYATI_TASK', ATTEND_ACTIONS = 'HAYATI_ATTEND', LOG_ACTIONS = 'HAYATI_LOG';
   const ATTEND_DAYS = 2, ATTEND_AFTER = 5;   // سؤال الحضور: يومين بس (حد iOS)، بعد المحاضرة بـ 5 دقايق
   const pad = (n) => String(n).padStart(2, '0');
   const dayKey = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
@@ -59,7 +59,7 @@
       const L = window.HayatiLang;
       if (L && L.lang === 'en' && typeof L.tr === 'function') { title = L.tr(title); body = L.tr(body || ''); }
       const n = { id: nid(key), title, body: body || '', schedule: { at: when, allowWhileIdle: true }, extra: extra || { kind: 'today' } };
-      if (extra && extra.act) n.actionTypeId = extra.act === 'attend' ? ATTEND_ACTIONS : TASK_ACTIONS;   // «حضرت/غبت» أو «خلصته/بعد ساعة»
+      if (extra && extra.act) n.actionTypeId = extra.act === 'attend' ? ATTEND_ACTIONS : extra.act === 'log' ? LOG_ACTIONS : TASK_ACTIONS;   // «حضرت/غبت» أو «خلصته/بعد ساعة» أو «سجّل»
       out.push(n);
     };
     const today = midnight(now);
@@ -156,7 +156,7 @@
       for (let d = 0; d < DAYS; d++) {
         const day = new Date(today.getFullYear(), today.getMonth(), today.getDate() + d);
         if (logged(day)) continue;
-        add('checkin:' + day.toDateString(), at(day, (ch || 0) * 60 + (cm || 0)), 'سكّر يومك 🌙', 'صرفت شي اليوم؟ سجّله بدقيقة عشان شهرك يطلع صح', { kind: 'checkin' });
+        add('checkin:' + day.toDateString(), at(day, (ch || 0) * 60 + (cm || 0)), 'سكّر يومك 🌙', 'صرفت شي اليوم؟ سجّله بدقيقة عشان شهرك يطلع صح', { kind: 'checkin', act: 'log' });
       }
     }
 
@@ -224,9 +224,21 @@
     if (extra.kind === 'checkin') { A.ui.moneySeg = 'tx'; A.go('money'); setTimeout(() => A.txForm(), 50); return; }
     A.go('today');
   }
+  // ✍️ «سجّل» من تنبيه «سكّر يومك» (DW-038): تكتب «1.200 قهوة» بالتنبيه نفسه وتنحفظ. لو السطر ما فيه مبلغ واضح، يفتح النموذج
+  function quickLog(text) {
+    const q = window.SmsParser && window.SmsParser.quick ? window.SmsParser.quick(text) : null;
+    if (!q) { A.ui.moneySeg = 'tx'; A.go('money'); setTimeout(() => A.txForm(), 50); if (String(text || '').trim()) A.toast('ما لقيت المبلغ، كمّل هني'); return; }
+    S.upsert('transactions', {
+      kind: q.kind, amount: q.amount, category: q.category, merchant: q.merchant || null, note: null,
+      occurred_at: new Date().toISOString(), source: 'manual', needs_review: false,
+    });
+    A.ui.moneySeg = 'tx'; A.go('money');
+    A.toast('انحفظ ✓ ' + A.fmt(q.amount) + ' د.ب · ' + q.category);
+  }
   function onAction(ev) {
     const n = (ev && ev.notification) || {};
     const extra = n.extra || { kind: 'today' };
+    if (ev.actionId === 'log') { quickLog(ev.inputValue); return; }
     if (ev.actionId === 'done') {
       const t = (A.st.tasks || []).find((x) => x.id === extra.id);
       if (!t) { A.toast('ما لقيت المهمة، يمكن انحذفت'); return; }
@@ -252,13 +264,18 @@
   }
   if (LN && typeof LN.registerActionTypes === 'function') {
     try {
+      // أزرار التنبيه من النظام: نترجمها مرة وحدة بلغة التطبيق وقت التشغيل
+      const L = window.HayatiLang, en = L && L.lang === 'en' && typeof L.tr === 'function';
+      const tr = (t) => { if (en) ['title', 'inputButtonTitle', 'inputPlaceholder'].forEach((k) => { if (t[k]) t[k] = L.tr(t[k]); }); return t; };
       Promise.resolve(LN.registerActionTypes({ types: [{ id: TASK_ACTIONS, actions: [
         { id: 'done', title: '✓ خلصته', foreground: true },
         { id: 'snooze', title: '⏰ ذكّرني بعد ساعة', foreground: true },
       ] }, { id: ATTEND_ACTIONS, actions: [
         { id: 'present', title: '✓ حضرت', foreground: true },
         { id: 'absent', title: '✗ غبت', foreground: true },
-      ] }] })).catch(() => {});
+      ] }, { id: LOG_ACTIONS, actions: [
+        { id: 'log', title: '✍️ سجّل مصروف', input: true, inputButtonTitle: 'سجّل', inputPlaceholder: 'مثلاً: 1.200 قهوة', foreground: true },
+      ] }].map((x) => Object.assign(x, { actions: x.actions.map(tr) })) })).catch(() => {});
     } catch (e) { /* نسخة قديمة بدون أزرار: التنبيه يشتغل عادي */ }
   }
   if (LN && typeof LN.addListener === 'function') {
@@ -314,7 +331,7 @@
   // ⚙️ الإعدادات ← التنبيهات (نسخة الآيفون بس)
   const TYPES = [['lectures', '📅 الجدول والصلاة', 'قبل المحاضرة بـ 10 دقايق، والصلاة بوقتها'], ['attend', '🎓 سؤال الحضور', 'بعد كل محاضرة: حضرت ولا غبت، من التنبيه نفسه'], ['exams', '📝 الاختبارات', 'الليلة اللي قبلها، وقبل الاختبار بساعتين'],
     ['homework', '📚 الواجبات', 'الليلة اللي قبل التسليم'], ['trips', '🧳 قبل السفر', 'قبله بـ 3 أيام والليلة اللي قبله: كم غرض باقي'], ['subs', '💳 تجديد الاشتراكات', 'قبل التجديد بالأيام اللي تحددها بالاشتراك'], ['brief', '☀️ ملخص الصباح', 'جدولك واختباراتك اليوم، والأيام الفاضية ما فيها'],
-    ['checkin', '🌙 سكّر يومك', 'بالليل، بس لو ما سجلت ولا مصروف بيومك'], ['adhkar', '📿 تذكير الأذكار', 'بعد الفجر والعصر بنص ساعة']];
+    ['checkin', '🌙 سكّر يومك', 'بالليل، بس لو ما سجلت ولا مصروف بيومك. تقدر تسجّل من التنبيه نفسه'], ['adhkar', '📿 تذكير الأذكار', 'بعد الفجر والعصر بنص ساعة']];
   function prefsSheet() {
     const p = prefs();
     A.openSheet({

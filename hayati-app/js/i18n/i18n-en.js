@@ -1828,5 +1828,12 @@ window.HAYATI_EN = {
 "سؤال · راجعها واضغط «حفظ»": "questions · check and tap «Save»",
 "· راجعها واضغط «حفظ»": "· check and tap «Save»",
 // DW-030: الترجمة الكاملة (الأخبار، الأدوات، أول دقيقة، النسخة المشفّرة، البلاغ، القبلة، عبادتي، الورد، المحاضرات، السفر، يوم الراتب والزكاة)
-"سؤالك وملخص أرقامك (بدون أسماء الناس) يروحون لـ Claude عشان الجواب، وما ينحفظون. كل سؤال يحسب من محاولات اليوم.": "Your question and a summary of your numbers (without people's names) go to Claude for the answer and aren't stored. Each question counts toward today's tries."
+"سؤالك وملخص أرقامك (بدون أسماء الناس) يروحون لـ Claude عشان الجواب، وما ينحفظون. كل سؤال يحسب من محاولات اليوم.": "Your question and a summary of your numbers (without people's names) go to Claude for the answer and aren't stored. Each question counts toward today's tries.",
+// DW-038: «سجّل» من تنبيه «سكّر يومك»، وأزرار التنبيهات
+"✍️ سجّل مصروف": "✍️ Log an expense",
+"مثلاً: 1.200 قهوة": "e.g. 1.200 coffee",
+"✓ حضرت": "✓ Attended",
+"✗ غبت": "✗ Absent",
+"ما لقيت المبلغ، كمّل هني": "Couldn't find the amount, finish here",
+"بالليل، بس لو ما سجلت ولا مصروف بيومك. تقدر تسجّل من التنبيه نفسه": "At night, only if you logged no expense that day. You can log right from the notification"
 };

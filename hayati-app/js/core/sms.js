@@ -33,7 +33,7 @@
   // التصنيف التلقائي حسب اسم المحل أو نص الرسالة
   const CATEGORY_RULES = [
     ['سحب نقدي', /\batm\b|cash withdrawal|withdrawal|صراف|سحب نقدي|سحب/i],
-    ['قهوة', /starbucks|costa|caribou|tim hortons|dunkin|coffee|cafe|café|كافيه|قهوة|كوفي|% arabica|arabica/i],
+    ['قهوة', /starbucks|costa|caribou|tim hortons|dunkin|coffee|cafe|café|كافيه|قهوة|كوفي|كوستا|ستاربكس|كاريبو|% arabica|arabica/i],
     ['أكل ومطاعم', /talabat|jahez|deliveroo|careem food|mcdonald|kfc|burger|pizza|hardee|shawarma|restaurant|مطعم|طلبات|جاهز|شاورما|برجر|بيتزا|subway|nando|texas/i],
     ['مواصلات وبنزين', /bapco|petrol|fuel|station|uber|careem|taxi|parking|بابكو|بنزين|محطة|وقود|تاكسي|كريم|مواقف/i],
     ['بقالة وتسوق', /lulu|carrefour|al ?osra|alosra|jawad|mega ?mart|geant|ramez|supermarket|hypermarket|market|mall|amazon|noon|shein|ikea|لولو|كارفور|الأسرة|جواد|سوبرماركت|هايبر|مول|نون|أمازون/i],
@@ -170,6 +170,21 @@
   }
 
 
+  /**
+   * سطر قصير يكتبه المستخدم من التنبيه (DW-038): «1.200 قهوة» · «قهوة 1.2» · «٣٫٥ كوستا» · «+50 راتب» (+ = دخل)
+   * يرجّع { kind, amount, merchant, category } أو null لو ما فيه مبلغ واضح
+   */
+  function quick(raw) {
+    const text = normalizeDigits(raw || '').replace(/\u200f|\u200e/g, '').replace(/\s+/g, ' ').trim();
+    const m = /(^|\s)([+-]?)(\d+(?:[.,]\d+)?)(?:\s*(?:د\.?\s?ب|bd|bhd|دينار))?(?=\s|$)/i.exec(text);
+    if (!m) return null;
+    const amount = Math.round(parseFloat(m[3].replace(',', '.')) * 1000) / 1000;
+    if (!(amount > 0) || amount > 100000) return null;
+    const kind = m[2] === '+' ? 'income' : 'expense';
+    const merchant = (text.slice(0, m.index) + ' ' + text.slice(m.index + m[0].length)).replace(/\s+/g, ' ').trim().slice(0, 60);
+    return { kind, amount, merchant, category: categorize(kind, merchant, merchant) };
+  }
+
   // ================= توحيد أسماء المحلات =================
   // «COSTA SEEF» = «Costa Coffee» = «كوستا» → مفتاح واحد «costa» واسم واحد «Costa»
   const BRANDS = [
@@ -246,7 +261,7 @@
       .replace(/[xX*]{2,}(?=\s|$)/g, '••');
   }
 
-  const api = { parse, categorize, mask, brand, groupByBrand, BRANDS, CATEGORY_RULES, INCOME_CATEGORY_RULES };
+  const api = { parse, quick, categorize, mask, brand, groupByBrand, BRANDS, CATEGORY_RULES, INCOME_CATEGORY_RULES };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else global.SmsParser = api;
 })(typeof window !== 'undefined' ? window : globalThis);

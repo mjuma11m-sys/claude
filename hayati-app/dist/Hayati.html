@@ -2537,7 +2537,14 @@ window.HAYATI_EN = {
 "سؤال · راجعها واضغط «حفظ»": "questions · check and tap «Save»",
 "· راجعها واضغط «حفظ»": "· check and tap «Save»",
 // DW-030: الترجمة الكاملة (الأخبار، الأدوات، أول دقيقة، النسخة المشفّرة، البلاغ، القبلة، عبادتي، الورد، المحاضرات، السفر، يوم الراتب والزكاة)
-"سؤالك وملخص أرقامك (بدون أسماء الناس) يروحون لـ Claude عشان الجواب، وما ينحفظون. كل سؤال يحسب من محاولات اليوم.": "Your question and a summary of your numbers (without people's names) go to Claude for the answer and aren't stored. Each question counts toward today's tries."
+"سؤالك وملخص أرقامك (بدون أسماء الناس) يروحون لـ Claude عشان الجواب، وما ينحفظون. كل سؤال يحسب من محاولات اليوم.": "Your question and a summary of your numbers (without people's names) go to Claude for the answer and aren't stored. Each question counts toward today's tries.",
+// DW-038: «سجّل» من تنبيه «سكّر يومك»، وأزرار التنبيهات
+"✍️ سجّل مصروف": "✍️ Log an expense",
+"مثلاً: 1.200 قهوة": "e.g. 1.200 coffee",
+"✓ حضرت": "✓ Attended",
+"✗ غبت": "✗ Absent",
+"ما لقيت المبلغ، كمّل هني": "Couldn't find the amount, finish here",
+"بالليل، بس لو ما سجلت ولا مصروف بيومك. تقدر تسجّل من التنبيه نفسه": "At night, only if you logged no expense that day. You can log right from the notification"
 };
 
 </script>
@@ -2706,7 +2713,7 @@ window.HAYATI_CONFIG = {
   // التصنيف التلقائي حسب اسم المحل أو نص الرسالة
   const CATEGORY_RULES = [
     ['سحب نقدي', /\batm\b|cash withdrawal|withdrawal|صراف|سحب نقدي|سحب/i],
-    ['قهوة', /starbucks|costa|caribou|tim hortons|dunkin|coffee|cafe|café|كافيه|قهوة|كوفي|% arabica|arabica/i],
+    ['قهوة', /starbucks|costa|caribou|tim hortons|dunkin|coffee|cafe|café|كافيه|قهوة|كوفي|كوستا|ستاربكس|كاريبو|% arabica|arabica/i],
     ['أكل ومطاعم', /talabat|jahez|deliveroo|careem food|mcdonald|kfc|burger|pizza|hardee|shawarma|restaurant|مطعم|طلبات|جاهز|شاورما|برجر|بيتزا|subway|nando|texas/i],
     ['مواصلات وبنزين', /bapco|petrol|fuel|station|uber|careem|taxi|parking|بابكو|بنزين|محطة|وقود|تاكسي|كريم|مواقف/i],
     ['بقالة وتسوق', /lulu|carrefour|al ?osra|alosra|jawad|mega ?mart|geant|ramez|supermarket|hypermarket|market|mall|amazon|noon|shein|ikea|لولو|كارفور|الأسرة|جواد|سوبرماركت|هايبر|مول|نون|أمازون/i],
@@ -2843,6 +2850,21 @@ window.HAYATI_CONFIG = {
   }
 
 
+  /**
+   * سطر قصير يكتبه المستخدم من التنبيه (DW-038): «1.200 قهوة» · «قهوة 1.2» · «٣٫٥ كوستا» · «+50 راتب» (+ = دخل)
+   * يرجّع { kind, amount, merchant, category } أو null لو ما فيه مبلغ واضح
+   */
+  function quick(raw) {
+    const text = normalizeDigits(raw || '').replace(/\u200f|\u200e/g, '').replace(/\s+/g, ' ').trim();
+    const m = /(^|\s)([+-]?)(\d+(?:[.,]\d+)?)(?:\s*(?:د\.?\s?ب|bd|bhd|دينار))?(?=\s|$)/i.exec(text);
+    if (!m) return null;
+    const amount = Math.round(parseFloat(m[3].replace(',', '.')) * 1000) / 1000;
+    if (!(amount > 0) || amount > 100000) return null;
+    const kind = m[2] === '+' ? 'income' : 'expense';
+    const merchant = (text.slice(0, m.index) + ' ' + text.slice(m.index + m[0].length)).replace(/\s+/g, ' ').trim().slice(0, 60);
+    return { kind, amount, merchant, category: categorize(kind, merchant, merchant) };
+  }
+
   // ================= توحيد أسماء المحلات =================
   // «COSTA SEEF» = «Costa Coffee» = «كوستا» → مفتاح واحد «costa» واسم واحد «Costa»
   const BRANDS = [
@@ -2919,7 +2941,7 @@ window.HAYATI_CONFIG = {
       .replace(/[xX*]{2,}(?=\s|$)/g, '••');
   }
 
-  const api = { parse, categorize, mask, brand, groupByBrand, BRANDS, CATEGORY_RULES, INCOME_CATEGORY_RULES };
+  const api = { parse, quick, categorize, mask, brand, groupByBrand, BRANDS, CATEGORY_RULES, INCOME_CATEGORY_RULES };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else global.SmsParser = api;
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -11125,7 +11147,7 @@ window.HAYATI_CONFIG = {
     try { return Object.assign({}, DEF, JSON.parse(localStorage.getItem(PREFS) || '{}')); } catch (e) { return Object.assign({}, DEF); }
   }
   function savePrefs(p) { try { localStorage.setItem(PREFS, JSON.stringify(p)); } catch (e) { /* تجاهل */ } }
-  const TASK_ACTIONS = 'HAYATI_TASK', ATTEND_ACTIONS = 'HAYATI_ATTEND';
+  const TASK_ACTIONS = 'HAYATI_TASK', ATTEND_ACTIONS = 'HAYATI_ATTEND', LOG_ACTIONS = 'HAYATI_LOG';
   const ATTEND_DAYS = 2, ATTEND_AFTER = 5;   // سؤال الحضور: يومين بس (حد iOS)، بعد المحاضرة بـ 5 دقايق
   const pad = (n) => String(n).padStart(2, '0');
   const dayKey = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
@@ -11160,7 +11182,7 @@ window.HAYATI_CONFIG = {
       const L = window.HayatiLang;
       if (L && L.lang === 'en' && typeof L.tr === 'function') { title = L.tr(title); body = L.tr(body || ''); }
       const n = { id: nid(key), title, body: body || '', schedule: { at: when, allowWhileIdle: true }, extra: extra || { kind: 'today' } };
-      if (extra && extra.act) n.actionTypeId = extra.act === 'attend' ? ATTEND_ACTIONS : TASK_ACTIONS;   // «حضرت/غبت» أو «خلصته/بعد ساعة»
+      if (extra && extra.act) n.actionTypeId = extra.act === 'attend' ? ATTEND_ACTIONS : extra.act === 'log' ? LOG_ACTIONS : TASK_ACTIONS;   // «حضرت/غبت» أو «خلصته/بعد ساعة» أو «سجّل»
       out.push(n);
     };
     const today = midnight(now);
@@ -11257,7 +11279,7 @@ window.HAYATI_CONFIG = {
       for (let d = 0; d < DAYS; d++) {
         const day = new Date(today.getFullYear(), today.getMonth(), today.getDate() + d);
         if (logged(day)) continue;
-        add('checkin:' + day.toDateString(), at(day, (ch || 0) * 60 + (cm || 0)), 'سكّر يومك 🌙', 'صرفت شي اليوم؟ سجّله بدقيقة عشان شهرك يطلع صح', { kind: 'checkin' });
+        add('checkin:' + day.toDateString(), at(day, (ch || 0) * 60 + (cm || 0)), 'سكّر يومك 🌙', 'صرفت شي اليوم؟ سجّله بدقيقة عشان شهرك يطلع صح', { kind: 'checkin', act: 'log' });
       }
     }
 
@@ -11325,9 +11347,21 @@ window.HAYATI_CONFIG = {
     if (extra.kind === 'checkin') { A.ui.moneySeg = 'tx'; A.go('money'); setTimeout(() => A.txForm(), 50); return; }
     A.go('today');
   }
+  // ✍️ «سجّل» من تنبيه «سكّر يومك» (DW-038): تكتب «1.200 قهوة» بالتنبيه نفسه وتنحفظ. لو السطر ما فيه مبلغ واضح، يفتح النموذج
+  function quickLog(text) {
+    const q = window.SmsParser && window.SmsParser.quick ? window.SmsParser.quick(text) : null;
+    if (!q) { A.ui.moneySeg = 'tx'; A.go('money'); setTimeout(() => A.txForm(), 50); if (String(text || '').trim()) A.toast('ما لقيت المبلغ، كمّل هني'); return; }
+    S.upsert('transactions', {
+      kind: q.kind, amount: q.amount, category: q.category, merchant: q.merchant || null, note: null,
+      occurred_at: new Date().toISOString(), source: 'manual', needs_review: false,
+    });
+    A.ui.moneySeg = 'tx'; A.go('money');
+    A.toast('انحفظ ✓ ' + A.fmt(q.amount) + ' د.ب · ' + q.category);
+  }
   function onAction(ev) {
     const n = (ev && ev.notification) || {};
     const extra = n.extra || { kind: 'today' };
+    if (ev.actionId === 'log') { quickLog(ev.inputValue); return; }
     if (ev.actionId === 'done') {
       const t = (A.st.tasks || []).find((x) => x.id === extra.id);
       if (!t) { A.toast('ما لقيت المهمة، يمكن انحذفت'); return; }
@@ -11353,13 +11387,18 @@ window.HAYATI_CONFIG = {
   }
   if (LN && typeof LN.registerActionTypes === 'function') {
     try {
+      // أزرار التنبيه من النظام: نترجمها مرة وحدة بلغة التطبيق وقت التشغيل
+      const L = window.HayatiLang, en = L && L.lang === 'en' && typeof L.tr === 'function';
+      const tr = (t) => { if (en) ['title', 'inputButtonTitle', 'inputPlaceholder'].forEach((k) => { if (t[k]) t[k] = L.tr(t[k]); }); return t; };
       Promise.resolve(LN.registerActionTypes({ types: [{ id: TASK_ACTIONS, actions: [
         { id: 'done', title: '✓ خلصته', foreground: true },
         { id: 'snooze', title: '⏰ ذكّرني بعد ساعة', foreground: true },
       ] }, { id: ATTEND_ACTIONS, actions: [
         { id: 'present', title: '✓ حضرت', foreground: true },
         { id: 'absent', title: '✗ غبت', foreground: true },
-      ] }] })).catch(() => {});
+      ] }, { id: LOG_ACTIONS, actions: [
+        { id: 'log', title: '✍️ سجّل مصروف', input: true, inputButtonTitle: 'سجّل', inputPlaceholder: 'مثلاً: 1.200 قهوة', foreground: true },
+      ] }].map((x) => Object.assign(x, { actions: x.actions.map(tr) })) })).catch(() => {});
     } catch (e) { /* نسخة قديمة بدون أزرار: التنبيه يشتغل عادي */ }
   }
   if (LN && typeof LN.addListener === 'function') {
@@ -11415,7 +11454,7 @@ window.HAYATI_CONFIG = {
   // ⚙️ الإعدادات ← التنبيهات (نسخة الآيفون بس)
   const TYPES = [['lectures', '📅 الجدول والصلاة', 'قبل المحاضرة بـ 10 دقايق، والصلاة بوقتها'], ['attend', '🎓 سؤال الحضور', 'بعد كل محاضرة: حضرت ولا غبت، من التنبيه نفسه'], ['exams', '📝 الاختبارات', 'الليلة اللي قبلها، وقبل الاختبار بساعتين'],
     ['homework', '📚 الواجبات', 'الليلة اللي قبل التسليم'], ['trips', '🧳 قبل السفر', 'قبله بـ 3 أيام والليلة اللي قبله: كم غرض باقي'], ['subs', '💳 تجديد الاشتراكات', 'قبل التجديد بالأيام اللي تحددها بالاشتراك'], ['brief', '☀️ ملخص الصباح', 'جدولك واختباراتك اليوم، والأيام الفاضية ما فيها'],
-    ['checkin', '🌙 سكّر يومك', 'بالليل، بس لو ما سجلت ولا مصروف بيومك'], ['adhkar', '📿 تذكير الأذكار', 'بعد الفجر والعصر بنص ساعة']];
+    ['checkin', '🌙 سكّر يومك', 'بالليل، بس لو ما سجلت ولا مصروف بيومك. تقدر تسجّل من التنبيه نفسه'], ['adhkar', '📿 تذكير الأذكار', 'بعد الفجر والعصر بنص ساعة']];
   function prefsSheet() {
     const p = prefs();
     A.openSheet({

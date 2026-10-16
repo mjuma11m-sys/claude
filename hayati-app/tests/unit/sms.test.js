@@ -65,3 +65,13 @@ test('mask: card, account and IBAN numbers hidden; amounts and dates kept', () =
   // القراءة تشتغل على النص الأصلي، والإخفاء ما يغيّر المبلغ
   assert.equal(P.parse(P.mask('Your card XX4821 was used for BHD 3.750 at COSTA')).amount, 3.75);
 });
+
+test('سطر سريع من التنبيه (DW-038): المبلغ قبل أو بعد، أرقام عربية، + للدخل', () => {
+  assert.deepStrictEqual(P.quick('1.200 قهوة'), { kind: 'expense', amount: 1.2, merchant: 'قهوة', category: 'قهوة' });
+  assert.deepStrictEqual(P.quick('٣٫٥ كوستا'), { kind: 'expense', amount: 3.5, merchant: 'كوستا', category: 'قهوة' });
+  assert.strictEqual(P.quick('طلبات 4.5 د.ب').category, 'أكل ومطاعم');
+  assert.strictEqual(P.quick('طلبات 4.5 د.ب').merchant, 'طلبات');
+  assert.strictEqual(P.quick('+50 راتب').kind, 'income');
+  assert.strictEqual(P.quick('3').category, 'أخرى');
+  for (const bad of ['', 'hello', '0', 'قهوة']) assert.strictEqual(P.quick(bad), null);
+});

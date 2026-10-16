@@ -1362,6 +1362,36 @@ test('daily loop: one card from day two turns on the morning brief and «سكّ�
   expect((await checkins()).length).toBeGreaterThan(0);
 });
 
+test('«سكّر يومك» (DW-038): type «1.200 كوستا» in the notification and it is saved; no amount opens the form', async ({ page }) => {
+  await page.addInitScript(() => {
+    const log = window.__cap = { scheduled: [] };
+    localStorage.setItem('hayati-notif-prefs', JSON.stringify({ checkin: true, checkinAt: '23:59' }));
+    window.Capacitor = { isNativePlatform: () => true, Plugins: {
+      LocalNotifications: { checkPermissions: async () => ({ display: 'granted' }), requestPermissions: async () => ({ display: 'granted' }),
+        getPending: async () => ({ notifications: log.scheduled.map((n) => ({ id: n.id })) }), cancel: async () => { log.scheduled = []; }, schedule: async ({ notifications }) => { log.scheduled = notifications; },
+        registerActionTypes: async (o) => { log.types = o.types; },
+        addListener: (ev, fn) => { log.handler = fn; return Promise.resolve({ remove() {} }); } },
+      Haptics: { impact: async () => {} } } };
+  });
+  await open(page);
+  await page.waitForFunction(() => window.__cap.scheduled.some((n) => n.title === 'سكّر يومك 🌙'), null, { timeout: 5000 });
+  const n = await store(page, () => window.__cap.scheduled.find((x) => x.title === 'سكّر يومك 🌙'));
+  const t = await store(page, (id) => window.__cap.types.find((x) => x.id === id), n.actionTypeId);
+  expect(t.actions).toEqual([expect.objectContaining({ id: 'log', input: true, inputPlaceholder: 'مثلاً: 1.200 قهوة', foreground: true })]);
+
+  await store(page, (n) => window.__cap.handler({ actionId: 'log', inputValue: '١٫٢٠٠ كوستا', notification: n }), n);
+  await expect(page.locator('.toast')).toContainText('انحفظ ✓ 1.200 د.ب · قهوة');
+  const tx = await store(page, () => App.st.transactions.find((x) => x.merchant === 'كوستا'));
+  expect([tx.kind, tx.amount, tx.category, tx.source]).toEqual(['expense', 1.2, 'قهوة', 'manual']);
+  // انسجّل اليوم ← تذكير الليلة ينشال
+  await page.waitForFunction(() => !window.__cap.scheduled.some((x) => x.title === 'سكّر يومك 🌙' && new Date(x.schedule.at).toDateString() === new Date().toDateString()), null, { timeout: 5000 });
+
+  // سطر بدون مبلغ ← النموذج ينفتح
+  await store(page, (n) => window.__cap.handler({ actionId: 'log', inputValue: 'قهوة', notification: n }), n);
+  await expect(page.locator('#sheetBody [name=amount]')).toBeVisible();
+  await expect(page.locator('.toast')).toContainText('ما لقيت المبلغ');
+});
+
 test('daily loop: «لا شكراً» hides the card for good, and it never shows on the first day or on the web', async ({ page }) => {
   await page.addInitScript(fakeCap);
   await open(page);
