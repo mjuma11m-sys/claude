@@ -120,7 +120,7 @@ function Idarati() {
       {page === "privacy" && <Privacy />}
 
       <PaySheet unit={unit} onClose={closeUnit} onReceipt={(payment, u) => { setUnit(null); setReceipt({ payment, unit: u }); }} onEdit={(u) => { setUnit(null); setEditing({ unit: u }); }} onStatement={(u) => { setUnit(null); setStmt(u); }} onContract={(u) => { setUnit(null); setContract(u); }} onRenew={(u) => { setUnit(null); setRenew(u); }} />
-      <SearchSheet open={searching} onClose={closeSearch} onPick={(u) => { setSearching(false); setUnit(u); }} />
+      <SearchSheet open={searching} onClose={closeSearch} onPick={(u) => { setSearching(false); setUnit(u); }} go={go} />
       <UnitForm open={!!editing} unit={editing?.unit ?? null} onClose={closeEditing} />
       <ReceiptSheet value={receipt} onClose={closeReceipt} />
       <StatementSheet unit={stmt} onClose={closeStmt} />

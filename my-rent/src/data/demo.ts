@@ -87,6 +87,11 @@ export function demoData(now = new Date()): Data {
       { id: "b4", unitId: "u3", month: m1, kind: "ewa", amount: 35250, paid: false },
       { id: "b5", unitId: "u6", month: m1, kind: "ewa", amount: 88600, paid: true },
     ],
+    // DW-029: المحل 1 عطى شيكات مؤجلة (أرقام وهمية)
+    cheques: [
+      { id: "q1", unitId: "u6", number: "000101", bank: "بنك البحرين الوطني", amount: 450000, due: isoDay(new Date(y, mo, now.getDate() + 3)), state: "held" },
+      { id: "q2", unitId: "u6", number: "000102", bank: "بنك البحرين الوطني", amount: 450000, due: isoDay(new Date(y, mo + 1, now.getDate() + 3)), state: "held" },
+    ],
     // DW-023: وثائق العقار (أرقام وهمية)
     docs: [
       { id: "d1", kind: "license", title: "رخصة البلدية — المحلات", ref: "BL-00000", expires: isoDay(new Date(y, mo, now.getDate() - 5)) },

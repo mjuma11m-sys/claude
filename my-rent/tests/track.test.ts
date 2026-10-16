@@ -1,5 +1,5 @@
 // منطق ملف متابعة الإيجار (DW-022): npm run test:track
-import { billsDue, collection, monthlyReport, addMonthsDay, renewUnit, rentAt, upcomingRent, owedMonths, docStatus, docsList, docAlerts, kindOf, nextUnpaid, paidThrough, prepaid, rentTracker, statement, trackerTotals, monthKey } from "../src/data/logic";
+import { buildIcs, chequeSeries, chequesDue, billsDue, collection, monthlyReport, addMonthsDay, renewUnit, rentAt, upcomingRent, owedMonths, docStatus, docsList, docAlerts, kindOf, nextUnpaid, paidThrough, prepaid, rentTracker, statement, trackerTotals, monthKey } from "../src/data/logic";
 import { reducer } from "../src/data/store";
 import { demoData } from "../src/data/demo";
 import { planImport, trackerSheet, TRACK_HEAD } from "../src/data/excel";
@@ -99,6 +99,23 @@ ok(m77?.elec === "123456" && m77?.water === "987", "استيراد العداد�
   const paid = reducer(d, { type: "bill", bill: { ...d.bills!.find((b) => b.id === "b3")!, paid: true } });
   ok(billsDue(paid, u3).amount === 35250 && paid.bills!.length === d.bills!.length, "مسددة: تنقص من غير المسددة بدون تكرار");
   ok(reducer(d, { type: "unbill", id: "b4" }).bills!.length === d.bills!.length - 1 && reducer({ ...d, bills: undefined }, { type: "bill", bill: { id: "z", unitId: "u1", month: cur, kind: "ewa", amount: 1, paid: false } }).bills!.length === 1, "unbill + بيانات قديمة بدون bills");
+}
+
+// 11) DW-029: الشيكات + ملف التقويم
+{
+  const ser = chequeSeries({ number: "000099", bank: "BBK", amount: 450000, due: "2026-01-31" }, 12);
+  ok(ser.length === 12 && ser[1].number === "000100" && ser[11].number === "000110" && ser[1].due === "2026-02-28" && ser[11].due === "2026-12-31", "سلسلة 12 شيك: الرقم والتاريخ", `${ser[1].number} ${ser[1].due}`);
+  ok(chequeSeries({ number: "A12", bank: "", amount: 1, due: "2026-03-01" }, 2)[1].number === "A12-2", "رقم مو أرقام: لاحقة");
+  const due = chequesDue(d, now);
+  ok(due.length === 1 && due[0].cheque.id === "q1" && due[0].left === 3, "شيكات تستحق خلال 7 أيام: واحد (باقي 3)");
+  const held: Data = d;
+  ok(JSON.stringify(rentTracker(held, now).map((r) => r.paid)) === JSON.stringify(rentTracker({ ...d, cheques: [] }, now).map((r) => r.paid)), "الشيك «عندي» ما يغيّر المسدد");
+  const ics = buildIcs(d, now);
+  const lines = ics.text.split("\r\n");
+  ok(ics.text.startsWith("BEGIN:VCALENDAR\r\n") && ics.text.endsWith("END:VCALENDAR\r\n") && (ics.text.match(/BEGIN:VEVENT/g) ?? []).length === ics.count, "ICS: بنية صحيحة", String(ics.count));
+  ok(ics.count === 6 + 2 + 4 + 2, "ICS: 6 إيجارات + 2 عقود + 4 وثائق بتاريخ + 2 شيكات", String(ics.count));
+  ok(lines.every((l) => new TextEncoder().encode(l).length <= 75), "ICS: كل سطر ≤ 75 بايت");
+  ok(ics.text.includes("RRULE:FREQ=MONTHLY") && ics.text.includes("TRIGGER:-P30D") && ics.text.includes("TRIGGER:-P1D"), "ICS: تكرار شهري + تنبيهات 30 يوم ويوم");
 }
 
 console.log(failed ? `\n${failed} فشل` : "\nكل اختبارات المتابعة نجحت");

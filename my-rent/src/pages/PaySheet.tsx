@@ -6,6 +6,7 @@ import { Chips, Sheet, useToast } from "../ui/kit";
 import { Money, StatusPill } from "../theme/AppShell";
 import { Icon } from "../ui/icons";
 import { BillsBox } from "./Bills";
+import { ChequesBox } from "./Cheques";
 
 const METHODS: Method[] = ["BenefitPay", "تحويل", "نقد", "شيك"];
 
@@ -109,6 +110,8 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onCont
             {!!u.tenant?.deposit && <div><div className="muted small">التأمين</div><Money fils={u.tenant.deposit} /></div>}
           </div>
 
+          {u.notes && <p className="unit-notes small" id="unit-notes">📝 {u.notes}</p>}
+
           {arr.amount > 0 && (
             <div className="arrears">
               <div>
@@ -147,6 +150,7 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onCont
           )}
 
           {u.tenant && <BillsBox unit={u} />}
+          {u.tenant && <ChequesBox unit={u} />}
 
           {history.length > 0 && (
             <div>

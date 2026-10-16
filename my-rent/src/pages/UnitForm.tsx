@@ -10,7 +10,7 @@ type Props = { open: boolean; unit: Unit | null; onClose: () => void; onSaved?: 
 export function UnitForm({ open, unit, onClose, onSaved }: Props) {
   const { saveUnit } = useStore();
   const toast = useToast();
-  const [f, setF] = useState({ name: "", building: "", rent: "", dueDay: "1", tenant: "", phone: "", since: "", until: "", deposit: "", elec: "", water: "" });
+  const [f, setF] = useState({ name: "", building: "", rent: "", dueDay: "1", tenant: "", phone: "", since: "", until: "", deposit: "", elec: "", water: "", notes: "" });
   const [kind, setKind] = useState<Kind>("flat");
   const [error, setError] = useState("");
 
@@ -30,6 +30,7 @@ export function UnitForm({ open, unit, onClose, onSaved }: Props) {
       deposit: unit?.tenant?.deposit ? fmt(unit.tenant.deposit) : "",
       elec: unit?.meters?.elec ?? "",
       water: unit?.meters?.water ?? "",
+      notes: unit?.notes ?? "",
     });
   }, [open, unit]);
 
@@ -54,6 +55,7 @@ export function UnitForm({ open, unit, onClose, onSaved }: Props) {
       kind,
       ...(unit?.contractFile ? { contractFile: unit.contractFile } : {}), // التعديل ما يمسح ملف العقد
       ...(sameTenant && unit?.rentBefore ? { rentBefore: unit.rentBefore } : {}),
+      ...(f.notes.trim() ? { notes: f.notes.trim() } : {}),
       ...(f.elec.trim() || f.water.trim() ? { meters: { ...(f.elec.trim() ? { elec: f.elec.trim() } : {}), ...(f.water.trim() ? { water: f.water.trim() } : {}) } } : {}),
       rent,
       dueDay: day,
@@ -91,6 +93,7 @@ export function UnitForm({ open, unit, onClose, onSaved }: Props) {
           <label className="field"><span>نهاية العقد</span><input id="u-until" className="input num" type="date" dir="ltr" value={f.until} onChange={set("until")} /></label>
         </div>
         <label className="field"><span>التأمين (د.ب) <span className="muted small">اختياري · يرجع وقت الإخلاء</span></span><input id="u-deposit" className="input num" inputMode="decimal" dir="ltr" value={f.deposit} onChange={set("deposit")} placeholder="0.000" /></label>
+        <label className="field"><span>ملاحظات <span className="muted small">اختياري · مثل «المكيف تبدّل 2026»</span></span><textarea id="u-notes" className="input" rows={2} value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} /></label>
         {error && <div className="field-error" role="alert">{error}</div>}
         <button type="submit" className="btn btn-block press">{unit ? "احفظ التعديل" : "أضف الوحدة"}</button>
       </form>

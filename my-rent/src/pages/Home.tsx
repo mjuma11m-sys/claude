@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useStore } from "../data/store";
-import { arrears, monthKey, rentAt, backupDue, balances, budget, collection, contractAlerts, docAlerts, fmt, monthName, unitStatus } from "../data/logic";
+import { arrears, chequesDue, monthKey, rentAt, backupDue, balances, budget, collection, contractAlerts, docAlerts, fmt, monthName, unitStatus } from "../data/logic";
 import { DocPill } from "./Docs";
 import type { Unit } from "../data/types";
 import { Money, StatusPill } from "../theme/AppShell";
@@ -41,6 +41,7 @@ export function Home({ onOpenUnit, go, onQuick }: { onOpenUnit: (u: Unit) => voi
   const attention = [...c.late, ...c.due];
   const contracts = contractAlerts(data);
   const docs = docAlerts(data);
+  const chq = chequesDue(data);
   const pct = c.expected ? Math.round((c.collected / c.expected) * 100) : 0;
 
   return (
@@ -117,6 +118,22 @@ export function Home({ onOpenUnit, go, onQuick }: { onOpenUnit: (u: Unit) => voi
                 </button>
               </li>
             ))}
+          </ul>
+        </section>
+      )}
+
+      {chq.length > 0 && (
+        <section className="area-docs" id="home-cheques">
+          <SectionHead title="شيكات تستحق الإيداع" />
+          <ul className="rows rows-tap card-list">
+            {chq.map(({ cheque: c, left }) => { const u = data.units.find((x) => x.id === c.unitId); return (
+              <li key={c.id}>
+                <button className="row-btn press" onClick={() => u && onOpenUnit(u)}>
+                  <span><span className="strong">{u?.name}</span> <span className="muted small">· شيك <span className="num">{c.number}</span> · <span className="num">{fmt(c.amount)}</span> د.ب</span></span>
+                  <span className={`pill ${left < 0 ? "pill-late" : "pill-due"}`}>{left < 0 ? <>متأخر <span className="num">{-left}</span> يوم</> : left === 0 ? "اليوم" : <>بعد <span className="num">{left}</span> يوم</>}</span>
+                </button>
+              </li>
+            ); })}
           </ul>
         </section>
       )}

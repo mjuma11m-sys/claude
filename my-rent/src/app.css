@@ -167,8 +167,9 @@ a.icon-btn { color: var(--brand); }
 
 @media print {
   body * { visibility: hidden !important; }
-  #receipt, #receipt *, #statement, #statement *, #contract, #contract * { visibility: visible !important; }
-  #receipt, #statement, #contract { position: absolute; inset: 0 auto auto 0; width: 100%; border: 0; }
+  #receipt, #receipt *, #statement, #statement *, #contract, #contract *, #month-report, #month-report * { visibility: visible !important; }
+  #receipt, #statement, #contract, #month-report { position: absolute; inset: 0 auto auto 0; width: 100%; border: 0; }
+  #month-report, #month-report * { color: #000 !important; background: #fff !important; }
 }
 
 /* DW-014: نموذج الوحدة، الإخلاء، التقارير */
@@ -431,3 +432,12 @@ select.input { appearance: auto; }
 .legal-sec h3 { font-size: 15px; margin: 6px 0 0; }
 .legal-sec ul { margin: 0; padding-inline-start: 20px; display: grid; gap: 6px; }
 .legal-sec p, .legal-sec li { line-height: 1.75; max-width: 70ch; }
+
+/* DW-029: الشيكات، تقرير الشهر، الملاحظات */
+.cheque-row { flex-wrap: wrap; }
+.cheque-main { display: grid; gap: 2px; }
+.cheque-acts { display: flex; gap: 14px; width: 100%; justify-content: flex-end; font-size: 13px; }
+.mr-title { margin: 8px 0 4px; font-size: 18px; }
+.month-report h4 { margin: 14px 0 4px; font-size: 14px; }
+.mr-table td.num { text-align: end; }
+.unit-notes { margin: 0; padding: 8px 12px; border-radius: 10px; background: var(--surface-2); white-space: pre-wrap; }

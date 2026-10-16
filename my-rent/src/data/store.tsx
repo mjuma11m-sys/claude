@@ -1,8 +1,8 @@
 // مخزن البيانات: useReducer + localStorage. لما ينربط Supabase، يتبدل load/save بس والشاشات ما تتغيّر.
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import type { Bill, BudgetCat, Data, DepositLog, Doc, Expense, Method, Payment, Recurring, Unit } from "./types";
+import type { Bill, BudgetCat, Cheque, Data, DepositLog, Doc, Expense, Method, Payment, Recurring, Unit } from "./types";
 import { demoData, emptyData } from "./demo";
-import { dueRecurring, findBill, isoDay, nextUnpaid, owedMonths, rentAt } from "./logic";
+import { dueRecurring, findBill, isoDay, monthKey, nextUnpaid, owedMonths, rentAt } from "./logic";
 import { SyncEngine, loadSyncConfig, saveSyncConfig, type SyncAction, type SyncConfig, type SyncStatus } from "./sync";
 
 const KEY = "idarati:v2";
@@ -28,6 +28,8 @@ export type Action =
   | { type: "undoc"; id: string }
   | { type: "bill"; bill: Bill }
   | { type: "unbill"; id: string }
+  | { type: "cheque"; cheque: Cheque }
+  | { type: "uncheque"; id: string }
   | { type: "import"; units: Unit[]; payments: Payment[]; expenses: Expense[]; cats: BudgetCat[] }
   | { type: "unimport"; restore: Unit[]; unitIds: string[]; paymentIds: string[]; expenseIds: string[]; catIds: string[] };
 
@@ -76,6 +78,11 @@ export function reducer(state: Data, a: Action): Data {
       return { ...state, bills: bills.some((b) => b.id === a.bill.id) ? bills.map((b) => (b.id === a.bill.id ? a.bill : b)) : [...bills, a.bill] };
     }
     case "unbill": return { ...state, bills: (state.bills ?? []).filter((b) => b.id !== a.id) };
+    case "cheque": { // DW-029
+      const cs = state.cheques ?? [];
+      return { ...state, cheques: cs.some((c) => c.id === a.cheque.id) ? cs.map((c) => (c.id === a.cheque.id ? a.cheque : c)) : [...cs, a.cheque] };
+    }
+    case "uncheque": return { ...state, cheques: (state.cheques ?? []).filter((c) => c.id !== a.id) };
     default: return state; // حدث من نسخة أحدث للتطبيق: نتجاهله بدل ما ننكسر
   }
 }
@@ -132,6 +139,13 @@ type Store = {
   removeDoc: (id: string) => Doc | null;
   saveBill: (b: Omit<Bill, "id"> & { id?: string }) => Bill;
   removeBill: (id: string) => void;
+  addCheques: (unitId: string, list: Omit<Cheque, "id" | "unitId" | "state">[]) => Cheque[];
+  setCheque: (c: Cheque) => void;
+  removeCheque: (id: string) => void;
+  /** يودع الشيك: دفعة «شيك» عن أول شهر ما اندفع؛ يرجّع دالة التراجع */
+  depositCheque: (id: string) => (() => void) | null;
+  /** الشيك رجع: لو كان مودع تنمسح دفعته */
+  returnCheque: (id: string) => (() => void) | null;
   importPlan: (p: { units: Unit[]; payments: Payment[]; expenses: Expense[]; cats: BudgetCat[] }) => () => void; // يرجّع دالة التراجع
   deleteUnit: (id: string) => boolean;
   replace: (data: Data) => void;
@@ -258,6 +272,31 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return bill;
     },
     removeBill: (id) => dispatch({ type: "unbill", id }),
+    addCheques: (unitId, list) => {
+      const cs = list.map((c) => ({ ...c, id: "q" + uid(), unitId, state: "held" as const }));
+      cs.forEach((cheque) => dispatch({ type: "cheque", cheque }));
+      return cs;
+    },
+    setCheque: (cheque) => dispatch({ type: "cheque", cheque }),
+    removeCheque: (id) => dispatch({ type: "uncheque", id }),
+    depositCheque: (id) => {
+      const c = (data.cheques ?? []).find((x) => x.id === id);
+      const unit = c && data.units.find((u) => u.id === c.unitId);
+      if (!c || !unit || c.state === "deposited") return null;
+      const month = nextUnpaid(data, unit, 1)[0] ?? monthKey(new Date());
+      const payment = { id: uid(), unitId: unit.id, month, amount: c.amount, method: "شيك", date: isoDay(new Date()) } as Payment;
+      dispatch({ type: "pay", payment });
+      dispatch({ type: "cheque", cheque: { ...c, state: "deposited", paymentId: payment.id } });
+      return () => { dispatch({ type: "unpay", id: payment.id }); dispatch({ type: "cheque", cheque: c }); };
+    },
+    returnCheque: (id) => {
+      const c = (data.cheques ?? []).find((x) => x.id === id);
+      if (!c || c.state === "returned") return null;
+      const pay = c.paymentId ? data.payments.find((p) => p.id === c.paymentId) : undefined;
+      if (pay) dispatch({ type: "unpay", id: pay.id });
+      dispatch({ type: "cheque", cheque: { ...c, state: "returned", paymentId: undefined } });
+      return () => { if (pay) dispatch({ type: "pay", payment: pay }); dispatch({ type: "cheque", cheque: c }); };
+    },
     saveDoc: (d) => {
       const doc = { ...d, id: d.id ?? "d" + uid() } as Doc;
       dispatch({ type: "doc", doc });

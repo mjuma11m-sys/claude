@@ -584,6 +584,64 @@ try {
     await cp.close();
   }
 
+  // 22) DW-029: الشيكات المؤجلة + التقويم + تقرير الشهر + البحث والملاحظات
+  {
+    const q = await browser.newPage({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
+    const qErr = []; q.on("pageerror", (x) => qErr.push(x.message));
+    await q.goto(URL + "#home"); await q.evaluate(() => localStorage.clear()); await q.reload(); await q.waitForTimeout(900);
+    ok((await q.locator("#home-cheques").innerText()).includes("000101"), "الرئيسية: شيك يستحق الإيداع");
+    await q.locator("#home-cheques button").first().click(); await q.waitForTimeout(500);
+    const st0 = await q.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")));
+    // إيداع ← دفعة شيك
+    await q.locator("#cheques-box .cheque-dep").first().click(); await q.waitForTimeout(400);
+    let st = await q.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")));
+    const q1 = st.cheques.find((c) => c.id === "q1");
+    const pay = st.payments.find((p) => p.id === q1.paymentId);
+    ok(q1.state === "deposited" && pay && pay.method === "شيك" && pay.amount === 450000 && st.payments.length === st0.payments.length + 1, "أودعته: دفعة «شيك» انسجلت");
+    // رجع ← الدفعة تنمسح
+    await q.locator("#cheques-box .cheque-ret").first().click(); await q.waitForTimeout(400);
+    st = await q.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")));
+    ok(st.cheques.find((c) => c.id === "q1").state === "returned" && st.payments.length === st0.payments.length, "رجع: الدفعة انمسحت");
+    await q.getByRole("button", { name: "تراجع" }).click(); await q.waitForTimeout(400);
+    st = await q.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")));
+    ok(st.cheques.find((c) => c.id === "q1").state === "deposited" && st.payments.length === st0.payments.length + 1, "التراجع عن «رجع» يرجّع الدفعة");
+    // 12 شيك بضغطة
+    await q.locator("#cheque-open").click(); await q.waitForTimeout(300);
+    await q.locator("#cheques-box").getByRole("radio", { name: "سنة (12)" }).click();
+    await q.locator("#chq-number").fill("000500"); await q.locator("#chq-bank").fill("BBK");
+    await q.locator("#chq-add").click(); await q.waitForTimeout(500);
+    st = await q.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")));
+    const s5 = st.cheques.filter((c) => c.bank === "BBK");
+    ok(s5.length === 12 && s5.some((c) => c.number === "000511") && s5.every((c) => c.state === "held") && st.payments.length === st0.payments.length + 1, "12 شيك بضغطة، وكلها «عندي» بدون دفعات");
+    await q.keyboard.press("Escape"); await q.waitForTimeout(300);
+    // التقويم
+    await q.goto(URL + "#settings"); await q.waitForTimeout(600);
+    const dl = q.waitForEvent("download"); await q.locator("#ics-btn").click();
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "idarati-ics-")); const icsPath = path.join(tmp, "x.ics"); const d0 = await dl; await d0.saveAs(icsPath);
+    const ics = fs.readFileSync(icsPath, "utf8");
+    ok(d0.suggestedFilename().endsWith(".ics") && ics.startsWith("BEGIN:VCALENDAR") && ics.includes("RRULE:FREQ=MONTHLY") && ics.includes("000505"), "ملف التقويم ينزل وفيه الإيجار والشيكات");
+    // تقرير الشهر
+    await q.goto(URL + "#reports"); await q.waitForTimeout(600);
+    await q.locator("#month-report-btn").click(); await q.waitForTimeout(500);
+    const rep = await q.locator("#month-report").innerText();
+    ok(rep.includes("المحصّل") && rep.includes("المتأخرين") && rep.includes("وثائق تحتاج تجديد") && rep.includes("شيكات تستحق"), "تقرير الشهر: التحصيل + المتأخرين + الوثائق + الشيكات");
+    await q.keyboard.press("Escape"); await q.waitForTimeout(300);
+    // ملاحظة + بحث
+    await q.goto(URL + "#tenants"); await q.waitForTimeout(500);
+    await q.locator(".unit-card", { hasText: "شقة 4" }).first().click(); await q.waitForTimeout(400);
+    await q.getByRole("button", { name: /^تعديل$/ }).first().click(); await q.waitForTimeout(400);
+    await q.locator("#u-notes").fill("المكيف تبدّل 2026"); await q.getByRole("button", { name: "احفظ التعديل" }).click(); await q.waitForTimeout(400);
+    await q.locator(".hdr-btn").click(); await q.waitForTimeout(300);
+    await q.locator("#search-q").fill("المكيف"); await q.waitForTimeout(300);
+    ok((await q.locator(".dlg").innerText()).includes("شقة 4"), "البحث يلقى الملاحظة");
+    await q.locator("#search-q").fill("تأمين"); await q.waitForTimeout(300);
+    ok(await q.locator("#search-docs li").count() >= 1, "البحث يلقى الوثائق");
+    await q.locator("#search-q").fill("سبّاك"); await q.waitForTimeout(300);
+    ok(await q.locator("#search-vendors li").count() === 1, "البحث يلقى الموردين");
+    ok(qErr.length === 0, "DW-029: بدون أخطاء", qErr.join(" | "));
+    await q.close();
+  }
+
   if (process.env.SHOTS) {
     for (const [n, w, h, s] of [["home-phone", 390, 844, "light"], ["home-dark", 390, 844, "dark"], ["home-desk", 1280, 800, "light"], ["tenants-tab", 820, 1180, "light"], ["budget-phone", 390, 844, "light"]]) {
       const q = await browser.newPage({ viewport: { width: w, height: h }, colorScheme: s });

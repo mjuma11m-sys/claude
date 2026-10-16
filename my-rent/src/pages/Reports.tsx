@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { MonthReportSheet } from "./MonthReport";
 import { useStore } from "../data/store";
 import { fmt, isoDay, monthName, monthlyReport, toCSV } from "../data/logic";
 import { Money } from "../theme/AppShell";
@@ -8,6 +10,7 @@ import { ExcelPanel } from "./ExcelPanel";
 export function Reports() {
   const { data } = useStore();
   const toast = useToast();
+  const [report, setReport] = useState(false);
   const r = monthlyReport(data);
   const max = Math.max(1, ...r.rows.flatMap((x) => [x.income, x.expense]));
   const W = 340, H = 180, pad = 22, slot = (W - pad * 2) / r.rows.length, bw = Math.min(18, slot / 3);
@@ -66,6 +69,8 @@ export function Reports() {
         </table>
       </section>
 
+      <button className="btn press" id="month-report-btn" onClick={() => setReport(true)}>تقرير الشهر للطباعة</button>
+      <MonthReportSheet open={report} onClose={() => setReport(false)} />
       <ExcelPanel />
       <button className="btn btn-ghost press" onClick={exportCsv}>تصدير CSV للمحاسب</button>
       <p className="muted small" style={{ margin: 0 }}>ملفات Excel وCSV فيها أسماء المستأجرين — لا ترسلها إلا للمحاسب.</p>

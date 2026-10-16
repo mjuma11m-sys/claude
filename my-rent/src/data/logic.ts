@@ -1,4 +1,4 @@
-import type { Bill, BillKind, Data, Doc, DocKind, Fils, Kind, Status, Unit } from "./types";
+import type { Bill, BillKind, ChequeState, Data, Doc, DocKind, Fils, Kind, Status, Unit } from "./types";
 
 export const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 export const isoDay = (d: Date) => `${monthKey(d)}-${String(d.getDate()).padStart(2, "0")}`;
@@ -378,3 +378,57 @@ export function billsDue(data: Data, unit: Unit) {
 /** نفس الوحدة + الشهر + النوع = نفس الفاتورة (تحديث بدل تكرار) */
 export const findBill = (data: Data, unitId: string, month: string, kind: BillKind): Bill | undefined =>
   (data.bills ?? []).find((b) => b.unitId === unitId && b.month === month && b.kind === kind);
+
+// ── DW-029: الشيكات المؤجلة ─────────────────────────────
+
+export const CHEQUE_LABEL: Record<ChequeState, string> = { held: "عندي", deposited: "مودع", returned: "رجع" };
+export const unitCheques = (data: Data, unitId: string) =>
+  (data.cheques ?? []).filter((c) => c.unitId === unitId).sort((a, b) => a.due.localeCompare(b.due));
+const daysTo = (day: string, now: Date) => Math.round((Date.parse(day) - Date.parse(isoDay(now))) / 86400000);
+/** شيكات «عندي» وصل تاريخها أو باقي عليها <= days يوم */
+export function chequesDue(data: Data, now = new Date(), days = 7) {
+  return (data.cheques ?? []).filter((c) => c.state === "held").map((c) => ({ cheque: c, left: daysTo(c.due, now) }))
+    .filter((x) => x.left <= days).sort((a, b) => a.left - b.left);
+}
+/** دفعات شيكات متتالية: الرقم يزيد واحد (لو رقم) والتاريخ شهر */
+export function chequeSeries(first: { number: string; bank: string; amount: Fils; due: string }, n: number) {
+  const digits = /^\d+$/.test(first.number);
+  return Array.from({ length: n }, (_, i) => ({
+    number: digits ? String(BigInt(first.number) + BigInt(i)).padStart(first.number.length, "0") : i ? `${first.number}-${i + 1}` : first.number,
+    bank: first.bank, amount: first.amount, due: addMonthsDay(first.due, i),
+  }));
+}
+export const chequeHeld = (data: Data, unitId: string) => (data.cheques ?? []).filter((c) => c.unitId === unitId && c.state === "held");
+
+// ── DW-029: ملف التقويم (.ics) — ينبني بالجهاز ─────────
+
+const icsEsc = (s: string) => s.replace(/\\/g, "\\\\").replace(/[;,]/g, (m) => "\\" + m).replace(/\n/g, "\\n");
+const icsDay = (day: string) => day.replace(/-/g, "");
+function fold(line: string) { // RFC 5545: سطر <= 75 بايت
+  const out: string[] = []; let cur = ""; let bytes = 0;
+  for (const ch of line) { const b = new TextEncoder().encode(ch).length; if (bytes + b > 73) { out.push(cur); cur = " "; bytes = 1; } cur += ch; bytes += b; }
+  out.push(cur); return out.join("\r\n");
+}
+export function buildIcs(data: Data, now = new Date()) {
+  const stamp = now.toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
+  const ev: string[][] = [];
+  const add = (uid: string, day: string, summary: string, extra: string[] = [], alarmDays?: number) => {
+    const next = icsDay(addMonthsDay(day, 0)); const end = new Date(Date.parse(day) + 86400000).toISOString().slice(0, 10);
+    ev.push(["BEGIN:VEVENT", `UID:${uid}@idarati`, `DTSTAMP:${stamp}`, `DTSTART;VALUE=DATE:${next}`, `DTEND;VALUE=DATE:${icsDay(end)}`, `SUMMARY:${icsEsc(summary)}`, ...extra,
+      ...(alarmDays !== undefined ? ["BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${icsEsc(summary)}`, `TRIGGER:-P${alarmDays}D`, "END:VALARM"] : []), "END:VEVENT"]);
+  };
+  const cur = monthKey(now);
+  for (const u of data.units.filter((x) => x.tenant)) {
+    const first = `${cur}-${String(u.dueDay).padStart(2, "0")}`;
+    const until = u.tenant!.until ? [`RRULE:FREQ=MONTHLY;UNTIL=${icsDay(u.tenant!.until)}`] : ["RRULE:FREQ=MONTHLY"];
+    add(`rent-${u.id}`, first, `إيجار ${u.name} · ${u.tenant!.name} · ${fmt(rentAt(u, cur))} د.ب`, until, 0);
+    if (u.tenant!.until) add(`lease-${u.id}`, u.tenant!.until, `نهاية عقد ${u.name} (${u.tenant!.name})`, [], 30);
+  }
+  for (const { doc } of docsList(data, now)) if (doc.expires) add(`doc-${doc.id}`, doc.expires, `تنتهي: ${doc.title}`, [], 30);
+  for (const c of data.cheques ?? []) if (c.state === "held") {
+    const u = data.units.find((x) => x.id === c.unitId);
+    add(`chq-${c.id}`, c.due, `أودع شيك ${c.number} · ${u?.name ?? ""} · ${fmt(c.amount)} د.ب`, [], 1);
+  }
+  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Idarati//AR", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:إداراتي", ...ev.flat(), "END:VCALENDAR"];
+  return { text: lines.map(fold).join("\r\n") + "\r\n", count: ev.length };
+}

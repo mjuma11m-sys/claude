@@ -10,6 +10,7 @@ export type Unit = {
   name: string;
   building: string;
   meters?: { elec?: string; water?: string }; // DW-023: رقم حساب/عداد الكهرباء والماء
+  notes?: string; // DW-029: ملاحظة حرة («المكيف تبدّل 2026»)
   kind?: Kind; // اختياري: البيانات القديمة بدونه ← kindOf يحسبه من الاسم
   rent: Fils;              // الإيجار الحالي (وما بعده)
   rentBefore?: { until: string; rent: Fils }[]; // DW-024: إيجارات سابقة — كل شهر <= until (YYYY-MM) ياخذ أقرب واحد
@@ -46,6 +47,10 @@ export type Doc = { id: string; kind: DocKind; title: string; ref?: string; unit
 export type BillKind = "ewa" | "elec" | "water";
 export type Bill = { id: string; unitId: string; month: string; kind: BillKind; amount: Fils; paid: boolean };
 
+/** DW-029: شيك مؤجل — ما يصير دفعة إلا لما ينودع (paymentId) */
+export type ChequeState = "held" | "deposited" | "returned";
+export type Cheque = { id: string; unitId: string; number: string; bank: string; amount: Fils; due: string; state: ChequeState; paymentId?: string };
+
 export type Vendor = { id: string; name: string; service: string; phone: string };
 
 export type Data = {
@@ -65,4 +70,5 @@ export type Data = {
   contractOwner?: string;    // اسم المؤجر اللي يطلع بالعقد
   docs?: Doc[];              // DW-023
   bills?: Bill[];            // DW-026
+  cheques?: Cheque[];        // DW-029
 };
