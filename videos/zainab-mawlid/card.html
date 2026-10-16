@@ -1,0 +1,54 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:var(--w);height:var(--h)}
+body{--gold:#E9C46A;--gold2:#F6E3A8;--ink:#071A2B;font-family:'Amiri',serif;color:var(--gold2);overflow:hidden;
+ background:radial-gradient(120% 70% at 50% 18%,#1d5a63 0%,#0b2f45 38%,#071A2B 72%,#040e18 100%)}
+.pat{position:absolute;inset:0;opacity:.11}
+.frame{position:absolute;inset:34px;border:2px solid rgba(233,196,106,.55);border-radius:28px}
+.frame:after{content:"";position:absolute;inset:12px;border:1px solid rgba(233,196,106,.28);border-radius:20px}
+.glow{position:absolute;left:50%;top:var(--domeTop);transform:translateX(-50%);width:760px;height:760px;border-radius:50%;
+ background:radial-gradient(circle,rgba(246,227,168,.33) 0%,rgba(246,227,168,.08) 40%,transparent 68%)}
+.dome{position:absolute;left:50%;top:var(--domeTop);transform:translateX(-50%);width:var(--domeW)}
+.lantern{position:absolute;top:34px;width:70px}
+.l1{right:120px}.l2{left:120px}.l3{right:250px;top:34px;width:52px}.l4{left:250px;width:52px}
+.text{position:absolute;left:0;right:0;top:var(--textTop);text-align:center;padding:0 90px}
+.mub{font-size:44px;letter-spacing:1px;color:var(--gold);opacity:.95}
+.kick{font-family:'Aref Ruqaa',serif;font-size:72px;color:var(--gold2);margin-top:6px}
+.name{font-family:'Aref Ruqaa',serif;font-weight:700;font-size:var(--nameSize);line-height:1.05;
+ background:linear-gradient(180deg,#FFF4CF 10%,#E9C46A 55%,#B8862F 100%);-webkit-background-clip:text;color:transparent;
+ filter:drop-shadow(0 6px 18px rgba(0,0,0,.45))}
+.as{font-family:'Aref Ruqaa',serif;font-size:58px;color:var(--gold);margin-top:-6px}
+.orn{display:block;margin:26px auto 22px;width:420px}
+.titles{font-size:46px;color:#F3E7C2}
+.date{display:inline-block;margin-top:26px;font-size:40px;padding:10px 38px;border:1.5px solid rgba(233,196,106,.6);border-radius:999px;color:var(--gold2)}
+.dua{position:absolute;left:0;right:0;bottom:var(--duaBottom);text-align:center;font-size:42px;color:#EADFC0;padding:0 100px;line-height:1.5}
+</style></head><body>
+<svg class="pat" width="100%" height="100%"><defs><pattern id="p" width="120" height="120" patternUnits="userSpaceOnUse">
+<g fill="none" stroke="#E9C46A" stroke-width="1.4"><path d="M60 8 L74 46 L112 60 L74 74 L60 112 L46 74 L8 60 L46 46Z"/><rect x="32" y="32" width="56" height="56" transform="rotate(45 60 60)"/><circle cx="60" cy="60" r="10"/></g></pattern></defs>
+<rect width="100%" height="100%" fill="url(#p)"/></svg>
+<div class="frame"></div>
+<svg class="lantern l1" viewBox="0 0 70 200"><line x1="35" y1="0" x2="35" y2="70" stroke="#E9C46A" stroke-width="2"/><path d="M22 70h26l8 20-8 60H22l-8-60z" fill="#E9C46A" opacity=".9"/><path d="M26 92h18l4 10-4 40H26l-4-40z" fill="#FFE9A8"/><path d="M28 150h14l-7 18z" fill="#E9C46A"/></svg>
+<svg class="lantern l2" viewBox="0 0 70 200"><line x1="35" y1="0" x2="35" y2="110" stroke="#E9C46A" stroke-width="2"/><path d="M22 110h26l8 20-8 60H22l-8-60z" fill="#E9C46A" opacity=".9"/><path d="M26 132h18l4 10-4 40H26l-4-40z" fill="#FFE9A8"/></svg>
+<svg class="lantern l3" viewBox="0 0 70 200"><line x1="35" y1="0" x2="35" y2="120" stroke="#E9C46A" stroke-width="2"/><path d="M22 120h26l8 18-8 52H22l-8-52z" fill="#E9C46A" opacity=".8"/><path d="M26 140h18l3 8-3 34H26l-3-34z" fill="#FFE9A8"/></svg>
+<svg class="lantern l4" viewBox="0 0 70 200"><line x1="35" y1="0" x2="35" y2="60" stroke="#E9C46A" stroke-width="2"/><path d="M22 60h26l8 18-8 52H22l-8-52z" fill="#E9C46A" opacity=".8"/><path d="M26 80h18l3 8-3 34H26l-3-34z" fill="#FFE9A8"/></svg>
+<div class="glow"></div>
+<svg class="dome" viewBox="0 0 640 330"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF1C4"/><stop offset=".5" stop-color="#E9C46A"/><stop offset="1" stop-color="#9C6E22"/></linearGradient></defs>
+<g fill="url(#g)">
+<rect x="58" y="70" width="26" height="250" rx="4"/><path d="M52 70h38l-19-58z"/><circle cx="71" cy="8" r="6"/><rect x="50" y="150" width="42" height="10" rx="3"/>
+<rect x="556" y="70" width="26" height="250" rx="4"/><path d="M550 70h38l-19-58z"/><circle cx="569" cy="8" r="6"/><rect x="548" y="150" width="42" height="10" rx="3"/>
+<path d="M170 250 C170 140 240 90 320 70 C400 90 470 140 470 250Z"/><rect x="314" y="22" width="12" height="50" rx="3"/><path d="M320 0 a14 14 0 1 0 12 22 a11 11 0 1 1 -12 -22z"/>
+<rect x="140" y="250" width="360" height="22" rx="4"/><rect x="120" y="272" width="400" height="58" rx="6" opacity=".85"/></g>
+<g fill="#0b2f45" opacity=".55"><path d="M300 330v-34a20 20 0 0 1 40 0v34z"/><path d="M200 330v-26a14 14 0 0 1 28 0v26z"/><path d="M412 330v-26a14 14 0 0 1 28 0v26z"/></g></svg>
+<div class="text">
+ <div class="mub">مباركٌ لكم</div>
+ <div class="kick">ميلاد العقيلة</div>
+ <div class="name">زينب</div>
+ <div class="as">عليها السلام</div>
+ <svg class="orn" viewBox="0 0 420 24"><g fill="#E9C46A"><rect x="0" y="11" width="170" height="2"/><rect x="250" y="11" width="170" height="2"/><path d="M210 0 L222 12 L210 24 L198 12Z"/><circle cx="182" cy="12" r="4"/><circle cx="238" cy="12" r="4"/></g></svg>
+ <div class="titles">عقيلة بني هاشم · بطلة كربلاء</div>
+ <div class="date">٥ جمادى الأولى</div>
+</div>
+<div class="dua">أعاده الله علينا وعليكم باليُمن والبركات</div>
+</body></html>
