@@ -1328,7 +1328,7 @@
     });
   }
 
-  // prefill: نص وصل من «شارك ← حياتي» (أندرويد أو نسخة الويب المثبّتة). ما ينحفظ شي إلا بـ «إضافة».
+  // prefill: نص وصل من «شارك ← حياتي» (أندرويد، آيفون، أو نسخة الويب المثبّتة). ما ينحفظ شي إلا بـ «إضافة».
   function pasteSmsForm(prefill) {
     const shared = typeof prefill === 'string' && prefill.trim() ? prefill.trim().slice(0, SHARE_MAX) : '';
     if (!st.settings.sms_consent_at) return smsConsentForm(shared);

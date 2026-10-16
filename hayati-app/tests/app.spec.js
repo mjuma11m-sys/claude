@@ -2519,3 +2519,16 @@ test('error log (DW-046): keeps technical errors on the device without numbers, 
   await store(page, () => { for (const k of Object.keys(localStorage)) if (k.startsWith('hayati')) localStorage.removeItem(k); });
   expect(await store(page, () => window.HayatiErrLog.list())).toEqual([]);
 });
+
+// ================= DW-046: تحميل أخف =================
+test('lighter start (DW-046): Arabic never downloads the 120KB English dictionary, English still loads it before the app', async ({ page }) => {
+  const asked = [];
+  page.on('request', (r) => { if (r.url().includes('i18n-en.js')) asked.push(r.url()); });
+  await open(page);
+  expect(asked).toEqual([]);
+  expect(await store(page, () => typeof window.HAYATI_EN)).toBe('undefined');
+  await store(page, () => localStorage.setItem('hayati-lang', 'en'));
+  await open(page);
+  expect(asked.length).toBe(1);
+  await expect(page.locator('#title')).toHaveText('Today');
+});

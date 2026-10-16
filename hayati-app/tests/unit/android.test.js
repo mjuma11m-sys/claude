@@ -168,3 +168,27 @@ test('release bundle is signed only from CI secrets, and no key material lives i
   assert.match(ign, /\*\.jks/);
   assert.match(ign, /\*\.keystore/);
 });
+
+test('iPhone share (DW-046): share extension embedded, plain text only, hands the message to the same ShareIn flow as Android', () => {
+  const iosRead = (f) => fs.readFileSync(path.join(W, 'ios/App', f), 'utf8');
+  const pbx = iosRead('App.xcodeproj/project.pbxproj');
+  // المشروع ينقرا بنفس المكتبة اللي تستخدمها Capacitor
+  const xcode = require('xcode');
+  const proj = xcode.project(path.join(W, 'ios/App/App.xcodeproj/project.pbxproj')); proj.parseSync();
+  const targets = Object.values(proj.pbxNativeTargetSection()).filter((t) => t && t.name).map((t) => t.name);
+  assert.deepStrictEqual(targets.sort(), ['App', 'HayatiShareExtension', 'HayatiWidgetExtension']);
+  assert.match(pbx, /HayatiShareExtension\.appex in Embed Foundation Extensions/);
+  assert.match(pbx, /PRODUCT_BUNDLE_IDENTIFIER = bh\.hayati\.app\.HayatiShare;/);
+  for (const f of ['ShareInPlugin.swift in Sources', 'ShareViewController.swift in Sources']) assert.ok(pbx.includes(f), f);
+  const info = iosRead('HayatiShare/Info.plist');
+  assert.match(info, /com\.apple\.share-services/);
+  assert.match(info, /NSExtensionActivationSupportsText/);
+  assert.doesNotMatch(info, /SupportsImage|SupportsWebURL|SupportsFileWithMaxCount/);   // نص بس
+  assert.match(iosRead('HayatiShare/HayatiShare.entitlements'), /group\.bh\.hayati\.app/);
+  const ext = iosRead('HayatiShare/ShareViewController.swift'), plug = iosRead('App/ShareInPlugin.swift');
+  assert.match(ext, /static let maxChars = 2000/);   // نفس حد الأندرويد
+  assert.doesNotMatch(ext, /URLSession|http/);   // ما يرسل شي لأي مكان
+  assert.match(plug, /jsName = "ShareIn"/);   // نفس اسم إضافة الأندرويد اللي يناديها native.js
+  assert.match(plug, /removeObject\(forKey: "share"\)/);   // تنقرا مرة وحدة
+  assert.match(iosRead('App/MainViewController.swift'), /registerPluginInstance\(ShareInPlugin\(\)\)/);
+});

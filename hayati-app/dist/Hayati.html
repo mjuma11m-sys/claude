@@ -756,6 +756,7 @@
 
 </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <!-- DW-046: قاموس الإنقليزي (120KB) ينحمل بس لو اللغة إنقليزي؛ document.write يخليه بنفس الترتيب قبل i18n.js -->
   <script>/* js/i18n/i18n-en.js */
 // قاموس الإنقليزي: النص العربي كما يظهر ← الإنقليزي. الكلمات القصيرة اللي ممكن تكون أسماء (علي، لي…) مو فيه عشان ما تتغير بياناتك
 window.HAYATI_EN = {
@@ -5316,7 +5317,7 @@ window.HAYATI_CONFIG = {
     });
   }
 
-  // prefill: نص وصل من «شارك ← حياتي» (أندرويد أو نسخة الويب المثبّتة). ما ينحفظ شي إلا بـ «إضافة».
+  // prefill: نص وصل من «شارك ← حياتي» (أندرويد، آيفون، أو نسخة الويب المثبّتة). ما ينحفظ شي إلا بـ «إضافة».
   function pasteSmsForm(prefill) {
     const shared = typeof prefill === 'string' && prefill.trim() ? prefill.trim().slice(0, SHARE_MAX) : '';
     if (!st.settings.sms_consent_at) return smsConsentForm(shared);
@@ -12030,7 +12031,7 @@ window.HAYATI_CONFIG = {
     try { const r = AppP.addListener('backButton', onBack); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
   }
 
-  // «شارك ← حياتي» (أندرويد، DW-009): رسالة البنك توصل من تطبيق الرسائل وتفتح نافذة اللصق معبّاة
+  // «شارك ← حياتي» (أندرويد DW-009 · آيفون DW-046 عبر امتداد المشاركة): رسالة البنك توصل من تطبيق الرسائل وتفتح نافذة اللصق معبّاة
   function onShared(text) {
     if (!text || typeof A.sharedSms !== 'function') return Promise.resolve(null);
     return A.sharedSms(text).then((kind) => { console.info('hayati-share:' + kind); return kind; });

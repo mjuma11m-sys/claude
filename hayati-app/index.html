@@ -701,7 +701,8 @@
 
   <script src="js/core/errlog.js"></script>
   <script src="vendor/supabase/supabase.min.js"></script>
-  <script src="js/i18n/i18n-en.js"></script>
+  <!-- DW-046: قاموس الإنقليزي (120KB) ينحمل بس لو اللغة إنقليزي؛ document.write يخليه بنفس الترتيب قبل i18n.js -->
+  <script id="enLoader">try { if (localStorage.getItem('hayati-lang') === 'en') document.write('<script src="js/i18n/i18n-en.js"><\/script>'); } catch (e) { /* تجاهل */ }</script>
   <script src="js/i18n/i18n.js"></script>
   <script src="js/core/config.js"></script>
   <script src="js/core/sms.js"></script>

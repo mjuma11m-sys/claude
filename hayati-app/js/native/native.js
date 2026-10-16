@@ -469,7 +469,7 @@
     try { const r = AppP.addListener('backButton', onBack); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
   }
 
-  // «شارك ← حياتي» (أندرويد، DW-009): رسالة البنك توصل من تطبيق الرسائل وتفتح نافذة اللصق معبّاة
+  // «شارك ← حياتي» (أندرويد DW-009 · آيفون DW-046 عبر امتداد المشاركة): رسالة البنك توصل من تطبيق الرسائل وتفتح نافذة اللصق معبّاة
   function onShared(text) {
     if (!text || typeof A.sharedSms !== 'function') return Promise.resolve(null);
     return A.sharedSms(text).then((kind) => { console.info('hayati-share:' + kind); return kind; });

@@ -24,6 +24,12 @@ WX="$APP/PlugIns/HayatiWidgetExtension.appex"
 [ "$(/usr/libexec/PlistBuddy -c 'Print :NSExtension:NSExtensionPointIdentifier' "$WX/Info.plist")" = "com.apple.widgetkit-extension" ] \
   || { echo "❌ الودجت مو WidgetKit"; exit 1; }
 echo "✅ ودجت الآيفون انبنى وداخل التطبيق"
+# DW-046: «شارك ← حياتي» بالآيفون
+SX="$APP/PlugIns/HayatiShareExtension.appex"
+[ -d "$SX" ] || { echo "❌ امتداد المشاركة (HayatiShareExtension.appex) مو داخل التطبيق"; ls "$APP/PlugIns"; exit 1; }
+[ "$(/usr/libexec/PlistBuddy -c 'Print :NSExtension:NSExtensionPointIdentifier' "$SX/Info.plist")" = "com.apple.share-services" ] \
+  || { echo "❌ الامتداد مو Share Extension"; exit 1; }
+echo "✅ «شارك ← حياتي» انبنى وداخل التطبيق"
 
 echo "▶ نشغّل آيفون سميوليتر"
 UDID=$(xcrun simctl list devices available -j | python3 -c '
