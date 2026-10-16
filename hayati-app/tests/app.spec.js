@@ -1975,6 +1975,35 @@ test('English: «21 يوم» (11+ days) translates like «3 أيام»', async (
   expect(await store(page, () => window.HayatiLang.tr('بعد 21 يوم · قبل 12 يوم · باقي 21 يوم'))).toBe('in 21 days · 12 days ago · Left 21 days');
 });
 
+test('month report as an image (DW-041): numbers hidden by default, no shop names, draws a 1080×1350 PNG and saves it', async ({ page }) => {
+  await open(page);
+  const r = await store(page, async () => {
+    const S = App.S; S.setSettings({ onboarded: true, budget: 400 });
+    const now = new Date(), d = new Date(now.getFullYear(), now.getMonth(), 1, 12);
+    S.upsert('transactions', { kind: 'expense', amount: 45.5, category: 'أكل ومطاعم', merchant: 'مطعم سرّي', occurred_at: d.toISOString() });
+    S.upsert('transactions', { kind: 'expense', amount: 12, category: 'قهوة', merchant: 'Costa', occurred_at: d.toISOString() });
+    const R = window.Extras.ReportImage, m = App.monthKey(now), data = R.data(m);
+    const c = await R.draw(m, false);
+    return { data, w: c.width, h: c.height, png: c.toDataURL('image/png').length };
+  });
+  expect([r.w, r.h]).toEqual([1080, 1350]);
+  expect(r.png).toBeGreaterThan(20000);
+  expect(r.data.cats.map((c) => [c.name, c.pct])).toEqual([['أكل ومطاعم', 79], ['قهوة', 21]]);
+  expect(r.data.budgetPct).toBe(14);
+  expect(JSON.stringify(r.data)).not.toMatch(/مطعم سرّي|Costa/);   // ما فيها أسماء محلات
+
+  // من «تقرير الشهر» ← «🖼️ صورة التقرير» ← احفظ
+  await store(page, () => { App.ui.moneySeg = 'tx'; App.go('money'); });
+  await page.click('[data-action="report"]');
+  await page.click('#reportImg');
+  await expect(page.locator('#riImg')).toHaveAttribute('src', /^data:image\/png/);
+  const first = await page.locator('#riImg').getAttribute('src');
+  await page.check('#riAmounts');
+  await expect.poll(() => page.locator('#riImg').getAttribute('src')).not.toBe(first);
+  const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#sheetSave')]);
+  expect(dl.suggestedFilename()).toMatch(/^hayati-report-\d{4}-\d{2}\.png$/);
+});
+
 test('goal photo (DW-040): pick a photo, it shows on the card, survives a reload, stays off the server, rides in the encrypted backup, and can be removed', async ({ page }) => {
   // صورة PNG صغيرة (8×8 أحمر) تتولّد بالمتصفح
   await open(page);

@@ -301,6 +301,18 @@
     }
   }
 
+  // صورة (تقرير الشهر DW-041): نكتبها PNG بالكاش ونفتح قائمة المشاركة (حفظ بالصور، واتساب…)
+  async function saveImage(filename, b64) {
+    if (!FS || !Share) { A.toast('المشاركة مو متوفرة بهالنسخة'); return false; }
+    try {
+      const w = await FS.writeFile({ path: filename, data: b64, directory: 'CACHE' });
+      await Share.share({ title: filename, files: [w.uri] });
+      return true;
+    } catch (e) {
+      if (!/cancel/i.test(String(e && (e.message || e)))) A.toast('ما قدرت أشارك الصورة');
+      return false;
+    }
+  }
   async function shareText(text) {
     if (!Share) return;
     try { await Share.share({ text }); } catch (e) { /* المستخدم سكّر القائمة */ }
@@ -461,5 +473,5 @@
 
   // رابط خارجي (زر «اقرأ»): متصفح النظام
   async function openLink(url) { if (!/^https:\/\//.test(url)) return; if (Browser) await Browser.open({ url }); else window.open(url, '_blank', 'noopener'); }
-  window.HayatiNative = { haptic: () => tap('LIGHT'), openLink, saveFile, shareText, reschedule, upcoming, testNotification, prefs, savePrefs, oauth, onAuthUrl, onBack, onShared };
+  window.HayatiNative = { haptic: () => tap('LIGHT'), openLink, saveFile, saveImage, shareText, reschedule, upcoming, testNotification, prefs, savePrefs, oauth, onAuthUrl, onBack, onShared };
 })();

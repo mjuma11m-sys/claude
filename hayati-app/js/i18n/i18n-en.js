@@ -1846,5 +1846,15 @@ window.HAYATI_EN = {
 "اختر صورة": "Choose a photo",
 "شيل الصورة": "Remove photo",
 "الصورة تنحفظ على هالجهاز بس، ما ترتفع ولا تطلع لأحد.": "The photo is saved on this device only; it isn't uploaded or shared with anyone.",
-"ما قدرنا نفتح الصورة": "Couldn't open the photo"
+"ما قدرنا نفتح الصورة": "Couldn't open the photo",
+// DW-041: تقرير الشهر كصورة
+"عن الشهر اللي قبله": "vs last month",
+"ما فيه مصاريف هالشهر": "No expenses this month",
+"متوسط اليوم (د.ب)": "Daily average (BHD)",
+"🖼️ صورة التقرير": "🖼️ Report image",
+"احفظ الصورة": "Save image",
+"اعرض المبالغ": "Show amounts",
+"المبالغ مخفية افتراضياً (نِسَب بس)، وما فيها أسماء محلات. الصورة تنرسم بجوالك وما ترتفع لأي مكان.": "Amounts are hidden by default (percentages only), and there are no shop names. The image is drawn on your phone and isn't uploaded anywhere.",
+"انحفظت الصورة ✓": "Image saved ✓",
+"ما قدرت أشارك الصورة": "Couldn't share the image"
 };

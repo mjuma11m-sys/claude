@@ -1042,11 +1042,13 @@
       (st.settings.budget ? '<li class="row" style="cursor:default"><div class="main">الميزانية</div><b class="' + (a.exp > st.settings.budget ? 'neg' : 'pos') + '">' + (a.exp > st.settings.budget ? 'تعدّيت بـ ' + fmt(a.exp - st.settings.budget) : 'باقي ' + fmt(st.settings.budget - a.exp)) + '</b></li>' : '') +
       '</ul></div>';
     // بالآيفون: ملخص نصي يروح لقائمة المشاركة (واتساب، ملاحظات…)
+    body += X('reportExtra', ui.month);   // 🖼️ صورة التقرير (DW-041)
     const share = window.HayatiNative && window.HayatiNative.shareText;
     if (share) body += '<button class="btn block" type="button" id="shareReport">' + I('upload') + 'شارك الملخص</button>';
     openSheet({
       title: 'تقرير الشهر', cancelLabel: 'تم', body,
       mount(root) {
+        X('reportMount', root, ui.month);
         const b = root.querySelector('#shareReport');
         if (b) b.onclick = () => share('تقرير ' + monthLabel(ui.month) + ' · «حياتي»\n' +
           'الصرف: ' + fmt(a.exp) + ' د.ب\nالدخل: ' + fmt(a.inc) + ' د.ب\n' +
