@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 44,
+  "next": 45,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -344,6 +344,14 @@
       "owner": "CEO",
       "priority": "P2",
       "status": "done",
+      "opened": "2026-10-16",
+      "updated": "2026-10-16"
+    },
+    "DW-044": {
+      "title": "ودجت الآيفون (WidgetKit): صغير ومتوسط من نفس لقطة الأندرويد",
+      "owner": "CEO",
+      "priority": "P2",
+      "status": "in_progress",
       "opened": "2026-10-16",
       "updated": "2026-10-16"
     }

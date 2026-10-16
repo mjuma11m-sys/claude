@@ -2221,6 +2221,38 @@ test('Android widget (DW-031): the app sends the snapshot to the native plugin, 
   expect(await store(page, () => window.__wg.sent[window.__wg.sent.length - 1].budget.line)).toBe('باقي 100.000 د.ب من الميزانية');
 });
 
+test('iPhone widget (DW-044): the app sends the same snapshot on iOS, the widget links open «+ مصروف» and «الصق رسالة», iOS install steps', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__wg = { sent: [], url: null };
+    window.Capacitor = { isNativePlatform: () => true, getPlatform: () => 'ios', Plugins: {
+      HayatiWidget: { update: async (o) => { window.__wg.sent.push(JSON.parse(o.data)); }, take: async () => ({}), addListener: () => Promise.resolve({ remove() {} }) },
+      App: { addListener: (ev, fn) => { if (ev === 'appUrlOpen') window.__wg.url = fn; return Promise.resolve({ remove() {} }); } },
+    } };
+  });
+  await open(page);
+  await store(page, () => App.S.setSettings({ onboarded: true, budget: 200 }));
+  await page.waitForFunction(() => window.__wg.sent.length > 0, null, { timeout: 8000 });
+  const snap = await store(page, () => window.__wg.sent[window.__wg.sent.length - 1]);
+  expect(snap).toMatchObject({ v: 1, locked: false, rtl: true, small: { cap: 'باقي من الميزانية' }, labels: { add: '+ مصروف' } });
+  // زر «+ مصروف» بالودجت = رابط bh.hayati.app://widget/add-tx
+  await page.waitForFunction(() => typeof window.__wg.url === 'function');
+  await store(page, () => window.__wg.url({ url: 'bh.hayati.app://widget/add-tx' }));
+  await expect(page.locator('#sheet[open] [name="amount"]')).toBeVisible({ timeout: 5000 });
+  await store(page, () => App.closeSheet());
+  await store(page, () => window.__wg.url({ url: 'bh.hayati.app://widget/paste-sms' }));
+  await expect(page.locator('#sheetTitle')).toContainText('رسالة بنك');
+  await store(page, () => App.closeSheet());
+  // رابط الدخول ما يتأثر، و«open» يفتح التطبيق بس
+  await expect(page.locator('#sheet[open]')).toHaveCount(0);
+  await store(page, () => window.__wg.url({ url: 'bh.hayati.app://widget/open' }));
+  await page.waitForTimeout(500);
+  await expect(page.locator('#sheet[open]')).toHaveCount(0);
+  // خطوات التثبيت بالآيفون
+  await page.click('#settingsBtn');
+  await page.click('#sheetBody [data-set="widget"]');
+  await expect(page.locator('#sheetBody')).toContainText('«+» فوق');
+});
+
 test('travel currency (DW-032): pegged rates prefilled, floating ones need a rate, costs in local currency convert to BHD', async ({ page }) => {
   await open(page);
   await store(page, () => {

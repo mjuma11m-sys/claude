@@ -433,6 +433,14 @@
     const url = await S.signInWithProvider(provider, { redirectTo: AUTH_URL, skipBrowserRedirect: true });
     await Browser.open({ url, presentationStyle: 'popover' });
   }
+  // أزرار ودجت الآيفون (DW-044): bh.hayati.app://widget/add-tx | paste-sms | open
+  function onWidgetUrl(url) {
+    const m = /^bh\.hayati\.app:\/\/widget\/([a-z-]+)/.exec(url || '');
+    if (!m) return false;
+    const W = window.Extras && window.Extras.Widget;
+    if (W && W.onAction && m[1] !== 'open') W.onAction(m[1]);
+    return true;
+  }
   async function onAuthUrl(url) {
     if (!url || url.indexOf(AUTH_URL) !== 0) return false;
     try { if (Browser) await Browser.close(); } catch (e) { /* انسكر */ }
@@ -444,7 +452,7 @@
     return true;
   }
   if (AppP && typeof AppP.addListener === 'function') {
-    try { const r = AppP.addListener('appUrlOpen', (ev) => onAuthUrl(ev && ev.url)); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
+    try { const r = AppP.addListener('appUrlOpen', (ev) => { if (!onWidgetUrl(ev && ev.url)) onAuthUrl(ev && ev.url); }); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
   }
 
   // ◀️ زر الرجوع بأندرويد: يسكّر النافذة المفتوحة، أو يرجع لـ «اليوم»، وبعدها بس يطلع من التطبيق

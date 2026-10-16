@@ -11,7 +11,7 @@
   const tr = (s) => (window.HayatiLang && HayatiLang.lang === 'en' && HayatiLang.tr ? HayatiLang.tr(s) : s);
   const Cap = window.Capacitor;
   const plugin = () => {
-    if (!Cap || typeof Cap.getPlatform !== 'function' || Cap.getPlatform() !== 'android') return null;
+    if (!Cap || typeof Cap.getPlatform !== 'function' || !['android', 'ios'].includes(Cap.getPlatform())) return null;   // آيفون من DW-044
     return (Cap.Plugins && Cap.Plugins.HayatiWidget) || (typeof Cap.registerPlugin === 'function' ? Cap.registerPlugin('HayatiWidget') : null);
   };
 
@@ -101,7 +101,7 @@
     A.openSheet({
       title: '📱 ودجت حياتي',
       saveLabel: 'حفظ',
-      body: '<p class="small muted" style="margin:0 0 12px">ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← الأدوات (Widgets) ← حياتي. فيه حجمين: الكبير (4×2) يعرض الجاي اليوم وبكرة والميزانية مع «+ مصروف» و«الصق رسالة»، والصغير (2×2) يعرض كم باقي من الميزانية وزر «+ مصروف».</p>' +
+      body: '<p class="small muted" style="margin:0 0 12px">' + (Cap && Cap.getPlatform() === 'ios' ? 'ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← «+» فوق ← حياتي. فيه حجمين: الصغير يعرض كم باقي من الميزانية وزر «+ مصروف»، والمتوسط يعرض الجاي اليوم وبكرة والميزانية مع «+ مصروف» و«الصق رسالة».' : 'ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← الأدوات (Widgets) ← حياتي. فيه حجمين: الكبير (4×2) يعرض الجاي اليوم وبكرة والميزانية مع «+ مصروف» و«الصق رسالة»، والصغير (2×2) يعرض كم باقي من الميزانية وزر «+ مصروف».') + '</p>' +
         '<label style="display:flex;gap:10px;align-items:center;margin:0 0 10px"><input id="wgAmounts" type="checkbox"' + (p.amounts ? ' checked' : '') + '><span>اعرض المبالغ بالودجت</span></label>' +
         '<p class="small muted" style="margin:0">الشاشة الرئيسية يشوفها أي أحد يمسك جوالك، فالمبالغ مخفية إلا لو فعّلتها (يطلع بس كم % باقي). ولو قفل التطبيق شغّال، الودجت ما يعرض أي بيانات.</p>',
       onSave(root) {
@@ -121,5 +121,5 @@
     return prevSet ? prevSet.apply(this, arguments) : false;
   };
 
-  E.Widget = { snapshot, items, sheet, push, prefs };
+  E.Widget = { snapshot, items, sheet, push, prefs, onAction };
 })();

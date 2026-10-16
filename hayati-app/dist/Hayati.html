@@ -2572,7 +2572,9 @@ window.HAYATI_EN = {
 "عمليات ثانية من": "other transactions from",
 "تصنيفها": "are in",
 "نخليها": "Move them to",
-"تعدّلت": "Updated"
+"تعدّلت": "Updated",
+// DW-044: ودجت الآيفون
+"ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← «+» فوق ← حياتي. فيه حجمين: الصغير يعرض كم باقي من الميزانية وزر «+ مصروف»، والمتوسط يعرض الجاي اليوم وبكرة والميزانية مع «+ مصروف» و«الصق رسالة».": "Add it from the home screen: long-press an empty spot → «+» at the top → Hayati. There are two sizes: the small one shows how much budget is left and a «+ Expense» button; the medium one shows what's next today and tomorrow and your budget, with «+ Expense» and «Paste message»."
 };
 
 </script>
@@ -10844,7 +10846,7 @@ window.HAYATI_CONFIG = {
   const tr = (s) => (window.HayatiLang && HayatiLang.lang === 'en' && HayatiLang.tr ? HayatiLang.tr(s) : s);
   const Cap = window.Capacitor;
   const plugin = () => {
-    if (!Cap || typeof Cap.getPlatform !== 'function' || Cap.getPlatform() !== 'android') return null;
+    if (!Cap || typeof Cap.getPlatform !== 'function' || !['android', 'ios'].includes(Cap.getPlatform())) return null;   // آيفون من DW-044
     return (Cap.Plugins && Cap.Plugins.HayatiWidget) || (typeof Cap.registerPlugin === 'function' ? Cap.registerPlugin('HayatiWidget') : null);
   };
 
@@ -10934,7 +10936,7 @@ window.HAYATI_CONFIG = {
     A.openSheet({
       title: '📱 ودجت حياتي',
       saveLabel: 'حفظ',
-      body: '<p class="small muted" style="margin:0 0 12px">ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← الأدوات (Widgets) ← حياتي. فيه حجمين: الكبير (4×2) يعرض الجاي اليوم وبكرة والميزانية مع «+ مصروف» و«الصق رسالة»، والصغير (2×2) يعرض كم باقي من الميزانية وزر «+ مصروف».</p>' +
+      body: '<p class="small muted" style="margin:0 0 12px">' + (Cap && Cap.getPlatform() === 'ios' ? 'ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← «+» فوق ← حياتي. فيه حجمين: الصغير يعرض كم باقي من الميزانية وزر «+ مصروف»، والمتوسط يعرض الجاي اليوم وبكرة والميزانية مع «+ مصروف» و«الصق رسالة».' : 'ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← الأدوات (Widgets) ← حياتي. فيه حجمين: الكبير (4×2) يعرض الجاي اليوم وبكرة والميزانية مع «+ مصروف» و«الصق رسالة»، والصغير (2×2) يعرض كم باقي من الميزانية وزر «+ مصروف».') + '</p>' +
         '<label style="display:flex;gap:10px;align-items:center;margin:0 0 10px"><input id="wgAmounts" type="checkbox"' + (p.amounts ? ' checked' : '') + '><span>اعرض المبالغ بالودجت</span></label>' +
         '<p class="small muted" style="margin:0">الشاشة الرئيسية يشوفها أي أحد يمسك جوالك، فالمبالغ مخفية إلا لو فعّلتها (يطلع بس كم % باقي). ولو قفل التطبيق شغّال، الودجت ما يعرض أي بيانات.</p>',
       onSave(root) {
@@ -10954,7 +10956,7 @@ window.HAYATI_CONFIG = {
     return prevSet ? prevSet.apply(this, arguments) : false;
   };
 
-  E.Widget = { snapshot, items, sheet, push, prefs };
+  E.Widget = { snapshot, items, sheet, push, prefs, onAction };
 })();
 
 </script>
@@ -11903,6 +11905,14 @@ window.HAYATI_CONFIG = {
     const url = await S.signInWithProvider(provider, { redirectTo: AUTH_URL, skipBrowserRedirect: true });
     await Browser.open({ url, presentationStyle: 'popover' });
   }
+  // أزرار ودجت الآيفون (DW-044): bh.hayati.app://widget/add-tx | paste-sms | open
+  function onWidgetUrl(url) {
+    const m = /^bh\.hayati\.app:\/\/widget\/([a-z-]+)/.exec(url || '');
+    if (!m) return false;
+    const W = window.Extras && window.Extras.Widget;
+    if (W && W.onAction && m[1] !== 'open') W.onAction(m[1]);
+    return true;
+  }
   async function onAuthUrl(url) {
     if (!url || url.indexOf(AUTH_URL) !== 0) return false;
     try { if (Browser) await Browser.close(); } catch (e) { /* انسكر */ }
@@ -11914,7 +11924,7 @@ window.HAYATI_CONFIG = {
     return true;
   }
   if (AppP && typeof AppP.addListener === 'function') {
-    try { const r = AppP.addListener('appUrlOpen', (ev) => onAuthUrl(ev && ev.url)); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
+    try { const r = AppP.addListener('appUrlOpen', (ev) => { if (!onWidgetUrl(ev && ev.url)) onAuthUrl(ev && ev.url); }); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
   }
 
   // ◀️ زر الرجوع بأندرويد: يسكّر النافذة المفتوحة، أو يرجع لـ «اليوم»، وبعدها بس يطلع من التطبيق

@@ -1863,5 +1863,7 @@ window.HAYATI_EN = {
 "عمليات ثانية من": "other transactions from",
 "تصنيفها": "are in",
 "نخليها": "Move them to",
-"تعدّلت": "Updated"
+"تعدّلت": "Updated",
+// DW-044: ودجت الآيفون
+"ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← «+» فوق ← حياتي. فيه حجمين: الصغير يعرض كم باقي من الميزانية وزر «+ مصروف»، والمتوسط يعرض الجاي اليوم وبكرة والميزانية مع «+ مصروف» و«الصق رسالة».": "Add it from the home screen: long-press an empty spot → «+» at the top → Hayati. There are two sizes: the small one shows how much budget is left and a «+ Expense» button; the medium one shows what's next today and tomorrow and your budget, with «+ Expense» and «Paste message»."
 };

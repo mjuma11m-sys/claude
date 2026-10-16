@@ -130,3 +130,23 @@ test('small widget (DW-039): its own receiver and 2×2 info, RemoteViews-safe la
   assert.match(read('app/src/main/java/bh/hayati/app/HayatiWidget.java'), /HayatiWidgetSmall\.refresh\(ctx\)/);
   for (const c of (x + info).matchAll(/<!--([\s\S]*?)-->/g)) assert.ok(!c[1].includes('--'), 'no -- inside XML comments');
 });
+
+test('iPhone widget (DW-044): WidgetKit target embedded in the app, files and plugin wired, same app group both sides', () => {
+  const iosRead = (f) => require('fs').readFileSync(require('path').join(__dirname, '../../ios/App', f), 'utf8');
+  const pbx = iosRead('App.xcodeproj/project.pbxproj');
+  assert.match(pbx, /productType = "com\.apple\.product-type\.app-extension"/);
+  assert.match(pbx, /HayatiWidgetExtension\.appex in Embed Foundation Extensions/);
+  assert.match(pbx, /dstSubfolderSpec = 13;/);
+  assert.match(pbx, /PRODUCT_BUNDLE_IDENTIFIER = bh\.hayati\.app\.HayatiWidget;/);
+  for (const f of ['WidgetPlugin.swift in Sources', 'MainViewController.swift in Sources', 'HayatiWidget.swift in Sources']) assert.ok(pbx.includes(f), f);
+  assert.match(iosRead('HayatiWidget/Info.plist'), /com\.apple\.widgetkit-extension/);
+  for (const e of ['App/App.entitlements', 'HayatiWidget/HayatiWidget.entitlements']) assert.match(iosRead(e), /group\.bh\.hayati\.app/);
+  const plugin = iosRead('App/WidgetPlugin.swift'), widget = iosRead('HayatiWidget/HayatiWidget.swift');
+  assert.match(plugin, /jsName = "HayatiWidget"/);   // نفس اسم الإضافة اللي تناديه widget.js
+  assert.match(plugin, /suiteName: "group\.bh\.hayati\.app"/);
+  assert.match(widget, /hayatiGroup = "group\.bh\.hayati\.app"/);
+  assert.match(iosRead('App/MainViewController.swift'), /registerPluginInstance\(WidgetPlugin\(\)\)/);
+  assert.match(iosRead('App/Base.lproj/Main.storyboard'), /customClass="MainViewController" customModule="App"/);
+  // الروابط اللي يفتحها الودجت يعرفها native.js
+  for (const u of ['add-tx', 'paste-sms']) assert.ok(widget.includes('bh.hayati.app://widget/' + u), u);
+});
