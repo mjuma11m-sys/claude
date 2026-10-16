@@ -1,5 +1,5 @@
 // منطق ملف متابعة الإيجار (DW-022): npm run test:track
-import { docStatus, docsList, docAlerts, kindOf, nextUnpaid, paidThrough, prepaid, rentTracker, statement, trackerTotals, monthKey } from "../src/data/logic";
+import { addMonthsDay, renewUnit, rentAt, upcomingRent, owedMonths, docStatus, docsList, docAlerts, kindOf, nextUnpaid, paidThrough, prepaid, rentTracker, statement, trackerTotals, monthKey } from "../src/data/logic";
 import { reducer } from "../src/data/store";
 import { demoData } from "../src/data/demo";
 import { planImport, trackerSheet, TRACK_HEAD } from "../src/data/excel";
@@ -67,6 +67,26 @@ ok(reducer({ ...d, docs: undefined }, { type: "doc", doc: { id: "a", kind: "cr",
 const p2 = planImport([{ sheet: "الوحدات", data: [["الوحدة", "الإيجار", "عداد الكهرباء", "عداد الماء"], ["شقة 77", 100, "123456", 987]] }], d, now);
 const m77 = p2.units.find((u) => u.name === "شقة 77")?.meters;
 ok(m77?.elec === "123456" && m77?.water === "987", "استيراد العدادات", JSON.stringify(m77));
+
+// 9) DW-024: تجديد مع زيادة — الماضي ما يتغيّر والمستقبل بالإيجار الجديد
+{
+  const u2 = d.units.find((u) => u.id === "u2")!; // عقده ينتهي بعد 20 يوم، وعليه متأخرات
+  const before = statement(d, u2, now);
+  const from = add(cur, 1);
+  const r = renewUnit(u2, addMonthsDay(u2.tenant!.until!, 12), 240000, from);
+  const d2: Data = reducer(d, { type: "unit", unit: r });
+  const ru = d2.units.find((u) => u.id === "u2")!;
+  const after = statement(d2, ru, now);
+  ok(JSON.stringify(before) === JSON.stringify(after), "التجديد مع زيادة: كشف الأشهر الفايتة ما تغيّر");
+  ok(rentAt(ru, cur) === 220000 && rentAt(ru, from) === 240000 && rentAt(ru, "2025-01") === 220000, "rentAt: قبل 220 · من الشهر الجاي 240");
+  ok(upcomingRent(ru, now)?.rent === 240000 && upcomingRent(ru, now)?.from === from, "الزيادة الجاية تبين");
+  ok(owedMonths(d2, ru, new Date(now.getFullYear(), now.getMonth() + 1, 20)).find((x) => x.month === from)?.left === 240000, "الشهر الجاي يُطلب بـ 240");
+  const nu = nextUnpaid(d2, { ...ru }, 3, new Date(now.getFullYear(), now.getMonth(), 15));
+  ok(nu.length === 3, "nextUnpaid يشتغل مع السجل");
+  ok(addMonthsDay("2026-01-31", 1) === "2026-02-28" && addMonthsDay("2026-11-04", 12) === "2027-11-04", "addMonthsDay");
+  const same = renewUnit(u2, "2027-12-31", u2.rent, from);
+  ok(!same.rentBefore && same.tenant!.until === "2027-12-31", "تجديد بدون زيادة: ما ينضاف سجل");
+}
 
 console.log(failed ? `\n${failed} فشل` : "\nكل اختبارات المتابعة نجحت");
 process.exit(failed ? 1 : 0);

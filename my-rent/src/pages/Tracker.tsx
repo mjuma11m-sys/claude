@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useStore } from "../data/store";
-import { KINDS, LEASE_LABEL, isoDay, kindLabel, monthLabel, rentTracker, trackerTotals, type LeaseState, type TrackRow } from "../data/logic";
+import { KINDS, LEASE_LABEL, isoDay, monthKey, rentAt, kindLabel, monthLabel, rentTracker, trackerTotals, type LeaseState, type TrackRow } from "../data/logic";
 import { trackerSheet } from "../data/excel";
 import type { Kind, Status, Unit } from "../data/types";
 import { Money, StatusPill } from "../theme/AppShell";
@@ -73,7 +73,7 @@ export function Tracker({ onOpenUnit }: { onOpenUnit: (u: Unit) => void }) {
                     <th scope="row"><span className="strong">{r.unit.name}</span><span className="muted small">{r.unit.building}</span></th>
                     <td>{kindLabel(r.kind)}</td>
                     <td>{r.unit.tenant?.name ?? <span className="muted">—</span>}</td>
-                    <td><Money fils={r.unit.rent} /></td>
+                    <td><Money fils={rentAt(r.unit, monthKey(new Date()))} /></td>
                     <td><Money fils={r.due} /></td>
                     <td><Money fils={r.paid} /></td>
                     <td>{r.left ? <Money fils={r.left} tone="out" /> : <span className="muted">—</span>}</td>

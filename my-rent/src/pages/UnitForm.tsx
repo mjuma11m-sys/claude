@@ -68,6 +68,7 @@ export function UnitForm({ open, unit, onClose, onSaved }: Props) {
           <label className="field"><span>اسم الوحدة</span><input id="u-name" className="input" value={f.name} onChange={set("name")} placeholder="شقة 6" /></label>
           <label className="field"><span>المبنى</span><input id="u-building" className="input" value={f.building} onChange={set("building")} placeholder="عمارة المالكية" /></label>
         </div>
+        {unit?.tenant && <p className="muted small" style={{ margin: 0 }}>تعديل الإيجار هني يصحّح كل الأشهر. لزيادة من شهر معيّن استخدم «جدّد العقد».</p>}
         <Chips<Kind> label="نوع العقار" value={kind} onChange={setKind} options={KINDS} />
         <div className="grid-2">
           <label className="field"><span>الإيجار الشهري (د.ب)</span><input id="u-rent" className="input num" inputMode="decimal" dir="ltr" value={f.rent} onChange={set("rent")} placeholder="200.000" /></label>

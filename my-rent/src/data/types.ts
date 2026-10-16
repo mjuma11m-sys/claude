@@ -11,7 +11,8 @@ export type Unit = {
   building: string;
   meters?: { elec?: string; water?: string }; // DW-023: رقم حساب/عداد الكهرباء والماء
   kind?: Kind; // اختياري: البيانات القديمة بدونه ← kindOf يحسبه من الاسم
-  rent: Fils;
+  rent: Fils;              // الإيجار الحالي (وما بعده)
+  rentBefore?: { until: string; rent: Fils }[]; // DW-024: إيجارات سابقة — كل شهر <= until (YYYY-MM) ياخذ أقرب واحد
   dueDay: number; // يوم الاستحقاق بالشهر
   tenant?: { name: string; phone: string; since: string; until?: string; deposit?: Fils };
   contractFile?: ContractFile; // DW-020: العقد الموقّع (الملف نفسه بالجهاز أو بالسحابة، هني بس وصفه) // since = YYYY-MM · until = YYYY-MM-DD نهاية العقد · deposit = مبلغ التأمين

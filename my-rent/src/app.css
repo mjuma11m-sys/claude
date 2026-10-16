@@ -402,3 +402,7 @@ html[data-size="xl"] .hero-owed { flex-wrap: wrap; }
 :root[data-theme="dark"] .doc-kpi-soon b, :root[data-theme="dark"] .pill.doc-soon { color: #f0c75a; }
 :root[data-theme="dark"] .doc-kpi-active b, :root[data-theme="dark"] .pill.doc-active { color: #6fd3a1; }
 select.input { appearance: auto; }
+
+/* DW-024: تجديد العقد */
+.renew-change { padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--brand) 8%, transparent); }
+.renew-done { text-align: center; justify-items: center; }

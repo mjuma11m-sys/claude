@@ -19,6 +19,7 @@ import { UnitForm } from "./pages/UnitForm";
 import { Reports } from "./pages/Reports";
 import { SearchSheet } from "./pages/Search";
 import { Tracker } from "./pages/Tracker";
+import { RenewSheet } from "./pages/Renew";
 import { DocSheet, Docs } from "./pages/Docs";
 import type { Doc } from "./data/types";
 import { PaySheet, PickUnitSheet } from "./pages/PaySheet";
@@ -46,6 +47,7 @@ function Idarati() {
   const [receipt, setReceipt] = useState<ReceiptRef>(null);
   const [stmt, setStmt] = useState<Unit | null>(null);
   const [contract, setContract] = useState<Unit | null>(null);
+  const [renew, setRenew] = useState<Unit | null>(null);
   const [editing, setEditing] = useState<{ unit: Unit | null } | null>(null);
   const [searching, setSearching] = useState(false);
   const [docEdit, setDocEdit] = useState<{ doc: Doc | null } | null>(null);
@@ -81,6 +83,7 @@ function Idarati() {
   const closeReceipt = useCallback(() => setReceipt(null), []);
   const closeStmt = useCallback(() => setStmt(null), []);
   const closeContract = useCallback(() => setContract(null), []);
+  const closeRenew = useCallback(() => setRenew(null), []);
   const closeEditing = useCallback(() => setEditing(null), []);
   const closeSearch = useCallback(() => setSearching(false), []);
   const closeDoc = useCallback(() => setDocEdit(null), []);
@@ -112,12 +115,13 @@ function Idarati() {
       {page === "vendors" && <Vendors />}
       {page === "settings" && <Settings />}
 
-      <PaySheet unit={unit} onClose={closeUnit} onReceipt={(payment, u) => { setUnit(null); setReceipt({ payment, unit: u }); }} onEdit={(u) => { setUnit(null); setEditing({ unit: u }); }} onStatement={(u) => { setUnit(null); setStmt(u); }} onContract={(u) => { setUnit(null); setContract(u); }} />
+      <PaySheet unit={unit} onClose={closeUnit} onReceipt={(payment, u) => { setUnit(null); setReceipt({ payment, unit: u }); }} onEdit={(u) => { setUnit(null); setEditing({ unit: u }); }} onStatement={(u) => { setUnit(null); setStmt(u); }} onContract={(u) => { setUnit(null); setContract(u); }} onRenew={(u) => { setUnit(null); setRenew(u); }} />
       <SearchSheet open={searching} onClose={closeSearch} onPick={(u) => { setSearching(false); setUnit(u); }} />
       <UnitForm open={!!editing} unit={editing?.unit ?? null} onClose={closeEditing} />
       <ReceiptSheet value={receipt} onClose={closeReceipt} />
       <StatementSheet unit={stmt} onClose={closeStmt} />
       <ContractSheet unit={contract} onClose={closeContract} />
+      <RenewSheet unit={renew} onClose={closeRenew} />
       <PickUnitSheet open={picking} onClose={closePick} onPick={(u) => { setPicking(false); setUnit(u); }} />
       <ExpenseSheet open={expense} onClose={closeExpense} />
       <DocSheet value={docEdit} onClose={closeDoc} />

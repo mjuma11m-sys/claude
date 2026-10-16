@@ -464,6 +464,28 @@ try {
     await g.close();
   }
 
+  // 18) DW-024: تجديد العقد مع زيادة من الشهر الجاي + واتساب + تراجع
+  {
+    const w = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const wErr = []; w.on("pageerror", (e) => wErr.push(e.message));
+    await w.goto(URL + "#tenants"); await w.evaluate(() => localStorage.clear()); await w.reload(); await w.waitForTimeout(800);
+    const before = await w.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")).units.find((u) => u.id === "u2"));
+    await w.locator(".unit-card", { hasText: "شقة 2" }).first().click(); await w.waitForTimeout(400);
+    await w.getByRole("button", { name: "جدّد العقد" }).click(); await w.waitForTimeout(500);
+    await w.locator("#renew-rent").fill("240");
+    ok((await w.locator("#renew-change").innerText()).includes("240"), "معاينة الزيادة ومن أي شهر");
+    await w.locator("#renew-btn").click(); await w.waitForTimeout(500);
+    const u2 = await w.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")).units.find((u) => u.id === "u2"));
+    ok(u2.rent === 240000 && u2.rentBefore?.[0]?.rent === 220000 && u2.tenant.until > before.tenant.until, "التجديد: إيجار جديد + سجل القديم + نهاية جديدة");
+    const wa = await w.locator("#renew-wa").getAttribute("href");
+    ok(wa.startsWith("https://wa.me/") && decodeURIComponent(wa).includes("240.000"), "رسالة واتساب بالتجديد");
+    await w.getByRole("button", { name: "تراجع" }).click(); await w.waitForTimeout(400);
+    const back = await w.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")).units.find((u) => u.id === "u2"));
+    ok(JSON.stringify(back) === JSON.stringify(before), "التراجع يرجّع العقد والإيجار");
+    ok(wErr.length === 0, "DW-024: بدون أخطاء", wErr.join(" | "));
+    await w.close();
+  }
+
   if (process.env.SHOTS) {
     for (const [n, w, h, s] of [["home-phone", 390, 844, "light"], ["home-dark", 390, 844, "dark"], ["home-desk", 1280, 800, "light"], ["tenants-tab", 820, 1180, "light"], ["budget-phone", 390, 844, "light"]]) {
       const q = await browser.newPage({ viewport: { width: w, height: h }, colorScheme: s });

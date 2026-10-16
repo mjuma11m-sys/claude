@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Method, Payment, Unit } from "../data/types";
 import { useStore } from "../data/store";
-import { arrears, fmt, monthLabel, monthName, nextUnpaid, owedMonths, paidThrough, parseBHD, prepaid, unitStatus } from "../data/logic";
+import { arrears, contractAlerts, fmt, monthKey, rentAt, upcomingRent, monthLabel, monthName, nextUnpaid, owedMonths, paidThrough, parseBHD, prepaid, unitStatus } from "../data/logic";
 import { Chips, Sheet, useToast } from "../ui/kit";
 import { Money, StatusPill } from "../theme/AppShell";
 import { Icon } from "../ui/icons";
@@ -17,7 +17,7 @@ function reminderUrl(unit: Unit, months: string[], amount: number) {
 }
 
 /** تفاصيل الوحدة + المتأخرات + تسجيل دفعة + الإيصالات */
-export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onContract }: { unit: Unit | null; onClose: () => void; onReceipt: (p: Payment, u: Unit) => void; onEdit: (u: Unit) => void; onStatement: (u: Unit) => void; onContract: (u: Unit) => void }) {
+export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onContract, onRenew }: { unit: Unit | null; onClose: () => void; onReceipt: (p: Payment, u: Unit) => void; onEdit: (u: Unit) => void; onStatement: (u: Unit) => void; onContract: (u: Unit) => void; onRenew: (u: Unit) => void }) {
   const { data, pay, unpay, payAhead, vacate, undeposit, deleteUnit, saveUnit } = useStore();
   const [confirmVacate, setConfirmVacate] = useState(false);
   const toast = useToast();
@@ -85,6 +85,8 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onCont
     toast({ text: `انسجلت دفعة مقدمة ${u.name} · ${r.months.length} ${r.months.length > 10 || r.months.length < 3 ? "شهر" : "أشهر"} لين ${monthLabel(r.months[r.months.length - 1])}`, undo: r.undo, stamp: true });
   };
   const thru = u ? paidThrough(data, u) : null;
+  const renewSoon = !!u?.tenant?.until && contractAlerts(data).some((c) => c.unit.id === u.id);
+  const up = u ? upcomingRent(u) : null;
   const pre = u ? prepaid(data, u) : { months: [], amount: 0 };
 
   return (
@@ -100,7 +102,7 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onCont
             <StatusPill status={status} />
           </div>
           <div className="kv-grid">
-            <div><div className="muted small">الإيجار الشهري</div><Money fils={u.rent} /></div>
+            <div><div className="muted small">الإيجار الشهري</div><Money fils={rentAt(u, monthKey(new Date()))} />{up && <div className="small muted" id="rent-up">يصير <span className="num">{fmt(up.rent)}</span> من {monthLabel(up.from)}</div>}</div>
             <div><div className="muted small">يستحق يوم</div><span className="num strong">{u.dueDay}</span></div>
             {u.tenant && <div><div className="muted small">من</div><span className="num strong">{u.tenant.since}</span></div>}
             {!!u.tenant?.deposit && <div><div className="muted small">التأمين</div><Money fils={u.tenant.deposit} /></div>}
@@ -137,7 +139,7 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onCont
               <span className="strong">دفعة مقدمة</span>
               <span className="muted small">{thru ? <>مدفوع لين <b>{monthLabel(thru)}</b>{pre.months.length > 0 && <> · مقدم <span className="num">{pre.months.length}</span> {pre.months.length > 10 || pre.months.length < 3 ? "شهر" : "أشهر"}</>}</> : "فيه أشهر ما اندفعت — المقدم يسددها أول"}</span>
               <Chips label="كم شهر" value={ahead} onChange={setAhead} options={[{ id: "1", label: "شهر" }, { id: "3", label: "3 أشهر" }, { id: "6", label: "6 أشهر" }, { id: "12", label: "سنة" }]} />
-              {ahead !== "0" && (() => { const ms = nextUnpaid(data, u, Number(ahead)); return <div className="small ahead-sum">من {monthLabel(ms[0])} لين {monthLabel(ms[ms.length - 1])} · <Money fils={u.rent * ms.length} /></div>; })()}
+              {ahead !== "0" && (() => { const ms = nextUnpaid(data, u, Number(ahead)); return <div className="small ahead-sum">من {monthLabel(ms[0])} لين {monthLabel(ms[ms.length - 1])} · <Money fils={ms.reduce((s, m) => s + rentAt(u, m), 0)} /></div>; })()}
               {owed.length === 0 && <Chips label="طريقة الدفع" value={method} onChange={setMethod} options={METHODS.map((m) => ({ id: m, label: m }))} />}
               <button type="submit" id="ahead-btn" className="btn btn-ghost btn-block press" disabled={ahead === "0"}>احفظ الدفعة المقدمة</button>
             </form>
@@ -162,6 +164,7 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onCont
           <div className="unit-actions">
             {u.tenant && <button type="button" className="btn btn-ghost press" onClick={() => onStatement(u)}>كشف حساب</button>}
             {u.tenant && <button type="button" className="btn btn-ghost press" onClick={() => onContract(u)}>العقد{u.contractFile ? " ✓" : ""}</button>}
+            {u.tenant?.until && <button type="button" className={`btn press ${renewSoon ? "" : "btn-ghost"}`} onClick={() => onRenew(u)}>جدّد العقد</button>}
             <button type="button" className="btn btn-ghost press" onClick={() => onEdit(u)}>{u.tenant ? "تعديل" : "أضف مستأجر"}</button>
             {u.tenant && !confirmVacate && <button type="button" className="btn btn-ghost press danger-text" onClick={() => setConfirmVacate(true)}>إخلاء الوحدة</button>}
             {!u.tenant && !data.payments.some((p) => p.unitId === u.id) && (

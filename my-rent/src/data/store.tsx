@@ -2,7 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { BudgetCat, Data, DepositLog, Doc, Expense, Method, Payment, Recurring, Unit } from "./types";
 import { demoData, emptyData } from "./demo";
-import { dueRecurring, isoDay, nextUnpaid, owedMonths } from "./logic";
+import { dueRecurring, isoDay, nextUnpaid, owedMonths, rentAt } from "./logic";
 import { SyncEngine, loadSyncConfig, saveSyncConfig, type SyncAction, type SyncConfig, type SyncStatus } from "./sync";
 
 const KEY = "idarati:v2";
@@ -220,7 +220,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const unit = data.units.find((u) => u.id === unitId);
       if (!unit?.tenant || n < 1) return null;
       const date = isoDay(new Date());
-      const ps = nextUnpaid(data, unit, n).map((month) => ({ id: uid(), unitId, month, amount: unit.rent - data.payments.filter((p) => p.unitId === unitId && p.month === month).reduce((s, p) => s + p.amount, 0), method, date }));
+      const ps = nextUnpaid(data, unit, n).map((month) => ({ id: uid(), unitId, month, amount: rentAt(unit, month) - data.payments.filter((p) => p.unitId === unitId && p.month === month).reduce((s, p) => s + p.amount, 0), method, date }));
       ps.forEach((payment) => dispatch({ type: "pay", payment }));
       return { months: ps.map((p) => p.month), undo: () => ps.forEach((p) => dispatch({ type: "unpay", id: p.id })) };
     },

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useStore } from "../data/store";
-import { arrears, monthName, monthTrail, unitStatus } from "../data/logic";
+import { arrears, monthKey, monthName, monthTrail, rentAt, unitStatus } from "../data/logic";
 import type { Status, Unit } from "../data/types";
 import { Money, StatusPill } from "../theme/AppShell";
 import { useStagger } from "../theme/motion";
@@ -54,7 +54,7 @@ export function Tenants({ onOpenUnit }: { onOpenUnit: (u: Unit) => void }) {
                     ))}
                   </div>
                 )}
-                <div className="unit-foot"><Money fils={u.rent} /><span className="muted small">يستحق يوم <span className="num">{u.dueDay}</span></span></div>
+                <div className="unit-foot"><Money fils={rentAt(u, monthKey(new Date()))} /><span className="muted small">يستحق يوم <span className="num">{u.dueDay}</span></span></div>
               </button>
             );
           })}

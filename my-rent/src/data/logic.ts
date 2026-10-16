@@ -20,6 +20,12 @@ export function monthsBetween(a: string, b: string): string[] {
   return out;
 }
 
+/** DW-024: إيجار شهر معيّن — أقدم إيجار سابق يغطي الشهر، وإلا الإيجار الحالي */
+export function rentAt(unit: Unit, month: string): Fils {
+  const hit = (unit.rentBefore ?? []).filter((r) => month <= r.until).sort((a, b) => a.until.localeCompare(b.until))[0];
+  return hit ? hit.rent : unit.rent;
+}
+
 const paidFor = (data: Data, unitId: string, month: string) =>
   data.payments.filter((p) => p.unitId === unitId && p.month === month).reduce((s, p) => s + p.amount, 0);
 
@@ -28,7 +34,7 @@ export function owedMonths(data: Data, unit: Unit, now = new Date()) {
   if (!unit.tenant) return [];
   const start = data.trackFrom > unit.tenant.since ? data.trackFrom : unit.tenant.since;
   return monthsBetween(start, monthKey(now))
-    .map((month) => ({ month, left: unit.rent - paidFor(data, unit.id, month) }))
+    .map((month) => ({ month, left: rentAt(unit, month) - paidFor(data, unit.id, month) }))
     .filter((x) => x.left > 0);
 }
 
@@ -51,7 +57,7 @@ export const rented = (data: Data) => data.units.filter((u) => u.tenant);
 export function collection(data: Data, now = new Date()) {
   const m = monthKey(now);
   const units = rented(data);
-  const expected = units.reduce((s, u) => s + u.rent, 0);
+  const expected = units.reduce((s, u) => s + rentAt(u, m), 0);
   const collected = data.payments.filter((p) => p.month === m).reduce((s, p) => s + p.amount, 0);
   const by = (st: Status) => units.filter((u) => unitStatus(data, u, now) === st);
   const owed = units.reduce((s, u) => s + arrears(data, u, now).amount, 0);
@@ -128,7 +134,7 @@ export function monthTrail(data: Data, unit: Unit, now = new Date(), n = 6) {
   const late = now.getDate() > unit.dueDay + GRACE_DAYS;
   return months.map((m) => {
     if (m < start) return { month: m, state: "none" as const };
-    if (paidFor(data, unit.id, m) >= unit.rent) return { month: m, state: "paid" as const };
+    if (paidFor(data, unit.id, m) >= rentAt(unit, m)) return { month: m, state: "paid" as const };
     if (m === cur && !late) return { month: m, state: "due" as const };
     return { month: m, state: "late" as const };
   });
@@ -152,9 +158,10 @@ export function statement(data: Data, unit: Unit, now = new Date()) {
   const lateNow = now.getDate() > unit.dueDay + GRACE_DAYS;
   const rows = monthsBetween(start, cur).map((month) => {
     const paid = paidFor(data, unit.id, month);
-    const left = Math.max(0, unit.rent - paid);
+    const rent = rentAt(unit, month);
+    const left = Math.max(0, rent - paid);
     const state = left === 0 ? "paid" : month === cur && !lateNow ? "due" : "late";
-    return { month, rent: unit.rent, paid, left, state: state as Status };
+    return { month, rent, paid, left, state: state as Status };
   });
   return {
     rows,
@@ -242,7 +249,7 @@ export const monthLabel = (key: string) => `${monthName(key)} ${key.slice(0, 4)}
 export function prepaid(data: Data, unit: Unit, now = new Date()) {
   const cur = monthKey(now);
   const pays = data.payments.filter((p) => p.unitId === unit.id && p.month > cur);
-  const months = [...new Set(pays.map((p) => p.month))].sort().filter((m) => paidFor(data, unit.id, m) >= unit.rent);
+  const months = [...new Set(pays.map((p) => p.month))].sort().filter((m) => paidFor(data, unit.id, m) >= rentAt(unit, m));
   return { months, amount: pays.reduce((s, p) => s + p.amount, 0) };
 }
 
@@ -258,7 +265,7 @@ export function paidThrough(data: Data, unit: Unit, now = new Date()) {
   let m = monthKey(now);
   for (;;) {
     const next = monthKey(new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)), 1));
-    if (paidFor(data, unit.id, next) < unit.rent) return m;
+    if (paidFor(data, unit.id, next) < rentAt(unit, next)) return m;
     m = next;
   }
 }
@@ -271,7 +278,7 @@ export function nextUnpaid(data: Data, unit: Unit, n: number, now = new Date()) 
   while (out.length < n) {
     m++; if (m > 12) { m = 1; y++; }
     const k = `${y}-${String(m).padStart(2, "0")}`;
-    if (paidFor(data, unit.id, k) < unit.rent) out.push(k);
+    if (paidFor(data, unit.id, k) < rentAt(unit, k)) out.push(k);
   }
   return out;
 }
@@ -324,3 +331,33 @@ export function docsList(data: Data, now = new Date()) {
     .sort((a, b) => (a.left ?? Infinity) - (b.left ?? Infinity));
 }
 export const docAlerts = (data: Data, now = new Date()) => docsList(data, now).filter((d) => d.state === "soon" || d.state === "ended");
+
+// ── DW-024: تجديد العقد ─────────────────────────────────
+
+export const nextMonth = (m: string) => monthKey(new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)), 1));
+export const prevMonth = (m: string) => monthKey(new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)) - 2, 1));
+/** يضيف أشهر لتاريخ يوم (آخر الشهر يبقى آخر الشهر) */
+export function addMonthsDay(day: string, n: number) {
+  const [y, m, d] = day.split("-").map(Number);
+  const last = new Date(y, m - 1 + n + 1, 0).getDate();
+  return isoDay(new Date(y, m - 1 + n, Math.min(d, last)));
+}
+/** الإيجار يتغيّر من شهر from: الأشهر قبله تبقى على الإيجار القديم */
+export function renewUnit(unit: Unit, until: string, rent: Fils, from: string): Unit {
+  if (!unit.tenant) return unit;
+  const changed = rent !== unit.rent;
+  return {
+    ...unit,
+    rent,
+    ...(changed ? { rentBefore: [...(unit.rentBefore ?? []), { until: prevMonth(from), rent: unit.rent }] } : {}),
+    tenant: { ...unit.tenant, until },
+  };
+}
+/** الإيجار الجاي لو فيه زيادة ما بدت للحين */
+export function upcomingRent(unit: Unit, now = new Date()) {
+  const cur = monthKey(now);
+  const r = rentAt(unit, cur);
+  if (r === unit.rent) return null;
+  const from = nextMonth([...(unit.rentBefore ?? [])].filter((x) => x.until >= cur).sort((a, b) => b.until.localeCompare(a.until))[0].until);
+  return { rent: unit.rent, from };
+}
