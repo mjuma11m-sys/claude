@@ -1,6 +1,6 @@
 // مخزن البيانات: useReducer + localStorage. لما ينربط Supabase، يتبدل load/save بس والشاشات ما تتغيّر.
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import type { BudgetCat, Data, DepositLog, Expense, Method, Payment, Recurring, Unit } from "./types";
+import type { BudgetCat, Data, DepositLog, Doc, Expense, Method, Payment, Recurring, Unit } from "./types";
 import { demoData, emptyData } from "./demo";
 import { dueRecurring, isoDay, nextUnpaid, owedMonths } from "./logic";
 import { SyncEngine, loadSyncConfig, saveSyncConfig, type SyncAction, type SyncConfig, type SyncStatus } from "./sync";
@@ -24,6 +24,8 @@ export type Action =
   | { type: "deposit"; log: DepositLog }
   | { type: "undeposit"; id: string }
   | { type: "contract"; template: string; owner: string }
+  | { type: "doc"; doc: Doc }
+  | { type: "undoc"; id: string }
   | { type: "import"; units: Unit[]; payments: Payment[]; expenses: Expense[]; cats: BudgetCat[] }
   | { type: "unimport"; restore: Unit[]; unitIds: string[]; paymentIds: string[]; expenseIds: string[]; catIds: string[] };
 
@@ -62,6 +64,11 @@ export function reducer(state: Data, a: Action): Data {
       cats: state.cats.filter((c) => !a.catIds.includes(c.id)),
     };
     case "contract": return { ...state, contractTemplate: a.template, contractOwner: a.owner };
+    case "doc": { // DW-023: إضافة أو تعديل
+      const docs = state.docs ?? [];
+      return { ...state, docs: docs.some((d) => d.id === a.doc.id) ? docs.map((d) => (d.id === a.doc.id ? a.doc : d)) : [...docs, a.doc] };
+    }
+    case "undoc": return { ...state, docs: (state.docs ?? []).filter((d) => d.id !== a.id) };
     default: return state; // حدث من نسخة أحدث للتطبيق: نتجاهله بدل ما ننكسر
   }
 }
@@ -114,6 +121,8 @@ type Store = {
   logRecurring: () => Expense[];
   unexpenses: (ids: string[]) => void;
   setContract: (template: string, owner: string) => void;
+  saveDoc: (doc: Omit<Doc, "id"> & { id?: string }) => Doc;
+  removeDoc: (id: string) => Doc | null;
   importPlan: (p: { units: Unit[]; payments: Payment[]; expenses: Expense[]; cats: BudgetCat[] }) => () => void; // يرجّع دالة التراجع
   deleteUnit: (id: string) => boolean;
   replace: (data: Data) => void;
@@ -233,6 +242,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     unexpense: (id) => dispatch({ type: "unexpense", id }),
     toggleTask: (id) => dispatch({ type: "task", id }),
+    saveDoc: (d) => {
+      const doc = { ...d, id: d.id ?? "d" + uid() } as Doc;
+      dispatch({ type: "doc", doc });
+      return doc;
+    },
+    removeDoc: (id) => {
+      const doc = (data.docs ?? []).find((d) => d.id === id) ?? null;
+      if (doc) dispatch({ type: "undoc", id });
+      return doc;
+    },
     saveUnit: (u) => {
       const unit = { ...u, id: u.id ?? "u" + uid() } as Unit;
       dispatch({ type: "unit", unit });

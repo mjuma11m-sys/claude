@@ -22,7 +22,7 @@ async function waitServer() {
 try {
   await waitServer();
   const browser = await chromium.launch({ executablePath: exe });
-  const pages = ["home", "tenants", "budget", "bank", "reports", "track", "house", "vendors", "settings"];
+  const pages = ["home", "tenants", "budget", "bank", "reports", "track", "docs", "house", "vendors", "settings"];
 
   // 1) كل الشاشات بكل الأحجام: بدون scroll أفقي وبدون أخطاء
   for (const [w, h] of [[390, 844], [820, 1180], [1280, 800]]) {
@@ -413,6 +413,55 @@ try {
     ok(u7.kind === "store" && u7.contractFile?.id === "cfx", "النوع ينحفظ وملف العقد يبقى بعد التعديل");
     ok(tErr.length === 0, "DW-022: بدون أخطاء", tErr.join(" | "));
     await t.close();
+  }
+
+  // 17) DW-023: الوثائق والمستندات + تنبيه الرئيسية + عدادات الوحدة
+  {
+    const g = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const gErr = []; g.on("pageerror", (e) => gErr.push(e.message));
+    await g.goto(URL + "#home"); await g.evaluate(() => localStorage.clear()); await g.reload(); await g.waitForTimeout(1000);
+    const hd = await g.locator("#home-docs").innerText();
+    ok(hd.includes("رخصة البلدية") && hd.includes("تأمين عمارة المالكية") && !hd.includes("الدفاع المدني"), "الرئيسية: وثيقتين تحتاج تجديد بس");
+    await g.locator("#home-docs").getByRole("button", { name: "كل الوثائق" }).click(); await g.waitForTimeout(700);
+    ok(g.url().endsWith("#docs") && await g.locator("#doc-list li").count() === 5, "صفحة الوثائق: 5 وثائق");
+    ok((await g.locator("#doc-list li").first().innerText()).includes("منتهية"), "المنتهية أول القائمة");
+    await g.locator(".doc-kpi-soon").click(); await g.waitForTimeout(300);
+    ok(await g.locator("#doc-list li").count() === 1, "بطاقة «قريبة الانتهاء» تصفّي");
+    await g.locator(".doc-kpi-soon").click(); await g.waitForTimeout(300);
+    // إضافة وثيقة بالزر الذهبي
+    await g.locator(".fab").click(); await g.waitForTimeout(400);
+    await g.locator(".doc-form").getByRole("radio", { name: "تأمين" }).click();
+    await g.locator("#d-title").fill("تأمين المحلات");
+    await g.locator("#d-expires").fill(await g.evaluate(() => { const d = new Date(); d.setDate(d.getDate() + 10); return d.toISOString().slice(0, 10); }));
+    await g.locator("#d-unit").selectOption("u6");
+    await g.getByRole("button", { name: "أضف الوثيقة" }).click(); await g.waitForTimeout(500);
+    let st = await g.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")));
+    const nd = st.docs.find((d) => d.title === "تأمين المحلات");
+    ok(nd && nd.kind === "insurance" && nd.unitId === "u6", "إضافة وثيقة بنوعها ووحدتها");
+    // الملف: رفض النوع الغلط
+    await g.locator("#doc-list li", { hasText: "تأمين المحلات" }).locator("button").click(); await g.waitForTimeout(400);
+    await g.locator("#doc-file").setInputFiles({ name: "a.txt", mimeType: "text/plain", buffer: Buffer.from("x") }); await g.waitForTimeout(200);
+    ok((await g.locator(".doc-form .field-error").innerText()).includes("PDF"), "ملف مو PDF/صورة ينرفض");
+    await g.locator("#doc-file").setInputFiles({ name: "p.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4") }); await g.waitForTimeout(200);
+    await g.getByRole("button", { name: "احفظ التعديل" }).click(); await g.waitForTimeout(700);
+    st = await g.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")));
+    ok(st.docs.find((d) => d.title === "تأمين المحلات")?.file?.name === "p.pdf", "إرفاق PDF بالوثيقة (محلي)");
+    // حذف + تراجع
+    await g.locator("#doc-list li", { hasText: "تأمين المحلات" }).locator("button").click(); await g.waitForTimeout(400);
+    await g.getByRole("button", { name: "احذف الوثيقة" }).click(); await g.waitForTimeout(400);
+    ok(await g.evaluate(() => !JSON.parse(localStorage.getItem("idarati:v2")).docs.some((d) => d.title === "تأمين المحلات")), "حذف الوثيقة");
+    await g.getByRole("button", { name: "تراجع" }).click(); await g.waitForTimeout(400);
+    ok(await g.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")).docs.some((d) => d.title === "تأمين المحلات" && d.file)), "التراجع يرجعها مع ملفها");
+    // العدادات
+    await g.goto(URL + "#tenants"); await g.waitForTimeout(600);
+    await g.locator(".unit-card", { hasText: "شقة 2" }).first().click(); await g.waitForTimeout(400);
+    await g.getByRole("button", { name: /^تعديل$/ }).first().click(); await g.waitForTimeout(400);
+    await g.locator("#u-elec").fill("445566"); await g.locator("#u-water").fill("778899");
+    await g.getByRole("button", { name: "احفظ التعديل" }).click(); await g.waitForTimeout(400);
+    const u2 = await g.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")).units.find((u) => u.id === "u2"));
+    ok(u2.meters?.elec === "445566" && u2.meters?.water === "778899" && u2.tenant?.name, "عدادات الكهرباء والماء تنحفظ مع الوحدة");
+    ok(gErr.length === 0, "DW-023: بدون أخطاء", gErr.join(" | "));
+    await g.close();
   }
 
   if (process.env.SHOTS) {

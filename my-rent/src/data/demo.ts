@@ -14,7 +14,7 @@ export function demoData(now = new Date()): Data {
   return {
     trackFrom: m2,
     units: [
-      { id: "u1", name: "شقة 1", building: "عمارة المالكية", rent: 180000, dueDay: 1, tenant: { name: "أحمد عبدالله", phone: "3xxx 1101", since: "2024-03" } },
+      { id: "u1", name: "شقة 1", building: "عمارة المالكية", meters: { elec: "000000", water: "000000" }, rent: 180000, dueDay: 1, tenant: { name: "أحمد عبدالله", phone: "3xxx 1101", since: "2024-03" } },
       { id: "u2", name: "شقة 2", building: "عمارة المالكية", rent: 220000, dueDay: 5, tenant: { name: "يوسف محمد", phone: "3xxx 1102", since: "2025-01", until: isoDay(new Date(y, mo, now.getDate() + 20)), deposit: 220000 } },
       { id: "u3", name: "شقة 3", building: "عمارة المالكية", rent: 200000, dueDay: 1, tenant: { name: "عائلة سلمان", phone: "3xxx 1103", since: "2023-09", deposit: 200000 } },
       { id: "u4", name: "شقة 4", building: "عمارة المالكية", rent: 190000, dueDay: 10, tenant: { name: "خالد ناصر", phone: "3xxx 1104", since: "2025-06", until: isoDay(new Date(y + 1, 5, 30)) } },
@@ -78,6 +78,14 @@ export function demoData(now = new Date()): Data {
       { id: "v1", name: "فني مكيفات", service: "صيانة وتركيب", phone: "3xxx 4410" },
       { id: "v2", name: "سبّاك المالكية", service: "طوارئ 24 ساعة", phone: "3xxx 5520" },
       { id: "v3", name: "شركة الدهانات", service: "عقود سنوية", phone: "17xx 6630" },
+    ],
+    // DW-023: وثائق العقار (أرقام وهمية)
+    docs: [
+      { id: "d1", kind: "license", title: "رخصة البلدية — المحلات", ref: "BL-00000", expires: isoDay(new Date(y, mo, now.getDate() - 5)) },
+      { id: "d2", kind: "insurance", title: "تأمين عمارة المالكية", ref: "POL-00000", expires: isoDay(new Date(y, mo, now.getDate() + 18)) },
+      { id: "d3", kind: "cr", title: "سجل تجاري — محل 1", unitId: "u6", ref: "CR-00000", expires: isoDay(new Date(y, mo + 7, 1)) },
+      { id: "d4", kind: "civil", title: "شهادة الدفاع المدني", expires: isoDay(new Date(y + 1, mo + 2, 15)) },
+      { id: "d5", kind: "service", title: "عقد صيانة المصعد" },
     ],
   };
 }

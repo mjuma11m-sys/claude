@@ -13,6 +13,7 @@ export const Icon = {
   budget: <I><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></I>,
   bank: <I><path d="M3 9l9-5 9 5M5 9v9M10 9v9M14 9v9M19 9v9M3 20h18" /></I>,
   track: <I><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 10h18M9 10v10M15 10v10" /></I>,
+  docs: <I><path d="M7 3h7l5 5v13H7z" /><path d="M14 3v5h5M10 13h6M10 17h4" /></I>,
   reports: <I><path d="M4 4v16h16" /><path d="M8 15l3-4 3 2 5-6" /></I>,
   house: <I><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z" /></I>,
   vendors: <I><path d="M3 7h13v10H3zM16 10h4l1 3v4h-5" /><circle cx="7" cy="18" r="1.5" /><circle cx="18" cy="18" r="1.5" /></I>,

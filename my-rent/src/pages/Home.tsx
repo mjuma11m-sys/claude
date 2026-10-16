@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useStore } from "../data/store";
-import { arrears, backupDue, balances, budget, collection, contractAlerts, fmt, monthName, unitStatus } from "../data/logic";
+import { arrears, backupDue, balances, budget, collection, contractAlerts, docAlerts, fmt, monthName, unitStatus } from "../data/logic";
+import { DocPill } from "./Docs";
 import type { Unit } from "../data/types";
 import { Money, StatusPill } from "../theme/AppShell";
 import { useStagger } from "../theme/motion";
@@ -39,6 +40,7 @@ export function Home({ onOpenUnit, go, onQuick }: { onOpenUnit: (u: Unit) => voi
   const bank = balances(data);
   const attention = [...c.late, ...c.due];
   const contracts = contractAlerts(data);
+  const docs = docAlerts(data);
   const pct = c.expected ? Math.round((c.collected / c.expected) * 100) : 0;
 
   return (
@@ -112,6 +114,22 @@ export function Home({ onOpenUnit, go, onQuick }: { onOpenUnit: (u: Unit) => voi
                 <button className="row-btn press" onClick={() => onOpenUnit(u)}>
                   <span><span className="strong">{u.name}</span> <span className="muted small">· {u.tenant?.name}</span></span>
                   <span className={`pill ${left < 0 ? "pill-late" : "pill-due"}`}>{left < 0 ? "انتهى" : left === 0 ? "اليوم" : <>بعد <span className="num">{left}</span> يوم</>}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {docs.length > 0 && (
+        <section className="area-docs" id="home-docs">
+          <SectionHead title="وثائق تحتاج تجديد" action={<button className="link press" onClick={() => go("docs")}>كل الوثائق</button>} />
+          <ul className="rows rows-tap card-list">
+            {docs.map(({ doc, state, left }) => (
+              <li key={doc.id}>
+                <button className="row-btn press" onClick={() => go("docs")}>
+                  <span className="strong">{doc.title}</span>
+                  <DocPill state={state} left={left} />
                 </button>
               </li>
             ))}

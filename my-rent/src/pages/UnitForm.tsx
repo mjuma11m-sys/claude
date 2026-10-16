@@ -10,7 +10,7 @@ type Props = { open: boolean; unit: Unit | null; onClose: () => void; onSaved?: 
 export function UnitForm({ open, unit, onClose, onSaved }: Props) {
   const { saveUnit } = useStore();
   const toast = useToast();
-  const [f, setF] = useState({ name: "", building: "", rent: "", dueDay: "1", tenant: "", phone: "", since: "", until: "", deposit: "" });
+  const [f, setF] = useState({ name: "", building: "", rent: "", dueDay: "1", tenant: "", phone: "", since: "", until: "", deposit: "", elec: "", water: "" });
   const [kind, setKind] = useState<Kind>("flat");
   const [error, setError] = useState("");
 
@@ -28,6 +28,8 @@ export function UnitForm({ open, unit, onClose, onSaved }: Props) {
       since: unit?.tenant?.since ?? monthKey(new Date()),
       until: unit?.tenant?.until ?? "",
       deposit: unit?.tenant?.deposit ? fmt(unit.tenant.deposit) : "",
+      elec: unit?.meters?.elec ?? "",
+      water: unit?.meters?.water ?? "",
     });
   }, [open, unit]);
 
@@ -49,6 +51,7 @@ export function UnitForm({ open, unit, onClose, onSaved }: Props) {
       building: f.building.trim() || "بدون مبنى",
       kind,
       ...(unit?.contractFile ? { contractFile: unit.contractFile } : {}), // التعديل ما يمسح ملف العقد
+      ...(f.elec.trim() || f.water.trim() ? { meters: { ...(f.elec.trim() ? { elec: f.elec.trim() } : {}), ...(f.water.trim() ? { water: f.water.trim() } : {}) } } : {}),
       rent,
       dueDay: day,
       tenant: f.tenant.trim() ? { name: f.tenant.trim(), phone: f.phone.trim(), since: f.since, until: f.until || undefined, ...(deposit ? { deposit } : {}) } : undefined,
@@ -69,6 +72,10 @@ export function UnitForm({ open, unit, onClose, onSaved }: Props) {
         <div className="grid-2">
           <label className="field"><span>الإيجار الشهري (د.ب)</span><input id="u-rent" className="input num" inputMode="decimal" dir="ltr" value={f.rent} onChange={set("rent")} placeholder="200.000" /></label>
           <label className="field"><span>يستحق يوم</span><input id="u-day" className="input num" inputMode="numeric" dir="ltr" value={f.dueDay} onChange={set("dueDay")} /></label>
+        </div>
+        <div className="grid-2">
+          <label className="field"><span>عداد الكهرباء <span className="muted small">اختياري</span></span><input id="u-elec" className="input num" inputMode="numeric" dir="ltr" value={f.elec} onChange={set("elec")} /></label>
+          <label className="field"><span>عداد الماء <span className="muted small">اختياري</span></span><input id="u-water" className="input num" inputMode="numeric" dir="ltr" value={f.water} onChange={set("water")} /></label>
         </div>
         <div className="form-sep">المستأجر <span className="muted small">(فاضي = الوحدة شاغرة)</span></div>
         <div className="grid-2">

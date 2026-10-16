@@ -1,4 +1,4 @@
-import type { Data, Fils, Kind, Status, Unit } from "./types";
+import type { Data, Doc, DocKind, Fils, Kind, Status, Unit } from "./types";
 
 export const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 export const isoDay = (d: Date) => `${monthKey(d)}-${String(d.getDate()).padStart(2, "0")}`;
@@ -300,3 +300,27 @@ export function trackerTotals(rows: TrackRow[]) {
   const sum = (k: "due" | "paid" | "left" | "aheadAmount") => rows.reduce((s, r) => s + r[k], 0);
   return { units: rows.length, rented: rows.filter((r) => r.unit.tenant).length, due: sum("due"), paid: sum("paid"), left: sum("left"), ahead: sum("aheadAmount") };
 }
+
+// ── DW-023: الوثائق والمستندات ──────────────────────────
+
+export const DOC_KINDS: { id: DocKind; label: string }[] = [
+  { id: "cr", label: "سجل تجاري" }, { id: "insurance", label: "تأمين" }, { id: "license", label: "رخصة بلدية" },
+  { id: "civil", label: "الدفاع المدني" }, { id: "service", label: "عقد صيانة" }, { id: "other", label: "أخرى" },
+];
+export const docKindLabel = (k: DocKind) => DOC_KINDS.find((x) => x.id === k)?.label ?? "أخرى";
+export const DOC_SOON = 30;
+export type DocState = "active" | "soon" | "ended" | "open";
+export const DOC_LABEL: Record<DocState, string> = { active: "سارية", soon: "قريبة الانتهاء", ended: "منتهية", open: "بدون انتهاء" };
+
+export function docStatus(doc: Doc, now = new Date()) {
+  if (!doc.expires) return { state: "open" as DocState, left: null };
+  const left = Math.round((Date.parse(doc.expires) - Date.parse(isoDay(now))) / 86400000);
+  return { state: (left < 0 ? "ended" : left <= DOC_SOON ? "soon" : "active") as DocState, left };
+}
+
+/** كل الوثائق بحالتها، مرتبة: المنتهية ثم الأقرب انتهاء، والبدون انتهاء آخر شي */
+export function docsList(data: Data, now = new Date()) {
+  return (data.docs ?? []).map((doc) => ({ doc, ...docStatus(doc, now) }))
+    .sort((a, b) => (a.left ?? Infinity) - (b.left ?? Infinity));
+}
+export const docAlerts = (data: Data, now = new Date()) => docsList(data, now).filter((d) => d.state === "soon" || d.state === "ended");

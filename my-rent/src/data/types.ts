@@ -9,6 +9,7 @@ export type Unit = {
   id: string;
   name: string;
   building: string;
+  meters?: { elec?: string; water?: string }; // DW-023: رقم حساب/عداد الكهرباء والماء
   kind?: Kind; // اختياري: البيانات القديمة بدونه ← kindOf يحسبه من الاسم
   rent: Fils;
   dueDay: number; // يوم الاستحقاق بالشهر
@@ -35,6 +36,11 @@ export type Recurring = { id: string; catId: string; label: string; amount: Fils
 /** سجل التأمين وقت الإخلاء: رجع للمستأجر أو انخصم */
 export type DepositLog = { id: string; unitId: string; tenant: string; amount: Fils; returned: boolean; date: string };
 
+/** DW-023: وثائق العقار والنشاط (مو هويات شخصية — DW-014) */
+export type DocKind = "cr" | "insurance" | "license" | "civil" | "service" | "other";
+export type DocFile = { id: string; name: string; type: string; size: number; uploadedAt: string; path?: string };
+export type Doc = { id: string; kind: DocKind; title: string; ref?: string; unitId?: string; expires?: string; file?: DocFile }; // expires = YYYY-MM-DD
+
 export type Vendor = { id: string; name: string; service: string; phone: string };
 
 export type Data = {
@@ -52,4 +58,5 @@ export type Data = {
   deposits?: DepositLog[];
   contractTemplate?: string; // DW-020: نموذج العقد بخانات {…}
   contractOwner?: string;    // اسم المؤجر اللي يطلع بالعقد
+  docs?: Doc[];              // DW-023
 };

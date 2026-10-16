@@ -19,15 +19,17 @@ import { UnitForm } from "./pages/UnitForm";
 import { Reports } from "./pages/Reports";
 import { SearchSheet } from "./pages/Search";
 import { Tracker } from "./pages/Tracker";
+import { DocSheet, Docs } from "./pages/Docs";
+import type { Doc } from "./data/types";
 import { PaySheet, PickUnitSheet } from "./pages/PaySheet";
 import "./app.css";
 import symbolUrl from "../brand/symbol.svg";
 
-const PAGES = ["home", "tenants", "budget", "bank", "reports", "track", "house", "vendors", "settings"] as const;
+const PAGES = ["home", "tenants", "budget", "bank", "reports", "track", "docs", "house", "vendors", "settings"] as const;
 type Page = (typeof PAGES)[number];
 const TITLES: Record<Page, string> = {
   home: "الرئيسية", tenants: "المستأجرين", budget: "الميزانية", bank: "بنك العائلة",
-  reports: "التقارير", track: "متابعة الإيجار", house: "الصيانة", vendors: "الموردين", settings: "الإعدادات",
+  reports: "التقارير", track: "متابعة الإيجار", docs: "الوثائق", house: "الصيانة", vendors: "الموردين", settings: "الإعدادات",
 };
 
 const fromHash = (): Page => {
@@ -46,6 +48,7 @@ function Idarati() {
   const [contract, setContract] = useState<Unit | null>(null);
   const [editing, setEditing] = useState<{ unit: Unit | null } | null>(null);
   const [searching, setSearching] = useState(false);
+  const [docEdit, setDocEdit] = useState<{ doc: Doc | null } | null>(null);
 
   useEffect(() => {
     const onHash = () => setPage(fromHash());
@@ -69,6 +72,7 @@ function Idarati() {
     page === "home" ? () => setPicking(true)
     : page === "tenants" ? () => setEditing({ unit: null })
     : page === "budget" ? () => setExpense(true)
+    : page === "docs" ? () => setDocEdit({ doc: null })
     : undefined;
 
   const closeUnit = useCallback(() => setUnit(null), []);
@@ -79,6 +83,7 @@ function Idarati() {
   const closeContract = useCallback(() => setContract(null), []);
   const closeEditing = useCallback(() => setEditing(null), []);
   const closeSearch = useCallback(() => setSearching(false), []);
+  const closeDoc = useCallback(() => setDocEdit(null), []);
 
   return (
     <AppShell
@@ -102,6 +107,7 @@ function Idarati() {
       {page === "bank" && <Bank />}
       {page === "reports" && <Reports />}
       {page === "track" && <Tracker onOpenUnit={setUnit} />}
+      {page === "docs" && <Docs onOpen={(doc) => setDocEdit({ doc })} />}
       {page === "house" && <Maintenance />}
       {page === "vendors" && <Vendors />}
       {page === "settings" && <Settings />}
@@ -114,6 +120,7 @@ function Idarati() {
       <ContractSheet unit={contract} onClose={closeContract} />
       <PickUnitSheet open={picking} onClose={closePick} onPick={(u) => { setPicking(false); setUnit(u); }} />
       <ExpenseSheet open={expense} onClose={closeExpense} />
+      <DocSheet value={docEdit} onClose={closeDoc} />
     </AppShell>
   );
 }

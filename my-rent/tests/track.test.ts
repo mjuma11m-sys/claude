@@ -1,5 +1,5 @@
 // منطق ملف متابعة الإيجار (DW-022): npm run test:track
-import { kindOf, nextUnpaid, paidThrough, prepaid, rentTracker, statement, trackerTotals, monthKey } from "../src/data/logic";
+import { docStatus, docsList, docAlerts, kindOf, nextUnpaid, paidThrough, prepaid, rentTracker, statement, trackerTotals, monthKey } from "../src/data/logic";
 import { reducer } from "../src/data/store";
 import { demoData } from "../src/data/demo";
 import { planImport, trackerSheet, TRACK_HEAD } from "../src/data/excel";
@@ -52,6 +52,21 @@ const sh = trackerSheet(d, now);
 ok(sh.data[0].length === TRACK_HEAD.length && sh.data.length === d.units.length + 2 && !JSON.stringify(sh).includes("3xxx"), "صفحة المتابعة: كل الوحدات + المجموع وبدون هواتف");
 const plan = planImport([{ sheet: "الوحدات", data: [["الوحدة", "النوع", "الإيجار"], ["ستور 9", "ستور", 90], ["روضة 1", "روضه", 900], ["x", "قصر", 1]] }], d, now);
 ok(plan.units.find((u) => u.name === "ستور 9")?.kind === "store" && plan.units.find((u) => u.name === "روضة 1")?.kind === "nursery" && plan.errors.some((e) => e.msg.includes("النوع")), "استيراد النوع + خطأ للنوع الغلط");
+
+// 8) DW-023: حالة الوثائق على الحدود + الترتيب + التنبيه + العدادات بالاستيراد
+const doc = (expires?: string) => ({ id: "x", kind: "cr" as const, title: "x", expires });
+const at = (n: number) => { const x = new Date(now); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); };
+ok(docStatus(doc(at(30)), now).state === "soon" && docStatus(doc(at(31)), now).state === "active" && docStatus(doc(at(0)), now).state === "soon" && docStatus(doc(at(-1)), now).state === "ended" && docStatus(doc(), now).state === "open", "حالة الوثيقة: 30 قريبة · 31 سارية · 0 قريبة · -1 منتهية · بدون");
+const dl2 = docsList(d, now);
+ok(dl2[0].state === "ended" && dl2[dl2.length - 1].state === "open" && docAlerts(d, now).length === 2, "الترتيب: المنتهية أول والبدون آخر · تنبيهين بالتجريبي", dl2.map((x) => x.state).join());
+let s3: Data = reducer(d, { type: "doc", doc: { id: "d9", kind: "insurance", title: "تأمين", expires: at(10) } });
+s3 = reducer(s3, { type: "doc", doc: { id: "d9", kind: "insurance", title: "تأمين معدّل", expires: at(10) } });
+ok(s3.docs!.filter((x) => x.id === "d9").length === 1 && s3.docs!.find((x) => x.id === "d9")!.title === "تأمين معدّل", "doc: إضافة ثم تعديل بدون تكرار");
+ok(reducer(s3, { type: "undoc", id: "d9" }).docs!.length === d.docs!.length, "undoc يحذف");
+ok(reducer({ ...d, docs: undefined }, { type: "doc", doc: { id: "a", kind: "cr", title: "a" } }).docs!.length === 1, "بيانات قديمة بدون docs");
+const p2 = planImport([{ sheet: "الوحدات", data: [["الوحدة", "الإيجار", "عداد الكهرباء", "عداد الماء"], ["شقة 77", 100, "123456", 987]] }], d, now);
+const m77 = p2.units.find((u) => u.name === "شقة 77")?.meters;
+ok(m77?.elec === "123456" && m77?.water === "987", "استيراد العدادات", JSON.stringify(m77));
 
 console.log(failed ? `\n${failed} فشل` : "\nكل اختبارات المتابعة نجحت");
 process.exit(failed ? 1 : 0);
