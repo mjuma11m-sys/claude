@@ -23,11 +23,17 @@ public class HayatiWidgetSmall extends AppWidgetProvider {
     }
 
     static void refresh(Context ctx) {
-        AppWidgetManager mgr = AppWidgetManager.getInstance(ctx);
-        int[] ids = mgr.getAppWidgetIds(new ComponentName(ctx, HayatiWidgetSmall.class));
-        RemoteViews views = build(ctx);
-        for (int id : ids) mgr.updateAppWidget(id, views);
-        HayatiWidget.preview(ctx, views, "widget-small-preview.png", "hayati-widget-small", 160, 160);
+        Log.i("Hayati", "hayati-widget-small:refresh");
+        try {
+            AppWidgetManager mgr = AppWidgetManager.getInstance(ctx);
+            int[] ids = mgr.getAppWidgetIds(new ComponentName(ctx, HayatiWidgetSmall.class));
+            RemoteViews views = build(ctx);
+            for (int id : ids) mgr.updateAppWidget(id, views);
+            HayatiWidget.preview(ctx, views, "widget-small-preview.png", "hayati-widget-small", 160, 160);
+        } catch (Exception e) {
+            // خطأ بالصغير ما يوقف الكبير
+            Log.e("Hayati", "hayati-widget-small:inflate fail " + e);
+        }
     }
 
     static RemoteViews build(Context ctx) {

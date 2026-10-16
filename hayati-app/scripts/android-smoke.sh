@@ -83,11 +83,18 @@ esac
 # DW-039: الودجت الصغير مسجّل، وانرسم من نفس اللقطة
 grep -q "bh.hayati.app/bh.hayati.app.HayatiWidgetSmall\|bh.hayati.app/.HayatiWidgetSmall" "$OUT/appwidget.txt" \
   || { echo "❌ الودجت الصغير مو مسجّل"; exit 1; }
-ws=$(grep -o 'hayati-widget-small:inflate [a-z]*.*' "$OUT/logcat.txt" | head -1 || true)
+ws=""
+for try in $(seq 1 10); do
+  ws=$(adb logcat -d | grep -o 'hayati-widget-small:inflate [a-z]*.*' | head -1 || true)
+  [ -n "$ws" ] && break
+  sleep 2
+done
 adb exec-out run-as "$PKG" cat files/widget-small-preview.png > "$OUT/widget-small.png" 2>/dev/null || true
 case "$ws" in
   "hayati-widget-small:inflate ok"*) echo "✅ الودجت الصغير انرسم" ;;
-  *) echo "❌ الودجت الصغير: ${ws:-ما انرسم}"; exit 1 ;;
+  *) echo "❌ الودجت الصغير: ${ws:-ما انرسم}"
+     adb logcat -d | grep -E 'Hayati|hayati-widget|AndroidRuntime|RemoteViews' | tail -40 || true
+     exit 1 ;;
 esac
 # ملاحظة: التحديث الدوري (APPWIDGET_UPDATE) ما نقدر نرسله من adb (بث محمي بالنظام)، وهو يمر على نفس build() اللي فوق
 if grep -q 'FATAL EXCEPTION' "$OUT/logcat.txt"; then echo "❌ طيحة بعد رسم الودجت"; exit 1; fi
