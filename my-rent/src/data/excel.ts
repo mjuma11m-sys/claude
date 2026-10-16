@@ -191,9 +191,9 @@ export function exportSheets(data: Data, now = new Date()) {
 
 // ── DW-022: ملف متابعة حالة الإيجار (بدون هاتف ولا CPR — Legal) ──
 const PAY_LABEL = { paid: "مسدد", due: "مستحق", late: "متأخر" } as const;
-export const TRACK_HEAD = ["الوحدة", "النوع", "المبنى", "المستأجر", "الإيجار", "المستحق", "المسدد", "المتبقي", "حالة السداد", "مدفوع لين", "أشهر مقدمة", "المبلغ المقدم", "نهاية العقد", "الأيام المتبقية", "حالة العقد"];
+export const TRACK_HEAD = ["الوحدة", "النوع", "المبنى", "المستأجر", "الإيجار", "المستحق", "المسدد", "المتبقي", "حالة السداد", "فواتير غير مسددة", "مدفوع لين", "أشهر مقدمة", "المبلغ المقدم", "نهاية العقد", "الأيام المتبقية", "حالة العقد"];
 export function trackerSheet(data: Data, now = new Date(), rows = rentTracker(data, now)) {
-  const sum = (k: "due" | "paid" | "left" | "aheadAmount") => D(rows.reduce((s, r) => s + r[k], 0));
+  const sum = (k: "due" | "paid" | "left" | "aheadAmount" | "bills") => D(rows.reduce((s, r) => s + r[k], 0));
   const bold = (v: string | number) => ({ value: v, fontWeight: "bold" as const });
   return {
     sheet: "متابعة الإيجار",
@@ -201,11 +201,11 @@ export function trackerSheet(data: Data, now = new Date(), rows = rentTracker(da
       TRACK_HEAD.map(H),
       ...rows.map((r) => [
         r.unit.name, kindLabel(r.kind), r.unit.building, r.unit.tenant?.name ?? "شاغرة", D(rentAt(r.unit, monthKey(now))),
-        D(r.due), D(r.paid), D(r.left), r.status ? PAY_LABEL[r.status] : "—",
+        D(r.due), D(r.paid), D(r.left), r.status ? PAY_LABEL[r.status] : "—", D(r.bills),
         r.through ? monthLabel(r.through) : "—", r.ahead, D(r.aheadAmount),
         r.unit.tenant?.until ?? "", r.daysLeft ?? "", LEASE_LABEL[r.lease],
       ]),
-      ["المجموع", "", "", `${rows.length} وحدة`, "", sum("due"), sum("paid"), sum("left"), "", "", "", sum("aheadAmount"), "", "", ""].map(bold),
+      ["المجموع", "", "", `${rows.length} وحدة`, "", sum("due"), sum("paid"), sum("left"), "", sum("bills"), "", "", sum("aheadAmount"), "", "", ""].map(bold),
     ],
   };
 }

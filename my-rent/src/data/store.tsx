@@ -1,8 +1,8 @@
 // مخزن البيانات: useReducer + localStorage. لما ينربط Supabase، يتبدل load/save بس والشاشات ما تتغيّر.
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import type { BudgetCat, Data, DepositLog, Doc, Expense, Method, Payment, Recurring, Unit } from "./types";
+import type { Bill, BudgetCat, Data, DepositLog, Doc, Expense, Method, Payment, Recurring, Unit } from "./types";
 import { demoData, emptyData } from "./demo";
-import { dueRecurring, isoDay, nextUnpaid, owedMonths, rentAt } from "./logic";
+import { dueRecurring, findBill, isoDay, nextUnpaid, owedMonths, rentAt } from "./logic";
 import { SyncEngine, loadSyncConfig, saveSyncConfig, type SyncAction, type SyncConfig, type SyncStatus } from "./sync";
 
 const KEY = "idarati:v2";
@@ -26,6 +26,8 @@ export type Action =
   | { type: "contract"; template: string; owner: string }
   | { type: "doc"; doc: Doc }
   | { type: "undoc"; id: string }
+  | { type: "bill"; bill: Bill }
+  | { type: "unbill"; id: string }
   | { type: "import"; units: Unit[]; payments: Payment[]; expenses: Expense[]; cats: BudgetCat[] }
   | { type: "unimport"; restore: Unit[]; unitIds: string[]; paymentIds: string[]; expenseIds: string[]; catIds: string[] };
 
@@ -69,6 +71,11 @@ export function reducer(state: Data, a: Action): Data {
       return { ...state, docs: docs.some((d) => d.id === a.doc.id) ? docs.map((d) => (d.id === a.doc.id ? a.doc : d)) : [...docs, a.doc] };
     }
     case "undoc": return { ...state, docs: (state.docs ?? []).filter((d) => d.id !== a.id) };
+    case "bill": { // DW-026: إضافة أو تعديل (نفس id)
+      const bills = state.bills ?? [];
+      return { ...state, bills: bills.some((b) => b.id === a.bill.id) ? bills.map((b) => (b.id === a.bill.id ? a.bill : b)) : [...bills, a.bill] };
+    }
+    case "unbill": return { ...state, bills: (state.bills ?? []).filter((b) => b.id !== a.id) };
     default: return state; // حدث من نسخة أحدث للتطبيق: نتجاهله بدل ما ننكسر
   }
 }
@@ -123,6 +130,8 @@ type Store = {
   setContract: (template: string, owner: string) => void;
   saveDoc: (doc: Omit<Doc, "id"> & { id?: string }) => Doc;
   removeDoc: (id: string) => Doc | null;
+  saveBill: (b: Omit<Bill, "id"> & { id?: string }) => Bill;
+  removeBill: (id: string) => void;
   importPlan: (p: { units: Unit[]; payments: Payment[]; expenses: Expense[]; cats: BudgetCat[] }) => () => void; // يرجّع دالة التراجع
   deleteUnit: (id: string) => boolean;
   replace: (data: Data) => void;
@@ -242,6 +251,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     unexpense: (id) => dispatch({ type: "unexpense", id }),
     toggleTask: (id) => dispatch({ type: "task", id }),
+    saveBill: (b) => {
+      const existing = b.id ? undefined : findBill(data, b.unitId, b.month, b.kind);
+      const bill = { ...b, id: b.id ?? existing?.id ?? "b" + uid() } as Bill;
+      dispatch({ type: "bill", bill });
+      return bill;
+    },
+    removeBill: (id) => dispatch({ type: "unbill", id }),
     saveDoc: (d) => {
       const doc = { ...d, id: d.id ?? "d" + uid() } as Doc;
       dispatch({ type: "doc", doc });

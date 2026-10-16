@@ -8,7 +8,7 @@ import { Chips, DemoNote, EmptyState, SectionHead, useToast } from "../ui/kit";
 import { save } from "./ExcelPanel";
 
 type KindF = "all" | Kind;
-type PayF = "all" | Status | "ahead";
+type PayF = "all" | Status | "ahead" | "bills";
 type LeaseF = "all" | LeaseState;
 const months = (n: number) => (n === 1 ? "شهر" : n === 2 ? "شهرين" : n <= 10 ? `${n} أشهر` : `${n} شهر`);
 
@@ -26,7 +26,7 @@ export function Tracker({ onOpenUnit }: { onOpenUnit: (u: Unit) => void }) {
   const rows = all.filter((r) =>
     (kind === "all" || r.kind === kind) &&
     (building === "all" || r.unit.building === building) &&
-    (pay === "all" || (pay === "ahead" ? r.ahead > 0 : r.status === pay)) &&
+    (pay === "all" || (pay === "ahead" ? r.ahead > 0 : pay === "bills" ? r.bills > 0 : r.status === pay)) &&
     (lease === "all" || r.lease === lease));
   const t = trackerTotals(rows);
   const ahead = rows.filter((r) => r.ahead > 0).sort((a, b) => b.ahead - a.ahead);
@@ -47,6 +47,7 @@ export function Tracker({ onOpenUnit }: { onOpenUnit: (u: Unit) => void }) {
         <div className="card kpi"><span className="muted small">المسدد</span><Money fils={t.paid} tone="in" animate /></div>
         <div className="card kpi"><span className="muted small">المتبقي</span><Money fils={t.left} tone={t.left ? "out" : undefined} animate /></div>
         <div className="card kpi"><span className="muted small">مدفوع مقدماً</span><Money fils={t.ahead} tone="in" animate /></div>
+        <div className="card kpi"><span className="muted small">فواتير كهرباء وماء غير مسددة</span><Money fils={t.bills} tone={t.bills ? "out" : undefined} animate /></div>
       </div>
 
       <section className="card stack track-filters" aria-label="تصفية">
@@ -54,7 +55,7 @@ export function Tracker({ onOpenUnit }: { onOpenUnit: (u: Unit) => void }) {
         {buildings.length > 1 && <div className="filter-row"><span>المبنى</span><Chips label="المبنى" value={building} onChange={setBuilding} options={[{ id: "all", label: "الكل" }, ...buildings.map((b) => ({ id: b, label: b }))]} /></div>}
         <div className="filter-row"><span>السداد</span><Chips<PayF> label="السداد" value={pay} onChange={setPay} options={[
           { id: "all", label: "الكل" }, { id: "late", label: "متأخر", count: n((r) => r.status === "late") }, { id: "due", label: "مستحق", count: n((r) => r.status === "due") },
-          { id: "paid", label: "مسدد", count: n((r) => r.status === "paid") }, { id: "ahead", label: "مقدم", count: n((r) => r.ahead > 0) }]} /></div>
+          { id: "paid", label: "مسدد", count: n((r) => r.status === "paid") }, { id: "ahead", label: "مقدم", count: n((r) => r.ahead > 0) }, { id: "bills", label: "فواتير غير مسددة", count: n((r) => r.bills > 0) }]} /></div>
         <div className="filter-row"><span>العقد</span><Chips<LeaseF> label="العقد" value={lease} onChange={setLease} options={[{ id: "all", label: "الكل" }, ...(["active", "soon", "ended", "open", "vacant"] as LeaseState[]).map((l) => ({ id: l, label: LEASE_LABEL[l], count: n((r) => r.lease === l) })).filter((l) => l.count)]} /></div>
       </section>
 
@@ -65,7 +66,7 @@ export function Tracker({ onOpenUnit }: { onOpenUnit: (u: Unit) => void }) {
             <table className="tbl track-tbl" id="track-tbl">
               <thead><tr>
                 <th>الوحدة</th><th>النوع</th><th>المستأجر</th><th>الإيجار</th><th>المستحق</th><th>المسدد</th><th>المتبقي</th>
-                <th>السداد</th><th>مدفوع لين</th><th>مقدم</th><th>أيام للنهاية</th><th>العقد</th>
+                <th>السداد</th><th>فواتير</th><th>مدفوع لين</th><th>مقدم</th><th>أيام للنهاية</th><th>العقد</th>
               </tr></thead>
               <tbody>
                 {rows.map((r) => (
@@ -78,6 +79,7 @@ export function Tracker({ onOpenUnit }: { onOpenUnit: (u: Unit) => void }) {
                     <td><Money fils={r.paid} /></td>
                     <td>{r.left ? <Money fils={r.left} tone="out" /> : <span className="muted">—</span>}</td>
                     <td>{r.status ? <StatusPill status={r.status} /> : <span className="muted">—</span>}</td>
+                    <td>{r.bills ? <Money fils={r.bills} tone="out" /> : <span className="muted">—</span>}</td>
                     <td>{r.through ? monthLabel(r.through) : <span className="muted">—</span>}</td>
                     <td className="num">{r.ahead ? months(r.ahead) : <span className="muted">—</span>}</td>
                     <td className={`num${r.daysLeft !== null && r.daysLeft < 0 ? " danger-text" : ""}`}>{r.daysLeft ?? <span className="muted">—</span>}</td>
@@ -88,7 +90,7 @@ export function Tracker({ onOpenUnit }: { onOpenUnit: (u: Unit) => void }) {
               <tfoot><tr>
                 <th scope="row">المجموع</th><td /><td /><td />
                 <td><Money fils={t.due} /></td><td><Money fils={t.paid} /></td><td><Money fils={t.left} /></td>
-                <td /><td /><td /><td /><td />
+                <td /><td>{t.bills ? <Money fils={t.bills} /> : null}</td><td /><td /><td /><td />
               </tr></tfoot>
             </table>
           </div>
@@ -111,7 +113,7 @@ export function Tracker({ onOpenUnit }: { onOpenUnit: (u: Unit) => void }) {
           </table>
         )}
       </section>
-      <p className="muted small" style={{ margin: 0 }}>المستحق والمسدد من بداية العقد (أو بداية التتبّع) لين هالشهر. المقدم = أشهر بعد هالشهر مدفوعة كامل. ملف Excel فيه أسماء المستأجرين بدون أرقام هواتف.</p>
+      <p className="muted small" style={{ margin: 0 }}>المستحق والمسدد من بداية العقد (أو بداية التتبّع) لين هالشهر. المقدم = أشهر بعد هالشهر مدفوعة كامل. الفواتير يدفعها المستأجر للهيئة وما تدخل بالمستحق. ملف Excel فيه أسماء المستأجرين بدون أرقام هواتف.</p>
       <DemoNote />
     </div>
   );

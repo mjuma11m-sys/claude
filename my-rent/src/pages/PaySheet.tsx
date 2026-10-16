@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import type { Method, Payment, Unit } from "../data/types";
 import { useStore } from "../data/store";
-import { arrears, contractAlerts, fmt, monthKey, rentAt, upcomingRent, monthLabel, monthName, nextUnpaid, owedMonths, paidThrough, parseBHD, prepaid, unitStatus } from "../data/logic";
+import { arrears, billsDue, contractAlerts, fmt, monthKey, rentAt, upcomingRent, monthLabel, monthName, nextUnpaid, owedMonths, paidThrough, parseBHD, prepaid, unitStatus } from "../data/logic";
 import { Chips, Sheet, useToast } from "../ui/kit";
 import { Money, StatusPill } from "../theme/AppShell";
 import { Icon } from "../ui/icons";
+import { BillsBox } from "./Bills";
 
 const METHODS: Method[] = ["BenefitPay", "تحويل", "نقد", "شيك"];
 
@@ -145,6 +146,8 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onCont
             </form>
           )}
 
+          {u.tenant && <BillsBox unit={u} />}
+
           {history.length > 0 && (
             <div>
               <div className="muted small" style={{ marginBottom: 6 }}>الدفعات والإيصالات</div>
@@ -174,6 +177,7 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onCont
           {confirmVacate && u.tenant && (
             <div className="confirm-box" role="alert">
               <div className="strong">إخلاء {u.name} من {u.tenant.name}؟</div>
+              {billsDue(data, u).amount > 0 && <div className="small" id="vacate-bills">عليه فواتير كهرباء وماء غير مسددة <Money fils={billsDue(data, u).amount} /> — اخصمها من التأمين لو اتفقتوا.</div>}
               {arr.amount > 0 && <div className="small">عليه متأخرات <Money fils={arr.amount} /> — بعد الإخلاء ما تبين بالمتأخرات. سجّلها أو اطبع كشف قبل.</div>}
               <div className="small muted">الدفعات السابقة تبقى بالسجل والتقارير.</div>
               {u.tenant.deposit ? (

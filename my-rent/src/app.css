@@ -359,14 +359,13 @@ html[data-size="xl"] .hero-owed { flex-wrap: wrap; }
 .xl-preview details summary { cursor: pointer; }
 
 /* DW-022: ملف متابعة حالة الإيجار */
-.track-kpis { grid-template-columns: repeat(5, 1fr); }
-@media (max-width: 900px) { .track-kpis { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 600px) { .track-kpis { grid-template-columns: 1fr 1fr; } .track-kpis > :last-child { grid-column: 1 / -1; } }
+.track-kpis { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 600px) { .track-kpis { grid-template-columns: 1fr 1fr; } .track-kpis > :last-child { grid-column: auto; } }
 .track-filters { gap: 10px; }
 .tracker > *, .tracker .card { min-width: 0; max-width: 100%; }
 .tbl-scroll { overflow-x: auto; margin-inline: -4px; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
 .tbl-scroll:focus-visible { outline: 2px solid var(--accent, currentColor); outline-offset: 2px; }
-.track-tbl { min-width: 980px; }
+.track-tbl { min-width: 1080px; }
 .track-tbl th, .track-tbl td { white-space: nowrap; padding-inline: 8px; vertical-align: middle; }
 .track-tbl tbody th, .track-tbl tfoot th { position: sticky; inset-inline-start: 0; background: var(--surface); z-index: 1; text-align: start; font-weight: 400; }
 .track-tbl tbody th > span { display: block; }
@@ -419,3 +418,11 @@ select.input { appearance: auto; }
 .field-warn { color: #8a6400; background: color-mix(in srgb, #d9a400 14%, transparent); padding: 8px 10px; border-radius: 10px; }
 :root[data-theme="dark"] .field-warn { color: #f0c75a; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .field-warn { color: #f0c75a; } }
+
+/* DW-026: فواتير الكهرباء والماء */
+.bills-box { border-top: 1px dashed var(--line); padding-top: 12px; }
+.bill-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 12px; }
+.bill-end { display: flex; gap: 8px; align-items: center; }
+.bill-st { border: 0; cursor: pointer; font: inherit; font-size: 12px; min-height: 32px; }
+.bill-add { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+#bills-due { white-space: nowrap; flex: none; }

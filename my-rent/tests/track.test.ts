@@ -1,5 +1,5 @@
 // منطق ملف متابعة الإيجار (DW-022): npm run test:track
-import { addMonthsDay, renewUnit, rentAt, upcomingRent, owedMonths, docStatus, docsList, docAlerts, kindOf, nextUnpaid, paidThrough, prepaid, rentTracker, statement, trackerTotals, monthKey } from "../src/data/logic";
+import { billsDue, collection, monthlyReport, addMonthsDay, renewUnit, rentAt, upcomingRent, owedMonths, docStatus, docsList, docAlerts, kindOf, nextUnpaid, paidThrough, prepaid, rentTracker, statement, trackerTotals, monthKey } from "../src/data/logic";
 import { reducer } from "../src/data/store";
 import { demoData } from "../src/data/demo";
 import { planImport, trackerSheet, TRACK_HEAD } from "../src/data/excel";
@@ -86,6 +86,19 @@ ok(m77?.elec === "123456" && m77?.water === "987", "استيراد العداد�
   ok(addMonthsDay("2026-01-31", 1) === "2026-02-28" && addMonthsDay("2026-11-04", 12) === "2027-11-04", "addMonthsDay");
   const same = renewUnit(u2, "2027-12-31", u2.rent, from);
   ok(!same.rentBefore && same.tenant!.until === "2027-12-31", "تجديد بدون زيادة: ما ينضاف سجل");
+}
+
+// 10) DW-026: الفواتير منفصلة عن الإيجار والدخل
+{
+  const u3 = d.units.find((u) => u.id === "u3")!;
+  ok(billsDue(d, u3).amount === 67050 && billsDue(d, d.units.find((u) => u.id === "u1")!).amount === 0, "فواتير غير مسددة: شقة 3 = 67.050 · شقة 1 = 0");
+  const noBills: Data = { ...d, bills: [] };
+  ok(JSON.stringify(rentTracker(d, now).map((r) => [r.due, r.paid, r.left])) === JSON.stringify(rentTracker(noBills, now).map((r) => [r.due, r.paid, r.left]))
+    && JSON.stringify(collection(d, now)) === JSON.stringify(collection(noBills, now)) && JSON.stringify(monthlyReport(d, now)) === JSON.stringify(monthlyReport(noBills, now)), "الفواتير ما تغيّر المستحق ولا التحصيل ولا الدخل");
+  ok(rentTracker(d, now).find((r) => r.unit.id === "u3")!.bills === 67050 && trackerTotals(rentTracker(d, now)).bills === 67050, "المتابعة: عمود ومجموع الفواتير");
+  const paid = reducer(d, { type: "bill", bill: { ...d.bills!.find((b) => b.id === "b3")!, paid: true } });
+  ok(billsDue(paid, u3).amount === 35250 && paid.bills!.length === d.bills!.length, "مسددة: تنقص من غير المسددة بدون تكرار");
+  ok(reducer(d, { type: "unbill", id: "b4" }).bills!.length === d.bills!.length - 1 && reducer({ ...d, bills: undefined }, { type: "bill", bill: { id: "z", unitId: "u1", month: cur, kind: "ewa", amount: 1, paid: false } }).bills!.length === 1, "unbill + بيانات قديمة بدون bills");
 }
 
 console.log(failed ? `\n${failed} فشل` : "\nكل اختبارات المتابعة نجحت");

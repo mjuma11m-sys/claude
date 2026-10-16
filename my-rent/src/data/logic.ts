@@ -1,4 +1,4 @@
-import type { Data, Doc, DocKind, Fils, Kind, Status, Unit } from "./types";
+import type { Bill, BillKind, Data, Doc, DocKind, Fils, Kind, Status, Unit } from "./types";
 
 export const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 export const isoDay = (d: Date) => `${monthKey(d)}-${String(d.getDate()).padStart(2, "0")}`;
@@ -298,14 +298,15 @@ export function rentTracker(data: Data, now = new Date()) {
       unit: u, kind: kindOf(u), status: u.tenant ? unitStatus(data, u, now) : null,
       due, paid, left: st.late + st.due, through: paidThrough(data, u, now),
       ahead: pre.months.length, aheadAmount: pre.amount, daysLeft, lease,
+      bills: u.tenant ? billsDue(data, u).amount : 0,
     };
   });
 }
 export type TrackRow = ReturnType<typeof rentTracker>[number];
 
 export function trackerTotals(rows: TrackRow[]) {
-  const sum = (k: "due" | "paid" | "left" | "aheadAmount") => rows.reduce((s, r) => s + r[k], 0);
-  return { units: rows.length, rented: rows.filter((r) => r.unit.tenant).length, due: sum("due"), paid: sum("paid"), left: sum("left"), ahead: sum("aheadAmount") };
+  const sum = (k: "due" | "paid" | "left" | "aheadAmount" | "bills") => rows.reduce((s, r) => s + r[k], 0);
+  return { units: rows.length, rented: rows.filter((r) => r.unit.tenant).length, due: sum("due"), paid: sum("paid"), left: sum("left"), ahead: sum("aheadAmount"), bills: sum("bills") };
 }
 
 // ── DW-023: الوثائق والمستندات ──────────────────────────
@@ -361,3 +362,19 @@ export function upcomingRent(unit: Unit, now = new Date()) {
   const from = nextMonth([...(unit.rentBefore ?? [])].filter((x) => x.until >= cur).sort((a, b) => b.until.localeCompare(a.until))[0].until);
   return { rent: unit.rent, from };
 }
+
+// ── DW-026: فواتير الكهرباء والماء (على المستأجر) ───────
+
+export const BILL_KINDS: { id: BillKind; label: string }[] = [{ id: "ewa", label: "كهرباء وماء" }, { id: "elec", label: "كهرباء" }, { id: "water", label: "ماء" }];
+export const billKindLabel = (k: BillKind) => BILL_KINDS.find((x) => x.id === k)?.label ?? "كهرباء وماء";
+export const unitBills = (data: Data, unitId: string) =>
+  (data.bills ?? []).filter((b) => b.unitId === unitId).sort((a, b) => b.month.localeCompare(a.month) || a.kind.localeCompare(b.kind));
+/** الفواتير غير المسددة للوحدة (للمستأجر الحالي: من بداية عقده) */
+export function billsDue(data: Data, unit: Unit) {
+  const since = unit.tenant?.since ?? "0000-00";
+  const list = unitBills(data, unit.id).filter((b) => !b.paid && b.month >= since);
+  return { list, amount: list.reduce((s, b) => s + b.amount, 0) };
+}
+/** نفس الوحدة + الشهر + النوع = نفس الفاتورة (تحديث بدل تكرار) */
+export const findBill = (data: Data, unitId: string, month: string, kind: BillKind): Bill | undefined =>
+  (data.bills ?? []).find((b) => b.unitId === unitId && b.month === month && b.kind === kind);

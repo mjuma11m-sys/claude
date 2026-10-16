@@ -42,6 +42,10 @@ export type DocKind = "cr" | "insurance" | "license" | "civil" | "service" | "ot
 export type DocFile = { id: string; name: string; type: string; size: number; uploadedAt: string; path?: string };
 export type Doc = { id: string; kind: DocKind; title: string; ref?: string; unitId?: string; expires?: string; file?: DocFile }; // expires = YYYY-MM-DD
 
+/** DW-026: فاتورة الكهرباء/الماء — المستأجر يدفعها للهيئة؛ نتابع السداد بس (مو دخل المالك) */
+export type BillKind = "ewa" | "elec" | "water";
+export type Bill = { id: string; unitId: string; month: string; kind: BillKind; amount: Fils; paid: boolean };
+
 export type Vendor = { id: string; name: string; service: string; phone: string };
 
 export type Data = {
@@ -60,4 +64,5 @@ export type Data = {
   contractTemplate?: string; // DW-020: نموذج العقد بخانات {…}
   contractOwner?: string;    // اسم المؤجر اللي يطلع بالعقد
   docs?: Doc[];              // DW-023
+  bills?: Bill[];            // DW-026
 };

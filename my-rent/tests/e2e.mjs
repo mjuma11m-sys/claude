@@ -527,6 +527,39 @@ try {
     ok(vErr.length === 0, "DW-025: بدون أخطاء", vErr.join(" | "));
   }
 
+  // 20) DW-026: فواتير الكهرباء والماء على المستأجر
+  {
+    const e = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const eErr = []; e.on("pageerror", (x) => eErr.push(x.message));
+    await e.goto(URL + "#tenants"); await e.evaluate(() => localStorage.clear()); await e.reload(); await e.waitForTimeout(800);
+    const before = await e.evaluate(() => { const d = JSON.parse(localStorage.getItem("idarati:v2")); return { p: d.payments.length, n: d.bills.length }; });
+    await e.locator(".unit-card", { hasText: "شقة 3" }).first().click(); await e.waitForTimeout(400);
+    ok((await e.locator("#bills-due").innerText()).includes("67.050"), "شقة 3: فواتير غير مسددة 67.050");
+    const wa = await e.locator("#bills-wa").getAttribute("href");
+    ok(decodeURIComponent(wa).includes("هيئة الكهرباء والماء") && decodeURIComponent(wa).includes("67.050"), "واتساب تذكير بالفاتورة");
+    // إضافة فاتورة لنفس الشهر مرتين = تحديث مو تكرار
+    await e.locator("#bill-amount").fill("41.2"); await e.locator("#bill-add").click(); await e.waitForTimeout(300);
+    await e.locator("#bill-amount").fill("42.5"); await e.locator("#bill-add").click(); await e.waitForTimeout(300);
+    let st = await e.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")));
+    const u3b = st.bills.filter((b) => b.unitId === "u3");
+    ok(st.bills.length === before.n && u3b.some((b) => b.amount === 42500), "نفس الشهر والنوع: تحديث بدون تكرار", String(st.bills.length));
+    ok(st.payments.length === before.p, "الفاتورة ما تنضاف للدفعات");
+    // مسددة بضغطة
+    await e.locator(".bill-st").first().click(); await e.waitForTimeout(300);
+    st = await e.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")));
+    ok(st.bills.filter((b) => b.unitId === "u3" && b.paid).length === 1, "تأشير مسددة بضغطة");
+    // تنبيه الإخلاء
+    await e.getByRole("button", { name: "إخلاء الوحدة" }).click(); await e.waitForTimeout(300);
+    ok((await e.locator("#vacate-bills").innerText()).includes("لو اتفقتوا"), "الإخلاء: تنبيه الفواتير غير المسددة");
+    await e.keyboard.press("Escape"); await e.waitForTimeout(300);
+    // المتابعة
+    await e.goto(URL + "#track"); await e.waitForTimeout(800);
+    await e.locator(".track-filters").getByRole("radio", { name: /فواتير غير مسددة/ }).click(); await e.waitForTimeout(300);
+    ok(await e.locator("#track-tbl tbody tr").count() === 1 && (await e.locator("#track-tbl tbody").innerText()).includes("شقة 3"), "المتابعة: تصفية الفواتير");
+    ok(eErr.length === 0, "DW-026: بدون أخطاء", eErr.join(" | "));
+    await e.close();
+  }
+
   if (process.env.SHOTS) {
     for (const [n, w, h, s] of [["home-phone", 390, 844, "light"], ["home-dark", 390, 844, "dark"], ["home-desk", 1280, 800, "light"], ["tenants-tab", 820, 1180, "light"], ["budget-phone", 390, 844, "light"]]) {
       const q = await browser.newPage({ viewport: { width: w, height: h }, colorScheme: s });

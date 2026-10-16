@@ -79,6 +79,14 @@ export function demoData(now = new Date()): Data {
       { id: "v2", name: "سبّاك المالكية", service: "طوارئ 24 ساعة", phone: "3xxx 5520" },
       { id: "v3", name: "شركة الدهانات", service: "عقود سنوية", phone: "17xx 6630" },
     ],
+    // DW-026: فواتير الكهرباء والماء (المستأجر يدفعها للهيئة)
+    bills: [
+      { id: "b1", unitId: "u1", month: m2, kind: "ewa", amount: 23400, paid: true },
+      { id: "b2", unitId: "u1", month: m1, kind: "ewa", amount: 27150, paid: true },
+      { id: "b3", unitId: "u3", month: m2, kind: "ewa", amount: 31800, paid: false },
+      { id: "b4", unitId: "u3", month: m1, kind: "ewa", amount: 35250, paid: false },
+      { id: "b5", unitId: "u6", month: m1, kind: "ewa", amount: 88600, paid: true },
+    ],
     // DW-023: وثائق العقار (أرقام وهمية)
     docs: [
       { id: "d1", kind: "license", title: "رخصة البلدية — المحلات", ref: "BL-00000", expires: isoDay(new Date(y, mo, now.getDate() - 5)) },
