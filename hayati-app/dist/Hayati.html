@@ -2857,6 +2857,38 @@ window.HAYATI_EN = {
 "عملتك": "Your currency",
 "دينار، ريال، درهم أو غيرها: التطبيق كله يشتغل بعملتك": "Dinar, riyal, dirham or another: the whole app works in your currency",
 "وصفات خليجية بمقاديرها": "Gulf recipes with amounts",
+// DW-061: حساباتي
+"حساباتي": "Accounts",
+"رصيد وصرف وميزانية لكل حساب وبطاقة، والرسائل تنربط بالبطاقة لحالها": "Balance, spending and budget for each account and card; messages link to the card automatically",
+"حساب بنك": "Bank account",
+"كاش": "Cash",
+"محفظة إلكترونية": "E-wallet",
+"أضف حساب أو بطاقة": "Add account or card",
+"استيراد كشف": "Import statement",
+"فرّق بين حساباتك": "Keep your accounts apart",
+"أضف حساب البنك والبطاقة والكاش، وكل واحد يطلع له رصيده وصرفه بالشهر. رسائل البنك تنربط بالبطاقة من آخر رقمين لحالها.": "Add your bank account, card and cash; each shows its balance and monthly spending. Bank messages link to the card by its last two digits.",
+"مجموع الأرصدة": "Total balance",
+"صرف الشهر": "Spent this month",
+"الرصيد": "Balance",
+"حط رصيده": "Set balance",
+"حساب أو بطاقة جديدة": "New account or card",
+"مثلاً: بطاقة بنك البحرين الوطني، حساب الراتب، الكاش": "e.g. NBB card, salary account, cash",
+"آخر رقمين من البطاقة أو الحساب (اختياري)": "Last two digits of the card or account (optional)",
+"مثلاً 21": "e.g. 21",
+"رسائل البنك اللي فيها «XX…21» تنربط بهالحساب لحالها. ما نحتاج الرقم كامل.": "Bank messages with \"XX…21\" link to this account automatically. We never need the full number.",
+"رصيده الحين (اختياري)": "Current balance (optional)",
+"ميزانية الشهر لهالحساب (اختياري)": "Monthly budget for this account (optional)",
+"مثلاً 150": "e.g. 150",
+"عملية مربوطة بهالحساب.": "transactions linked to this account.",
+"احذف الحساب (العمليات تظل)": "Delete account (transactions stay)",
+"اكتب اسم الحساب": "Enter the account name",
+"آخر رقمين بس": "Last two digits only",
+"فيه حساب ثاني بنفس الرقمين": "Another account already uses these two digits",
+"الرصيد مو رقم": "Balance isn't a number",
+"الحساب": "Account",
+"بدون": "None",
+"من آخر رقمين بالرسالة، أو بدون": "By the last two digits in the message, or none",
+"عملية بدون حساب. افتح أي عملية واختار حسابها، أو استخدم «اربط القديمة» بالحساب.": "transactions without an account. Open any transaction to pick its account, or use \"Link old ones\" in the account.",
 };
 
 </script>
@@ -3212,6 +3244,13 @@ window.HAYATI_CONFIG = {
     return null;
   }
 
+  // DW-061: آخر رقمين من البطاقة أو الحساب بالرسالة (XX4821 · card ending 4821 · المنتهية بـ 21) — قبل الإخفاء
+  function cardDigits(text) {
+    const t = normalizeDigits(String(text || ''));
+    const m = /[xX*•]{2,}[\s-]?(\d{2,4})(?!\d)/.exec(t) || /(?:ending(?:\s+(?:in|with))?|ends\s+with|المنتهية\s*ب|منتهية\s*ب|تنتهي\s*ب)\s*[:ـ-]?\s*(\d{2,4})(?!\d)/i.exec(t);
+    return m ? m[1].slice(-2) : null;
+  }
+
   function parse(raw, now) {
     if (!raw) return null;
     const text = normalizeDigits(raw).replace(/\u200f|\u200e/g, '');
@@ -3324,7 +3363,7 @@ window.HAYATI_CONFIG = {
       .replace(/[xX*]{2,}(?=\s|$)/g, '••');
   }
 
-  const api = { parse, findDate, detectKind, quick, categorize, learn, learnedFor, setLearned, LEARN_KEY, mask, brand, groupByBrand, BRANDS, CATEGORY_RULES, INCOME_CATEGORY_RULES };
+  const api = { parse, findDate, detectKind, cardDigits, quick, categorize, learn, learnedFor, setLearned, LEARN_KEY, mask, brand, groupByBrand, BRANDS, CATEGORY_RULES, INCOME_CATEGORY_RULES };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else global.SmsParser = api;
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -3338,7 +3377,7 @@ window.HAYATI_CONFIG = {
   const KEY = 'hayati-v1';
   const CFG_KEY = 'hayati-supabase';
   const TABLES = ['transactions', 'courses', 'tasks', 'subscriptions', 'goals', 'grades', 'study_sessions', 'debts', 'habits', 'daily', 'lifts', 'body', 'cards', 'events', 'shopping', 'journal', 'matches', 'lectures', 'trips'];
-  const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges', 'name', 'roles', 'onboarded', 'payday', 'gold_price', 'today_hide', 'study_level', 'kitchen_fav', 'currency'];
+  const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges', 'name', 'roles', 'onboarded', 'payday', 'gold_price', 'today_hide', 'study_level', 'kitchen_fav', 'currency', 'accounts'];
   // على الجهاز بس (ما تروح لجدول settings بالسيرفر) بس تدخل بالنسخة الاحتياطية (DW-012)
   //   DW-035: يوم الراتب وسعر الذهب وترتيب «اليوم» صارت تتزامن؛ إعدادات العبادة تظل على الجهاز (خصوصية)
   const LOCAL_SETTINGS = ['madhhab', 'khums_start', 'wird', 'hijri_offset', 'tasbih'];
@@ -3920,6 +3959,12 @@ window.HAYATI_CONFIG = {
     if (i >= 0) list[i] = row; else list.push(row);
   }
 
+  function accountFor(body) {
+    const d = global.SmsParser.cardDigits ? global.SmsParser.cardDigits(body) : null;
+    const list = Array.isArray(state.settings.accounts) ? state.settings.accounts : [];
+    const a = d && list.find((x) => x.last2 === d);
+    return a ? a.id : null;
+  }
   function smsToTransaction(body, when, id) {
     const p = global.SmsParser.parse(body);
     if (!p) return null;
@@ -3941,6 +3986,7 @@ window.HAYATI_CONFIG = {
       merchant: p.merchant || null,
       note: note || null,
       occurred_at: p.date ? p.date.toISOString() : when || new Date().toISOString(),   // DW-057: تاريخ العملية من الرسالة نفسها
+      account_id: accountFor(body),   // DW-061: البطاقة أو الحساب من آخر رقمين
       source: 'sms',
       raw: global.SmsParser.mask ? global.SmsParser.mask(body) : body,
       needs_review: p.needs_review,
@@ -4442,7 +4488,7 @@ window.HAYATI_CONFIG = {
   ];
 
   const GRADE_POINTS = { 'A': 4, 'A-': 3.67, 'B+': 3.33, 'B': 3, 'B-': 2.67, 'C+': 2.33, 'C': 2, 'C-': 1.67, 'D+': 1.33, 'D': 1, 'F': 0 };
-  const MONEY_SEGS = [['tx', 'العمليات'], ['subs', 'اشتراكات'], ['goals', 'أهداف'], ['debts', 'لي وعلي']];
+  const MONEY_SEGS = [['tx', 'العمليات'], ['accounts', 'حساباتي'], ['subs', 'اشتراكات'], ['goals', 'أهداف'], ['debts', 'لي وعلي']];
   const STUDY_SEGS = [['schedule', 'الجدول'], ['lectures', 'المحاضرات'], ['focus', 'المذاكرة'], ['gpa', 'المعدل'], ['health', 'صحتي']];
   const SUB_PRESETS = [
     ['نتفليكس', 'ترفيه'], ['شاهد', 'ترفيه'], ['سبوتيفاي', 'ترفيه'], ['iCloud', 'فواتير واتصالات'],
@@ -4969,7 +5015,7 @@ window.HAYATI_CONFIG = {
 
   // ================= المصاريف (حاوية الأقسام) =================
   function viewMoney() {
-    return segBar(MONEY_SEGS, ui.moneySeg, 'money-seg') + ({ tx: viewMoneyTx, subs: viewSubs, goals: () => X('goalsTop') + viewGoals(), debts: viewDebts })[ui.moneySeg]();
+    return segBar(MONEY_SEGS, ui.moneySeg, 'money-seg') + ({ tx: viewMoneyTx, subs: viewSubs, goals: () => X('goalsTop') + viewGoals(), debts: viewDebts, accounts: () => X('viewAccounts') })[ui.moneySeg]();
   }
 
   // ================= الاشتراكات =================
@@ -5640,6 +5686,7 @@ window.HAYATI_CONFIG = {
         '<div class="amount-box"><input name="amount" inputmode="decimal" placeholder="0.000" value="' + (t.amount !== '' ? Number(t.amount).toFixed((window.HayatiCur ? HayatiCur.dec() : 3)) : '') + '"><small>دينار بحريني</small></div>' +
         '<div class="field"><label>التصنيف</label><div class="cat-grid" id="catGrid">' + catGrid(t.kind, t.category) + '</div></div>' +
         '<div class="field"><label>المحل / الوصف</label><input name="merchant" value="' + h(t.merchant || '') + '" placeholder="مثلاً: طلبات، كوستا، راتب"></div>' +
+        X('txAccountField', t) +
         '<div class="field"><label>الوقت</label><input type="datetime-local" name="occurred_at" value="' + toLocalInput(new Date(t.occurred_at)) + '"></div>' +
         '<div class="field"><label>ملاحظة</label><input name="note" value="' + h(t.note || '') + '" placeholder="اختياري"></div>' +
         (t.raw ? '<div class="field"><label>نص الرسالة</label><div class="raw">' + h(t.raw) + '</div></div>' : '') +
@@ -5680,6 +5727,7 @@ window.HAYATI_CONFIG = {
           occurred_at: when ? new Date(when).toISOString() : new Date().toISOString(),
           source: (tx && tx.source) || 'manual',
           needs_review: false,
+          account_id: root.querySelector('[name=account_id]') ? root.querySelector('[name=account_id]').value || null : (tx && tx.account_id) || null,
         }));
         toast(tx ? 'تم التعديل' : 'انضافت ✓');
         if (tx) X('txSaved', savedTx, tx);
@@ -9311,7 +9359,7 @@ window.HAYATI_CONFIG = {
         if (a) { amt = Math.abs(a); kind = a < 0 ? 'expense' : /\bCR\b|دائن/i.test(String(r[col.amount])) ? 'income' : P.detectKind(desc).kind; }
       }
       if (!amt || !(amt > 0)) continue;
-      if (col.balance != null) { const b = money(r[col.balance]); if (b != null) lastBal = { b, at: d }; }
+      if (col.balance != null) { const b = money(r[col.balance]); if (b != null && (!lastBal || d >= lastBal.at)) lastBal = { b, at: d }; }   // الأحدث (الكشف ممكن يكون من الجديد للقديم)
       out.push({ kind, amount: Math.round(amt * 1000) / 1000, currency: window.HayatiCur ? HayatiCur.code() : 'BHD', merchant: desc.slice(0, 60), category: P.categorize(kind, desc, desc), at: d, review: col.amount != null && !(money(r[col.amount]) < 0) && !P.detectKind(desc).sure });
     }
     return { list: out, balance: lastBal };
@@ -9445,6 +9493,8 @@ window.HAYATI_CONFIG = {
       saveLabel: 'أضف العمليات',
       body: '<p class="small muted" style="margin:0 0 10px">ارفع <b>كشف الحساب</b> من تطبيق البنك (Excel أو CSV أو PDF)، أو <b>ملف رسائل البنك</b> (TXT، أو XML من تطبيق «SMS Backup & Restore» بالأندرويد). كل عملية تنحفظ بتاريخها، والمكرر ما ينضاف.</p>' +
         '<label class="btn primary block" style="margin-bottom:10px">' + I('upload') + 'اختار الملف<input type="file" id="biFile" accept=".xlsx,.csv,.pdf,.txt,.xml,text/csv,text/plain,text/xml,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></label>' +
+        (E.accounts && E.accounts.list().length ? '<div class="field"><label>الحساب</label><select id="biAcc"><option value="">من آخر رقمين بالرسالة، أو بدون</option>' +
+          E.accounts.list().map((a) => '<option data-noi18n value="' + a.id + '">' + h(a.name) + (a.last2 ? ' ••' + h(a.last2) : '') + '</option>').join('') + '</select></div>' : '') +
         '<p class="small muted" id="biStatus" style="margin:6px 4px 10px;min-height:18px"></p><div id="biOut"></div>' +
         '<details class="card" style="margin-top:10px"><summary class="small"><b>وين ألقى الملف؟</b></summary>' +
         '<p class="small" style="margin:8px 0 0">• <b>كشف الحساب:</b> تطبيق البنك ← الحساب ← كشف حساب (Statement) ← اختار الفترة ← صدّره Excel أو PDF ← احفظه بـ «الملفات».</p>' +
@@ -9472,14 +9522,21 @@ window.HAYATI_CONFIG = {
           root.querySelector('#biOut').innerHTML = summary();
         };
       },
-      onSave() {
+      onSave(root) {
+        const accSel = root.querySelector('#biAcc'), acc = accSel && accSel.value ? accSel.value : null;
+        // DW-061: آخر رصيد بالكشف يصير رصيد الحساب (لو أحدث من اللي عندنا)
+        if (acc && res && res.balance && E.accounts) {
+          const a = E.accounts.byId(acc);
+          if (a && (!a.balance_at || new Date(a.balance_at) <= res.balance.at)) S.setSettings({ accounts: E.accounts.list().map((x) => (x.id === acc ? Object.assign({}, x, { balance: res.balance.b, balance_at: res.balance.at.toISOString() }) : x)) });
+        }
         if (!res || !res.fresh.length) { A.toast(res && res.dup ? 'كل العمليات موجودة عندك قبل' : 'اختار الملف أول'); return false; }
         const C = window.HayatiCur, mine = C ? C.code() : 'BHD';
         for (const x of res.fresh) {
           let amount = x.amount, note = 'من ملف الاستيراد';
           if (C && x.currency && x.currency !== mine && C.LIST[x.currency]) { note = 'أصلها ' + x.amount + ' ' + x.currency + ' ≈ بعملتك'; amount = C.convert(x.amount, x.currency, mine); }
           S.upsert('transactions', { kind: x.kind, amount, category: x.category, merchant: x.merchant || null, note, occurred_at: x.at.toISOString(), source: 'import',
-            needs_review: !!x.review, raw: x.raw ? P.mask(x.raw) : null });
+            needs_review: !!x.review, raw: x.raw ? P.mask(x.raw) : null,
+            account_id: acc || ((E.accounts && x.raw && P.cardDigits(x.raw)) ? ((E.accounts.list().find((a) => a.last2 === P.cardDigits(x.raw)) || {}).id || null) : null) });
         }
         A.toast('انضافت ' + res.fresh.length + ' عملية بتواريخها ✓');
       },
@@ -9493,6 +9550,137 @@ window.HAYATI_CONFIG = {
   wrap('action', (prev, name, el, e) => { if (name === 'bankfile') { sheet(); return; } return prev(name, el, e); });
   E.bankImport = sheet;
   E._bank = { csv, fromRows, fromText, fromXml, fromPdfLines, dedupe, money, when }; // للاختبار
+})();
+
+</script>
+  <script>/* js/features/accounts.js */
+// DW-061: «حساباتي» — حساب بنك أو بطاقة أو كاش أو محفظة: رصيده، صرف الشهر، وميزانيته
+// الحسابات بالإعدادات (settings.accounts)، وكل عملية فيها account_id. الرسائل تنربط بالبطاقة من آخر رقمين لحالها.
+// الرصيد = رصيد تعرفه بتاريخ معيّن (اللي تكتبه أو آخر رصيد بكشف الحساب) + العمليات بعده.
+(function () {
+  'use strict';
+
+  const A = window.App, E = window.Extras;
+  if (!A || !E) return;
+  const { S, st, I, h, tint } = A;
+  const wrap = (name, fn) => { const prev = E[name]; E[name] = (...a) => fn(prev ? prev : () => '', ...a); };
+
+  const KINDS = { bank: ['حساب بنك', 'banknote'], card: ['بطاقة', 'wallet'], cash: ['كاش', 'coins'], wallet: ['محفظة إلكترونية', 'phone'] };
+  const COLORS = ['#1A8A8F', '#0ea5e9', '#8b5cf6', '#f59e0b', '#ec4899', '#10b981', '#64748b'];
+  const list = () => (Array.isArray(st.settings.accounts) ? st.settings.accounts : []);
+  const save = (arr) => S.setSettings({ accounts: arr });
+  const byId = (id) => list().find((a) => a.id === id);
+
+  function balance(a) {
+    if (a.balance == null || a.balance === '') return null;
+    const from = a.balance_at ? new Date(a.balance_at) : new Date(0);
+    let b = Number(a.balance);
+    for (const t of st.transactions) {
+      if (t.account_id !== a.id || new Date(t.occurred_at) <= from) continue;
+      b += t.kind === 'income' ? Number(t.amount) : -Number(t.amount);
+    }
+    return Math.round(b * 1000) / 1000;
+  }
+  function monthSpend(a) {
+    const r = A.monthRange(A.monthKey(new Date()));
+    return st.transactions.filter((t) => t.account_id === a.id && t.kind === 'expense' && new Date(t.occurred_at) >= r.start && new Date(t.occurred_at) < r.end)
+      .reduce((s, t) => s + Number(t.amount), 0);
+  }
+
+  // ---------- الصفحة ----------
+  function view() {
+    const accs = list();
+    let out = '<div class="actions" style="margin-top:4px"><button class="action" data-action="acc-add"><div class="ico" style="' + tint('#1A8A8F') + '">' + I('plus') + '</div>أضف حساب أو بطاقة</button>' +
+      '<button class="action" data-action="bankfile"><div class="ico" style="' + tint('#0d9488') + '">' + I('download') + '</div>استيراد كشف</button></div>';
+    if (!accs.length) {
+      return out + '<div class="card" style="margin-top:12px">' + A.empty('wallet', 'فرّق بين حساباتك', 'أضف حساب البنك والبطاقة والكاش، وكل واحد يطلع له رصيده وصرفه بالشهر. رسائل البنك تنربط بالبطاقة من آخر رقمين لحالها.') + '</div>';
+    }
+    const unassigned = st.transactions.filter((t) => !t.account_id).length;
+    const total = accs.map(balance).filter((b) => b != null);
+    if (total.length) out += '<div class="hero" style="margin-top:12px"><span class="eyebrow">' + I('wallet') + 'مجموع الأرصدة</span><div class="amount-big">' + A.money(total.reduce((s, b) => s + b, 0)) + '</div></div>';
+    out += '<div class="card flush" style="margin-top:12px"><ul class="list">' + accs.map((a) => {
+      const b = balance(a), sp = monthSpend(a), k = KINDS[a.kind] || KINDS.bank;
+      const pct = a.budget ? Math.min(100, Math.round((sp / a.budget) * 100)) : null;
+      return '<li class="row" data-action="acc-edit" data-id="' + a.id + '"><div class="ico" style="' + tint(a.color || COLORS[0]) + '">' + I(k[1]) + '</div>' +
+        '<div class="main"><div class="title"><span class="t">' + h(a.name) + '</span>' + (a.last2 ? ' <small class="muted" data-noi18n>••' + h(a.last2) + '</small>' : '') + '</div>' +
+        '<div class="sub">صرف الشهر ' + A.fmt(sp) + (a.budget ? ' من ' + A.fmt(a.budget) : '') + '</div>' +
+        (pct != null ? '<div class="bar" style="height:5px;border-radius:3px;background:var(--surface-2);margin-top:6px;overflow:hidden"><i style="display:block;height:100%;width:' + pct + '%;background:' + (pct >= 100 ? 'var(--expense)' : pct >= 80 ? '#f59e0b' : 'var(--income)') + '"></i></div>' : '') +
+        '</div><div style="text-align:end">' + (b != null ? '<div class="amount"><span class="num">' + A.fmt(b) + '</span></div><small class="muted">الرصيد</small>' : '<small class="muted">حط رصيده</small>') + '</div></li>';
+    }).join('') + '</ul></div>';
+    if (unassigned) out += '<p class="small muted" style="margin:10px 6px">' + unassigned + ' عملية بدون حساب. افتح أي عملية واختار حسابها، أو استخدم «اربط القديمة» بالحساب.</p>';
+    return out;
+  }
+
+  // ---------- إضافة / تعديل ----------
+  function form(acc) {
+    const a = Object.assign({ id: S.uuid(), name: '', kind: 'card', last2: '', balance: '', budget: '', color: COLORS[list().length % COLORS.length] }, acc || {});
+    const n = acc ? st.transactions.filter((t) => t.account_id === a.id).length : 0;
+    const loose = acc && a.last2 ? st.transactions.filter((t) => !t.account_id && t.raw && t.raw.includes('••' + a.last2)).length : 0;
+    A.openSheet({
+      title: acc ? a.name : 'حساب أو بطاقة جديدة',
+      body: '<div class="seg" id="akSeg">' + Object.entries(KINDS).map(([k, x]) => '<button type="button" data-k="' + k + '" class="' + (a.kind === k ? 'on' : '') + '">' + x[0] + '</button>').join('') + '</div>' +
+        '<div class="field"><label>الاسم</label><input name="ac_name" maxlength="30" value="' + h(a.name) + '" placeholder="مثلاً: بطاقة بنك البحرين الوطني، حساب الراتب، الكاش"></div>' +
+        '<div class="field"><label>آخر رقمين من البطاقة أو الحساب (اختياري)</label><input name="ac_last2" inputmode="numeric" maxlength="2" value="' + h(a.last2 || '') + '" placeholder="مثلاً 21"><p class="small muted" style="margin:4px 4px 0">رسائل البنك اللي فيها «XX…21» تنربط بهالحساب لحالها. ما نحتاج الرقم كامل.</p></div>' +
+        '<div class="field"><label>رصيده الحين (اختياري)</label><input name="ac_balance" inputmode="decimal" value="' + (acc && balance(a) != null ? balance(a) : '') + '" placeholder="0.000"></div>' +
+        '<div class="field"><label>ميزانية الشهر لهالحساب (اختياري)</label><input name="ac_budget" inputmode="decimal" value="' + h(a.budget || '') + '" placeholder="مثلاً 150"></div>' +
+        (acc ? '<p class="small muted" style="margin:0 4px 10px">' + n + ' عملية مربوطة بهالحساب.</p>' : '') +
+        (loose ? '<button type="button" class="btn block" id="acLink">' + I('repeat') + 'اربط القديمة (' + loose + ' رسالة فيها ••' + h(a.last2) + ')</button>' : '') +
+        (acc ? '<button type="button" class="btn danger block" id="acDel" style="margin-top:10px">' + I('trash') + 'احذف الحساب (العمليات تظل)</button>' : ''),
+      mount(root) {
+        root.dataset.kind = a.kind;
+        A.segPick(root, '#akSeg', (k) => { root.dataset.kind = k; });
+        const link = root.querySelector('#acLink');
+        if (link) link.onclick = () => {
+          let c = 0;
+          for (const t of st.transactions) if (!t.account_id && t.raw && t.raw.includes('••' + a.last2)) { S.upsert('transactions', Object.assign({}, t, { account_id: a.id })); c++; }
+          link.remove(); A.toast('انربطت ' + c + ' عملية ✓');
+        };
+        const del = root.querySelector('#acDel');
+        if (del) del.onclick = async () => {
+          if (!(await A.ask('تحذف «' + a.name + '»؟ العمليات تظل بدون حساب.'))) return;
+          for (const t of st.transactions) if (t.account_id === a.id) S.upsert('transactions', Object.assign({}, t, { account_id: null }));
+          save(list().filter((x) => x.id !== a.id)); A.closeSheet(); A.toast('انحذف');
+        };
+      },
+      onSave(root) {
+        const name = A.val(root, 'ac_name');
+        if (!name) throw new Error('اكتب اسم الحساب');
+        const last2 = A.val(root, 'ac_last2').replace(/\D/g, '');
+        if (last2 && last2.length !== 2) throw new Error('آخر رقمين بس');
+        if (last2 && list().some((x) => x.id !== a.id && x.last2 === last2)) throw new Error('فيه حساب ثاني بنفس الرقمين');
+        const next = Object.assign({}, a, { name: name.slice(0, 30), kind: root.dataset.kind, last2: last2 || null, budget: A.parseAmount(A.val(root, 'ac_budget')) || null });
+        const bal = A.val(root, 'ac_balance');
+        if (bal !== '') {
+          const v = A.parseAmount(bal);
+          if (!isFinite(v)) throw new Error('الرصيد مو رقم');
+          if (!acc || balance(a) == null || Math.abs(v - balance(a)) > 0.0005) { next.balance = v; next.balance_at = new Date().toISOString(); }
+        } else { next.balance = null; next.balance_at = null; }
+        const arr = list().filter((x) => x.id !== a.id).concat([next]);
+        save(arr);
+        A.ui.moneySeg = 'accounts';
+        A.toast(acc ? 'تم التعديل' : 'انضاف ✓');
+      },
+    });
+  }
+
+  // ---------- بنموذج العملية ----------
+  function txField(t) {
+    const accs = list();
+    if (!accs.length) return '';
+    const cur = t && t.account_id ? t.account_id : (accs.length === 1 ? accs[0].id : '');
+    return '<div class="field"><label>الحساب</label><select name="account_id"><option value="">بدون</option>' +
+      accs.map((a) => '<option data-noi18n value="' + a.id + '"' + (a.id === cur ? ' selected' : '') + '>' + h(a.name) + (a.last2 ? ' ••' + h(a.last2) : '') + '</option>').join('') + '</select></div>';
+  }
+
+  // ================= الربط =================
+  E.viewAccounts = view;
+  E.txAccountField = txField;
+  E.accounts = { list, balance, monthSpend, form, byId };
+  wrap('action', (prev, name, el, e) => {
+    if (name === 'acc-add') { form(); return; }
+    if (name === 'acc-edit') { form(byId(el.dataset.id)); return; }
+    return prev(name, el, e);
+  });
 })();
 
 </script>
@@ -9779,6 +9967,211 @@ window.HAYATI_CONFIG = {
         'قدّمه مع عيش أبيض.'],
       tip: 'لو ثقل وايد ضف ماي حار.',
     },
+    // ================= DW-060: وصفات زيادة =================
+    {
+      id: 'kabsa-chicken', name: 'كبسة دجاج', en: 'Chicken kabsa', cat: 'main', icon: '🍗', mins: 75, level: 1, serves: 4,
+      ing: [[1, 'حبة', 'دجاجة مقطّعة 4 قطع (حوالي 1.2 كغ)'], [3, 'كوب', 'رز بسمتي'], [2, 'حبة', 'بصل مفروم'], [2, 'حبة', 'طماط مبشور'], [2, 'م.ك', 'معجون طماط'],
+        [3, 'فص', 'ثوم مهروس'], [1, 'حبة', 'جزر مبشور'], [2, 'م.ك', 'بهارات كبسة'], [2, 'حبة', 'لومي'], [4, 'حبة', 'هيل'], [2.5, 'م.ص', 'ملح'], [3, 'م.ك', 'زيت'], [5, 'كوب', 'ماي حار'], [null, '', 'زبيب ولوز محمّص للتزيين']],
+      steps: ['اغسل الرز ونقّعه 30 دقيقة.', 'حمّس البصل بالزيت 8 دقايق لين يذهّب، وضف الثوم دقيقة.',
+        'ضف الدجاج وقلّبه 5 دقايق، بعدين بهارات الكبسة ومعجون الطماط والطماط والجزر وحرّك 3 دقايق.',
+        'ضف اللومي والهيل والملح والماي الحار، وغطّه 35 دقيقة على نار متوسطة.', 'طلّع الدجاج، وحمّره بالفرن على 200° لمدة 15 دقيقة لو تحب.',
+        'قيس المرق: تحتاج 4 أكواب ونص. صفّي الرز وضفه وخله يغلي لين يختفي الماي من فوق.', 'غطّه ونزّل النار لأقل شي 20 دقيقة.',
+        'قدّم الرز وفوقه الدجاج والزبيب واللوز.'],
+      tip: 'الجزر المبشور يعطي الكبسة لونها وحلاوتها الخفيفة.',
+    },
+    {
+      id: 'mandi-oven', name: 'مندي دجاج بالفرن', en: 'Oven chicken mandi', cat: 'main', icon: '🍗', mins: 90, level: 2, serves: 4,
+      ing: [[1, 'حبة', 'دجاجة مقطّعة نصين'], [3, 'كوب', 'رز بسمتي'], [2, 'م.ك', 'بهارات مندي'], [1, 'م.ص', 'كركم'], [3, 'م.ك', 'زيت'], [2, 'م.ك', 'زبدة'],
+        [1, 'حبة', 'بصل مفروم'], [4, 'حبة', 'هيل'], [1, 'عود', 'قرفة'], [2.5, 'م.ص', 'ملح'], [4.5, 'كوب', 'ماي حار'], [null, '', 'قطعة فحم صغيرة للتدخين (اختياري)']],
+      steps: ['تبّل الدجاج بالبهارات والكركم والزيت ونص الملح، وخله ساعة على الأقل.', 'اغسل الرز ونقّعه 30 دقيقة.',
+        'حمّس البصل بالزبدة، وضف الهيل والقرفة والرز المصفّى وباقي الملح وحرّك دقيقتين.', 'صب الرز بصينية فرن عميقة، وصب عليه الماي الحار.',
+        'حط فوقه شبك (أو مباشرة) الدجاج، وغطّ الصينية زين بورق ألمنيوم.', 'اخبزه على 180° ساعة وربع.',
+        'شيل الغطا آخر 15 دقيقة وارفع الحرارة لـ 220° عشان يتحمّر الدجاج.',
+        'للتدخين: سخّن الفحم لين يحمّر، حطه بوعاء صغير بنص الرز، وصب عليه شوية زيت وغطّ 5 دقايق.'],
+      tip: 'لا تفتح الغطا قبل الوقت؛ البخار هو اللي يطبخ الرز.',
+    },
+    {
+      id: 'maqalqal', name: 'مقلقل لحم', en: 'Meat maqalqal', cat: 'main', icon: '🥩', mins: 35, level: 1, serves: 4,
+      ing: [[500, 'غرام', 'لحم غنم مقطّع قطع صغيرة'], [1, 'حبة', 'بصل مقطّع'], [2, 'حبة', 'طماط مقطّع'], [1, 'حبة', 'فلفل حلو'], [3, 'فص', 'ثوم مهروس'],
+        [1, 'م.ك', 'بزار'], [0.5, 'م.ص', 'كركم'], [1, 'م.ص', 'ملح'], [3, 'م.ك', 'زيت']],
+      steps: ['سخّن الزيت على نار قوية، وحط اللحم وحرّكه 8 دقايق لين يتحمّر وينشف ماه.', 'ضف البصل والثوم وحرّك 5 دقايق.',
+        'ضف البزار والكركم والملح، بعدين الطماط والفلفل.', 'غطّه ونزّل النار 15 دقيقة لين يلين اللحم، وحرّكه كل شوي.', 'قدّمه مع خبز أو عيش.'],
+      tip: 'قطّع اللحم صغير عشان يستوي بسرعة ويطلع طري.',
+    },
+    {
+      id: 'kofta-oven', name: 'كفتة بالفرن مع البطاط', en: 'Baked kofta with potatoes', cat: 'main', icon: '🧆', mins: 60, level: 1, serves: 4,
+      ing: [[500, 'غرام', 'لحم مفروم'], [1, 'حبة', 'بصل مبشور ومعصور'], [0.5, 'كوب', 'بقدونس مفروم'], [1, 'م.ص', 'بهارات مشكلة'], [1, 'م.ص', 'ملح'],
+        [3, 'حبة', 'بطاط شرائح'], [2, 'حبة', 'طماط شرائح'], [1, 'كوب', 'صلصة طماط'], [1, 'كوب', 'ماي'], [2, 'م.ك', 'زيت']],
+      steps: ['اخلط اللحم والبصل والبقدونس والبهارات والملح بيدك 2 دقيقة.', 'شكّلها أصابع وحطها بصينية مدهونة بالزيت.',
+        'رتّب بينها شرائح البطاط والطماط.', 'اخلط الصلصة بالماي وصبها فوقها، وغطّ الصينية بورق ألمنيوم.',
+        'اخبزها على 200° لمدة 35 دقيقة، بعدين شيل الورق 10 دقايق لين يتحمّر الوجه.'],
+      tip: 'اعصر البصل من ماه عشان الكفتة ما تتفكك.',
+    },
+    {
+      id: 'roast-chicken', name: 'دجاج مشوي بالفرن', en: 'Oven roast chicken', cat: 'main', icon: '🍗', mins: 80, level: 1, serves: 4,
+      ing: [[1, 'حبة', 'دجاجة كاملة'], [3, 'م.ك', 'زيت زيتون'], [1, 'حبة', 'ليمون'], [4, 'فص', 'ثوم مهروس'], [1, 'م.ك', 'بابريكا'], [1, 'م.ص', 'كمون'],
+        [1.5, 'م.ص', 'ملح'], [0.5, 'م.ص', 'فلفل أسود'], [3, 'حبة', 'بطاط مقطّع']],
+      steps: ['جفّف الدجاجة بمنشفة.', 'اخلط الزيت وعصير الليمون والثوم والبهارات والملح، وافرك الدجاجة من برّا ومن داخل.',
+        'حطها بصينية وحوالينها البطاط.', 'اخبزها على 200° ساعة إلا ربع إلى ساعة.',
+        'تتأكد إنها استوت: اغرز سكين بين الفخذ والصدر، لو طلع الماي صافي (مو وردي) استوت.', 'خلها 10 دقايق قبل التقطيع.'],
+      tip: 'لو تبيها أطرى، تبّلها من الليل.',
+    },
+    {
+      id: 'saloona-meat', name: 'صالونة لحم', en: 'Lamb saloona', cat: 'main', icon: '🥘', mins: 110, level: 1, serves: 4,
+      ing: [[600, 'غرام', 'لحم غنم مقطّع'], [2, 'حبة', 'بطاط'], [2, 'حبة', 'جزر'], [1, 'حبة', 'بصل مفروم'], [2, 'حبة', 'طماط مبشور'], [2, 'م.ك', 'معجون طماط'],
+        [3, 'فص', 'ثوم'], [1.5, 'م.ك', 'بزار'], [1, 'حبة', 'لومي'], [2, 'م.ص', 'ملح'], [2, 'م.ك', 'زيت'], [6, 'كوب', 'ماي']],
+      steps: ['حمّس البصل بالزيت، وضف اللحم وقلّبه 5 دقايق.', 'ضف الثوم والبزار ومعجون الطماط والطماط 3 دقايق.',
+        'ضف الماي واللومي والملح، وغطّه على نار هادية ساعة لين يلين اللحم.', 'ضف البطاط والجزر 25 دقيقة.', 'قدّمها مع عيش أبيض.'],
+      tip: 'بقدر الضغط: 30 دقيقة للحم بدال ساعة.',
+    },
+    {
+      id: 'saloona-fish', name: 'صالونة سمك', en: 'Fish saloona', cat: 'main', icon: '🐟', mins: 40, level: 1, serves: 4,
+      ing: [[750, 'غرام', 'سمك (هامور أو كنعد) شرائح'], [1, 'حبة', 'بصل مفروم'], [3, 'حبة', 'طماط مبشور'], [2, 'م.ك', 'معجون طماط'], [3, 'فص', 'ثوم'],
+        [1, 'م.ك', 'بزار سمك'], [0.5, 'م.ص', 'كركم'], [1, 'م.ك', 'تمر هندي (اختياري)'], [1.5, 'م.ص', 'ملح'], [3, 'م.ك', 'زيت'], [2, 'كوب', 'ماي'], [null, '', 'كزبرة']],
+      steps: ['حمّس البصل بالزيت لين يذبل، وضف الثوم والبزار والكركم دقيقة.', 'ضف الطماط ومعجون الطماط والتمر الهندي 5 دقايق.',
+        'ضف الماي والملح وخله يغلي 5 دقايق.', 'نزّل السمك بهدوء، وغطّه 12–15 دقيقة على نار هادية بدون تحريك.', 'رش الكزبرة، وقدّمها مع عيش أبيض.'],
+      tip: 'لا تحرّك بالملعقة بعد ما تحط السمك؛ هزّ القدر بس.',
+    },
+    {
+      id: 'pasta-meat', name: 'مكرونة باللحم المفروم', en: 'Pasta with minced meat', cat: 'main', icon: '🍝', mins: 35, level: 1, serves: 4,
+      ing: [[500, 'غرام', 'مكرونة'], [400, 'غرام', 'لحم مفروم'], [1, 'حبة', 'بصل مفروم'], [2, 'فص', 'ثوم'], [2, 'كوب', 'صلصة طماط'], [1, 'م.ص', 'بهارات مشكلة'],
+        [1, 'م.ص', 'ملح'], [2, 'م.ك', 'زيت'], [null, '', 'جبن مبشور للوجه']],
+      steps: ['اسلق المكرونة بماي يغلي فيه ملح حسب الوقت المكتوب على الكيس، وصفّها.', 'حمّس البصل بالزيت 5 دقايق، وضف الثوم.',
+        'ضف اللحم وفكّكه بالملعقة لين يتغيّر لونه كله (8 دقايق).', 'ضف البهارات والملح والصلصة، وخلها 10 دقايق على نار هادية.',
+        'اخلط المكرونة بالصلصة، ورش الجبن.'],
+      tip: 'خلّ نص كوب من ماي سلق المكرونة، لو الصلصة ثقلت ضف منه.',
+    },
+    {
+      id: 'qeema', name: 'قيمة', en: 'Qeema', cat: 'main', icon: '🍲', mins: 120, level: 2, serves: 6,
+      ing: [[500, 'غرام', 'لحم مفروم أو مقطّع صغير'], [1, 'كوب', 'حمص يابس منقوع من الليل'], [2, 'حبة', 'بصل مفروم'], [3, 'م.ك', 'معجون طماط'], [2, 'حبة', 'لومي'],
+        [1, 'م.ك', 'بزار'], [0.5, 'م.ص', 'كركم'], [2, 'م.ص', 'ملح'], [3, 'م.ك', 'زيت'], [6, 'كوب', 'ماي']],
+      steps: ['اسلق الحمص المنقوع بالماي ساعة لين يلين.', 'بقدر ثاني حمّس البصل بالزيت 10 دقايق، وضف اللحم 8 دقايق.',
+        'ضف البزار والكركم ومعجون الطماط دقيقتين.', 'ضف الحمص مع ماه واللومي والملح.',
+        'خلها على نار هادية 40 دقيقة، وهرس شوية من الحمص بالملعقة لين تثقل.', 'قدّمها مع عيش أبيض.'],
+      tip: 'تثقل أكثر وهي تبرد؛ لو ثقلت وايد ضف ماي حار.',
+    },
+    {
+      id: 'muhammar', name: 'محمّر', en: 'Muhammar (sweet rice)', cat: 'main', icon: '🍚', mins: 50, level: 2, serves: 4,
+      ing: [[2, 'كوب', 'رز بسمتي'], [0.5, 'كوب', 'دبس تمر أو سكر بني'], [3, 'كوب', 'ماي'], [0.5, 'م.ص', 'ملح'], [0.5, 'م.ص', 'هيل مطحون'],
+        [0.25, 'م.ص', 'زعفران بماي ورد'], [3, 'م.ك', 'سمن']],
+      steps: ['اغسل الرز ونقّعه 20 دقيقة.', 'اسلق الرز بماي يغلي مع الملح 6–7 دقايق (نص مستوي) وصفّه.',
+        'بالقدر نفسه ذوّب الدبس بنص كوب ماي مع الهيل والزعفران.', 'رجّع الرز وقلّبه بهدوء لين يتلوّن.',
+        'صب السمن على الوجه، غطّه زين وخله على أقل نار 25 دقيقة.', 'قدّمه مع سمك مقلي (صافي) زي العادة البحرينية.'],
+      tip: 'حط فوطة تحت الغطا عشان تشرب البخار والرز يطلع حبّة حبّة.',
+    },
+    {
+      id: 'madrooba', name: 'مضروبة دجاج', en: 'Chicken madrooba', cat: 'main', icon: '🥣', mins: 60, level: 1, serves: 4,
+      ing: [[500, 'غرام', 'صدر دجاج'], [1, 'كوب', 'رز مصري أو قصير'], [1, 'حبة', 'بصل مفروم'], [2, 'حبة', 'طماط'], [1, 'م.ك', 'بزار'], [1, 'حبة', 'لومي'],
+        [1.5, 'م.ص', 'ملح'], [6, 'كوب', 'ماي'], [2, 'م.ك', 'سمن']],
+      steps: ['اسلق الدجاج مع البصل واللومي بالماي 25 دقيقة، وطلّعه وقطّعه خيوط.', 'ضف الرز المغسول والطماط والبزار والملح للمرق.',
+        'خله على نار هادية 30 دقيقة، وحرّك كل شوي لين يلين الرز وايد.', 'رجّع الدجاج، واضربه بالمضرب أو الخلاط اليدوي ضربات خفيفة لين يصير مثل العصيدة.',
+        'قدّمه وفوقه سمن حار.'],
+      tip: 'لو ثقل وايد ضف ماي حار؛ لازم يكون ناعم وسايل شوي.',
+    },
+    {
+      id: 'veg-saloona', name: 'صالونة خضار', en: 'Vegetable saloona', cat: 'main', icon: '🥕', mins: 40, level: 1, serves: 4,
+      ing: [[2, 'حبة', 'بطاط'], [2, 'حبة', 'جزر'], [1, 'حبة', 'كوسا'], [1, 'حبة', 'باذنجان'], [1, 'كوب', 'بازلاء'], [1, 'حبة', 'بصل'], [2, 'حبة', 'طماط مبشور'],
+        [2, 'م.ك', 'معجون طماط'], [1, 'م.ك', 'بزار'], [1.5, 'م.ص', 'ملح'], [3, 'م.ك', 'زيت'], [3, 'كوب', 'ماي']],
+      steps: ['قطّع الخضار مكعبات متساوية.', 'حمّس البصل بالزيت، وضف البزار ومعجون الطماط والطماط 3 دقايق.',
+        'ضف البطاط والجزر والماي والملح، وغطّه 15 دقيقة.', 'ضف الكوسا والباذنجان والبازلاء 10 دقايق.', 'قدّمها مع عيش.'],
+      tip: 'وجبة نباتية خفيفة؛ تقدر تضيف حمص معلّب لو تبيها أشبع.',
+    },
+    // ---------- جانبي ورمضان ----------
+    {
+      id: 'lentil-soup', name: 'شوربة عدس', en: 'Lentil soup', cat: 'side', icon: '🍜', mins: 35, level: 1, serves: 4,
+      ing: [[1, 'كوب', 'عدس أحمر'], [1, 'حبة', 'بصل'], [1, 'حبة', 'جزر'], [1, 'حبة', 'بطاط صغيرة'], [1, 'م.ص', 'كمون'], [0.5, 'م.ص', 'كركم'], [1.5, 'م.ص', 'ملح'],
+        [2, 'م.ك', 'زيت'], [6, 'كوب', 'ماي'], [1, 'حبة', 'ليمون للتقديم']],
+      steps: ['حمّس البصل بالزيت 5 دقايق.', 'ضف العدس المغسول والجزر والبطاط والكمون والكركم والماي.', 'خله يغلي، بعدين نار هادية 25 دقيقة لين يلين كل شي.',
+        'اضربها بالخلاط لين تنعم، وضف الملح.', 'قدّمها مع عصرة ليمون وخبز محمّص.'],
+      tip: 'لو ثقلت ضف ماي حار؛ لو خفيفة خلها تغلي أكثر.',
+    },
+    {
+      id: 'oats-soup', name: 'شوربة شوفان', en: 'Oat soup', cat: 'side', icon: '🥣', mins: 40, level: 1, serves: 4,
+      ing: [[250, 'غرام', 'صدر دجاج مقطّع صغير'], [0.75, 'كوب', 'شوفان'], [1, 'حبة', 'بصل مفروم'], [1, 'حبة', 'طماط مبشور'], [1, 'م.ك', 'معجون طماط'],
+        [1, 'م.ص', 'بهارات'], [1, 'م.ص', 'ملح'], [2, 'م.ك', 'زيت'], [6, 'كوب', 'ماي'], [null, '', 'بقدونس']],
+      steps: ['حمّس البصل بالزيت، وضف الدجاج 5 دقايق.', 'ضف الطماط والمعجون والبهارات دقيقتين.', 'ضف الماي وخله يغلي 15 دقيقة.',
+        'ضف الشوفان والملح، وخلها 10 دقايق مع التحريك.', 'رش البقدونس وقدّمها.'],
+      tip: 'شوربة رمضان المعروفة، خفيفة على المعدة بعد الصيام.',
+    },
+    {
+      id: 'sambosa', name: 'سمبوسة لحم', en: 'Meat sambosa', cat: 'side', icon: '🥟', mins: 45, level: 1, serves: 6,
+      ing: [[300, 'غرام', 'لحم مفروم'], [1, 'حبة', 'بصل مفروم'], [0.5, 'كوب', 'كزبرة أو بقدونس'], [1, 'م.ص', 'بهارات'], [1, 'م.ص', 'ملح'], [20, 'حبة', 'ورق سمبوسة جاهز'],
+        [1, 'م.ك', 'طحين + ماي (لصق الأطراف)'], [null, '', 'زيت للقلي']],
+      steps: ['حمّر اللحم مع البصل لين ينشف ماه (10 دقايق)، وضف البهارات والملح، وخله يبرد، وبعدين ضف الكزبرة.',
+        'حط ملعقة حشوة بطرف الورقة، ولفّها مثلثات.', 'الصق الطرف بعجينة الطحين والماي.', 'اقليها بزيت متوسط لين تذهّب (2–3 دقايق)، وطلّعها على ورق مطبخ.'],
+      tip: 'الحشوة لازم تبرد قبل اللف؛ لو حارة تفتق الورق.',
+    },
+    {
+      id: 'salad', name: 'سلطة خضرا', en: 'Green salad', cat: 'side', icon: '🥗', mins: 10, level: 1, serves: 4,
+      ing: [[2, 'حبة', 'خيار'], [2, 'حبة', 'طماط'], [0.5, 'حبة', 'خس'], [0.5, 'حبة', 'بصل'], [2, 'م.ك', 'زيت زيتون'], [1, 'حبة', 'ليمون'], [0.5, 'م.ص', 'ملح'], [1, 'م.ص', 'نعناع يابس']],
+      steps: ['اغسل الخضار وجففها.', 'قطّعها مكعبات صغيرة.', 'اخلط الزيت وعصير الليمون والملح والنعناع، وصبها فوقها قبل التقديم على طول.'],
+      tip: 'حط الصوص وقت التقديم بس، عشان السلطة ما تذبل.',
+    },
+    {
+      id: 'saffron-rice', name: 'عيش بالزعفران', en: 'Saffron rice', cat: 'side', icon: '🍚', mins: 35, level: 1, serves: 4,
+      ing: [[2, 'كوب', 'رز بسمتي'], [3, 'كوب', 'ماي'], [0.25, 'م.ص', 'زعفران بماي ورد'], [3, 'حبة', 'هيل'], [1, 'م.ص', 'ملح'], [1, 'م.ك', 'سمن']],
+      steps: ['اغسل الرز ونقّعه 20 دقيقة.', 'غلّي الماي مع الهيل والملح والسمن.', 'ضف الرز وخله يغلي لين يختفي الماي من فوق.',
+        'صب الزعفران على الوجه بخطوط، وغطّه على أقل نار 18 دقيقة.', 'فكّكه بالشوكة وقلّبه بهدوء.'],
+      tip: 'الزعفران على الوجه بس يعطي لونين حلوين.',
+    },
+    // ---------- فطور ----------
+    {
+      id: 'nakhi', name: 'نخي', en: 'Nakhi (spiced chickpeas)', cat: 'breakfast', icon: '🫘', mins: 20, level: 1, serves: 4,
+      ing: [[2, 'علبة', 'حمص معلّب'], [1, 'م.ص', 'كمون'], [0.5, 'م.ص', 'فلفل أسود'], [0.5, 'م.ص', 'ملح'], [1, 'حبة', 'ليمون'], [null, '', 'صوص حار حسب الرغبة']],
+      steps: ['حط الحمص مع ماه بقدر وخله يغلي 10 دقايق.', 'ضف الكمون والفلفل والملح.', 'قدّمه حار مع عصرة ليمون وصوص حار.'],
+      tip: 'الأصل حمص يابس منقوع من الليل ومسلوق ساعة ونص.',
+    },
+    {
+      id: 'regag-egg', name: 'رقاق بالبيض', en: 'Regag with egg', cat: 'breakfast', icon: '🫓', mins: 10, level: 1, serves: 2,
+      ing: [[2, 'حبة', 'خبز رقاق'], [2, 'حبة', 'بيض'], [2, 'شريحة', 'جبن'], [1, 'م.ص', 'زبدة'], [null, '', 'زعتر أو شطة (اختياري)']],
+      steps: ['سخّن مقلاة كبيرة على نار متوسطة وحط الزبدة.', 'حط الرقاق، واكسر فوقه البيضة وافردها بالملعقة.',
+        'حط الجبن، وانطر دقيقة لين يستوي البيض.', 'اطويه نصين وقدّمه.'],
+      tip: 'لو ما عندك رقاق، خبز التنور أو التورتيلا يمشي.',
+    },
+    // ---------- حلا ----------
+    {
+      id: 'muhallabia', name: 'مهلبية', en: 'Muhallabia', cat: 'sweet', icon: '🍮', mins: 20, level: 1, serves: 6,
+      ing: [[4, 'كوب', 'حليب'], [0.5, 'كوب', 'سكر'], [5, 'م.ك', 'نشا'], [1, 'م.ك', 'ماي ورد'], [0.5, 'م.ص', 'هيل مطحون'], [null, '', 'فستق مطحون للتزيين']],
+      steps: ['ذوّب النشا بكوب حليب بارد.', 'سخّن باقي الحليب مع السكر والهيل.', 'ضف خليط النشا وحرّك بدون توقف لين يثقل ويغلي (5–7 دقايق).',
+        'ضف ماي الورد وصبه بصحون، وخله يبرد ساعتين بالثلاجة.', 'زيّنه بالفستق.'],
+      tip: 'لا تبطّل تحريك وإلا يتكتّل ويلصق تحت.',
+    },
+    {
+      id: 'bitheeth', name: 'بثيث', en: 'Bitheeth', cat: 'sweet', icon: '🌴', mins: 20, level: 1, serves: 6,
+      ing: [[1, 'كوب', 'طحين'], [1.5, 'كوب', 'تمر بدون نوى مفروم'], [0.5, 'كوب', 'سمن'], [0.5, 'م.ص', 'هيل مطحون'], [null, '', 'سمسم محمّص (اختياري)']],
+      steps: ['حمّص الطحين بقدر ناشف على نار هادية 8–10 دقايق مع التحريك لين يصير لونه بني فاتح.', 'ضف السمن وحرّك دقيقة.',
+        'طفّ النار، وضف التمر والهيل وافركه بالملعقة لين يتداخل.', 'شكّله كرات أو افرده بصينية، ورش السمسم.'],
+      tip: 'التمر الطري يتداخل أسهل؛ لو يابس سخّنه 20 ثانية بالمايكرويف.',
+    },
+    {
+      id: 'ranginak', name: 'رنگينة', en: 'Ranginak', cat: 'sweet', icon: '🍯', mins: 25, level: 1, serves: 6,
+      ing: [[20, 'حبة', 'تمر كبير'], [20, 'حبة', 'جوز أو لوز'], [1, 'كوب', 'طحين'], [0.5, 'كوب', 'زبدة'], [0.5, 'م.ص', 'هيل'], [1, 'م.ص', 'قرفة'], [null, '', 'فستق مطحون']],
+      steps: ['شيل نوى التمر، وحط مكانها حبة جوز، ورتّبها بصحن.', 'حمّص الطحين بالزبدة على نار هادية 10 دقايق لين يذهّب.',
+        'ضف الهيل والقرفة، وصبه حار فوق التمر.', 'رش الفستق، وخله يبرد قبل التقطيع.'],
+      tip: 'حلا سهل وما يحتاج فرن.',
+    },
+    {
+      id: 'date-cake', name: 'كيكة التمر', en: 'Date cake', cat: 'sweet', icon: '🍰', mins: 55, level: 2, serves: 8,
+      ing: [[1, 'كوب', 'تمر بدون نوى'], [1, 'كوب', 'حليب حار'], [1, 'م.ص', 'بيكنج صودا'], [0.5, 'كوب', 'زبدة طرية'], [0.75, 'كوب', 'سكر بني'], [2, 'حبة', 'بيض'],
+        [1.5, 'كوب', 'طحين'], [1, 'م.ص', 'بيكنج باودر'], [1, 'م.ص', 'هيل'], [null, '', 'صوص تمر أو كراميل (اختياري)']],
+      steps: ['نقّع التمر بالحليب الحار مع البيكنج صودا 10 دقايق، واهرسه.', 'اخفق الزبدة والسكر، وضف البيض وحدة وحدة.',
+        'ضف التمر، بعدين الطحين والبيكنج باودر والهيل وحرّك بس لين يختلط.', 'صبه بقالب مدهون، واخبزه على 175° لمدة 35–40 دقيقة.',
+        'تتأكد إنها استوت: عود خشب بالنص يطلع ناشف.'],
+      tip: 'لا تكثر خلط بعد الطحين، عشان الكيكة تطلع هشّة.',
+    },
+    // ---------- مشروبات ----------
+    {
+      id: 'ginger-milk', name: 'حليب بالزنجبيل', en: 'Ginger milk', cat: 'drink', icon: '🥛', mins: 10, level: 1, serves: 2,
+      ing: [[2, 'كوب', 'حليب'], [1, 'م.ص', 'زنجبيل مطحون (أو قطعة طازجة)'], [2, 'م.ك', 'سكر أو عسل'], [2, 'حبة', 'هيل'], [null, '', 'قرفة للوجه']],
+      steps: ['سخّن الحليب مع الزنجبيل والهيل لين يقرب يغلي.', 'نزّل النار وخله دقيقتين.', 'ضف السكر، وصفّيه، ورش القرفة.'],
+      tip: 'مشروب الشتا؛ لا تخليه يفور ويطلع.',
+    },
+    {
+      id: 'sulaimani', name: 'شاي سليماني', en: 'Sulaimani tea', cat: 'drink', icon: '🍵', mins: 8, level: 1, serves: 4,
+      ing: [[4, 'كوب', 'ماي'], [2, 'م.ص', 'شاي ورق'], [3, 'حبة', 'هيل'], [3, 'م.ك', 'سكر'], [1, 'حبة', 'ليمون'], [null, '', 'نعناع (اختياري)']],
+      steps: ['غلّي الماي مع الهيل 3 دقايق.', 'طفّ النار، وضف الشاي وغطّه 3 دقايق.', 'صفّيه، وضف السكر وعصرة ليمون.'],
+      tip: 'شاي خفيف بدون حليب، يساعد بعد الأكل الدسم.',
+    },
   ];
 })();
 
@@ -9797,7 +10190,7 @@ window.HAYATI_CONFIG = {
 
   const CATS = [['all', 'الكل'], ['fav', '❤️ المفضلة'], ['main', 'الغدا'], ['breakfast', 'الفطور'], ['sweet', 'الحلا'], ['drink', 'المشروبات'], ['side', 'جانبي']];
   const LEVEL = ['', 'سهلة', 'متوسطة'];
-  const COUNT = ['حبة', 'فص', 'عود', 'علبة'];
+  const COUNT = ['حبة', 'فص', 'عود', 'علبة', 'شريحة'];
   const ui = { cat: 'all', q: '' };
   const favs = () => (Array.isArray(st.settings.kitchen_fav) ? st.settings.kitchen_fav : []);
 
@@ -12936,6 +13329,7 @@ window.HAYATI_CONFIG = {
   // الجديد لكل نسخة (نصوص قصيرة وصادقة: شي يشتغل اليوم بس)
   const NEWS = {
     v25: [
+      ['💳', 'حساباتي', 'رصيد وصرف وميزانية لكل حساب وبطاقة، والرسائل تنربط بالبطاقة لحالها'],
       ['💱', 'عملتك', 'دينار، ريال، درهم أو غيرها: التطبيق كله يشتغل بعملتك'],
       ['🏦', 'استيراد الحساب كامل', 'كشف الحساب (Excel أو CSV أو PDF) أو ملف رسائل البنك: كل العمليات بتواريخها'],
       ['📅', 'رسالة البنك بتاريخها', 'الصق رسالة قديمة وتنحفظ بيوم العملية نفسه، أو كذا رسالة مرة وحدة'],

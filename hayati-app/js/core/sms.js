@@ -220,6 +220,13 @@
     return null;
   }
 
+  // DW-061: آخر رقمين من البطاقة أو الحساب بالرسالة (XX4821 · card ending 4821 · المنتهية بـ 21) — قبل الإخفاء
+  function cardDigits(text) {
+    const t = normalizeDigits(String(text || ''));
+    const m = /[xX*•]{2,}[\s-]?(\d{2,4})(?!\d)/.exec(t) || /(?:ending(?:\s+(?:in|with))?|ends\s+with|المنتهية\s*ب|منتهية\s*ب|تنتهي\s*ب)\s*[:ـ-]?\s*(\d{2,4})(?!\d)/i.exec(t);
+    return m ? m[1].slice(-2) : null;
+  }
+
   function parse(raw, now) {
     if (!raw) return null;
     const text = normalizeDigits(raw).replace(/\u200f|\u200e/g, '');
@@ -332,7 +339,7 @@
       .replace(/[xX*]{2,}(?=\s|$)/g, '••');
   }
 
-  const api = { parse, findDate, detectKind, quick, categorize, learn, learnedFor, setLearned, LEARN_KEY, mask, brand, groupByBrand, BRANDS, CATEGORY_RULES, INCOME_CATEGORY_RULES };
+  const api = { parse, findDate, detectKind, cardDigits, quick, categorize, learn, learnedFor, setLearned, LEARN_KEY, mask, brand, groupByBrand, BRANDS, CATEGORY_RULES, INCOME_CATEGORY_RULES };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else global.SmsParser = api;
 })(typeof window !== 'undefined' ? window : globalThis);

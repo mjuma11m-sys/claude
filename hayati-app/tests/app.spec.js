@@ -304,6 +304,44 @@ test('user currency: Saudi riyal shows everywhere, riyal messages stay as they a
   await expect(page.locator('[data-pick="kitchen"]')).toHaveCount(1);
 });
 
+// DW-061: حساباتي: الرسائل تنربط بالبطاقة من آخر رقمين، الرصيد يمشي مع العمليات، والكشف يحط آخر رصيد
+test('accounts: messages link by the last two digits, balance follows, statement sets the balance', async ({ page }) => {
+  await open(page);
+  await store(page, () => { App.S.setSettings({ onboarded: true, sms_consent_at: new Date().toISOString() }); App.ui.moneySeg = 'accounts'; App.go('money'); });
+  await page.click('[data-action="acc-add"]');
+  await page.click('#akSeg [data-k="card"]');
+  await page.fill('#sheetBody [name=ac_name]', 'بطاقة الراتب');
+  await page.fill('#sheetBody [name=ac_last2]', '21');
+  await page.fill('#sheetBody [name=ac_balance]', '500');
+  await page.fill('#sheetBody [name=ac_budget]', '100');
+  await page.click('#sheetSave');
+  await expect.poll(() => store(page, () => (App.st.settings.accounts || []).length)).toBe(1);
+  await page.waitForTimeout(350);
+  const r = await store(page, () => {
+    const a = App.st.settings.accounts[0];
+    const t1 = App.S.smsToTransaction('Purchase of BHD 12.500 at TALABAT using card XXXX4821');
+    const t2 = App.S.smsToTransaction('Purchase of BHD 3.000 at CAFE using card XXXX9999');
+    App.S.upsert('transactions', t1); App.S.upsert('transactions', t2);
+    return { a1: t1.account_id === a.id, a2: t2.account_id, bal: Extras.accounts.balance(a), spend: Extras.accounts.monthSpend(a) };
+  });
+  expect(r).toEqual({ a1: true, a2: null, bal: 487.5, spend: 12.5 });
+  await expect(page.locator('#view')).toContainText('487.500');
+  await expect(page.locator('#view')).toContainText('صرف الشهر 12.500 من 100.000');
+  // كشف الحساب لهالبطاقة: آخر رصيد بالكشف يصير رصيدها (لو ما عندنا رصيد أحدث؛ اللي كتبته اليوم أحدث فنشيله للتجربة)
+  await store(page, () => App.S.setSettings({ accounts: App.st.settings.accounts.map((x) => Object.assign({}, x, { balance: null, balance_at: null })) }));
+  await store(page, () => Extras.bankImport());
+  await page.selectOption('#biAcc', { label: 'بطاقة الراتب ••21' });
+  await page.setInputFiles('#biFile', path.join(__dirname, 'fixtures/statement.xlsx'));
+  await expect(page.locator('#biOut')).toContainText('783.750');
+  await page.click('#sheetSave');
+  await expect.poll(() => store(page, () => App.st.transactions.filter((t) => t.account_id === App.st.settings.accounts[0].id).length)).toBe(4);
+  // 783.750 بتاريخ 5 أكتوبر + عملية طلبات (اليوم، بعده) = 771.250
+  expect(await store(page, () => Extras.accounts.balance(App.st.settings.accounts[0]))).toBe(771.25);
+  // العملية اليدوية فيها خانة الحساب
+  await store(page, () => App.txForm());
+  await expect(page.locator('#sheetBody [name=account_id]')).toHaveCount(1);
+});
+
 test('weekly report shows on Friday evening and opens', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-10-16T20:00:00+03:00') });
   await open(page);
@@ -1793,7 +1831,7 @@ test('«جديد بحياتي»: an existing user sees what is new once after th
   await store(page, () => localStorage.setItem('hayati-seen-version', 'v23'));   // كان على النسخة اللي قبل
   await open(page);
   await expect(page.locator('#sheetTitle')).toHaveText('جديد بحياتي ✨', { timeout: 5000 });
-  await expect(page.locator('#sheetBody .news-item')).toHaveCount(13);
+  await expect(page.locator('#sheetBody .news-item')).toHaveCount(14);
   await page.click('#sheetCancel');
   expect(await store(page, () => localStorage.getItem('hayati-seen-version'))).toBe(await store(page, () => App.APP_VERSION));
   await open(page);

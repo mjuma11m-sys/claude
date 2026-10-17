@@ -56,7 +56,7 @@
   ];
 
   const GRADE_POINTS = { 'A': 4, 'A-': 3.67, 'B+': 3.33, 'B': 3, 'B-': 2.67, 'C+': 2.33, 'C': 2, 'C-': 1.67, 'D+': 1.33, 'D': 1, 'F': 0 };
-  const MONEY_SEGS = [['tx', 'العمليات'], ['subs', 'اشتراكات'], ['goals', 'أهداف'], ['debts', 'لي وعلي']];
+  const MONEY_SEGS = [['tx', 'العمليات'], ['accounts', 'حساباتي'], ['subs', 'اشتراكات'], ['goals', 'أهداف'], ['debts', 'لي وعلي']];
   const STUDY_SEGS = [['schedule', 'الجدول'], ['lectures', 'المحاضرات'], ['focus', 'المذاكرة'], ['gpa', 'المعدل'], ['health', 'صحتي']];
   const SUB_PRESETS = [
     ['نتفليكس', 'ترفيه'], ['شاهد', 'ترفيه'], ['سبوتيفاي', 'ترفيه'], ['iCloud', 'فواتير واتصالات'],
@@ -583,7 +583,7 @@
 
   // ================= المصاريف (حاوية الأقسام) =================
   function viewMoney() {
-    return segBar(MONEY_SEGS, ui.moneySeg, 'money-seg') + ({ tx: viewMoneyTx, subs: viewSubs, goals: () => X('goalsTop') + viewGoals(), debts: viewDebts })[ui.moneySeg]();
+    return segBar(MONEY_SEGS, ui.moneySeg, 'money-seg') + ({ tx: viewMoneyTx, subs: viewSubs, goals: () => X('goalsTop') + viewGoals(), debts: viewDebts, accounts: () => X('viewAccounts') })[ui.moneySeg]();
   }
 
   // ================= الاشتراكات =================
@@ -1254,6 +1254,7 @@
         '<div class="amount-box"><input name="amount" inputmode="decimal" placeholder="0.000" value="' + (t.amount !== '' ? Number(t.amount).toFixed((window.HayatiCur ? HayatiCur.dec() : 3)) : '') + '"><small>دينار بحريني</small></div>' +
         '<div class="field"><label>التصنيف</label><div class="cat-grid" id="catGrid">' + catGrid(t.kind, t.category) + '</div></div>' +
         '<div class="field"><label>المحل / الوصف</label><input name="merchant" value="' + h(t.merchant || '') + '" placeholder="مثلاً: طلبات، كوستا، راتب"></div>' +
+        X('txAccountField', t) +
         '<div class="field"><label>الوقت</label><input type="datetime-local" name="occurred_at" value="' + toLocalInput(new Date(t.occurred_at)) + '"></div>' +
         '<div class="field"><label>ملاحظة</label><input name="note" value="' + h(t.note || '') + '" placeholder="اختياري"></div>' +
         (t.raw ? '<div class="field"><label>نص الرسالة</label><div class="raw">' + h(t.raw) + '</div></div>' : '') +
@@ -1294,6 +1295,7 @@
           occurred_at: when ? new Date(when).toISOString() : new Date().toISOString(),
           source: (tx && tx.source) || 'manual',
           needs_review: false,
+          account_id: root.querySelector('[name=account_id]') ? root.querySelector('[name=account_id]').value || null : (tx && tx.account_id) || null,
         }));
         toast(tx ? 'تم التعديل' : 'انضافت ✓');
         if (tx) X('txSaved', savedTx, tx);

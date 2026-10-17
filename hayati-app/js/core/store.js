@@ -5,7 +5,7 @@
   const KEY = 'hayati-v1';
   const CFG_KEY = 'hayati-supabase';
   const TABLES = ['transactions', 'courses', 'tasks', 'subscriptions', 'goals', 'grades', 'study_sessions', 'debts', 'habits', 'daily', 'lifts', 'body', 'cards', 'events', 'shopping', 'journal', 'matches', 'lectures', 'trips'];
-  const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges', 'name', 'roles', 'onboarded', 'payday', 'gold_price', 'today_hide', 'study_level', 'kitchen_fav', 'currency'];
+  const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges', 'name', 'roles', 'onboarded', 'payday', 'gold_price', 'today_hide', 'study_level', 'kitchen_fav', 'currency', 'accounts'];
   // على الجهاز بس (ما تروح لجدول settings بالسيرفر) بس تدخل بالنسخة الاحتياطية (DW-012)
   //   DW-035: يوم الراتب وسعر الذهب وترتيب «اليوم» صارت تتزامن؛ إعدادات العبادة تظل على الجهاز (خصوصية)
   const LOCAL_SETTINGS = ['madhhab', 'khums_start', 'wird', 'hijri_offset', 'tasbih'];
@@ -587,6 +587,12 @@
     if (i >= 0) list[i] = row; else list.push(row);
   }
 
+  function accountFor(body) {
+    const d = global.SmsParser.cardDigits ? global.SmsParser.cardDigits(body) : null;
+    const list = Array.isArray(state.settings.accounts) ? state.settings.accounts : [];
+    const a = d && list.find((x) => x.last2 === d);
+    return a ? a.id : null;
+  }
   function smsToTransaction(body, when, id) {
     const p = global.SmsParser.parse(body);
     if (!p) return null;
@@ -608,6 +614,7 @@
       merchant: p.merchant || null,
       note: note || null,
       occurred_at: p.date ? p.date.toISOString() : when || new Date().toISOString(),   // DW-057: تاريخ العملية من الرسالة نفسها
+      account_id: accountFor(body),   // DW-061: البطاقة أو الحساب من آخر رقمين
       source: 'sms',
       raw: global.SmsParser.mask ? global.SmsParser.mask(body) : body,
       needs_review: p.needs_review,

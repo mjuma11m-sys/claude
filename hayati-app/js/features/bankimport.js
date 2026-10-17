@@ -91,7 +91,7 @@
         if (a) { amt = Math.abs(a); kind = a < 0 ? 'expense' : /\bCR\b|دائن/i.test(String(r[col.amount])) ? 'income' : P.detectKind(desc).kind; }
       }
       if (!amt || !(amt > 0)) continue;
-      if (col.balance != null) { const b = money(r[col.balance]); if (b != null) lastBal = { b, at: d }; }
+      if (col.balance != null) { const b = money(r[col.balance]); if (b != null && (!lastBal || d >= lastBal.at)) lastBal = { b, at: d }; }   // الأحدث (الكشف ممكن يكون من الجديد للقديم)
       out.push({ kind, amount: Math.round(amt * 1000) / 1000, currency: window.HayatiCur ? HayatiCur.code() : 'BHD', merchant: desc.slice(0, 60), category: P.categorize(kind, desc, desc), at: d, review: col.amount != null && !(money(r[col.amount]) < 0) && !P.detectKind(desc).sure });
     }
     return { list: out, balance: lastBal };
@@ -225,6 +225,8 @@
       saveLabel: 'أضف العمليات',
       body: '<p class="small muted" style="margin:0 0 10px">ارفع <b>كشف الحساب</b> من تطبيق البنك (Excel أو CSV أو PDF)، أو <b>ملف رسائل البنك</b> (TXT، أو XML من تطبيق «SMS Backup & Restore» بالأندرويد). كل عملية تنحفظ بتاريخها، والمكرر ما ينضاف.</p>' +
         '<label class="btn primary block" style="margin-bottom:10px">' + I('upload') + 'اختار الملف<input type="file" id="biFile" accept=".xlsx,.csv,.pdf,.txt,.xml,text/csv,text/plain,text/xml,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></label>' +
+        (E.accounts && E.accounts.list().length ? '<div class="field"><label>الحساب</label><select id="biAcc"><option value="">من آخر رقمين بالرسالة، أو بدون</option>' +
+          E.accounts.list().map((a) => '<option data-noi18n value="' + a.id + '">' + h(a.name) + (a.last2 ? ' ••' + h(a.last2) : '') + '</option>').join('') + '</select></div>' : '') +
         '<p class="small muted" id="biStatus" style="margin:6px 4px 10px;min-height:18px"></p><div id="biOut"></div>' +
         '<details class="card" style="margin-top:10px"><summary class="small"><b>وين ألقى الملف؟</b></summary>' +
         '<p class="small" style="margin:8px 0 0">• <b>كشف الحساب:</b> تطبيق البنك ← الحساب ← كشف حساب (Statement) ← اختار الفترة ← صدّره Excel أو PDF ← احفظه بـ «الملفات».</p>' +
@@ -252,14 +254,21 @@
           root.querySelector('#biOut').innerHTML = summary();
         };
       },
-      onSave() {
+      onSave(root) {
+        const accSel = root.querySelector('#biAcc'), acc = accSel && accSel.value ? accSel.value : null;
+        // DW-061: آخر رصيد بالكشف يصير رصيد الحساب (لو أحدث من اللي عندنا)
+        if (acc && res && res.balance && E.accounts) {
+          const a = E.accounts.byId(acc);
+          if (a && (!a.balance_at || new Date(a.balance_at) <= res.balance.at)) S.setSettings({ accounts: E.accounts.list().map((x) => (x.id === acc ? Object.assign({}, x, { balance: res.balance.b, balance_at: res.balance.at.toISOString() }) : x)) });
+        }
         if (!res || !res.fresh.length) { A.toast(res && res.dup ? 'كل العمليات موجودة عندك قبل' : 'اختار الملف أول'); return false; }
         const C = window.HayatiCur, mine = C ? C.code() : 'BHD';
         for (const x of res.fresh) {
           let amount = x.amount, note = 'من ملف الاستيراد';
           if (C && x.currency && x.currency !== mine && C.LIST[x.currency]) { note = 'أصلها ' + x.amount + ' ' + x.currency + ' ≈ بعملتك'; amount = C.convert(x.amount, x.currency, mine); }
           S.upsert('transactions', { kind: x.kind, amount, category: x.category, merchant: x.merchant || null, note, occurred_at: x.at.toISOString(), source: 'import',
-            needs_review: !!x.review, raw: x.raw ? P.mask(x.raw) : null });
+            needs_review: !!x.review, raw: x.raw ? P.mask(x.raw) : null,
+            account_id: acc || ((E.accounts && x.raw && P.cardDigits(x.raw)) ? ((E.accounts.list().find((a) => a.last2 === P.cardDigits(x.raw)) || {}).id || null) : null) });
         }
         A.toast('انضافت ' + res.fresh.length + ' عملية بتواريخها ✓');
       },
