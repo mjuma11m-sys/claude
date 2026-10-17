@@ -1,0 +1,39 @@
+<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><style>
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Bold.ttf);font-weight:700}
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Regular.ttf);font-weight:400}
+*{box-sizing:border-box}html,body{margin:0;width:1080px;height:1920px;overflow:hidden;font-family:P}
+.v{position:absolute;inset:0;display:none}
+body.A #A,body.B #B,body.C #C{display:block}
+.beta{position:absolute;left:50%;transform:translateX(-50%);padding:12px 30px;border-radius:999px;font-size:34px;font-weight:700;white-space:nowrap}
+.demo{position:absolute;top:1430px;left:0;right:0;text-align:center;font-size:28px;opacity:.7}
+/* A: أيقونة كبيرة بالنص */
+#A{background:radial-gradient(90% 60% at 50% 45%,#16626a 0%,#0E3B43 45%,#081a1e 100%);color:#E8DCC4}
+#A img{position:absolute;top:470px;left:50%;width:330px;margin-left:-165px;border-radius:76px;box-shadow:0 50px 90px -30px rgba(0,0,0,.8)}
+#A h1{position:absolute;top:840px;left:0;right:0;margin:0;text-align:center;font-size:120px;line-height:1.1}
+#A h1 span{color:#FF6B4A}
+#A .beta{top:1250px;border:3px solid rgba(232,220,196,.45);color:#E8DCC4}
+/* B: قائمة الضغط المطوّل */
+#B{background:linear-gradient(160deg,#1d6b73 0%,#0E3B43 50%,#081a1e 100%);color:#fff}
+#B .ic{position:absolute;top:520px;right:150px;width:200px;height:200px;border-radius:46px;overflow:hidden;box-shadow:0 30px 60px -10px rgba(0,0,0,.6)}
+#B .ic img{width:100%;height:100%}
+#B .menu{position:absolute;top:760px;right:150px;width:600px;border-radius:44px;background:rgba(40,52,55,.95);overflow:hidden;box-shadow:0 40px 80px -20px rgba(0,0,0,.7)}
+#B .menu div{display:flex;justify-content:space-between;padding:34px 44px;font-size:50px;font-weight:700;border-bottom:2px solid rgba(255,255,255,.12)}
+#B .menu div:last-child{border:0}#B .menu div.hi{background:rgba(255,107,74,.9)}
+#B h1{position:absolute;top:470px;left:90px;margin:0;font-size:96px;line-height:1.08;text-align:left;direction:rtl;width:420px}
+#B h1 span{color:#FF6B4A}
+#B .beta{top:1300px;border:3px solid rgba(255,255,255,.4)}
+/* C: فاتح لؤلؤي */
+#C{background:#E8DCC4;color:#0E3B43}
+#C h1{position:absolute;top:470px;left:0;right:0;margin:0;text-align:center;font-size:118px;line-height:1.08}
+#C h1 span{color:#FF6B4A}
+#C .ph{position:absolute;top:780px;left:50%;width:520px;height:570px;margin-left:-260px;border-radius:70px 70px 0 0;background:#0b1416;padding:14px 14px 0;overflow:hidden;box-shadow:0 -10px 60px -20px rgba(14,59,67,.5)}
+#C .ph img{width:100%;border-radius:58px 58px 0 0}
+#C .beta{top:1370px;background:#0E3B43;color:#E8DCC4;z-index:2}
+#C .demo{top:1448px}
+</style></head><body>
+<div class="v" id="A"><img src="icon.png"><h1>حياتي<br>صار على <span>الآيفون</span></h1><div class="beta">🛠️ قيد التطوير · نسخة تجريبية</div></div>
+<div class="v" id="B"><h1>اضغط<br>مطوّل…<br><span>وسجّل</span></h1><div class="ic"><img src="icon.png"></div>
+<div class="menu"><div class="hi">+ مصروف<span>＋</span></div><div>الصق رسالة<span>📋</span></div><div>اسأل حياتي<span>🔎</span></div></div>
+<div class="beta">🛠️ قيد التطوير · نسخة تجريبية</div><div class="demo">* رسم توضيحي</div></div>
+<div class="v" id="C"><h1>حياتي على<br><span>الآيفون</span> 📱</h1><div class="ph"><img src="shots/01_today.png"></div><div class="beta">🛠️ قيد التطوير · نسخة تجريبية</div><div class="demo">* لقطات ببيانات تجريبية</div></div>
+</body></html>
