@@ -3,12 +3,12 @@
 // كل اللقطات ببيانات تجريبية، مو بيانات أحد، ومكتوب عليها كذا.
 const { chromium } = require('../node_modules/@playwright/test');
 const fs = require('fs'), path = require('path');
-const D = __dirname, OUT = path.join(D, 'out'), RAW = path.join(D, 'raw');
+const D = __dirname, OUT = path.join(D, 'out'), RAW = path.join(D, 'raw'), RAW_IPAD = path.join(D, 'raw-ipad');
 const APP = 'file://' + path.join(D, '../dist/Hayati.html');
 const FONT = path.join(__dirname, '../brand/fonts');
 const ICON = fs.readFileSync(path.join(D, '../brand/icon-square.svg'), 'utf8');
 const GLYPH = ICON.replace(/<\?xml[^>]*>|<svg[^>]*>|<\/svg>|<rect[^>]*\/>|<!--[^>]*-->/g, '');
-fs.mkdirSync(OUT, { recursive: true }); fs.mkdirSync(RAW, { recursive: true });
+fs.mkdirSync(OUT, { recursive: true }); fs.mkdirSync(RAW, { recursive: true }); fs.mkdirSync(RAW_IPAD, { recursive: true });
 
 // نفس البيانات التجريبية «الطبيعية» حق الإعلان (videos/hayati-ad/seed.js)
 const seed = require('./seed.js');
@@ -23,8 +23,8 @@ const SHOTS = [
   ['07_tools', 'كل شي', 'بمكان واحد', 'الفلوس · يومك · الدراسة والصحة · العبادة'],
 ];
 
-async function raw(b) {
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, locale: 'ar-BH', timezoneId: 'Asia/Bahrain', colorScheme: 'light' });
+async function raw(b, vw = 390, vh = 844, dsf = 3, dir = RAW) {
+  const ctx = await b.newContext({ viewport: { width: vw, height: vh }, deviceScaleFactor: dsf, locale: 'ar-BH', timezoneId: 'Asia/Bahrain', colorScheme: 'light' });
   // نسخة المتجر أندرويد أصلية: Capacitor مزيّف عشان تطلع أزرارها (التنبيهات)
   const APPV = /const APP_VERSION = '(v\d+)'/.exec(fs.readFileSync(path.join(D, '../js/core/app.js'), 'utf8'))[1];
   await ctx.addInitScript((APPV) => {
@@ -34,7 +34,7 @@ async function raw(b) {
     localStorage.setItem('hayati-seen-version', APPV);     // «جديد بحياتي» ما تغطي اللقطات
   }, APPV);
   const p = await ctx.newPage();
-  const shot = async (n) => { await p.waitForTimeout(700); await p.screenshot({ path: path.join(RAW, n + '.png') }); };
+  const shot = async (n) => { await p.waitForTimeout(700); await p.screenshot({ path: path.join(dir, n + '.png') }); };
   await p.goto(APP); await p.waitForFunction(() => window.App && App.st);
   await p.addStyleTag({ content: '.morning{display:none!important}' });
   await p.evaluate(seed);
@@ -73,6 +73,17 @@ function storeShot([n, a, c, sub], w, h) {
 <div style="position:absolute;right:${Math.round(60 * s)}px;bottom:${Math.round(50 * s)}px;font-size:${Math.round(34 * s)}px;font-weight:400;padding:${Math.round(10 * s)}px ${Math.round(22 * s)}px;border-radius:${Math.round(14 * s)}px;background:rgba(10,26,30,.85)">* لقطات ببيانات تجريبية</div></body></html>`;
 }
 
+// لقطة آيباد 13": نفس العنوان، والشاشة داخل إطار آيباد
+function ipadShot([n, a, c, sub], w, h) {
+  const s = w / 2064, inner = Math.round(1560 * s), bz = Math.round(36 * s), top = Math.round(560 * s);
+  return head(w, h) + `<div style="position:absolute;left:0;right:0;top:${Math.round(150 * s)}px;text-align:center;line-height:1.1">
+<div style="font-size:${Math.round(150 * s)}px;white-space:nowrap">${a}${c ? ' <b>' + c + '</b>' : ''}</div>
+<div style="font-size:${Math.round(72 * s)}px;font-weight:400;margin-top:${Math.round(30 * s)}px;opacity:.9">${sub}</div></div>
+<div style="position:absolute;left:50%;top:${top}px;width:${inner + 2 * bz}px;margin-left:${-(inner + 2 * bz) / 2}px;padding:${bz}px;border-radius:${Math.round(90 * s)}px;background:#0b1416;box-shadow:0 50px 140px -30px rgba(0,0,0,.8),inset 0 0 0 ${Math.max(2, Math.round(5 * s))}px #2a4a50">
+<img src="file://${RAW_IPAD}/${n}.png" style="width:100%;display:block;border-radius:${Math.round(56 * s)}px"></div>
+<div style="position:absolute;right:${Math.round(60 * s)}px;bottom:${Math.round(24 * s)}px;font-size:${Math.round(34 * s)}px;font-weight:400;opacity:.8">* لقطات ببيانات تجريبية</div></body></html>`;
+}
+
 const iconPage = (size, pad, bg = true) => `<!doctype html><html><body style="margin:0;width:${size}px;height:${size}px;overflow:hidden;background:#0E3B43">
 <svg viewBox="0 0 512 512" style="position:absolute;left:${pad}px;top:${pad}px;width:${size - 2 * pad}px;height:${size - 2 * pad}px">${GLYPH}</svg></body></html>`;
 
@@ -83,7 +94,9 @@ const feature = head(1024, 500) + `<svg viewBox="0 0 512 512" style="position:ab
 
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.PW_CHROMIUM || '/opt/pw-browsers/chromium' });
-  if (!process.env.SKIP_RAW) await raw(b);   // SKIP_RAW=1: نعيد التركيب من store/raw بدون ما نصوّر من جديد
+  if (!process.env.SKIP_RAW) await raw(b);
+  // iPad 13" (التطبيق يدعم الآيباد TARGETED_DEVICE_FAMILY 1,2 فـ Apple تطلب صوره): 1032×1376 ×2 = 2064×2752
+  if (!process.env.SKIP_RAW) await raw(b, 1032, 1376, 2, RAW_IPAD);   // SKIP_RAW=1: نعيد التركيب من store/raw بدون ما نصوّر من جديد
   const p = await b.newPage();
   const tmp = path.join(D, '_page.html');
   const render = async (html, w, h, file, type = 'png') => {
@@ -97,6 +110,7 @@ const feature = head(1024, 500) + `<svg viewBox="0 0 512 512" style="position:ab
     await render(storeShot(s, 1290, 2796), 1290, 2796, 'ios-' + s[0] + '.png');
     // App Store Connect 2026: خانة «iPhone with Dynamic Island (medium display)» تقبل 1206×2622 أو 1179×2556 بس
     await render(storeShot(s, 1206, 2622), 1206, 2622, 'ios63-' + s[0] + '.png');
+    await render(ipadShot(s, 2064, 2752), 2064, 2752, 'ipad13-' + s[0] + '.png');
     await render(storeShot(s, 1080, 1920), 1080, 1920, 'android-' + s[0] + '.png');
   }
   await render(iconPage(1024, 0), 1024, 1024, 'icon-ios-1024.png');
