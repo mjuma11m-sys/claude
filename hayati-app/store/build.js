@@ -26,10 +26,13 @@ const SHOTS = [
 async function raw(b) {
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, locale: 'ar-BH', timezoneId: 'Asia/Bahrain', colorScheme: 'light' });
   // نسخة المتجر أندرويد أصلية: Capacitor مزيّف عشان تطلع أزرارها (التنبيهات)
-  await ctx.addInitScript(() => {
+  const APPV = /const APP_VERSION = '(v\d+)'/.exec(fs.readFileSync(path.join(D, '../js/core/app.js'), 'utf8'))[1];
+  await ctx.addInitScript((APPV) => {
     window.Capacitor = { isNativePlatform: () => true, Plugins: { LocalNotifications: { checkPermissions: async () => ({ display: 'granted' }), getPending: async () => ({ notifications: [] }), cancel: async () => {}, schedule: async () => {} }, Haptics: { impact: async () => {} } } };
     localStorage.setItem('hayati-loop-ask', 'yes');
-  });
+    localStorage.setItem('hayati-account-step', 'skip');   // DW-050: شاشة الدخول أول مرة ما تطلع باللقطات
+    localStorage.setItem('hayati-seen-version', APPV);     // «جديد بحياتي» ما تغطي اللقطات
+  }, APPV);
   const p = await ctx.newPage();
   const shot = async (n) => { await p.waitForTimeout(700); await p.screenshot({ path: path.join(RAW, n + '.png') }); };
   await p.goto(APP); await p.waitForFunction(() => window.App && App.st);
@@ -80,7 +83,7 @@ const feature = head(1024, 500) + `<svg viewBox="0 0 512 512" style="position:ab
 
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.PW_CHROMIUM || '/opt/pw-browsers/chromium' });
-  await raw(b);
+  if (!process.env.SKIP_RAW) await raw(b);   // SKIP_RAW=1: نعيد التركيب من store/raw بدون ما نصوّر من جديد
   const p = await b.newPage();
   const tmp = path.join(D, '_page.html');
   const render = async (html, w, h, file, type = 'png') => {
@@ -92,6 +95,8 @@ const feature = head(1024, 500) + `<svg viewBox="0 0 512 512" style="position:ab
   };
   for (const s of SHOTS) {
     await render(storeShot(s, 1290, 2796), 1290, 2796, 'ios-' + s[0] + '.png');
+    // App Store Connect 2026: خانة «iPhone with Dynamic Island (medium display)» تقبل 1206×2622 أو 1179×2556 بس
+    await render(storeShot(s, 1206, 2622), 1206, 2622, 'ios63-' + s[0] + '.png');
     await render(storeShot(s, 1080, 1920), 1080, 1920, 'android-' + s[0] + '.png');
   }
   await render(iconPage(1024, 0), 1024, 1024, 'icon-ios-1024.png');
