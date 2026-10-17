@@ -206,6 +206,13 @@ test('kitchen: recipe scales with people and missing items go to shopping', asyn
   await expect.poll(() => store(page, () => App.st.shopping.map((x) => [x.name, x.qty]))).toEqual(expect.arrayContaining([['دجاجة مقطّعة 4 قطع', '1½ حبة'], ['رز بسمتي', '4½ كوب']]));
   const q = await page.evaluate(() => [Extras._kitchenQty(500, 'غرام', 3), Extras._kitchenQty(1, 'كغ', 0.25), Extras._kitchenQty(0.25, 'م.ص', 0.5), Extras._kitchenQty(4, 'حبة', 0.25)]);
   expect(q).toEqual(['1½ كغ', '250 غرام', '¼ م.ص', '1 حبة']);
+  // DW-060: 50 وصفة، كل وحدة كاملة (مقادير بوحدات معروفة وخطوات ونصيحة)
+  const bad = await page.evaluate(() => {
+    const U = ['حبة', 'فص', 'عود', 'علبة', 'شريحة', 'كوب', 'م.ك', 'م.ص', 'غرام', 'كغ', ''];
+    return window.HAYATI_RECIPES.filter((r) => !(r.name && r.steps.length >= 2 && r.ing.length >= 2 && r.tip && r.serves > 0 && r.ing.every((x) => U.includes(x[1]) && (x[0] == null || x[0] > 0)))).map((r) => r.id);
+  });
+  expect(bad).toEqual([]);
+  expect(await page.evaluate(() => window.HAYATI_RECIPES.length)).toBe(50);
 });
 
 // DW-057: الرسالة القديمة تنحفظ بتاريخها، وكذا رسالة مرة وحدة، ونفس الرسالة ما تنضاف مرتين

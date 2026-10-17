@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 60,
+  "next": 64,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -472,6 +472,38 @@
       "owner": "CEO",
       "priority": "P1",
       "status": "review",
+      "opened": "2026-10-17",
+      "updated": "2026-10-17"
+    },
+    "DW-060": {
+      "title": "المطبخ: 25 وصفة زيادة (50 بالمجموع)",
+      "owner": "CEO",
+      "priority": "P2",
+      "status": "review",
+      "opened": "2026-10-17",
+      "updated": "2026-10-17"
+    },
+    "DW-061": {
+      "title": "الحسابات والبطاقات: رصيد وميزانية لكل حساب، والعمليات تنربط بالبطاقة من آخر رقمين",
+      "owner": "CEO",
+      "priority": "P2",
+      "status": "new",
+      "opened": "2026-10-17",
+      "updated": "2026-10-17"
+    },
+    "DW-062": {
+      "title": "شارك الملف ← حياتي: كشف الحساب أو أي ملف من الواتساب والإيميل",
+      "owner": "CEO",
+      "priority": "P2",
+      "status": "new",
+      "opened": "2026-10-17",
+      "updated": "2026-10-17"
+    },
+    "DW-063": {
+      "title": "الأندرويد: Health Connect + ودجت الجدول الكامل",
+      "owner": "CEO",
+      "priority": "P2",
+      "status": "new",
       "opened": "2026-10-17",
       "updated": "2026-10-17"
     }

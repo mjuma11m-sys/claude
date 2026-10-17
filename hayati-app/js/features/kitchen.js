@@ -11,7 +11,7 @@
 
   const CATS = [['all', 'الكل'], ['fav', '❤️ المفضلة'], ['main', 'الغدا'], ['breakfast', 'الفطور'], ['sweet', 'الحلا'], ['drink', 'المشروبات'], ['side', 'جانبي']];
   const LEVEL = ['', 'سهلة', 'متوسطة'];
-  const COUNT = ['حبة', 'فص', 'عود', 'علبة'];
+  const COUNT = ['حبة', 'فص', 'عود', 'علبة', 'شريحة'];
   const ui = { cat: 'all', q: '' };
   const favs = () => (Array.isArray(st.settings.kitchen_fav) ? st.settings.kitchen_fav : []);
 
