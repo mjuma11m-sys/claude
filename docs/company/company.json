@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 65,
+  "next": 66,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -512,6 +512,14 @@
       "owner": "CEO",
       "priority": "P1",
       "status": "blocked",
+      "opened": "2026-10-17",
+      "updated": "2026-10-17"
+    },
+    "DW-065": {
+      "title": "قارئ PDF بالمواقع: جداول الجامعات (خط مكسور، يمين←يسار) وبرامج التمرين من البوربوينت",
+      "owner": "CEO",
+      "priority": "P1",
+      "status": "review",
       "opened": "2026-10-17",
       "updated": "2026-10-17"
     }

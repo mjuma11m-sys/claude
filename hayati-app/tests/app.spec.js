@@ -178,6 +178,40 @@ test('timetable: a work roster with a day range and a training schedule', async 
   ]));
 });
 
+// DW-065: قارئ PDF بالمواقع: جدول من موقع (خط أرقامه مكسور، يمين ← يسار، أيام مقلوبة) وبرنامج تمرين من بوربوينت
+test('PDF position reader: broken-font university table and a PowerPoint workout program', async ({ page }) => {
+  await open(page);
+  const r = await page.evaluate(() => {
+    const R = window.HayatiPdfRead;
+    const it = (s, x, y, p = 1) => ({ s: R.fix(s), x, y, p, w: 600 });
+    // صفين لكل يوم؛ العنوان مقلوب، والأوقات مشفّرة (\u0013 = 0، \u0014 = 1)، والصف الثاني اسمه ملفوف
+    const sched = [
+      it('دحألا موي', 467, 679), it('\u00138:\u0013\u0013', 511, 614), it('\u00139:\u0013\u0013 - ', 452, 614), it('MATH101', 358, 614), it('- Calculus', 263, 614), it('2\u00136', 183, 614), it('DR TEST ONE', 59, 614),
+      it('دحألا موي نثإلا موي', 455, 492), it('\u0014\u0014:\u0013\u0013', 511, 427), it('\u00142:3\u0013', 511, 413), it('ACCT201', 401, 427), it('- Principles of', 325, 427), it('Accounting', 379, 413), it('3\u00134', 243, 420),
+      it('دحألا موي ثالثلا موي', 455, 773, 2), it('\u00132:\u0013\u0013', 511, 700, 2), it('\u00133:3\u0013', 452, 700, 2), it('ACCT201', 401, 700, 2), it('- Principles of', 325, 700, 2), it('Accounting', 379, 690, 2), it('3\u00134', 243, 700, 2),
+    ];
+    const W = (s, x, y, p) => ({ s, x, y, p, w: 2471 });
+    const prog = [
+      W('تماريه', 1234, 1058, 1), W('يوم', 1041, 1058, 1), W('السبت', 729, 1058, 1), W('(', 1530, 942, 1), W('يوم', 1359, 942, 1), W('الذفع', 1084, 942, 1), W('يشمل', 780, 942, 1), W(')', 750, 942, 1),
+      W(')', 685, 822, 1), W('تراى', 737, 822, 1), W('+', 966, 822, 1), W('صذر', 1364, 822, 1), W('(', 1561, 822, 1),
+      W('1-', 1584, 1108, 2), W('smith', 1631, 1108, 2), W('FLAT CHEST PRESS', 1748, 1108, 2),
+      W('1', 1730, 991, 2), W('2', 1828, 991, 2), W('3', 1926, 991, 2), W('x', 2122, 994, 2), W('15', 1719, 902, 2), W('12', 1815, 907, 2), W('10', 1912, 906, 2), W('x', 2122, 910, 2), W('دقيقتني', 1233, 693, 2),
+      W('2- PLANK', 517, 659, 2), W('1', 664, 546, 2), W('2', 762, 546, 2), W('60', 643, 457, 2), W('60', 741, 457, 2), W('دقيقة', 210, 248, 2),
+    ];
+    return { s: R.schedule(sched), w: R.workout(prog), day: [R.dayIn('األربعاء'), R.dayIn('دحألا موي مخلا موي')] };
+  });
+  expect(r.s).toEqual([
+    { name: 'MATH101 Calculus', days: [0], start: '08:00', end: '09:00', room: '206' },
+    { name: 'ACCT201 Principles of Accounting', days: [1], start: '11:00', end: '12:30', room: '304' },
+    { name: 'ACCT201 Principles of Accounting', days: [2], start: '14:00', end: '15:30', room: '304' },
+  ]);
+  expect(r.w).toEqual([{ day: 6, name: 'يوم الدفع', focus: 'صدر + تراي', exercises: [
+    { name: 'smith FLAT CHEST PRESS', sets: ['15', '12', '10'], rest: 120 },
+    { name: 'PLANK', sets: ['60ث', '60ث'], rest: 60 },
+  ] }]);
+  expect(r.day).toEqual([3, 4]);
+});
+
 test('timetable image without an account asks to sign in or paste text', async ({ page }) => {
   await open(page);
   await store(page, () => App.S.setSettings({ onboarded: true, roles: ['keeper', 'athlete'] }));   // يطلع حتى لو ملفه مو «طالب»

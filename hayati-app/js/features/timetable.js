@@ -122,7 +122,7 @@
       const key = [name.toLowerCase(), start, end, room].join('|');
       const g = groups.get(key);
       if (g) g.days = [...new Set(g.days.concat(days))];
-      else groups.set(key, { name, days, start, end, room });
+      else groups.set(key, { name, days, start, end, room, workout: c.workout || null });
     }
     return [...groups.values()].map((c) => {
       c.days.sort();
@@ -194,7 +194,7 @@
     const draw = () => rows.length ? '<div class="card flush"><ul class="list">' + rows.map((r, i) =>
       '<li class="row" style="cursor:default"><button type="button" class="check' + (r.on ? ' on' : '') + '" data-i="' + i + '" aria-label="ضمّن">' + I('check') + '</button>' +
       '<div class="ico" style="' + tint(KINDS[k].color || A.COLORS[i % A.COLORS.length]) + '">' + I(KINDS[k].icon) + '</div><div class="main"><div class="title"><span class="t">' + h(r.name) + '</span>' +
-      (r.exists ? ' <small class="muted">موجودة</small>' : '') + '</div><div class="sub">' + dayList(r.days) + ' · <bdi>' + A.time12(r.start) + (r.end ? ' – ' + A.time12(r.end) : '') + '</bdi>' +
+      (r.exists ? ' <small class="muted">موجودة</small>' : '') + '</div><div class="sub">' + dayList(r.days) + ' · <bdi>' + A.time12(r.start) + (r.end ? ' – ' + A.time12(r.end) : '') + '</bdi>' + (r.workout ? ' · ' + r.workout.exercises.length + ' تمارين' + (r.workout.focus ? ' (' + h(r.workout.focus) + ')' : '') : '') +
       (r.room ? ' · ' + h(r.room) : '') + '</div></div></li>').join('') + '</ul></div>' +
       '<p class="small muted" style="margin:8px 4px 0">شيّك عليها قبل الحفظ: شيل الصح عن أي مادة غلط، وتقدر تعدّل أي وحدة بعدين من الجدول.</p>' : '';
     A.openSheet({
@@ -224,7 +224,23 @@
             if (!file && !text) { status('ارفع صورة أو PDF، أو الصق الجدول أول'); return; }
             if (file && isPdf && file.size > PDF_MAX) { status('الملف كبير · الحد 6MB'); return; }
             let list = null;
-            if (file && (isImg || isPdf) && signedIn()) {
+            // DW-065: PDF ← القارئ بالمواقع أول (بالجهاز): جدول جامعة أو برنامج تمرين بتماريه
+            if (file && isPdf && window.HayatiPdfRead) {
+              status('أقرا الـPDF…');
+              try {
+                const its = await HayatiPdfRead.items(file);
+                const plans = HayatiPdfRead.workout(its);
+                if (plans.length) {
+                  if (k !== 'gym') { k = 'gym'; root.querySelectorAll('#ttKind button').forEach((b) => b.classList.toggle('on', b.dataset.k === 'gym')); }
+                  list = plans.filter((p) => p.day != null).map((p) => ({ name: p.name || KINDS.gym.def, days: [p.day], start: '18:00', end: '19:30', room: '',
+                    workout: { focus: p.focus, exercises: p.exercises } }));
+                } else {
+                  const sc = HayatiPdfRead.schedule(its);
+                  if (sc.length) list = sc;
+                }
+              } catch (e) { /* نكمّل بالطرق الثانية */ }
+            }
+            if (!list && file && (isImg || isPdf) && signedIn()) {
               status(isPdf ? '✨ نقرا الملف… (نص دقيقة تقريباً)' : '✨ نقرا الصورة…');
               try {
                 const image = isImg ? await shrink(file) : await toB64(file);
@@ -241,7 +257,6 @@
               catch (e) { status('ما قدرنا نقرا الصورة · الصق الجدول كنص'); return; }
             }
             if (!list && file && isPdf) {
-              status('أقرا الـPDF…');
               try { list = localParse(await pdfText(file), KINDS[k].def); } catch (e) { status('ما قدرت أفتح الـPDF · خذ له سكرين شوت'); return; }
             }
             if (!list && file && !isImg && !isPdf) list = localParse(await file.text(), KINDS[k].def);
@@ -254,7 +269,8 @@
             }
             rows = clean(list);
             const fresh = rows.filter((r) => r.on).length;
-            status(rows.length ? 'لقيت ' + rows.length + (rows.length === 1 ? KINDS[k].one : KINDS[k].many) + (fresh < rows.length ? ' (' + (rows.length - fresh) + ' موجودة عندك)' : '') :
+            const wk = rows.some((r) => r.workout);
+            status(wk ? 'لقيت برنامج تمرين: ' + rows.length + ' أيام · الوقت 6–7:30 المسا افتراضي، عدّله بعدين من الجدول' : rows.length ? 'لقيت ' + rows.length + (rows.length === 1 ? KINDS[k].one : KINDS[k].many) + (fresh < rows.length ? ' (' + (rows.length - fresh) + ' موجودة عندك)' : '') :
               'ما لقيت أيام وأوقات واضحة · جرّب سكرين شوت أوضح، أو اكتب كل مادة بسطر: الاسم، الأيام، الوقت');
             show();
           } finally { btn.disabled = false; }
@@ -264,7 +280,8 @@
         const pick = rows.filter((r) => r.on);
         if (!pick.length) { A.toast('ما فيه مواد مختارة'); return false; }
         const base = st.courses.length;
-        pick.forEach((r, i) => S.upsert('courses', { name: r.name || KINDS[k].def, type: KINDS[k].type, days: r.days, start_time: r.start, end_time: r.end || null, room: r.room || null, color: KINDS[k].color || A.COLORS[(base + i) % A.COLORS.length], source: 'timetable' }));
+        pick.forEach((r, i) => S.upsert('courses', { name: r.name || KINDS[k].def, type: KINDS[k].type, days: r.days, start_time: r.start, end_time: r.end || null, room: r.room || null, color: KINDS[k].color || A.COLORS[(base + i) % A.COLORS.length], source: 'timetable',
+          workout: r.workout || undefined }));
         A.ui.studySeg = 'schedule';
         A.toast('انضاف ' + pick.length + (pick.length === 1 ? KINDS[k].one : KINDS[k].many) + ' لجدولك ✓ — لا تنسى تحدّث التقويم');
       },

@@ -2129,4 +2129,8 @@ window.HAYATI_EN = {
 "بدون": "None",
 "من آخر رقمين بالرسالة، أو بدون": "By the last two digits in the message, or none",
 "عملية بدون حساب. افتح أي عملية واختار حسابها، أو استخدم «اربط القديمة» بالحساب.": "transactions without an account. Open any transaction to pick its account, or use \"Link old ones\" in the account.",
+// DW-065: قارئ PDF بالمواقع
+"لقيت برنامج تمرين:": "Found a workout program:",
+"أيام · الوقت 6–7:30 المسا افتراضي، عدّله بعدين من الجدول": "days · default time 6–7:30 pm, change it later from the schedule",
+"دراسة أو دوام أو تمارين: PDF أو سكرين شوت أو نص. برنامج المدرب PDF ينضاف بتمارينه وجولاته": "Study, work or training: PDF, screenshot or text. A coach's PDF program comes in with its exercises and sets",
 };
