@@ -171,7 +171,46 @@
    * يحلل نص رسالة ويرجّع عملية، أو null إذا الرسالة مو عملية مالية
    * { kind, amount, currency, merchant, category, needs_review }
    */
-  function parse(raw) {
+  // ================= تاريخ العملية من نص الرسالة (DW-057) =================
+  // 11/10/26 · 11/10/2026 · 11-10-2026 · 2026-10-11 · 11-OCT-26 · 11 Oct 2026 · 11 أكتوبر · بتاريخ ١١/١٠ (بدون سنة = آخر مرة مرّ هالتاريخ)
+  // البحرين يوم/شهر؛ لو الرقم الثاني فوق 12 يعني شهر/يوم. الوقت (14:32 أو 2:32 PM) لو موجود.
+  const MON = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, sept: 9, oct: 10, nov: 11, dec: 12,
+    'يناير': 1, 'فبراير': 2, 'مارس': 3, 'أبريل': 4, 'ابريل': 4, 'مايو': 5, 'يونيو': 6, 'يوليو': 7, 'أغسطس': 8, 'اغسطس': 8,
+    'سبتمبر': 9, 'أكتوبر': 10, 'اكتوبر': 10, 'نوفمبر': 11, 'ديسمبر': 12 };
+  const MON_RE = Object.keys(MON).sort((a, b) => b.length - a.length).join('|');
+  const DATE_RES = [
+    [new RegExp('(?<![\\d.])(\\d{4})[-/.](\\d{1,2})[-/.](\\d{1,2})(?!\\d)'), (m) => [m[3], m[2], m[1]]],
+    [new RegExp('(?<![\\d.])(\\d{1,2})[-\\s/]?(' + MON_RE + ')\\.?[-\\s/,]*(\\d{4}|\\d{2})?(?![\\d])', 'i'), (m) => [m[1], MON[m[2].toLowerCase()], m[3]]],
+    [new RegExp('(?<![\\d.:])(\\d{1,2})[/-](\\d{1,2})[/-](\\d{4}|\\d{2})(?![\\d/])'), (m) => [m[1], m[2], m[3]]],
+    [new RegExp('(?<![\\d.:])(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})(?!\\d)'), (m) => [m[1], m[2], m[3]]],
+    [new RegExp('(?:on|dated|date|بتاريخ|تاريخ|في)\\s*:?\\s*(\\d{1,2})[/-](\\d{1,2})(?![\\d/.])', 'i'), (m) => [m[1], m[2], null]],
+  ];
+  function findDate(text, now) {
+    now = now || new Date();
+    for (const [re, pick] of DATE_RES) {
+      const m = re.exec(text);
+      if (!m) continue;
+      let [d, mo, y] = pick(m).map((x) => (x == null || x === '' ? null : Number(x)));
+      if (mo > 12 && d <= 12) [d, mo] = [mo, d];
+      if (!(d >= 1 && d <= 31 && mo >= 1 && mo <= 12)) continue;
+      const noYear = y == null;
+      if (noYear) y = now.getFullYear(); else if (y < 100) y += 2000;
+      const t = (text.slice(m.index + m[0].length, m.index + m[0].length + 25).match(/^[\s,،T@at-]*(\d{1,2}):(\d{2})(?::\d{2})?\s*(am|pm|ص|م)?/i)
+        || text.match(/(?<![\d.])(\d{1,2}):(\d{2})(?::\d{2})?\s*(am|pm|ص|م)?(?![\d.])/i));
+      let H = 12, M = 0;
+      if (t) { H = Number(t[1]) % 24; M = Number(t[2]); if (t[3] && /pm|م/i.test(t[3]) && H < 12) H += 12; if (t[3] && /am|ص/i.test(t[3]) && H === 12) H = 0; }
+      let at = new Date(y, mo - 1, d, H, M);
+      if (at.getMonth() !== mo - 1) continue;   // 31/02
+      if (noYear && at - now > 864e5) at = new Date(y - 1, mo - 1, d, H, M);
+      if (at - now > 864e5 || now - at > 400 * 864e5) continue;   // مستقبل أو أقدم من سنة: مو تاريخ العملية
+      // تاريخ بدون وقت وهو اليوم = الحين
+      if (!t && at.toDateString() === now.toDateString()) at = new Date(now);
+      return at;
+    }
+    return null;
+  }
+
+  function parse(raw, now) {
     if (!raw) return null;
     const text = normalizeDigits(raw).replace(/\u200f|\u200e/g, '');
     if (IGNORE_WORDS.test(text)) return null;
@@ -186,6 +225,7 @@
       merchant,
       category: categorize(kind, text, merchant),
       needs_review: !sure || amt.currency !== 'BHD',
+      date: findDate(text, now),
     };
   }
 
@@ -281,7 +321,7 @@
       .replace(/[xX*]{2,}(?=\s|$)/g, '••');
   }
 
-  const api = { parse, quick, categorize, learn, learnedFor, setLearned, LEARN_KEY, mask, brand, groupByBrand, BRANDS, CATEGORY_RULES, INCOME_CATEGORY_RULES };
+  const api = { parse, findDate, quick, categorize, learn, learnedFor, setLearned, LEARN_KEY, mask, brand, groupByBrand, BRANDS, CATEGORY_RULES, INCOME_CATEGORY_RULES };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else global.SmsParser = api;
 })(typeof window !== 'undefined' ? window : globalThis);

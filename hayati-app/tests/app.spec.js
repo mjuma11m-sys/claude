@@ -208,6 +208,31 @@ test('kitchen: recipe scales with people and missing items go to shopping', asyn
   expect(q).toEqual(['1½ كغ', '250 غرام', '¼ م.ص', '1 حبة']);
 });
 
+// DW-057: الرسالة القديمة تنحفظ بتاريخها، وكذا رسالة مرة وحدة، ونفس الرسالة ما تنضاف مرتين
+test('bank messages keep their own date, several at once, and no duplicates', async ({ page }) => {
+  await open(page);
+  await store(page, () => App.S.setSettings({ sms_consent_at: new Date().toISOString() }));
+  // التواريخ بساعة المتصفح (البحرين)، مو ساعة جهاز الاختبار
+  const D = await page.evaluate(() => [3, 1, 0].map((n) => { const d = new Date(); d.setDate(d.getDate() - n); return { s: d.toDateString(), dmy: String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear() }; }));
+  const one = 'Purchase of BHD 3.750 at COSTA COFFEE on ' + D[0].dmy + ' 09:15';
+  await store(page, () => App.pasteSmsForm());
+  await page.fill('#sheetBody [name=sms]', one);
+  await expect(page.locator('#smsWhenNote')).toContainText('من الرسالة');
+  await page.click('#sheetSave');
+  await expect(page.locator('#toast')).toContainText('انضافت بتاريخ');
+  let tx = await store(page, () => App.st.transactions.map((t) => [new Date(t.occurred_at).toDateString(), new Date(t.occurred_at).getHours()]));
+  expect(tx[0]).toEqual([D[0].s, 9]);
+  await page.waitForTimeout(350);
+  await store(page, () => App.pasteSmsForm());
+  await page.fill('#sheetBody [name=sms]', one + '\n\nBHD 5.250 debited at TALABAT on ' + D[1].dmy + '\n\nPurchase of BHD 1.000 at CAFE');
+  await expect(page.locator('#smsPreview')).toContainText('مضافة قبل');
+  await page.click('#sheetSave');
+  await expect(page.locator('#toast')).toContainText('انضافت 2 عمليات');
+  tx = await store(page, () => App.st.transactions.map((t) => [t.amount, new Date(t.occurred_at).toDateString()]));
+  expect(tx).toEqual(expect.arrayContaining([[3.75, D[0].s], [5.25, D[1].s], [1, D[2].s]]));
+  expect(tx.length).toBe(3);
+});
+
 test('weekly report shows on Friday evening and opens', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-10-16T20:00:00+03:00') });
   await open(page);
@@ -1697,7 +1722,7 @@ test('«جديد بحياتي»: an existing user sees what is new once after th
   await store(page, () => localStorage.setItem('hayati-seen-version', 'v23'));   // كان على النسخة اللي قبل
   await open(page);
   await expect(page.locator('#sheetTitle')).toHaveText('جديد بحياتي ✨', { timeout: 5000 });
-  await expect(page.locator('#sheetBody .news-item')).toHaveCount(10);
+  await expect(page.locator('#sheetBody .news-item')).toHaveCount(11);
   await page.click('#sheetCancel');
   expect(await store(page, () => localStorage.getItem('hayati-seen-version'))).toBe(await store(page, () => App.APP_VERSION));
   await open(page);

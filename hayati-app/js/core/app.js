@@ -1350,12 +1350,33 @@
       body: (shared ? '<p class="small muted" id="smsShared" style="margin:0 4px 12px">وصلت من المشاركة. راجع المبلغ والمحل، وبعدين اضغط «إضافة».</p>'
         : '<p class="small muted" style="margin:0 4px 12px">انسخ رسالة البنك أو BenefitPay والصقها هنا، والتطبيق يطلّع المبلغ والمحل لحاله.</p>') +
         '<div class="field"><textarea name="sms" placeholder="مثال: Purchase of BHD 3.500 at TALABAT using card XXXX1234"></textarea></div>' +
-        '<div id="smsPreview"></div>',
+        '<div id="smsPreview"></div>' +
+        '<div class="field" id="smsWhen" hidden><label>تاريخ العملية</label><input type="datetime-local" name="sms_at"><p class="small muted" id="smsWhenNote" style="margin:4px 4px 0"></p></div>' +
+        '<p class="small muted" style="margin:8px 4px 0">تقدر تلصق كذا رسالة مرة وحدة (سطر فاضي بين كل وحدة)، وكل وحدة تنحفظ بتاريخها.</p>',
       mount(root) {
         const ta = root.querySelector('textarea');
         const pv = root.querySelector('#smsPreview');
+        const whenF = root.querySelector('#smsWhen'), whenIn = root.querySelector('[name=sms_at]'), whenNote = root.querySelector('#smsWhenNote');
+        let touched = false;
+        whenIn.addEventListener('input', () => { touched = true; });
         const update = () => {
+          // DW-057: كذا رسالة مرة وحدة ← قائمة، كل وحدة بتاريخها
+          const many = smsParts(ta.value).map((t) => ({ t, p: window.SmsParser.parse(t) })).filter((x) => x.p);
+          if (many.length > 1) {
+            whenF.hidden = true;
+            pv.innerHTML = '<div class="card flush"><ul class="list">' + many.map(({ t, p }) => '<li class="row" style="cursor:default">' + catIcon(p.category, p.kind) +
+              '<div class="main"><div class="title"><span class="t">' + h(p.merchant || p.category) + '</span>' + (smsSeen(t) ? ' <small class="muted">مضافة قبل</small>' : '') + '</div><div class="sub">' +
+              (p.date ? dayLabel(p.date) + ' · ' + timeOf(p.date) : 'بدون تاريخ ← الحين') + '</div></div>' +
+              '<div class="amount ' + p.kind + '"><span class="num">' + fmt(p.amount) + '</span><span class="cur">' + p.currency + '</span></div></li>').join('') + '</ul></div>' +
+              '<p class="small muted" style="margin:6px 4px 0">' + many.length + ' رسائل · اللي «مضافة قبل» ما تنضاف مرة ثانية</p>';
+            return;
+          }
           const p = ta.value.trim() ? window.SmsParser.parse(ta.value) : null;
+          if (!touched) {
+            whenIn.value = toLocalInput(p && p.date ? p.date : new Date());
+            whenNote.textContent = p && p.date ? '📅 من الرسالة نفسها' : 'ما لقيت تاريخ بالرسالة، فحطينا الحين. لو العملية قديمة غيّره.';
+          }
+          whenF.hidden = !p;
           if (!ta.value.trim()) { pv.innerHTML = ''; return; }
           if (!p) { pv.innerHTML = '<div class="card">' + empty('alert', 'ما لقيت مبلغ', 'تأكد إنها رسالة عملية مالية') + '</div>'; return; }
           pv.innerHTML = '<div class="card"><div class="row" style="cursor:default">' + catIcon(p.category, p.kind) +
@@ -1367,13 +1388,33 @@
         if (shared) { ta.value = shared; update(); } else setTimeout(() => autoFocus(ta), 300);
       },
       onSave(root) {
-        const tx = S.smsToTransaction(val(root, 'sms'), new Date().toISOString());
+        const parts = smsParts(val(root, 'sms')).filter((t) => window.SmsParser.parse(t));
+        if (parts.length > 1) {
+          let n = 0, dup = 0;
+          for (const t of parts) { if (smsSeen(t)) { dup++; continue; } const tx = S.smsToTransaction(t); if (tx) { S.upsert('transactions', tx); n++; } }
+          if (!n && dup) throw new Error('كل الرسائل مضافة من قبل');
+          toast('انضافت ' + n + ' عمليات بتواريخها ✓' + (dup ? ' · ' + dup + ' مضافة قبل' : ''));
+          return;
+        }
+        const body = val(root, 'sms');
+        if (smsSeen(body)) throw new Error('هالرسالة مضافة من قبل');
+        const tx = S.smsToTransaction(body, new Date().toISOString());
         if (!tx) throw new Error('ما قدرت أقرأ مبلغ من الرسالة');
+        const at = val(root, 'sms_at');
+        if (at && !isNaN(new Date(at))) tx.occurred_at = new Date(at).toISOString();
         const savedSms = S.upsert('transactions', tx);
         setTimeout(() => X('afterTx', savedSms), 450);
-        toast('انضافت ✓');
+        const old = !sameDay(new Date(tx.occurred_at), new Date());
+        toast(old ? 'انضافت بتاريخ ' + dayLabel(new Date(tx.occurred_at)) + ' ✓' : 'انضافت ✓');
       },
     });
+  }
+
+  // DW-057: رسائل منفصلة بسطر فاضي؛ ونفس الرسالة (بعد إخفاء الأرقام) ما تنضاف مرتين
+  function smsParts(text) { return String(text || '').split(/\n\s*\n/).map((t) => t.trim()).filter(Boolean); }
+  function smsSeen(text) {
+    const raw = window.SmsParser.mask ? window.SmsParser.mask(String(text).trim()) : String(text).trim();
+    return st.transactions.some((t) => t.source === 'sms' && t.raw && t.raw.trim() === raw);
   }
 
   // «شارك ← حياتي»: يستنى لين تنقرا البيانات (عشان نعرف هل وافق قبل)، ويسكّر أي نافذة مفتوحة

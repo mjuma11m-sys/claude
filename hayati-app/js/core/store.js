@@ -605,7 +605,7 @@
       category: p.category,
       merchant: p.merchant || null,
       note: note || null,
-      occurred_at: when || new Date().toISOString(),
+      occurred_at: p.date ? p.date.toISOString() : when || new Date().toISOString(),   // DW-057: تاريخ العملية من الرسالة نفسها
       source: 'sms',
       raw: global.SmsParser.mask ? global.SmsParser.mask(body) : body,
       needs_review: p.needs_review,

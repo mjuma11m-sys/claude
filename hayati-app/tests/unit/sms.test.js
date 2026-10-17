@@ -89,3 +89,20 @@ test('تصنيفاتك (DW-043): تصحيح محل مرة يغلب القواع�
   P.setLearned({});
   assert.strictEqual(P.parse(msg).category, 'أخرى');
 });
+
+// DW-057: تاريخ العملية من الرسالة نفسها
+test('transaction date comes from the message text (day/month first, time if present)', () => {
+  const now = new Date(2026, 9, 17, 16, 0);
+  const at = (t) => { const d = P.parse(t, now).date; return d && [d.getFullYear(), d.getMonth() + 1, d.getDate(), d.getHours(), d.getMinutes()]; };
+  assert.deepEqual(at('Your card XX4821 was used for BHD 3.750 at COSTA on 11/10/26. Avl bal BHD 412.300'), [2026, 10, 11, 12, 0]);
+  assert.deepEqual(at('تم خصم مبلغ ٥٫٢٥٠ د.ب من بطاقتك لدى طلبات بتاريخ ١١/١٠'), [2026, 10, 11, 12, 0]);
+  assert.deepEqual(at('Purchase of BHD 12.500 at LULU on 2026-10-14 19:42'), [2026, 10, 14, 19, 42]);
+  assert.deepEqual(at('BHD 8.000 debited on 05-OCT-26 at 21:15 TALABAT'), [2026, 10, 5, 21, 15]);
+  assert.deepEqual(at('Card used BHD 2.500 at X on 15 Oct 2026 8:05 PM'), [2026, 10, 15, 20, 5]);
+  assert.deepEqual(at('خصم 4.000 د.ب في 12 أكتوبر الساعة 09:30'), [2026, 10, 12, 9, 30]);
+  assert.deepEqual(at('Purchase BHD 3.500 on 25/12 at X'), [2025, 12, 25, 12, 0]);        // بدون سنة وبالمستقبل = السنة اللي فاتت
+  assert.deepEqual(at('Purchase BHD 3.500 on 10/17/2026 at X'), [2026, 10, 17, 16, 0]);   // شهر/يوم، واليوم بدون وقت = الحين
+  assert.equal(at('Purchase of BHD 3.200 at COSTA SEEF using card XXXX4821'), null);
+  assert.equal(at('Purchase BHD 3.500 on 11/10/29 at X'), null);                          // مستقبل: مو تاريخ العملية
+  assert.equal(at('BHD 412.300 available. Purchase BHD 3.750'), null);                     // المبالغ ما تنقرا تاريخ
+});

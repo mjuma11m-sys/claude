@@ -2057,4 +2057,18 @@ window.HAYATI_EN = {
 "مادة": "class",
 "لجدولك ✓ — لا تنسى تحدّث التقويم": "to your schedule ✓ — remember to update your calendar",
 "دراسة أو دوام أو تمارين: سكرين شوت أو PDF أو نص، وينضاف بأيامه ووقته": "Study, work or training: screenshot, PDF or text, added with its days and times",
+// DW-057: رسالة البنك بتاريخها
+"رسالة البنك بتاريخها": "Bank messages keep their date",
+"الصق رسالة قديمة وتنحفظ بيوم العملية نفسه، أو كذا رسالة مرة وحدة": "Paste an old message and it's saved on the day of the transaction, or paste several at once",
+"تاريخ العملية": "Transaction date",
+"📅 من الرسالة نفسها": "📅 From the message itself",
+"ما لقيت تاريخ بالرسالة، فحطينا الحين. لو العملية قديمة غيّره.": "No date in the message, so we used now. Change it if the transaction is older.",
+"تقدر تلصق كذا رسالة مرة وحدة (سطر فاضي بين كل وحدة)، وكل وحدة تنحفظ بتاريخها.": "You can paste several messages at once (a blank line between each), and each is saved on its own date.",
+"مضافة قبل": "already added",
+"بدون تاريخ ← الحين": "no date → now",
+"رسائل · اللي «مضافة قبل» ما تنضاف مرة ثانية": "messages · ones marked \"already added\" won't be added again",
+"كل الرسائل مضافة من قبل": "All these messages were already added",
+"هالرسالة مضافة من قبل": "This message was already added",
+"انضافت بتاريخ": "Added on",
+"عمليات بتواريخها ✓": "transactions on their dates ✓",
 };
