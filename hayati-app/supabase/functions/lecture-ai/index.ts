@@ -1,6 +1,7 @@
 // DW-021 phase 2 — lecture notes → summary / practice questions.
 // DW-034 — photo of a board or page → notes text (the image is only passed through, never stored).
 // DW-036 — lecture PDF → notes + summary + practice questions in one call (the file is only passed through, never stored).
+// DW-051 — university timetable (photo, PDF or pasted text) → weekly classes with days and times (the file is only passed through, never stored).
 // DW-037 — «اسأل حياتي»: a question about the user's own numbers, answered from a snapshot the app sends with it (nothing is stored here).
 // Secrets (Supabase → Edge Functions → Secrets, never in the app or repo):
 //   ANTHROPIC_API_KEY  required
@@ -47,6 +48,28 @@ const SCHEMAS = {
       },
     },
     required: ["notes", "summary", "cards"],
+    additionalProperties: false,
+  },
+  schedule: {
+    type: "object",
+    properties: {
+      courses: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            days: { type: "array", items: { type: "integer" } },
+            start: { type: "string" },
+            end: { type: "string" },
+            room: { type: "string" },
+          },
+          required: ["name", "days", "start", "end", "room"],
+          additionalProperties: false,
+        },
+      },
+    },
+    required: ["courses"],
     additionalProperties: false,
   },
   quiz: {
@@ -96,6 +119,13 @@ const TASKS = {
     "(each answer shows the formula, the numbers substituted and the result, checked carefully). " +
     "Write in the language the lecture is mostly written in. Use only what is in the PDF; do not add outside facts. " +
     "If the PDF is not lecture material or has no readable text, return empty notes and summary and no cards." + MATH,
+  schedule:
+    "This is a university student's weekly class timetable (a screenshot of the registration portal, a photo, a PDF or copied text), most likely from a university in Bahrain. " +
+    "List every weekly class meeting. For each: name = course code and title as written (e.g. \"ITCS 113 Computer Programming I\"), add \" (Lab)\" or \" (Tutorial)\" if that meeting is a lab or tutorial; " +
+    "days = weekday numbers, 0=Sunday 1=Monday 2=Tuesday 3=Wednesday 4=Thursday 5=Friday 6=Saturday. Day letters on Bahraini portals: U=Sunday, M=Monday, T=Tuesday, W=Wednesday, H=Thursday (R also means Thursday), so UTH = [0,2,4] and MW = [1,3]; " +
+    "start and end = 24-hour HH:MM (university classes run about 07:00–21:00, so 1:00–7:59 without am/pm means afternoon); room = building and room as written, or empty. " +
+    "Put meetings of the same course at different times as separate items. Copy only what is in the timetable; never guess a time or day that is not shown. " +
+    "If this is not a timetable or nothing is readable, return no courses.",
 };
 const MEDIA = ["image/jpeg", "image/png", "image/webp"];
 
@@ -120,7 +150,7 @@ Deno.serve(async (req) => {
 
   let body: { mode?: string; title?: string; notes?: string; image?: string; media?: string; data?: string; messages?: { role: string; content: string }[] };
   try { body = await req.json(); } catch { return json({ error: "bad" }, 400); }
-  const mode = body.mode === "quiz" ? "quiz" : body.mode === "summary" ? "summary" : body.mode === "photo" ? "photo" : body.mode === "pdf" ? "pdf" : body.mode === "ask" ? "ask" : null;
+  const mode = body.mode === "quiz" ? "quiz" : body.mode === "summary" ? "summary" : body.mode === "photo" ? "photo" : body.mode === "pdf" ? "pdf" : body.mode === "ask" ? "ask" : body.mode === "schedule" ? "schedule" : null;
   // ask: last 8 turns, alternating, ending with the user's question
   const turns = (Array.isArray(body.messages) ? body.messages : []).slice(-8)
     .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content.trim())
@@ -137,6 +167,11 @@ Deno.serve(async (req) => {
   } else if (mode === "pdf") {
     // ≤ 6 MB file → ≤ 8.4 MB of base64
     if (!image || image.length > 8_400_000 || !image.startsWith("JVBER")) return json({ error: "bad" }, 400);
+  } else if (mode === "schedule") {
+    // one of: resized JPEG/PNG, a PDF (≤ 6 MB), or pasted text
+    const pdf = image.startsWith("JVBER");
+    if (image && (image.length > 8_400_000 || (!pdf && (image.length > 5_000_000 || !/^[A-Za-z0-9+/=]+$/.test(image.slice(0, 200)) || !MEDIA.includes(media))))) return json({ error: "bad" }, 400);
+    if (!image && notes.length < 20) return json({ error: "bad" }, 400);
   } else if (mode === "ask") {
     if (!turns.length || turns[turns.length - 1].role !== "user" || !data) return json({ error: "bad" }, 400);
   } else if (notes.length < 200) return json({ error: "bad" }, 400);
@@ -174,7 +209,13 @@ Deno.serve(async (req) => {
       output_config: { format: { type: "json_schema", schema: SCHEMAS[mode] } },
       messages: [{
         role: "user",
-        content: mode === "pdf"
+        content: mode === "schedule"
+          ? (image.startsWith("JVBER")
+            ? [{ type: "document", source: { type: "base64", media_type: "application/pdf", data: image } }, { type: "text", text: TASKS.schedule }]
+            : image
+            ? [{ type: "image", source: { type: "base64", media_type: media, data: image } }, { type: "text", text: TASKS.schedule }]
+            : TASKS.schedule + "\n\n<timetable>\n" + notes + "\n</timetable>")
+          : mode === "pdf"
           ? [
             { type: "document", source: { type: "base64", media_type: "application/pdf", data: image } },
             { type: "text", text: TASKS.pdf + (title ? "\n\n<title>" + title + "</title>" : "") },

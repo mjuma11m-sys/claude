@@ -130,6 +130,36 @@ test('football schedule from the coach message', async ({ page }) => {
   expect(out.t[0]).toContain('الرفاع');
 });
 
+// DW-051: ارفع جدولك الجامعي ← المواد بأيامها ووقتها (النص يتقرا بالجهاز)
+test('university timetable from pasted portal text', async ({ page }) => {
+  await open(page);
+  await store(page, () => App.S.upsert('courses', { name: 'MATH 101', type: 'lecture', days: [1, 3], start_time: '13:00', end_time: '14:15' }));
+  await store(page, () => App.go('schedule'));
+  await page.click('[data-action="timetable"]');
+  await page.fill('#sheetBody [name=tt_txt]', 'ITCS 113 Programming I  UTH  10:00 - 10:50  S40-021\nMATH 101  MW  1:00 - 2:15  S1A-105\nPHYCS 101 - General Physics\nLab W 11:00-12:50 S1B-1010\nإحصاء · الأحد والثلاثاء ٨:٠٠ - ٩:١٥ قاعة 12');
+  await page.click('#ttRead');
+  await expect(page.locator('#ttStatus')).toContainText('4');
+  await expect(page.locator('#ttStatus')).toContainText('1 موجودة');
+  await page.click('#sheetSave');
+  await expect.poll(() => store(page, () => App.st.courses.length)).toBe(4);
+  const c = await store(page, () => App.st.courses.filter((x) => x.source === 'timetable').map((x) => [x.name, x.days.join(','), x.start_time, x.end_time, x.room]));
+  expect(c).toEqual(expect.arrayContaining([
+    ['ITCS 113 Programming I', '0,2,4', '10:00', '10:50', 'S40-021'],
+    ['PHYCS 101 General Physics (عملي)', '3', '11:00', '12:50', 'S1B-1010'],
+    ['إحصاء', '0,2', '08:00', '09:15', 'قاعة 12'],
+  ]));
+});
+
+test('timetable image without an account asks to sign in or paste text', async ({ page }) => {
+  await open(page);
+  await page.click('#addBtn');
+  await page.click('[data-pick="timetable"]');
+  await page.setInputFiles('#ttFile', { name: 'schedule.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgo=', 'base64') });
+  await page.click('#ttRead');
+  await expect(page.locator('#ttStatus')).toContainText('تحتاج حساب');
+  expect(await store(page, () => App.st.courses.length)).toBe(0);
+});
+
 test('weekly report shows on Friday evening and opens', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-10-16T20:00:00+03:00') });
   await open(page);
@@ -1589,7 +1619,7 @@ test('«جديد بحياتي»: an existing user sees what is new once after th
   await store(page, () => localStorage.setItem('hayati-seen-version', 'v23'));   // كان على النسخة اللي قبل
   await open(page);
   await expect(page.locator('#sheetTitle')).toHaveText('جديد بحياتي ✨', { timeout: 5000 });
-  await expect(page.locator('#sheetBody .news-item')).toHaveCount(4);
+  await expect(page.locator('#sheetBody .news-item')).toHaveCount(5);
   await page.click('#sheetCancel');
   expect(await store(page, () => localStorage.getItem('hayati-seen-version'))).toBe(await store(page, () => App.APP_VERSION));
   await open(page);

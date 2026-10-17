@@ -1921,7 +1921,7 @@ window.HAYATI_EN = {
 "سجّل دخول عشان بياناتك تنحفظ بحسابك وتوصل لك على أي جهاز، وما تضيع لو بدّلت جوالك.": "Sign in so your data is saved to your account, reaches you on any device, and isn't lost if you change phones.",
 "تخطَّ الحين": "Skip for now",
 "بدون حساب التطبيق يشتغل كامل، وبياناتك تظل على هالجهاز بس. تقدر تسجّل بعدين من الإعدادات ← «حسابك».": "Without an account the app works fully, and your data stays on this device only. You can sign in later from Settings → «Your account».",
-// DW-051: v24 والتحقق من الإيميل
+// v24 والتحقق من الإيميل (DW-050)
 "قسّم الفاتورة": "Split the bill",
 "بالتساوي أو كل واحد حصته، وأرسل لربعك حصصهم": "Equally or custom shares, and send your friends their shares",
 "اختصارات الأيقونة": "App icon shortcuts",
@@ -1934,5 +1934,24 @@ window.HAYATI_EN = {
 "الإيميل ينتهي بـ .con، غالباً تقصد .com": "The email ends in .con; you probably mean .com",
 "الإيميل مو صحيح، تأكد منه (مثلاً .com مو .con)": "That email isn't valid; check it (e.g. .com, not .con)",
 "كلمة المرور ضعيفة، خلّها أطول وفيها أرقام وحروف": "Weak password; make it longer with letters and numbers",
-"أرسلنا لك إيميل تأكيد. افتح الرابط من هالجهاز، ويدخلك على طول": "We sent you a confirmation email. Open the link on this device and you'll be signed in"
+"أرسلنا لك إيميل تأكيد. افتح الرابط من هالجهاز، ويدخلك على طول": "We sent you a confirmation email. Open the link on this device and you'll be signed in",
+// DW-051: ارفع جدولك الجامعي
+"ارفع جدولك الجامعي": "Upload your university timetable",
+"سكرين شوت أو PDF أو نص من البوابة، والمواد تنضاف بأيامها ووقتها": "Screenshot, PDF or text from the portal; classes are added with their days and times",
+"صورة أو PDF أو نص من البوابة، والمواد تنضاف بأيامها ووقتها": "Image, PDF or text from the portal; classes are added with their days and times",
+"صورة، PDF، أو نص من البوابة": "Image, PDF, or text from the portal",
+"ارفع جدول الفصل الجديد": "Upload the new semester's timetable",
+"موجودة": "already added",
+"النص يتقرا بجوالك. الصورة والـPDF يتقرون بالذكاء (لأصحاب الحسابات) والملف ما ينحفظ.": "Text is read on your phone. Images and PDFs are read by AI (for account holders) and the file isn't stored.",
+"شيّك عليها قبل الحفظ: شيل الصح عن أي مادة غلط، وتقدر تعدّل أي وحدة بعدين من الجدول.": "Check them before saving: untick any wrong class; you can edit any of them later from the schedule.",
+"ارفع صورة أو PDF، أو الصق الجدول أول": "Upload an image or PDF, or paste the timetable first",
+"الملف كبير · الحد 6MB": "File too large · 6MB max",
+"✨ نقرا الملف… (نص دقيقة تقريباً)": "✨ Reading the file… (about half a minute)",
+"✨ نقرا الصورة…": "✨ Reading the image…",
+"✨ نقرا النص…": "✨ Reading the text…",
+"قراءة الصورة تحتاج حساب (سجّل دخول من الإعدادات) · أو الصق الجدول كنص من بوابة الجامعة": "Reading an image needs an account (sign in from Settings) · or paste the timetable as text from the university portal",
+"ما قدرنا نقرا الصورة · الصق الجدول كنص": "Couldn't read the image · paste the timetable as text",
+"ما قدرت أفتح الـPDF · خذ له سكرين شوت": "Couldn't open the PDF · take a screenshot of it",
+"ما لقيت أيام وأوقات واضحة · جرّب سكرين شوت أوضح، أو اكتب كل مادة بسطر: الاسم، الأيام، الوقت": "No clear days and times found · try a clearer screenshot, or write each class on a line: name, days, time",
+"ما فيه مواد مختارة": "No classes selected",
 };

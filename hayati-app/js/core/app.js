@@ -5,7 +5,7 @@
   const S = window.Store;
   const st = S.state;
   const I = window.icon;
-  const APP_VERSION = 'v24';   // نفس رقم sw.js (فيه اختبار يتأكد)
+  const APP_VERSION = 'v25';   // نفس رقم sw.js (فيه اختبار يتأكد)
 
   // ---------- ثوابت ----------
   const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
@@ -788,7 +788,7 @@
     const now = new Date();
     const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay());
     const dates = DAYS_SHORT.map((_, i) => { const d = new Date(weekStart); d.setDate(weekStart.getDate() + i); return d; });
-    let out = seedCard() + '<div class="week">' + DAYS_SHORT.map((d, i) => {
+    let out = seedCard() + X('timetableCard') + '<div class="week">' + DAYS_SHORT.map((d, i) => {
       const cls = ['wd', ui.day === i ? 'on' : '', i === now.getDay() ? 'is-today' : '', agendaOn(dates[i]).length ? 'has' : ''].join(' ');
       return '<button class="' + cls + '" data-action="day" data-d="' + i + '"><small>' + d + '</small><b class="num">' + dates[i].getDate() + '</b><i></i></button>';
     }).join('') + '</div>';
