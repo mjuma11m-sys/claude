@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 68,
+  "next": 69,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -536,6 +536,14 @@
       "owner": "CEO",
       "priority": "P1",
       "status": "review",
+      "opened": "2026-10-17",
+      "updated": "2026-10-17"
+    },
+    "DW-068": {
+      "title": "حياتي بلس: نموذج الدخل وميزات الاشتراك",
+      "owner": "CEO",
+      "priority": "P2",
+      "status": "blocked",
       "opened": "2026-10-17",
       "updated": "2026-10-17"
     }
