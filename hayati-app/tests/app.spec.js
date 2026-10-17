@@ -331,6 +331,8 @@ test('user currency: Saudi riyal shows everywhere, riyal messages stay as they a
   await page.click('#obLevel [data-lv="secondary"]');
   await page.selectOption('#obCur', 'KWD');
   await page.click('#sheetSave');
+  // DW-067: يسأل يحوّل المبالغ ولا لا ← لا
+  await page.click('#askDlg [data-cancel]');
   await expect.poll(() => store(page, () => [App.st.settings.currency, App.st.settings.study_level])).toEqual(['KWD', 'secondary']);
   await page.waitForTimeout(350);
   // تختارها من «ملفك»، والمطبخ موجود بقائمة +
@@ -374,6 +376,45 @@ test('accounts: messages link by the last two digits, balance follows, statement
   // العملية اليدوية فيها خانة الحساب
   await store(page, () => App.txForm());
   await expect(page.locator('#sheetBody [name=account_id]')).toHaveCount(1);
+});
+
+// DW-067: إصلاحات التقييم: «ابدأ هني»، Google مخفي لين ينشر، الذكاء يختفي لو الدالة مو منشورة، وتحويل المبالغ مع العملة
+test('review fixes: start-here card, hidden Google, AI hides when the function is missing, currency conversion', async ({ page }) => {
+  await open(page);
+  await store(page, () => { App.S.setSettings({ onboarded: true, roles: ['student'] }); App.go('today'); });
+  await expect(page.locator('#startHere')).toContainText('0/4');
+  await store(page, () => App.S.setSettings({ budget: 200 }));
+  await expect(page.locator('#startHere')).toContainText('1/4');
+  await page.click('#startHere [data-k="timetable"]');
+  await expect(page.locator('#ttRead')).toHaveCount(1);
+  await page.click('#sheetCancel'); await page.waitForTimeout(350);
+  await page.click('#startHere [data-action="start-hide"]');
+  await expect(page.locator('#startHere')).toHaveCount(0);
+  // Google ما يطلع حتى لو مفعّل
+  expect(await page.evaluate(() => { window.HAYATI_CONFIG.PROVIDERS = ['apple', 'google']; return App.S.providers(); })).not.toContain('google');
+  // دالة الذكاء مو منشورة ← تختفي الأزرار
+  const off = await store(page, async () => {
+    App.S.status.signedIn = true;
+    const real = App.S.invokeFn;
+    App.S.invokeFn = async () => { App.S.status.aiOff = true; throw new Error('unavailable'); };
+    try { await App.S.invokeFn('lecture-ai', {}); } catch (e) { /* متوقع */ }
+    App.S.invokeFn = real;
+    return App.S.status.aiOff;
+  });
+  expect(off).toBe(true);
+  await store(page, () => { App.ui.studySeg = 'lectures'; App.go('schedule'); });
+  await page.click('[data-action="lec-new"]');
+  await expect(page.locator('[data-ai]')).toHaveCount(0);
+  await page.click('#sheetCancel'); await page.waitForTimeout(350);
+  // تحويل المبالغ: 10 د.ب ← تقريباً 99.73 ر.س
+  const r = await store(page, () => {
+    App.S.upsert('transactions', { kind: 'expense', amount: 10, category: 'قهوة', occurred_at: new Date().toISOString() });
+    App.S.setSettings({ currency: 'SAR' });
+    Extras._convertAll('BHD', 'SAR');
+    return [App.st.transactions[0].amount, App.st.settings.budget];
+  });
+  expect(r[0]).toBeCloseTo(99.73, 1);
+  expect(r[1]).toBeCloseTo(1994.68, 0);
 });
 
 test('weekly report shows on Friday evening and opens', async ({ page }) => {
@@ -1391,6 +1432,7 @@ test('accounts: «لا، ابدأ من حسابي» drops guest data; sign-out w
 test('accounts: Apple/Google buttons only when enabled, web OAuth returns to the app, password reset, account screen', async ({ page }) => {
   await useFakeSupabase(page);
   await open(page);
+  await page.evaluate(() => { window.HAYATI_CONFIG.HIDE_PROVIDERS = []; });   // كأن شاشة Google انتشرت (DW-067)
   // DW-035: الإعدادات فيها سطر «حسابك» يفتح صفحة الحساب
   await page.click('#settingsBtn');
   await expect(page.locator('#sheetBody [data-set="account"]')).toContainText('سجّل دخول أو أنشئ حساب');
@@ -2758,6 +2800,7 @@ test('account page (DW-035): Google shows up once Supabase enables it, trips fol
   let asked = 0;
   await page.route('**/auth/v1/settings', (r) => { asked++; r.fulfill({ contentType: 'application/json', headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' }, body: JSON.stringify({ external: { google: true, apple: false, email: true } }) }); });
   await open(page);
+  await page.evaluate(() => { window.HAYATI_CONFIG.HIDE_PROVIDERS = []; });   // كأن شاشة Google انتشرت (DW-067)
   await store(page, () => App.S.setSettings({ onboarded: true }));
   expect(asked).toBe(0);                                                      // بدون ما تفتح الصفحة: ولا اتصال
   await store(page, () => App.accountSheet());

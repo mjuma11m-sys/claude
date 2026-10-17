@@ -2892,6 +2892,31 @@ window.HAYATI_EN = {
 // DW-065: قارئ PDF بالمواقع
 "لقيت برنامج تمرين:": "Found a workout program:",
 "أيام · الوقت 6–7:30 المسا افتراضي، عدّله بعدين من الجدول": "days · default time 6–7:30 pm, change it later from the schedule",
+"دراسة أو دوام أو تمارين: PDF أو سكرين شوت أو نص. برنامج المدرب PDF ينضاف بتمارينه وجولاته": "Study, work or training: PDF, screenshot or text. A coach's PDF program comes in with its exercises and sets",
+// DW-067: إصلاحات التقييم
+"🚀 ابدأ هني": "🚀 Start here",
+"خلاص": "Done",
+"الصق رسالة بنك": "Paste a bank message",
+"المبلغ والمحل والتاريخ لحالهم": "Amount, shop and date filled in for you",
+"دراسة أو دوام أو برنامج المدرب": "Study, work or your coach's program",
+"حط ميزانيتك": "Set your budget",
+"وكل يوم يقولك كم تقدر تصرف": "And see how much you can spend each day",
+"أضف بطاقتك": "Add your card",
+"رصيدها، والرسائل تنربط فيها": "Its balance, with messages linked to it",
+"الذكاء قيد التجهيز · جرّب بعدين": "AI is being set up · try later",
+"الذكاء قيد التجهيز · الصق الجدول كنص أو ارفع PDF": "AI is being set up · paste the schedule as text or upload a PDF",
+"(بسعر تقريبي)": "(approximate rate)",
+"سجل ✓": "records ✓",
+"صوّر الجدول أو خذ": "Photograph the schedule or take a",
+"سكرين شوت": "screenshot",
+"(من بوابة الجامعة، أو جدول المناوبات، أو المدرب)، أو ارفع": "(from the university portal, a shift roster or your coach), or upload a",
+"، أو انسخ الجدول": ", or copy the schedule",
+"كنص": "as text",
+"والصقه.": "and paste it.",
+"مثال:\nITCS 113 Programming I  UTH  10:00 - 10:50  S40-021\nMATH 101  MW  1:00 - 2:15  S1A-105\nأو: إحصاء · الأحد والثلاثاء 8:00 - 9:15 قاعة 12": "Example:\nITCS 113 Programming I  UTH  10:00 - 10:50  S40-021\nMATH 101  MW  1:00 - 2:15  S1A-105\nor: Statistics · Sun & Tue 8:00 - 9:15 Room 12",
+"مثال:\nالأحد – الخميس 7:00 - 3:00\nالسبت 8 - 12 دوام نص يوم\nأو سكرين شوت من جدول المناوبات": "Example:\nSun – Thu 7:00 - 3:00\nSat 8 - 12 half day\nor a screenshot of the shift roster",
+"مثال:\nالأحد والثلاثاء 6 - 8 جيم صدر وتراي\nالاثنين والأربعاء 5:30 - 7 جري\nالخميس 7 - 8:30 م كورة": "Example:\nSun & Tue 6 - 8 gym chest and triceps\nMon & Wed 5:30 - 7 running\nThu 7 - 8:30 pm football",
+"حوّل": "Convert",
 };
 
 </script>
@@ -3021,6 +3046,9 @@ window.HAYATI_CONFIG = {
   // الدخول السريع: اكتب 'apple' و/أو 'google' بس بعد ما تفعّلهم بلوحة Supabase (الخطوات بـ supabase/SETUP.md)
   //   فاضي = الأزرار ما تطلع (ولا زر ميت)
   PROVIDERS: [],
+  // DW-067: أزرار مخفية حتى لو مفعّلة بـ Supabase. Google بوضع Testing (بس المختبرين يدخلون، ومراجع Apple بيفشل)،
+  //   فنخفيه لين تنشر شاشة الموافقة (Google Auth Platform ← Branding ← Audience ← Publish app)، وبعدين شيله من هني
+  HIDE_PROVIDERS: ['google'],
 };
 
 </script>
@@ -3779,7 +3807,8 @@ window.HAYATI_CONFIG = {
   function providers() {
     const p = (global.HAYATI_CONFIG || {}).PROVIDERS;
     const list = detected.concat(Array.isArray(p) ? p : []);
-    return sb ? ['apple', 'google'].filter((x) => list.includes(x)) : [];
+    const hide = (global.HAYATI_CONFIG || {}).HIDE_PROVIDERS || [];
+    return sb ? ['apple', 'google'].filter((x) => list.includes(x) && !hide.includes(x)) : [];
   }
 
   function arabicAuthError(msg) {
@@ -4058,6 +4087,9 @@ window.HAYATI_CONFIG = {
     if (error) {
       let msg = error.message || 'error';
       try { const j = await error.context.json(); if (j && j.error) msg = j.error; } catch (e) { /* no body */ }
+      // DW-067: الدالة مو منشورة أو بدون مفتاح ← نخفي أزرار الذكاء بدال ما تطلع أخطاء
+      const code = error.context && error.context.status;
+      if (code === 404 || msg === 'not_configured' || /not found|failed to send/i.test(msg)) { status.aiOff = true; emit(); throw new Error('unavailable'); }
       throw new Error(msg);
     }
     return data;
@@ -7950,7 +7982,7 @@ window.HAYATI_CONFIG = {
   // ================= المساعد الذكي =================
   // DW-037: يشتغل بطريقتين: داخل Claude (sample)، أو بالتطبيق نفسه لما تكون مسجّل دخول (دالة lecture-ai بـ Supabase)
   let sampleFn = null, chatTurns = [], chatCtl = null;
-  const viaServer = () => !sampleFn && !!(S && S.status && S.status.signedIn && S.invokeFn);
+  const viaServer = () => !sampleFn && !!(S && S.status && S.status.signedIn && S.invokeFn && !S.status.aiOff);
   function showBtn() {
     const btn = document.getElementById('assistBtn');
     if (!btn) return;
@@ -9347,12 +9379,12 @@ window.HAYATI_CONFIG = {
     }
     return lines.join('\n');
   }
-  const signedIn = () => !!(S.status && S.status.signedIn && S.invokeFn);
+  const signedIn = () => !!(S.status && S.status.signedIn && S.invokeFn && !S.status.aiOff);
   let samplePromise = null;
   const getSample = () => (samplePromise = samplePromise || (window.claude && typeof window.claude.use === 'function' ? window.claude.use('sample').catch(() => null) : Promise.resolve(null)));
   const PROMPT = 'This is a university student\'s weekly class timetable. Return only JSON: {"courses":[{"name":"course code and title","days":[0-6, 0=Sunday],"start":"HH:MM 24h","end":"HH:MM","room":""}]}. ' +
     'Day letters: U=Sunday M=Monday T=Tuesday W=Wednesday H or R=Thursday. Classes run 07:00–21:00, so 1:00–7:59 without am/pm is afternoon. Copy only what is shown; never guess.';
-  const aiError = (e) => { const m = String(e && e.message || ''); return m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : 'ما قدرنا نوصل للخدمة · جرّب بعدين'; };
+  const aiError = (e) => { const m = String(e && e.message || ''); return m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · الصق الجدول كنص أو ارفع PDF' : 'ما قدرنا نوصل للخدمة · جرّب بعدين'; };
 
   // ---------- الواجهة ----------
   // DW-056: نفس الميزة لجدول الدوام والتمارين
@@ -12616,7 +12648,7 @@ window.HAYATI_CONFIG = {
   // DW-021 phase 2: AI summary + questions from the notes. Signed-in only; the notes go to the server function, recordings never do.
   const AI_MIN = 200;
   function aiBlock() {
-    if (!(S.status && S.status.signedIn && S.invokeFn)) return '<p class="small muted" style="margin:0 4px 12px">✨ التلخيص والأسئلة التلقائية تشتغل لما تسجّل دخول بحسابك.</p>';
+    if (!(S.status && S.status.signedIn && S.invokeFn && !S.status.aiOff)) return '<p class="small muted" style="margin:0 4px 12px">✨ التلخيص والأسئلة التلقائية تشتغل لما تسجّل دخول بحسابك.</p>';
     return '<div style="display:flex;gap:8px;margin:0 0 8px"><button type="button" class="btn ghost" style="flex:1" data-photo>📷 صوّر السبورة</button><button type="button" class="btn ghost" style="flex:1" data-pdf>📄 ملف PDF</button></div>' +
       '<input type="file" id="lcPhoto" accept="image/*" capture="environment" hidden><input type="file" id="lcPdf" accept="application/pdf,.pdf" hidden>' +
       '<div class="row-btns" style="display:flex;gap:8px;margin:0 0 6px"><button type="button" class="btn ghost" style="flex:1" data-ai="summary">لخّصها لي ✨</button><button type="button" class="btn ghost" style="flex:1" data-ai="quiz">سوّ لي أسئلة ✨</button></div>' +
@@ -12641,7 +12673,7 @@ window.HAYATI_CONFIG = {
       } else A.toast('ما قدرنا نطلع نتيجة');
     } catch (e) {
       const m = String(e && e.message || '');
-      A.toast(m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
+      A.toast(m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · جرّب بعدين' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
     } finally { btns.forEach((b) => { b.disabled = false; }); btn.textContent = label; }
   }
 
@@ -12668,7 +12700,7 @@ window.HAYATI_CONFIG = {
       A.toast('انضاف النص للملاحظات · راجعه واضغط «حفظ»');
     } catch (e) {
       const m = String(e && e.message || '');
-      A.toast(m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
+      A.toast(m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · جرّب بعدين' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
     } finally { btn.disabled = false; btn.textContent = label; }
   }
 
@@ -12696,7 +12728,7 @@ window.HAYATI_CONFIG = {
       A.toast('انضافت الملاحظات والملخص' + (add.length ? ' و' + add.length + ' سؤال' : '') + ' · راجعها واضغط «حفظ»');
     } catch (e) {
       const m = String(e && e.message || '');
-      A.toast(m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
+      A.toast(m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · جرّب بعدين' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
     } finally { root.querySelectorAll('[data-ai],[data-photo],[data-pdf]').forEach((b) => { b.disabled = false; }); btn.textContent = label; }
   }
 
@@ -12705,7 +12737,7 @@ window.HAYATI_CONFIG = {
   function officeBlock() {
     return '<button type="button" class="btn ghost block" data-office style="margin:0 0 6px">📑 ارفع بوربوينت أو وورد</button>' +
       '<input type="file" id="lcOffice" accept=".pptx,.docx,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>' +
-      '<p class="small muted" style="margin:0 4px 12px">' + (S.status && S.status.signedIn && S.invokeFn ? 'نطلع نص الشرائح بجوالك، وبعدين نسوي منه ملاحظات مختصرة وملخص وأسئلة للمراجعة. الملف ما ينحفظ.' : 'نطلع نص الشرائح لملاحظاتك بجوالك (بدون نت). الملخص والأسئلة التلقائية تحتاج حساب.') + '</p>';
+      '<p class="small muted" style="margin:0 4px 12px">' + (S.status && S.status.signedIn && S.invokeFn && !S.status.aiOff ? 'نطلع نص الشرائح بجوالك، وبعدين نسوي منه ملاحظات مختصرة وملخص وأسئلة للمراجعة. الملف ما ينحفظ.' : 'نطلع نص الشرائح لملاحظاتك بجوالك (بدون نت). الملخص والأسئلة التلقائية تحتاج حساب.') + '</p>';
   }
   async function runOffice(root, l, file, redrawCards) {
     if (file.size > OFFICE_MAX) { A.toast('الملف كبير · الحد 30MB'); return; }
@@ -12721,7 +12753,7 @@ window.HAYATI_CONFIG = {
       const ta = root.querySelector('[name=lc_notes]'), sm = root.querySelector('[name=lc_summary]'), titleIn = root.querySelector('[name=lc_title]');
       if (!titleIn.value.trim()) titleIn.value = file.name.replace(/\.(pptx|docx)$/i, '').slice(0, 120);
       const put = (notes) => { ta.value = ((ta.value.trim() ? ta.value.trim() + '\n\n' : '') + notes).slice(0, 20000); ta.dispatchEvent(new Event('input')); };
-      if (!(S.status && S.status.signedIn && S.invokeFn)) {
+      if (!(S.status && S.status.signedIn && S.invokeFn && !S.status.aiOff)) {
         put(text);
         A.toast('انضاف نص ' + (doc.kind === 'pptx' ? doc.count + ' شريحة' : 'الملف') + ' للملاحظات · اضغط «حفظ»');
         return;
@@ -12926,6 +12958,61 @@ window.HAYATI_CONFIG = {
     return prev(name, el, e);
   });
   E.FirstMinute = { KEY, card };
+})();
+
+</script>
+  <script>/* js/features/starthere.js */
+// DW-067: «ابدأ هني» — 4 خطوات توصّل المستخدم الجديد لأقوى شي بالتطبيق، وكل خطوة تنشطب لحالها من بياناته
+// تختفي لما يخلصها كلها أو يضغط «خلاص». الحالة بالجهاز (localStorage).
+(function () {
+  'use strict';
+
+  const A = window.App, E = window.Extras;
+  if (!A || !E) return;
+  const { st, I, tint } = A;
+  const wrap = (name, fn) => { const prev = E[name]; E[name] = (...a) => fn(prev ? prev : () => '', ...a); };
+  const KEY = 'hayati-start-here';
+  const hidden = () => { try { return localStorage.getItem(KEY) === 'done'; } catch (e) { return false; } };
+
+  const STEPS = [
+    ['sms', '💬', 'الصق رسالة بنك', 'المبلغ والمحل والتاريخ لحالهم', () => st.transactions.some((t) => t.source === 'sms' || t.source === 'import')],
+    ['timetable', '📅', 'ارفع جدولك', 'دراسة أو دوام أو برنامج المدرب', () => st.courses.length > 0],
+    ['budget', '🎯', 'حط ميزانيتك', 'وكل يوم يقولك كم تقدر تصرف', () => Number(st.settings.budget) > 0],
+    ['acc-add', '💳', 'أضف بطاقتك', 'رصيدها، والرسائل تنربط فيها', () => Array.isArray(st.settings.accounts) && st.settings.accounts.length > 0],
+  ];
+
+  function card() {
+    if (hidden() || !(st.settings || {}).onboarded) return '';
+    const done = STEPS.map((s) => s[4]());
+    if (done.every(Boolean)) return '';
+    const n = done.filter(Boolean).length;
+    return '<section data-tk="start"><div class="card" id="startHere"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><b style="flex:1">🚀 ابدأ هني</b>' +
+      '<small class="muted"><bdi>' + n + '/' + STEPS.length + '</bdi></small><button type="button" class="link" data-action="start-hide">خلاص</button></div>' +
+      '<div class="track" style="margin:0 0 8px"><span style="width:' + (n / STEPS.length) * 100 + '%"></span></div><ul class="list">' +
+      STEPS.map(([k, e, t, sub], i) => '<li class="row' + (done[i] ? ' done' : '') + '" data-action="start-go" data-k="' + k + '"><div class="ico" style="' + tint(done[i] ? '#10b981' : '#1A8A8F') + '">' + (done[i] ? I('check') : e) + '</div>' +
+        '<div class="main"><div class="title"><span class="t">' + t + '</span></div><div class="sub">' + sub + '</div></div>' + (done[i] ? '' : '<span class="muted">' + I('chevL') + '</span>') + '</li>').join('') +
+      '</ul></div></section>';
+  }
+
+  // نفس طريقة «كل شي بحياتي»: زر مخفي بـ data-action يمر على موزّع التطبيق
+  function run(action) {
+    const b = document.createElement('button'); b.dataset.action = action; b.hidden = true;
+    document.getElementById('view').appendChild(b); b.click(); b.remove();
+  }
+
+  wrap('todayTop', (prev) => prev() + card());
+  wrap('action', (prev, name, el, e) => {
+    if (name === 'start-hide') { try { localStorage.setItem(KEY, 'done'); } catch (err) { /* تجاهل */ } A.render(); return; }
+    if (name === 'start-go') {
+      const k = el.dataset.k;
+      if (k === 'sms') A.pasteSmsForm();
+      else if (k === 'acc-add') { A.ui.moneySeg = 'accounts'; A.go('money'); setTimeout(() => run('acc-add'), 60); }
+      else run(k);
+      return;
+    }
+    return prev(name, el, e);
+  });
+  E._startHere = { STEPS, card };
 })();
 
 </script>
@@ -13742,6 +13829,26 @@ window.HAYATI_CONFIG = {
     ['student', '🎓', 'طالب'], ['employee', '💼', 'موظف'], ['athlete', '🏃', 'رياضي'],
     ['keeper', '🧤', 'حارس مرمى'], ['home', '🏠', 'شؤون البيت'],
   ];
+  // DW-067: تحويل كل المبالغ لعملة جديدة (الأسعار تقريبية ومربوطة بالدولار)
+  function convertAll(from, to) {
+    const cv = (n) => (n == null || n === '' || !isFinite(Number(n)) ? n : window.HayatiCur.convert(Number(n), from, to));
+    let n = 0;
+    for (const [table, fields] of [['transactions', ['amount']], ['subscriptions', ['amount']], ['goals', ['target', 'saved']], ['debts', ['amount']]]) {
+      for (const r of st[table] || []) {
+        const patch = {};
+        for (const f of fields) if (r[f] != null) patch[f] = cv(r[f]);
+        if (Object.keys(patch).length) { S.upsert(table, Object.assign({}, r, patch)); n++; }
+      }
+    }
+    const set = {};
+    if (st.settings.budget) set.budget = cv(st.settings.budget);
+    if (st.settings.cat_budgets) set.cat_budgets = Object.fromEntries(Object.entries(st.settings.cat_budgets).map(([k, v]) => [k, cv(v)]));
+    if (Array.isArray(st.settings.accounts)) set.accounts = st.settings.accounts.map((a) => Object.assign({}, a, { balance: cv(a.balance), budget: cv(a.budget) }));
+    if (Object.keys(set).length) S.setSettings(set);
+    A.render(); A.toast('تحوّل ' + n + ' سجل ✓');
+  }
+  E._convertAll = convertAll;   // للاختبار
+
   // DW-054: الدراسة لكل المراحل (مدرسة، ثانوي، جامعة) — تغيّر الكلمات (حصة بدال محاضرة) والمعدل (٪ بدال 4.00)
   const LEVELS = [['school', 'مدرسة'], ['secondary', 'ثانوي'], ['university', 'جامعة أو دبلوم']];
   const PRAYER = [['gulf', 'أهل السنة (5 أوقات)'], ['jafari', 'جعفري (3 أوقات)'], ['off', 'لا تظهرها']];
@@ -13892,7 +13999,15 @@ window.HAYATI_CONFIG = {
       title: 'ملفك',
       body: '<p class="small muted" style="margin:0 0 12px">اللي تختاره يحدد وش يطلع لك: المعدل للطالب، الجاهزية للرياضي، ووضع الحارس للحارس. ما تختار شي = كل شي يطلع.</p>' + form(st.settings || {}, true),
       mount: bind,
-      onSave(root) { S.setSettings(read(root)); A.render(); A.toast('انحفظ ✓'); },
+      onSave(root) {
+        const C = window.HayatiCur, from = C ? C.code() : null;
+        S.setSettings(read(root)); A.render(); A.toast('انحفظ ✓');
+        const to = C ? C.code() : null;
+        // DW-067: غيّر عملته وعنده مبالغ ← نعرض نحوّلها (تقريبي) بدال ما يتغير الرمز بس
+        if (from && to && from !== to && (st.transactions.length || st.settings.budget)) setTimeout(async () => {
+          if (await A.ask('تحوّل المبالغ المسجلة من ' + C.LIST[from][4] + ' لـ ' + C.LIST[to][4] + '؟ (بسعر تقريبي)', 'حوّل')) convertAll(from, to);
+        }, 350);
+      },
     });
   }
 

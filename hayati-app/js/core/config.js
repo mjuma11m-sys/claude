@@ -12,4 +12,7 @@ window.HAYATI_CONFIG = {
   // الدخول السريع: اكتب 'apple' و/أو 'google' بس بعد ما تفعّلهم بلوحة Supabase (الخطوات بـ supabase/SETUP.md)
   //   فاضي = الأزرار ما تطلع (ولا زر ميت)
   PROVIDERS: [],
+  // DW-067: أزرار مخفية حتى لو مفعّلة بـ Supabase. Google بوضع Testing (بس المختبرين يدخلون، ومراجع Apple بيفشل)،
+  //   فنخفيه لين تنشر شاشة الموافقة (Google Auth Platform ← Branding ← Audience ← Publish app)، وبعدين شيله من هني
+  HIDE_PROVIDERS: ['google'],
 };

@@ -113,7 +113,7 @@
   // DW-021 phase 2: AI summary + questions from the notes. Signed-in only; the notes go to the server function, recordings never do.
   const AI_MIN = 200;
   function aiBlock() {
-    if (!(S.status && S.status.signedIn && S.invokeFn)) return '<p class="small muted" style="margin:0 4px 12px">✨ التلخيص والأسئلة التلقائية تشتغل لما تسجّل دخول بحسابك.</p>';
+    if (!(S.status && S.status.signedIn && S.invokeFn && !S.status.aiOff)) return '<p class="small muted" style="margin:0 4px 12px">✨ التلخيص والأسئلة التلقائية تشتغل لما تسجّل دخول بحسابك.</p>';
     return '<div style="display:flex;gap:8px;margin:0 0 8px"><button type="button" class="btn ghost" style="flex:1" data-photo>📷 صوّر السبورة</button><button type="button" class="btn ghost" style="flex:1" data-pdf>📄 ملف PDF</button></div>' +
       '<input type="file" id="lcPhoto" accept="image/*" capture="environment" hidden><input type="file" id="lcPdf" accept="application/pdf,.pdf" hidden>' +
       '<div class="row-btns" style="display:flex;gap:8px;margin:0 0 6px"><button type="button" class="btn ghost" style="flex:1" data-ai="summary">لخّصها لي ✨</button><button type="button" class="btn ghost" style="flex:1" data-ai="quiz">سوّ لي أسئلة ✨</button></div>' +
@@ -138,7 +138,7 @@
       } else A.toast('ما قدرنا نطلع نتيجة');
     } catch (e) {
       const m = String(e && e.message || '');
-      A.toast(m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
+      A.toast(m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · جرّب بعدين' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
     } finally { btns.forEach((b) => { b.disabled = false; }); btn.textContent = label; }
   }
 
@@ -165,7 +165,7 @@
       A.toast('انضاف النص للملاحظات · راجعه واضغط «حفظ»');
     } catch (e) {
       const m = String(e && e.message || '');
-      A.toast(m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
+      A.toast(m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · جرّب بعدين' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
     } finally { btn.disabled = false; btn.textContent = label; }
   }
 
@@ -193,7 +193,7 @@
       A.toast('انضافت الملاحظات والملخص' + (add.length ? ' و' + add.length + ' سؤال' : '') + ' · راجعها واضغط «حفظ»');
     } catch (e) {
       const m = String(e && e.message || '');
-      A.toast(m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
+      A.toast(m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · جرّب بعدين' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
     } finally { root.querySelectorAll('[data-ai],[data-photo],[data-pdf]').forEach((b) => { b.disabled = false; }); btn.textContent = label; }
   }
 
@@ -202,7 +202,7 @@
   function officeBlock() {
     return '<button type="button" class="btn ghost block" data-office style="margin:0 0 6px">📑 ارفع بوربوينت أو وورد</button>' +
       '<input type="file" id="lcOffice" accept=".pptx,.docx,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>' +
-      '<p class="small muted" style="margin:0 4px 12px">' + (S.status && S.status.signedIn && S.invokeFn ? 'نطلع نص الشرائح بجوالك، وبعدين نسوي منه ملاحظات مختصرة وملخص وأسئلة للمراجعة. الملف ما ينحفظ.' : 'نطلع نص الشرائح لملاحظاتك بجوالك (بدون نت). الملخص والأسئلة التلقائية تحتاج حساب.') + '</p>';
+      '<p class="small muted" style="margin:0 4px 12px">' + (S.status && S.status.signedIn && S.invokeFn && !S.status.aiOff ? 'نطلع نص الشرائح بجوالك، وبعدين نسوي منه ملاحظات مختصرة وملخص وأسئلة للمراجعة. الملف ما ينحفظ.' : 'نطلع نص الشرائح لملاحظاتك بجوالك (بدون نت). الملخص والأسئلة التلقائية تحتاج حساب.') + '</p>';
   }
   async function runOffice(root, l, file, redrawCards) {
     if (file.size > OFFICE_MAX) { A.toast('الملف كبير · الحد 30MB'); return; }
@@ -218,7 +218,7 @@
       const ta = root.querySelector('[name=lc_notes]'), sm = root.querySelector('[name=lc_summary]'), titleIn = root.querySelector('[name=lc_title]');
       if (!titleIn.value.trim()) titleIn.value = file.name.replace(/\.(pptx|docx)$/i, '').slice(0, 120);
       const put = (notes) => { ta.value = ((ta.value.trim() ? ta.value.trim() + '\n\n' : '') + notes).slice(0, 20000); ta.dispatchEvent(new Event('input')); };
-      if (!(S.status && S.status.signedIn && S.invokeFn)) {
+      if (!(S.status && S.status.signedIn && S.invokeFn && !S.status.aiOff)) {
         put(text);
         A.toast('انضاف نص ' + (doc.kind === 'pptx' ? doc.count + ' شريحة' : 'الملف') + ' للملاحظات · اضغط «حفظ»');
         return;

@@ -12,6 +12,26 @@
     ['student', '🎓', 'طالب'], ['employee', '💼', 'موظف'], ['athlete', '🏃', 'رياضي'],
     ['keeper', '🧤', 'حارس مرمى'], ['home', '🏠', 'شؤون البيت'],
   ];
+  // DW-067: تحويل كل المبالغ لعملة جديدة (الأسعار تقريبية ومربوطة بالدولار)
+  function convertAll(from, to) {
+    const cv = (n) => (n == null || n === '' || !isFinite(Number(n)) ? n : window.HayatiCur.convert(Number(n), from, to));
+    let n = 0;
+    for (const [table, fields] of [['transactions', ['amount']], ['subscriptions', ['amount']], ['goals', ['target', 'saved']], ['debts', ['amount']]]) {
+      for (const r of st[table] || []) {
+        const patch = {};
+        for (const f of fields) if (r[f] != null) patch[f] = cv(r[f]);
+        if (Object.keys(patch).length) { S.upsert(table, Object.assign({}, r, patch)); n++; }
+      }
+    }
+    const set = {};
+    if (st.settings.budget) set.budget = cv(st.settings.budget);
+    if (st.settings.cat_budgets) set.cat_budgets = Object.fromEntries(Object.entries(st.settings.cat_budgets).map(([k, v]) => [k, cv(v)]));
+    if (Array.isArray(st.settings.accounts)) set.accounts = st.settings.accounts.map((a) => Object.assign({}, a, { balance: cv(a.balance), budget: cv(a.budget) }));
+    if (Object.keys(set).length) S.setSettings(set);
+    A.render(); A.toast('تحوّل ' + n + ' سجل ✓');
+  }
+  E._convertAll = convertAll;   // للاختبار
+
   // DW-054: الدراسة لكل المراحل (مدرسة، ثانوي، جامعة) — تغيّر الكلمات (حصة بدال محاضرة) والمعدل (٪ بدال 4.00)
   const LEVELS = [['school', 'مدرسة'], ['secondary', 'ثانوي'], ['university', 'جامعة أو دبلوم']];
   const PRAYER = [['gulf', 'أهل السنة (5 أوقات)'], ['jafari', 'جعفري (3 أوقات)'], ['off', 'لا تظهرها']];
@@ -162,7 +182,15 @@
       title: 'ملفك',
       body: '<p class="small muted" style="margin:0 0 12px">اللي تختاره يحدد وش يطلع لك: المعدل للطالب، الجاهزية للرياضي، ووضع الحارس للحارس. ما تختار شي = كل شي يطلع.</p>' + form(st.settings || {}, true),
       mount: bind,
-      onSave(root) { S.setSettings(read(root)); A.render(); A.toast('انحفظ ✓'); },
+      onSave(root) {
+        const C = window.HayatiCur, from = C ? C.code() : null;
+        S.setSettings(read(root)); A.render(); A.toast('انحفظ ✓');
+        const to = C ? C.code() : null;
+        // DW-067: غيّر عملته وعنده مبالغ ← نعرض نحوّلها (تقريبي) بدال ما يتغير الرمز بس
+        if (from && to && from !== to && (st.transactions.length || st.settings.budget)) setTimeout(async () => {
+          if (await A.ask('تحوّل المبالغ المسجلة من ' + C.LIST[from][4] + ' لـ ' + C.LIST[to][4] + '؟ (بسعر تقريبي)', 'حوّل')) convertAll(from, to);
+        }, 350);
+      },
     });
   }
 

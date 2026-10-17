@@ -404,7 +404,8 @@
   function providers() {
     const p = (global.HAYATI_CONFIG || {}).PROVIDERS;
     const list = detected.concat(Array.isArray(p) ? p : []);
-    return sb ? ['apple', 'google'].filter((x) => list.includes(x)) : [];
+    const hide = (global.HAYATI_CONFIG || {}).HIDE_PROVIDERS || [];
+    return sb ? ['apple', 'google'].filter((x) => list.includes(x) && !hide.includes(x)) : [];
   }
 
   function arabicAuthError(msg) {
@@ -683,6 +684,9 @@
     if (error) {
       let msg = error.message || 'error';
       try { const j = await error.context.json(); if (j && j.error) msg = j.error; } catch (e) { /* no body */ }
+      // DW-067: الدالة مو منشورة أو بدون مفتاح ← نخفي أزرار الذكاء بدال ما تطلع أخطاء
+      const code = error.context && error.context.status;
+      if (code === 404 || msg === 'not_configured' || /not found|failed to send/i.test(msg)) { status.aiOff = true; emit(); throw new Error('unavailable'); }
       throw new Error(msg);
     }
     return data;

@@ -568,7 +568,7 @@
   // ================= المساعد الذكي =================
   // DW-037: يشتغل بطريقتين: داخل Claude (sample)، أو بالتطبيق نفسه لما تكون مسجّل دخول (دالة lecture-ai بـ Supabase)
   let sampleFn = null, chatTurns = [], chatCtl = null;
-  const viaServer = () => !sampleFn && !!(S && S.status && S.status.signedIn && S.invokeFn);
+  const viaServer = () => !sampleFn && !!(S && S.status && S.status.signedIn && S.invokeFn && !S.status.aiOff);
   function showBtn() {
     const btn = document.getElementById('assistBtn');
     if (!btn) return;
