@@ -24,6 +24,7 @@
       ['subs', 'repeat', '#f59e0b', 'الاشتراكات', () => goSeg('money', 'moneySeg', 'subs')],
       ['goals', 'piggy', '#10b981', 'أهداف الادخار', () => goSeg('money', 'moneySeg', 'goals')],
       ['debts', 'users', '#0891b2', 'لي وعلي', () => goSeg('money', 'moneySeg', 'debts')],
+      ['bankfile', 'download', '#0d9488', 'استيراد الحساب كامل', () => run('bankfile')],
       ['report', 'chart', '#8b5cf6', 'تقرير الشهر', () => { goSeg('money', 'moneySeg', 'tx'); setTimeout(() => run('report'), 50); }],
       ['year', 'chart', '#6366f1', 'ملخص السنة', () => run('year')],
       ['travel', 'briefcase', '#0d9488', 'تخطيط السفر', () => run('travel')],

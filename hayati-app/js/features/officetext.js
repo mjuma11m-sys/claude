@@ -63,5 +63,33 @@
     throw new Error('type');
   }
 
-  window.HayatiOffice = { extract };
+  // DW-058: أول ورقة بملف Excel (.xlsx) ← صفوف [[خلية، خلية…]]؛ الأرقام تظل أرقام (التواريخ أرقام Excel)
+  async function sheet(file) {
+    const { b, out } = entries(await file.arrayBuffer());
+    const get = (n) => out.find((e) => e.name === n);
+    const shared = [];
+    const ss = get('xl/sharedStrings.xml');
+    if (ss) for (const si of (await read(b, ss)).split('</si>')) { const t = [...si.matchAll(/<t(?:\s[^>]*)?>([^<]*)<\/t>/g)].map((m) => m[1]).join(''); if (si.includes('<si')) shared.push(unxml(t)); }
+    const ws = get('xl/worksheets/sheet1.xml') || out.find((e) => /^xl\/worksheets\/sheet\d+\.xml$/.test(e.name));
+    if (!ws) throw new Error('type');
+    const rows = [];
+    for (const r of (await read(b, ws)).split('</row>')) {
+      const row = [];
+      for (const c of r.matchAll(/<c\s([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
+        const ref = (c[1].match(/r="([A-Z]+)\d+"/) || [])[1];
+        const col = ref ? [...ref].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0) - 1 : row.length;
+        const type = (c[1].match(/t="(\w+)"/) || [])[1];
+        const v = ((c[2] || '').match(/<v>([^<]*)<\/v>/) || [])[1];
+        let val = '';
+        if (type === 's') val = shared[Number(v)] || '';
+        else if (type === 'inlineStr') val = unxml([...(c[2] || '').matchAll(/<t(?:\s[^>]*)?>([^<]*)<\/t>/g)].map((m) => m[1]).join(''));
+        else if (v != null) val = type === 'str' ? unxml(v) : Number(v);
+        row[col] = val;
+      }
+      if (row.some((x) => x !== '' && x != null)) rows.push(Array.from(row, (x) => (x == null ? '' : x)));
+    }
+    return rows;
+  }
+
+  window.HayatiOffice = { extract, sheet };
 })();

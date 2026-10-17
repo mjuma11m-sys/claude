@@ -233,6 +233,40 @@ test('bank messages keep their own date, several at once, and no duplicates', as
   expect(tx.length).toBe(3);
 });
 
+// DW-058: استيراد الحساب كامل: كشف Excel، ملف رسائل CSV/XML/TXT، وسطور PDF؛ كل عملية بتاريخها والمكرر ما ينضاف
+test('bank import: statement Excel, message files and PDF lines, each on its date, no duplicates', async ({ page }) => {
+  await open(page);
+  await page.click('#addBtn');
+  await page.click('[data-pick="bankfile"]');
+  await page.setInputFiles('#biFile', path.join(__dirname, 'fixtures/statement.xlsx'));
+  await expect(page.locator('#biOut')).toContainText('لقيت 3 عملية');
+  await expect(page.locator('#biOut')).toContainText('783.750');
+  await page.click('#sheetSave');
+  await expect.poll(() => store(page, () => App.st.transactions.length)).toBe(3);
+  const tx = await store(page, () => App.st.transactions.map((t) => [t.kind, t.amount, new Date(t.occurred_at).toDateString(), t.category]).sort((a, b) => a[1] - b[1]));
+  expect(tx).toEqual([['expense', 3.75, new Date(2026, 8, 3).toDateString(), 'قهوة'], ['expense', 12.5, new Date(2026, 9, 5).toDateString(), 'أكل ومطاعم'], ['income', 300, new Date(2026, 8, 3).toDateString(), expect.any(String)]]);
+  // نفس الكشف مرة ثانية: ولا وحدة تنضاف
+  await page.waitForTimeout(350);
+  await store(page, () => Extras.bankImport());
+  await page.setInputFiles('#biFile', path.join(__dirname, 'fixtures/statement.xlsx'));
+  await expect(page.locator('#biOut')).toContainText('بينضاف 0');
+  await page.click('#sheetCancel');
+  // ملفات الرسائل
+  const r = await page.evaluate(() => {
+    const B = Extras._bank, now = new Date(2026, 9, 17, 12);
+    const fromCsv = B.fromRows(B.csv('Message Date,Sender,Text\n2025-06-01 10:15:00,BBK,"Purchase of BHD 4.200 at STARBUCKS using card XXXX4821"\n2025-06-02 09:00:00,BBK,Your OTP is 1234\n'), now).list;
+    const fromXml = B.fromXml('<?xml version="1.0"?><smses count="2"><sms address="NBB" date="1735725600000" body="BHD 20.000 debited at LULU HYPERMARKET" /><sms address="Mom" date="1735725600000" body="hi" /></smses>', now).list;
+    const fromTxt = B.fromText('Purchase of BHD 1.500 at CAFE on 01/03/2024\n\nhello\n\nBHD 100.000 credited salary on 25/03/2024', now).list;
+    const fromPdf = B.fromPdfLines(['Date  Details  Amount  Balance', '05/10/2026  POS TALABAT  12.500 DR  770.000', '06/10/2026  TRANSFER FROM AHMED  50.000 CR  820.000', 'Closing balance 820.000'], now).list;
+    const f = (l) => l.map((x) => [x.kind, x.amount, x.at.getFullYear() + '-' + (x.at.getMonth() + 1) + '-' + x.at.getDate()]);
+    return { csv: f(fromCsv), xml: f(fromXml), txt: f(fromTxt), pdf: f(fromPdf) };
+  });
+  expect(r.csv).toEqual([['expense', 4.2, '2025-6-1']]);
+  expect(r.xml).toEqual([['expense', 20, '2025-1-1']]);
+  expect(r.txt).toEqual([['expense', 1.5, '2024-3-1'], ['income', 100, '2024-3-25']]);
+  expect(r.pdf).toEqual([['expense', 12.5, '2026-10-5'], ['income', 50, '2026-10-6']]);
+});
+
 test('weekly report shows on Friday evening and opens', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-10-16T20:00:00+03:00') });
   await open(page);
@@ -1722,7 +1756,7 @@ test('«جديد بحياتي»: an existing user sees what is new once after th
   await store(page, () => localStorage.setItem('hayati-seen-version', 'v23'));   // كان على النسخة اللي قبل
   await open(page);
   await expect(page.locator('#sheetTitle')).toHaveText('جديد بحياتي ✨', { timeout: 5000 });
-  await expect(page.locator('#sheetBody .news-item')).toHaveCount(11);
+  await expect(page.locator('#sheetBody .news-item')).toHaveCount(12);
   await page.click('#sheetCancel');
   expect(await store(page, () => localStorage.getItem('hayati-seen-version'))).toBe(await store(page, () => App.APP_VERSION));
   await open(page);

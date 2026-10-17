@@ -185,8 +185,9 @@
     [new RegExp('(?<![\\d.:])(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})(?!\\d)'), (m) => [m[1], m[2], m[3]]],
     [new RegExp('(?:on|dated|date|بتاريخ|تاريخ|في)\\s*:?\\s*(\\d{1,2})[/-](\\d{1,2})(?![\\d/.])', 'i'), (m) => [m[1], m[2], null]],
   ];
-  function findDate(text, now) {
+  function findDate(text, now, maxDays) {
     now = now || new Date();
+    const oldest = (maxDays || 400) * 864e5;   // الاستيراد (DW-058) يقبل سنين
     for (const [re, pick] of DATE_RES) {
       const m = re.exec(text);
       if (!m) continue;
@@ -202,7 +203,7 @@
       let at = new Date(y, mo - 1, d, H, M);
       if (at.getMonth() !== mo - 1) continue;   // 31/02
       if (noYear && at - now > 864e5) at = new Date(y - 1, mo - 1, d, H, M);
-      if (at - now > 864e5 || now - at > 400 * 864e5) continue;   // مستقبل أو أقدم من سنة: مو تاريخ العملية
+      if (at - now > 864e5 || now - at > oldest) continue;   // مستقبل أو أقدم من سنة: مو تاريخ العملية
       // تاريخ بدون وقت وهو اليوم = الحين
       if (!t && at.toDateString() === now.toDateString()) at = new Date(now);
       return at;
@@ -321,7 +322,7 @@
       .replace(/[xX*]{2,}(?=\s|$)/g, '••');
   }
 
-  const api = { parse, findDate, quick, categorize, learn, learnedFor, setLearned, LEARN_KEY, mask, brand, groupByBrand, BRANDS, CATEGORY_RULES, INCOME_CATEGORY_RULES };
+  const api = { parse, findDate, detectKind, quick, categorize, learn, learnedFor, setLearned, LEARN_KEY, mask, brand, groupByBrand, BRANDS, CATEGORY_RULES, INCOME_CATEGORY_RULES };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else global.SmsParser = api;
 })(typeof window !== 'undefined' ? window : globalThis);

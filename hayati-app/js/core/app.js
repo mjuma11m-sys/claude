@@ -1352,10 +1352,12 @@
         '<div class="field"><textarea name="sms" placeholder="مثال: Purchase of BHD 3.500 at TALABAT using card XXXX1234"></textarea></div>' +
         '<div id="smsPreview"></div>' +
         '<div class="field" id="smsWhen" hidden><label>تاريخ العملية</label><input type="datetime-local" name="sms_at"><p class="small muted" id="smsWhenNote" style="margin:4px 4px 0"></p></div>' +
-        '<p class="small muted" style="margin:8px 4px 0">تقدر تلصق كذا رسالة مرة وحدة (سطر فاضي بين كل وحدة)، وكل وحدة تنحفظ بتاريخها.</p>',
+        '<p class="small muted" style="margin:8px 4px 0">تقدر تلصق كذا رسالة مرة وحدة (سطر فاضي بين كل وحدة)، وكل وحدة تنحفظ بتاريخها.</p>' +
+        '<button type="button" class="btn ghost block" id="smsFile" style="margin-top:10px">' + I('download') + 'عندك كشف حساب أو ملف رسائل كامل؟ ارفعه</button>',
       mount(root) {
         const ta = root.querySelector('textarea');
         const pv = root.querySelector('#smsPreview');
+        root.querySelector('#smsFile').onclick = () => { closeSheet(); setTimeout(() => X('bankImport'), 280); };
         const whenF = root.querySelector('#smsWhen'), whenIn = root.querySelector('[name=sms_at]'), whenNote = root.querySelector('#smsWhenNote');
         let touched = false;
         whenIn.addEventListener('input', () => { touched = true; });

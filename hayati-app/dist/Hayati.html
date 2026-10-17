@@ -2831,6 +2831,28 @@ window.HAYATI_EN = {
 "هالرسالة مضافة من قبل": "This message was already added",
 "انضافت بتاريخ": "Added on",
 "عمليات بتواريخها ✓": "transactions on their dates ✓",
+// DW-058: استيراد الحساب كامل
+"استيراد الحساب كامل": "Import your whole account",
+"كشف الحساب أو ملف رسائل البنك": "Bank statement or bank messages file",
+"كشف الحساب (Excel أو CSV أو PDF) أو ملف رسائل البنك: كل العمليات بتواريخها": "Bank statement (Excel, CSV or PDF) or a bank messages file: every transaction on its date",
+"أضف العمليات": "Add transactions",
+"اختار الملف": "Choose file",
+"ما لقيت عمليات": "No transactions found",
+"تأكد إن الملف كشف حساب أو رسائل البنك": "Make sure the file is a bank statement or bank messages",
+"آخر رصيد بالكشف": "Last balance in the statement",
+"بينضاف": "Will add",
+"موجودة عندك قبل وما بتتكرر": "already in your app and won't be duplicated",
+"عليها «راجعها»": "marked \"review\"",
+"وين ألقى الملف؟": "Where do I find the file?",
+"من": "From",
+"لين": "to",
+"الملف يتقرا بجوالك وما يطلع منه، وأرقام البطاقات تنخفى قبل الحفظ.": "The file is read on your phone and never leaves it; card numbers are hidden before saving.",
+"الملف كبير · قسّم الفترة": "File too large · split the period",
+"هذا ملف Excel قديم (.xls) · احفظه .xlsx أو CSV": "This is an old Excel file (.xls) · save it as .xlsx or CSV",
+"ما قدرنا نقرا الملف · جرّب Excel أو CSV": "Couldn't read the file · try Excel or CSV",
+"كل العمليات موجودة عندك قبل": "All these transactions are already in your app",
+"اختار الملف أول": "Choose the file first",
+"عندك كشف حساب أو ملف رسائل كامل؟ ارفعه": "Have a full statement or messages file? Upload it",
 };
 
 </script>
@@ -3151,8 +3173,9 @@ window.HAYATI_CONFIG = {
     [new RegExp('(?<![\\d.:])(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})(?!\\d)'), (m) => [m[1], m[2], m[3]]],
     [new RegExp('(?:on|dated|date|بتاريخ|تاريخ|في)\\s*:?\\s*(\\d{1,2})[/-](\\d{1,2})(?![\\d/.])', 'i'), (m) => [m[1], m[2], null]],
   ];
-  function findDate(text, now) {
+  function findDate(text, now, maxDays) {
     now = now || new Date();
+    const oldest = (maxDays || 400) * 864e5;   // الاستيراد (DW-058) يقبل سنين
     for (const [re, pick] of DATE_RES) {
       const m = re.exec(text);
       if (!m) continue;
@@ -3168,7 +3191,7 @@ window.HAYATI_CONFIG = {
       let at = new Date(y, mo - 1, d, H, M);
       if (at.getMonth() !== mo - 1) continue;   // 31/02
       if (noYear && at - now > 864e5) at = new Date(y - 1, mo - 1, d, H, M);
-      if (at - now > 864e5 || now - at > 400 * 864e5) continue;   // مستقبل أو أقدم من سنة: مو تاريخ العملية
+      if (at - now > 864e5 || now - at > oldest) continue;   // مستقبل أو أقدم من سنة: مو تاريخ العملية
       // تاريخ بدون وقت وهو اليوم = الحين
       if (!t && at.toDateString() === now.toDateString()) at = new Date(now);
       return at;
@@ -3287,7 +3310,7 @@ window.HAYATI_CONFIG = {
       .replace(/[xX*]{2,}(?=\s|$)/g, '••');
   }
 
-  const api = { parse, findDate, quick, categorize, learn, learnedFor, setLearned, LEARN_KEY, mask, brand, groupByBrand, BRANDS, CATEGORY_RULES, INCOME_CATEGORY_RULES };
+  const api = { parse, findDate, detectKind, quick, categorize, learn, learnedFor, setLearned, LEARN_KEY, mask, brand, groupByBrand, BRANDS, CATEGORY_RULES, INCOME_CATEGORY_RULES };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else global.SmsParser = api;
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -5616,10 +5639,12 @@ window.HAYATI_CONFIG = {
         '<div class="field"><textarea name="sms" placeholder="مثال: Purchase of BHD 3.500 at TALABAT using card XXXX1234"></textarea></div>' +
         '<div id="smsPreview"></div>' +
         '<div class="field" id="smsWhen" hidden><label>تاريخ العملية</label><input type="datetime-local" name="sms_at"><p class="small muted" id="smsWhenNote" style="margin:4px 4px 0"></p></div>' +
-        '<p class="small muted" style="margin:8px 4px 0">تقدر تلصق كذا رسالة مرة وحدة (سطر فاضي بين كل وحدة)، وكل وحدة تنحفظ بتاريخها.</p>',
+        '<p class="small muted" style="margin:8px 4px 0">تقدر تلصق كذا رسالة مرة وحدة (سطر فاضي بين كل وحدة)، وكل وحدة تنحفظ بتاريخها.</p>' +
+        '<button type="button" class="btn ghost block" id="smsFile" style="margin-top:10px">' + I('download') + 'عندك كشف حساب أو ملف رسائل كامل؟ ارفعه</button>',
       mount(root) {
         const ta = root.querySelector('textarea');
         const pv = root.querySelector('#smsPreview');
+        root.querySelector('#smsFile').onclick = () => { closeSheet(); setTimeout(() => X('bankImport'), 280); };
         const whenF = root.querySelector('#smsWhen'), whenIn = root.querySelector('[name=sms_at]'), whenNote = root.querySelector('#smsWhenNote');
         let touched = false;
         whenIn.addEventListener('input', () => { touched = true; });
@@ -9092,6 +9117,285 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
+  <script>/* js/features/bankimport.js */
+// DW-058: استيراد الحساب كامل — كشف الحساب (Excel · CSV · PDF) أو ملف الرسائل (TXT · XML من «SMS Backup & Restore» · CSV)
+// كل شي يتقرا بالجهاز. الـPDF بس، لأصحاب الحسابات، يقدر يروح للذكاء لو القارئ المحلي ما لقى شي. المكرر ما ينضاف.
+(function () {
+  'use strict';
+
+  const A = window.App, E = window.Extras, P = window.SmsParser;
+  if (!A || !E || !P) return;
+  const { S, st, I, h } = A;
+  const wrap = (name, fn) => { const prev = E[name]; E[name] = (...a) => fn(prev ? prev : () => '', ...a); };
+  const MAX_DAYS = 365 * 15;
+  const PDF_MAX = 6 * 1024 * 1024;
+  const PDFJS = location.protocol === 'file:' ? 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/' : 'vendor/pdfjs/';
+  const digits = (s) => String(s == null ? '' : s).replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/٫/g, '.').replace(/٬/g, ',');
+
+  // ---------- CSV ----------
+  function csv(text) {
+    const first = text.split('\n', 1)[0];
+    const sep = [',', ';', '\t'].sort((a, b) => first.split(b).length - first.split(a).length)[0];
+    const rows = []; let row = [], cell = '', q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) { if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') q = false; else cell += c; continue; }
+      if (c === '"') q = true;
+      else if (c === sep) { row.push(cell); cell = ''; }
+      else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); if (row.some((x) => x.trim())) rows.push(row); row = []; cell = ''; }
+      else cell += c;
+    }
+    row.push(cell); if (row.some((x) => x.trim())) rows.push(row);
+    return rows;
+  }
+
+  // ---------- قيم الخلايا ----------
+  function money(v) {
+    if (typeof v === 'number') return v;
+    let t = digits(v).trim();
+    if (!t) return null;
+    const neg = /^\(.*\)$/.test(t) || /^-|-$/.test(t) || /\bDR\b|مدين/i.test(t);
+    t = t.replace(/[^\d.,]/g, '');
+    if (/,\d{3}(\.|$)/.test(t)) t = t.replace(/,/g, ''); else t = t.replace(',', '.');
+    const n = parseFloat(t);
+    return isFinite(n) ? (neg ? -Math.abs(n) : n) : null;
+  }
+  function when(v, now) {
+    if (typeof v === 'number' && v > 20000 && v < 80000) {   // رقم تاريخ Excel
+      const d = new Date(Math.round((v - 25569) * 864e5)); return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes());
+    }
+    if (typeof v === 'number' && v > 1e12 && v < 4e12) return new Date(v);   // ملّي ثانية (XML الرسائل)
+    const t = digits(v).trim();
+    if (!t) return null;
+    const iso = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{1,2}):(\d{2}))?/.exec(t);
+    if (iso) return new Date(+iso[1], +iso[2] - 1, +iso[3], +(iso[4] || 12), +(iso[5] || 0));
+    return P.findDate(t, now, MAX_DAYS);
+  }
+
+  // ---------- الصفوف ← عمليات ----------
+  const H = {
+    date: /\bdate\b|تاريخ/i,
+    text: /^(text|body|message|sms|content)$|الرسالة|نص الرسالة/i,
+    desc: /desc|details|narration|particular|remark|transaction|merchant|beneficiary|البيان|التفاصيل|الوصف|الشرح|المستفيد/i,
+    debit: /debit|withdraw|^dr$|money out|paid out|مدين|سحب|مسحوب|خصم/i,
+    credit: /credit|deposit|^cr$|money in|paid in|دائن|إيداع|ايداع|وارد/i,
+    amount: /^amount|المبلغ|القيمة/i,
+    balance: /balance|الرصيد/i,
+  };
+  const SKIP = /opening balance|closing balance|balance b\/?f|balance c\/?f|brought forward|carried forward|الرصيد الافتتاحي|الرصيد الختامي|رصيد مرحل/i;
+
+  function fromRows(rows, now) {
+    let hi = -1, col = {};
+    for (let i = 0; i < Math.min(rows.length, 25) && hi < 0; i++) {
+      const c = {};
+      rows[i].forEach((x, j) => { const t = String(x).trim(); if (!t || t.length > 40) return; for (const k of Object.keys(H)) if (c[k] == null && H[k].test(t)) { c[k] = j; break; } });
+      if (c.date != null && (c.text != null || c.desc != null) && (c.text != null || c.debit != null || c.credit != null || c.amount != null)) { hi = i; col = c; }
+    }
+    if (hi < 0) return null;
+    const out = [];
+    let lastBal = null;
+    for (const r of rows.slice(hi + 1)) {
+      const d = when(r[col.date], now);
+      if (col.text != null) {   // ملف رسائل: كل صف رسالة
+        const body = String(r[col.text] || '');
+        const p = P.parse(body, now);
+        if (p) out.push({ kind: p.kind, amount: p.amount, currency: p.currency, merchant: p.merchant, category: p.category, at: d || p.date, review: p.needs_review, raw: body });
+        continue;
+      }
+      const desc = String(r[col.desc] || '').replace(/\s+/g, ' ').trim();
+      if (!d || SKIP.test(desc)) continue;
+      let amt = null, kind = null;
+      const dr = col.debit != null ? money(r[col.debit]) : null, cr = col.credit != null ? money(r[col.credit]) : null;
+      if (dr) { amt = Math.abs(dr); kind = 'expense'; } else if (cr) { amt = Math.abs(cr); kind = 'income'; } else if (col.amount != null) {
+        const a = money(r[col.amount]);
+        if (a) { amt = Math.abs(a); kind = a < 0 ? 'expense' : /\bCR\b|دائن/i.test(String(r[col.amount])) ? 'income' : P.detectKind(desc).kind; }
+      }
+      if (!amt || !(amt > 0)) continue;
+      if (col.balance != null) { const b = money(r[col.balance]); if (b != null) lastBal = { b, at: d }; }
+      out.push({ kind, amount: Math.round(amt * 1000) / 1000, currency: 'BHD', merchant: desc.slice(0, 60), category: P.categorize(kind, desc, desc), at: d, review: col.amount != null && !(money(r[col.amount]) < 0) && !P.detectKind(desc).sure });
+    }
+    return { list: out, balance: lastBal };
+  }
+
+  // ملف نص: رسائل بسطر فاضي بينها (أو تصدير iMazing/الماك: كل رسالة تبدأ بتاريخ)
+  function fromText(text, now) {
+    let parts = text.split(/\n\s*\n/);
+    if (parts.length < 3) parts = text.split(/\n(?=\s*(?:\[?\d{4}-\d{2}-\d{2}|\[?\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}))/);
+    const out = [];
+    for (const raw of parts) {
+      const t = raw.trim(); if (!t) continue;
+      const p = P.parse(t, now);
+      if (p) out.push({ kind: p.kind, amount: p.amount, currency: p.currency, merchant: p.merchant, category: p.category, at: p.date || P.findDate(t, now, MAX_DAYS), review: p.needs_review, raw: t });
+    }
+    return { list: out, balance: null };
+  }
+
+  // «SMS Backup & Restore» (أندرويد): <sms date="ملّي ثانية" body="…" />
+  function fromXml(text, now) {
+    const doc = new DOMParser().parseFromString(text, 'text/xml');
+    const out = [];
+    for (const n of doc.querySelectorAll('sms')) {
+      const body = n.getAttribute('body') || '';
+      const p = P.parse(body, now);
+      if (!p) continue;
+      const ms = Number(n.getAttribute('date'));
+      out.push({ kind: p.kind, amount: p.amount, currency: p.currency, merchant: p.merchant, category: p.category, at: p.date || (ms ? new Date(ms) : null), review: p.needs_review, raw: body });
+    }
+    return { list: out, balance: null };
+  }
+
+  // PDF: كل سطر فيه تاريخ ومبلغ = عملية (الرقم الأخير غالباً الرصيد لو فيه أكثر من رقم)
+  let pdfLib = null;
+  function loadPdf() {
+    if (pdfLib) return pdfLib;
+    pdfLib = window.pdfjsLib ? Promise.resolve(window.pdfjsLib) : new Promise((res, rej) => {
+      const s = document.createElement('script'); s.src = PDFJS + 'pdf.min.js';
+      s.onload = () => { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js'; res(window.pdfjsLib); };
+      s.onerror = () => { pdfLib = null; rej(new Error('pdf')); };
+      document.head.appendChild(s);
+    });
+    return pdfLib;
+  }
+  async function pdfLines(file) {
+    const lib = await loadPdf();
+    const doc = await lib.getDocument({ data: await file.arrayBuffer() }).promise;
+    const lines = [];
+    for (let i = 1; i <= Math.min(doc.numPages, 60); i++) {
+      const rows = new Map();
+      for (const it of (await (await doc.getPage(i)).getTextContent()).items) {
+        const y = Math.round(it.transform[5] / 3);
+        rows.set(y, (rows.get(y) || []).concat([[it.transform[4], it.str]]));
+      }
+      [...rows.entries()].sort((a, b) => b[0] - a[0]).forEach(([, r]) => lines.push(r.sort((a, b) => a[0] - b[0]).map((x) => x[1]).join('  ')));
+    }
+    return lines;
+  }
+  function fromPdfLines(lines, now) {
+    const out = [];
+    for (const raw of lines) {
+      const line = digits(raw);
+      if (SKIP.test(line)) continue;
+      const m = /^\s*(\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}|\d{4}-\d{2}-\d{2}|\d{1,2}[\s-][A-Za-z]{3}[\s-]\d{2,4})/.exec(line);
+      if (!m) continue;
+      const d = when(m[1], now);
+      const nums = [...line.slice(m[0].length).matchAll(/-?\(?\d{1,3}(?:,\d{3})*\.\d{2,3}\)?(?:\s*(?:DR|CR))?/gi)].map((x) => x[0]);
+      if (!d || !nums.length) continue;
+      const a = money(nums[0]);
+      if (!a) continue;
+      const desc = line.slice(m[0].length).replace(/-?\(?\d{1,3}(?:,\d{3})*\.\d{2,3}\)?(?:\s*(?:DR|CR))?/gi, ' ').replace(/\s+/g, ' ').trim();
+      const k = a < 0 || /\bDR\b/i.test(nums[0]) ? 'expense' : /\bCR\b/i.test(nums[0]) ? 'income' : P.detectKind(desc).kind;
+      out.push({ kind: k, amount: Math.round(Math.abs(a) * 1000) / 1000, currency: 'BHD', merchant: desc.slice(0, 60), category: P.categorize(k, desc, desc), at: d, review: true });
+    }
+    return { list: out, balance: null };
+  }
+
+  // ---------- المكرر ----------
+  const dayKey = (d) => d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+  const keyOf = (kind, amount, d) => kind + '|' + Number(amount).toFixed(3) + '|' + dayKey(d);
+  function dedupe(list) {
+    const have = new Map();
+    for (const t of st.transactions) { const k = keyOf(t.kind, t.amount, new Date(t.occurred_at)); have.set(k, (have.get(k) || 0) + 1); }
+    const seen = new Map();
+    let dup = 0;
+    const fresh = [];
+    for (const x of list) {
+      const k = keyOf(x.kind, x.amount, x.at);
+      const n = (seen.get(k) || 0) + 1; seen.set(k, n);
+      if (n <= (have.get(k) || 0)) { dup++; continue; }   // نفس اليوم والمبلغ موجود قبل (أو من رسالة لصقتها)
+      fresh.push(x);
+    }
+    return { fresh, dup };
+  }
+
+  async function readFile(file, now) {
+    const name = String(file.name || '').toLowerCase();
+    if (/\.xlsx$/.test(name)) return fromRows(await window.HayatiOffice.sheet(file), now) || { list: [], balance: null };
+    if (/\.xls$/.test(name)) throw new Error('xls');
+    if (/\.pdf$/.test(name) || /pdf$/.test(file.type)) return fromPdfLines(await pdfLines(file), now);
+    const text = await file.text();
+    if (/<smses|<sms\s/.test(text.slice(0, 4000))) return fromXml(text, now);
+    if (/\.csv$/.test(name) || /^[^\n]*[,;\t][^\n]*[,;\t]/.test(text)) { const r = fromRows(csv(text), now); if (r && r.list.length) return r; }
+    return fromText(text, now);
+  }
+
+  // ---------- الواجهة ----------
+  function sheet() {
+    let res = null;
+    const fmt = (n) => A.fmt(n);
+    const summary = () => {
+      if (!res) return '';
+      const { fresh, dup, all, balance } = res;
+      if (!all.length) return '<div class="card">' + A.empty('alert', 'ما لقيت عمليات', 'تأكد إن الملف كشف حساب أو رسائل البنك') + '</div>';
+      const dates = fresh.map((x) => x.at).sort((a, b) => a - b);
+      const exp = fresh.filter((x) => x.kind === 'expense').reduce((s, x) => s + x.amount, 0), inc = fresh.filter((x) => x.kind === 'income').reduce((s, x) => s + x.amount, 0);
+      const months = new Map();
+      for (const x of fresh) { const k = x.at.getFullYear() + '-' + String(x.at.getMonth() + 1).padStart(2, '0'); const m = months.get(k) || { n: 0, e: 0, i: 0 }; m.n++; if (x.kind === 'expense') m.e += x.amount; else m.i += x.amount; months.set(k, m); }
+      const review = fresh.filter((x) => x.review).length;
+      return '<div class="card"><b>لقيت ' + all.length + ' عملية</b>' +
+        (dates.length ? '<p class="small muted" style="margin:4px 0 8px">من <bdi>' + A.dayLabel(dates[0]) + ' ' + dates[0].getFullYear() + '</bdi> لين <bdi>' + A.dayLabel(dates[dates.length - 1]) + ' ' + dates[dates.length - 1].getFullYear() + '</bdi></p>' : '') +
+        '<div class="split" style="display:flex;gap:12px"><div><small class="muted">صرف</small><br><b class="num" data-noi18n>' + fmt(exp) + '</b></div><div><small class="muted">دخل</small><br><b class="num" data-noi18n>' + fmt(inc) + '</b></div>' +
+        (balance ? '<div><small class="muted">آخر رصيد بالكشف</small><br><b class="num" data-noi18n>' + fmt(balance.b) + '</b></div>' : '') + '</div>' +
+        '<p class="small" style="margin:8px 0 0">بينضاف <b>' + fresh.length + '</b>' + (dup ? ' · ' + dup + ' موجودة عندك قبل وما بتتكرر' : '') + (review ? ' · ' + review + ' عليها «راجعها»' : '') + '</p></div>' +
+        (months.size ? '<div class="card flush"><ul class="list">' + [...months.entries()].sort((a, b) => (a[0] < b[0] ? 1 : -1)).slice(0, 24).map(([k, m]) =>
+          '<li class="row" style="cursor:default"><div class="main"><div class="title"><span class="t" data-noi18n>' + A.monthLabel(k) + '</span></div><div class="sub">' + m.n + ' عملية</div></div>' +
+          '<div style="text-align:end"><div class="amount expense"><span class="num" data-noi18n>' + fmt(m.e) + '</span></div>' + (m.i ? '<small class="muted num" data-noi18n>+' + fmt(m.i) + '</small>' : '') + '</div></li>').join('') + '</ul></div>' : '');
+    };
+    A.openSheet({
+      title: 'استيراد الحساب كامل',
+      saveLabel: 'أضف العمليات',
+      body: '<p class="small muted" style="margin:0 0 10px">ارفع <b>كشف الحساب</b> من تطبيق البنك (Excel أو CSV أو PDF)، أو <b>ملف رسائل البنك</b> (TXT، أو XML من تطبيق «SMS Backup & Restore» بالأندرويد). كل عملية تنحفظ بتاريخها، والمكرر ما ينضاف.</p>' +
+        '<label class="btn primary block" style="margin-bottom:10px">' + I('upload') + 'اختار الملف<input type="file" id="biFile" accept=".xlsx,.csv,.pdf,.txt,.xml,text/csv,text/plain,text/xml,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></label>' +
+        '<p class="small muted" id="biStatus" style="margin:6px 4px 10px;min-height:18px"></p><div id="biOut"></div>' +
+        '<details class="card" style="margin-top:10px"><summary class="small"><b>وين ألقى الملف؟</b></summary>' +
+        '<p class="small" style="margin:8px 0 0">• <b>كشف الحساب:</b> تطبيق البنك ← الحساب ← كشف حساب (Statement) ← اختار الفترة ← صدّره Excel أو PDF ← احفظه بـ «الملفات».</p>' +
+        '<p class="small" style="margin:6px 0 0">• <b>رسائل الآيفون:</b> الآيفون ما يصدّر الرسائل كملف. أسهل شي كشف الحساب، أو انسخ الرسائل والصقها بـ «لصق رسالة بنك» (كذا وحدة مرة وحدة).</p>' +
+        '<p class="small" style="margin:6px 0 0">• <b>رسائل الأندرويد:</b> تطبيق «SMS Backup & Restore» ← نسخة احتياطية ← ارفع ملف الـ XML.</p></details>' +
+        '<p class="small muted" style="margin:10px 4px 0">الملف يتقرا بجوالك وما يطلع منه، وأرقام البطاقات تنخفى قبل الحفظ.</p>',
+      mount(root) {
+        const status = (t) => { root.querySelector('#biStatus').textContent = t; };
+        root.querySelector('#biFile').onchange = async (e) => {
+          const file = e.target.files[0]; e.target.value = '';
+          if (!file) return;
+          if (/\.pdf$/i.test(file.name) && file.size > PDF_MAX * 4) { status('الملف كبير · قسّم الفترة'); return; }
+          status('📎 ' + file.name + ' · نقرا…'); res = null; root.querySelector('#biOut').innerHTML = '';
+          const now = new Date();
+          try {
+            const r = await readFile(file, now);
+            const all = r.list.filter((x) => x.at instanceof Date && !isNaN(x.at) && x.amount > 0).sort((a, b) => a.at - b.at);
+            const { fresh, dup } = dedupe(all);
+            res = { all, fresh, dup, balance: r.balance };
+            status(all.length ? '📎 ' + file.name : '📎 ' + file.name + (/\.pdf$/i.test(file.name) ? ' · كشوف الـPDF تختلف؛ لو تقدر صدّره Excel أو CSV' : ''));
+          } catch (err) {
+            status(err && err.message === 'xls' ? 'هذا ملف Excel قديم (.xls) · احفظه .xlsx أو CSV' : 'ما قدرنا نقرا الملف · جرّب Excel أو CSV');
+            return;
+          }
+          root.querySelector('#biOut').innerHTML = summary();
+        };
+      },
+      onSave() {
+        if (!res || !res.fresh.length) { A.toast(res && res.dup ? 'كل العمليات موجودة عندك قبل' : 'اختار الملف أول'); return false; }
+        const RATES = { USD: 0.376, SAR: 0.1003, AED: 0.1024, QAR: 0.1033, KWD: 1.226, OMR: 0.977, EUR: 0.43, GBP: 0.5 };
+        for (const x of res.fresh) {
+          let amount = x.amount, note = 'من ملف الاستيراد';
+          if (x.currency && x.currency !== 'BHD' && RATES[x.currency]) { note = 'أصلها ' + x.amount + ' ' + x.currency + ' ≈ بالدينار'; amount = Math.round(x.amount * RATES[x.currency] * 1000) / 1000; }
+          S.upsert('transactions', { kind: x.kind, amount, category: x.category, merchant: x.merchant || null, note, occurred_at: x.at.toISOString(), source: 'import',
+            needs_review: !!x.review, raw: x.raw ? P.mask(x.raw) : null });
+        }
+        A.toast('انضافت ' + res.fresh.length + ' عملية بتواريخها ✓');
+      },
+    });
+  }
+
+  // ================= الربط =================
+  wrap('chooserItems', (prev, item) => prev(item) + item('bankfile', 'download', '#0d9488', 'استيراد الحساب كامل', 'كشف الحساب أو ملف رسائل البنك'));
+  const prevPick = E.pick;
+  E.pick = (k) => { if (k === 'bankfile') { sheet(); return; } if (prevPick) prevPick(k); };
+  wrap('action', (prev, name, el, e) => { if (name === 'bankfile') { sheet(); return; } return prev(name, el, e); });
+  E.bankImport = sheet;
+  E._bank = { csv, fromRows, fromText, fromXml, fromPdfLines, dedupe, money, when }; // للاختبار
+})();
+
+</script>
   <script>/* js/features/recipes.js */
 // DW-052: وصفات «المطبخ» — خليجية وبحرينية، مكتوبة للي ما يعرف يطبخ
 // كل وصفة لعدد serves؛ المقادير [الكمية (رقم أو null = حسب الذوق)، الوحدة، الاسم]. الكوب = 240 مل، م.ك = ملعقة كبيرة، م.ص = ملعقة صغيرة
@@ -11282,6 +11586,7 @@ window.HAYATI_CONFIG = {
       ['subs', 'repeat', '#f59e0b', 'الاشتراكات', () => goSeg('money', 'moneySeg', 'subs')],
       ['goals', 'piggy', '#10b981', 'أهداف الادخار', () => goSeg('money', 'moneySeg', 'goals')],
       ['debts', 'users', '#0891b2', 'لي وعلي', () => goSeg('money', 'moneySeg', 'debts')],
+      ['bankfile', 'download', '#0d9488', 'استيراد الحساب كامل', () => run('bankfile')],
       ['report', 'chart', '#8b5cf6', 'تقرير الشهر', () => { goSeg('money', 'moneySeg', 'tx'); setTimeout(() => run('report'), 50); }],
       ['year', 'chart', '#6366f1', 'ملخص السنة', () => run('year')],
       ['travel', 'briefcase', '#0d9488', 'تخطيط السفر', () => run('travel')],
@@ -11447,7 +11752,35 @@ window.HAYATI_CONFIG = {
     throw new Error('type');
   }
 
-  window.HayatiOffice = { extract };
+  // DW-058: أول ورقة بملف Excel (.xlsx) ← صفوف [[خلية، خلية…]]؛ الأرقام تظل أرقام (التواريخ أرقام Excel)
+  async function sheet(file) {
+    const { b, out } = entries(await file.arrayBuffer());
+    const get = (n) => out.find((e) => e.name === n);
+    const shared = [];
+    const ss = get('xl/sharedStrings.xml');
+    if (ss) for (const si of (await read(b, ss)).split('</si>')) { const t = [...si.matchAll(/<t(?:\s[^>]*)?>([^<]*)<\/t>/g)].map((m) => m[1]).join(''); if (si.includes('<si')) shared.push(unxml(t)); }
+    const ws = get('xl/worksheets/sheet1.xml') || out.find((e) => /^xl\/worksheets\/sheet\d+\.xml$/.test(e.name));
+    if (!ws) throw new Error('type');
+    const rows = [];
+    for (const r of (await read(b, ws)).split('</row>')) {
+      const row = [];
+      for (const c of r.matchAll(/<c\s([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
+        const ref = (c[1].match(/r="([A-Z]+)\d+"/) || [])[1];
+        const col = ref ? [...ref].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0) - 1 : row.length;
+        const type = (c[1].match(/t="(\w+)"/) || [])[1];
+        const v = ((c[2] || '').match(/<v>([^<]*)<\/v>/) || [])[1];
+        let val = '';
+        if (type === 's') val = shared[Number(v)] || '';
+        else if (type === 'inlineStr') val = unxml([...(c[2] || '').matchAll(/<t(?:\s[^>]*)?>([^<]*)<\/t>/g)].map((m) => m[1]).join(''));
+        else if (v != null) val = type === 'str' ? unxml(v) : Number(v);
+        row[col] = val;
+      }
+      if (row.some((x) => x !== '' && x != null)) rows.push(Array.from(row, (x) => (x == null ? '' : x)));
+    }
+    return rows;
+  }
+
+  window.HayatiOffice = { extract, sheet };
 })();
 
 </script>
@@ -12500,6 +12833,7 @@ window.HAYATI_CONFIG = {
   // الجديد لكل نسخة (نصوص قصيرة وصادقة: شي يشتغل اليوم بس)
   const NEWS = {
     v25: [
+      ['🏦', 'استيراد الحساب كامل', 'كشف الحساب (Excel أو CSV أو PDF) أو ملف رسائل البنك: كل العمليات بتواريخها'],
       ['📅', 'رسالة البنك بتاريخها', 'الصق رسالة قديمة وتنحفظ بيوم العملية نفسه، أو كذا رسالة مرة وحدة'],
       ['📅', 'جدولك على الشاشة الرئيسية', 'ودجت «جدول اليوم» وعلى شاشة القفل: الحين والجاي بدون ما تفتح التطبيق'],
       ['🏫', 'الدراسة لكل المراحل', 'مدرسة أو ثانوي أو جامعة: حصص ومعدل بالنسبة المئوية للمدرسة'],
