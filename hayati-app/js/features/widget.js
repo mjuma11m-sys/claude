@@ -39,13 +39,31 @@
       .map((x) => ({ t: x.t, title: tr(String(x.title || '')).slice(0, 60), sub: tr(x.sub).slice(0, 60), time: tr(A.timeOf(new Date(x.t))) }));
   }
 
+  // DW-055: ودجت «جدول اليوم» وشاشة القفل: جدول اليوم وبكرة كامل بالبداية والنهاية (حتى اللي خلص اليوم، يطلع باهت)
+  function sched(now) {
+    const out = [];
+    for (let d = 0; d < 2; d++) {
+      const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + d);
+      for (const it of A.agendaOn(day)) {
+        if (it.src === 'prayer') continue;   // الصلاة لها «عبادتي»؛ الودجت للجدول بس
+        const at = (m) => new Date(day.getFullYear(), day.getMonth(), day.getDate(), Math.floor(m / 60), m % 60).getTime();
+        const s = at(it.start), e = at(Math.max(it.end || 0, it.start + 15));
+        const type = A.ACT_TYPES[it.type] || A.ACT_TYPES.activity || {};
+        out.push({ s, e, title: tr(String(it.name || '')).slice(0, 50), sub: tr([type.label, it.room].filter(Boolean).join(' · ')).slice(0, 50),
+          time: tr(A.timeOf(new Date(s))) + ' – ' + tr(A.timeOf(new Date(e))), c: /^#[0-9a-f]{6}$/i.test(it.color || '') ? it.color : '#8FD6D1' });
+      }
+    }
+    return out.slice(0, 24);
+  }
+
   function snapshot(now) {
     now = now || new Date();
     const p = prefs(), en = !!(window.HayatiLang && HayatiLang.lang === 'en');
     const labels = { next: tr('الجاي'), none: tr('ما فيه شي اليوم وبكرة'), add: tr('+ مصروف'), paste: tr('الصق رسالة'), locked: tr('🔒 افتح حياتي'),
-      today: tr('اليوم'), tomorrow: tr('بكرة'), noBudget: tr('حدد ميزانيتك من التطبيق') };
+      today: tr('اليوم'), tomorrow: tr('بكرة'), noBudget: tr('حدد ميزانيتك من التطبيق'),
+      schedToday: tr('جدول اليوم'), schedTomorrow: tr('جدول بكرة'), now: tr('الحين'), free: tr('ما فيه شي اليوم وبكرة 🎉') };
     const base = { v: 1, at: now.getTime(), rtl: !en, labels };
-    if (locked()) return Object.assign(base, { locked: true, items: [] });
+    if (locked()) return Object.assign(base, { locked: true, items: [], sched: [] });
     const budget = Number(st.settings.budget) || 0;
     const spent = A.sums(A.txInMonth(A.monthKey(now))).exp;
     let line = labels.noBudget, pct = -1;
@@ -61,7 +79,7 @@
         ? { big: p.amounts ? '−' + A.fmt(-left) : '0%', cap: en ? 'Over budget' : 'تجاوزت الميزانية', pct: 0 }
         : { big: p.amounts ? A.fmt(left) : pct + '%', cap: p.amounts ? (en ? 'BHD left this month' : 'د.ب باقي هالشهر') : (en ? 'of budget left' : 'باقي من الميزانية'), pct };
     }
-    return Object.assign(base, { locked: false, budget: { line, pct }, small, items: items(now) });
+    return Object.assign(base, { locked: false, budget: { line, pct }, small, items: items(now), sched: sched(now) });
   }
 
   // نرسل اللقطة بعد ما تهدا الشاشة، ولما التطبيق يروح للخلفية
@@ -102,7 +120,7 @@
     A.openSheet({
       title: '📱 ودجت حياتي',
       saveLabel: 'حفظ',
-      body: '<p class="small muted" style="margin:0 0 12px">' + (Cap && Cap.getPlatform() === 'ios' ? 'ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← «+» فوق ← حياتي. فيه حجمين: الصغير يعرض كم باقي من الميزانية وزر «+ مصروف»، والمتوسط يعرض الجاي اليوم وبكرة والميزانية مع «+ مصروف» و«الصق رسالة».' : 'ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← الأدوات (Widgets) ← حياتي. فيه حجمين: الكبير (4×2) يعرض الجاي اليوم وبكرة والميزانية مع «+ مصروف» و«الصق رسالة»، والصغير (2×2) يعرض كم باقي من الميزانية وزر «+ مصروف».') + '</p>' +
+      body: '<p class="small muted" style="margin:0 0 12px">' + (Cap && Cap.getPlatform() === 'ios' ? 'ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← «+» فوق ← حياتي. فيه حجمين: الصغير يعرض كم باقي من الميزانية وزر «+ مصروف»، والمتوسط يعرض الجاي اليوم وبكرة والميزانية مع «+ مصروف» و«الصق رسالة». وفيه ودجت ثاني اسمه «جدول اليوم» (متوسط أو كبير) يعرض جدولك كامل، وتقدر تحطه على شاشة القفل: اضغط مطوّل على شاشة القفل ← تخصيص ← الأدوات ← حياتي.' : 'ثبّته من الشاشة الرئيسية: اضغط مطوّل على مكان فاضي ← الأدوات (Widgets) ← حياتي. فيه حجمين: الكبير (4×2) يعرض الجاي اليوم وبكرة والميزانية مع «+ مصروف» و«الصق رسالة»، والصغير (2×2) يعرض كم باقي من الميزانية وزر «+ مصروف».') + '</p>' +
         '<label style="display:flex;gap:10px;align-items:center;margin:0 0 10px"><input id="wgAmounts" type="checkbox"' + (p.amounts ? ' checked' : '') + '><span>اعرض المبالغ بالودجت</span></label>' +
         '<p class="small muted" style="margin:0">الشاشة الرئيسية يشوفها أي أحد يمسك جوالك، فالمبالغ مخفية إلا لو فعّلتها (يطلع بس كم % باقي). ولو قفل التطبيق شغّال، الودجت ما يعرض أي بيانات.</p>',
       onSave(root) {
@@ -122,5 +140,5 @@
     return prevSet ? prevSet.apply(this, arguments) : false;
   };
 
-  E.Widget = { snapshot, items, sheet, push, prefs, onAction };
+  E.Widget = { snapshot, items, sched, sheet, push, prefs, onAction };
 })();

@@ -2041,4 +2041,9 @@ window.HAYATI_EN = {
 "راسب ⚠️": "Fail ⚠️",
 "أضف موادك ودرجة كل وحدة من 100، وأحسب لك المعدل الفصلي والتراكمي.": "Add your subjects and each grade out of 100, and I'll calculate your term and cumulative GPA.",
 "النظام: النسبة المئوية، وكل مادة توزن بساعاتها (لو مدرستك ما تستخدم ساعات خلها 1). 50% نجاح.": "System: percentage, each subject weighted by its hours (if your school doesn't use hours, keep it 1). 50% to pass.",
+// DW-055: ودجت جدول اليوم
+"جدول بكرة": "Tomorrow's schedule",
+"ما فيه شي اليوم وبكرة 🎉": "Nothing today or tomorrow 🎉",
+"جدولك على الشاشة الرئيسية": "Your schedule on the Home Screen",
+"ودجت «جدول اليوم» وعلى شاشة القفل: الحين والجاي بدون ما تفتح التطبيق": "\"Today's schedule\" widget, also on the Lock Screen: now and next without opening the app",
 };

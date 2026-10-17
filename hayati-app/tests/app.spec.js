@@ -1668,7 +1668,7 @@ test('«جديد بحياتي»: an existing user sees what is new once after th
   await store(page, () => localStorage.setItem('hayati-seen-version', 'v23'));   // كان على النسخة اللي قبل
   await open(page);
   await expect(page.locator('#sheetTitle')).toHaveText('جديد بحياتي ✨', { timeout: 5000 });
-  await expect(page.locator('#sheetBody .news-item')).toHaveCount(9);
+  await expect(page.locator('#sheetBody .news-item')).toHaveCount(10);
   await page.click('#sheetCancel');
   expect(await store(page, () => localStorage.getItem('hayati-seen-version'))).toBe(await store(page, () => App.APP_VERSION));
   await open(page);
@@ -2360,6 +2360,11 @@ test('Android widget (DW-031): snapshot hides amounts by default, shows nothing 
   expect(snap.hidden.small).toEqual({ big: '75%', cap: 'باقي من الميزانية', pct: 75 });
   expect(snap.shown.small).toEqual({ big: '150.000', cap: 'د.ب باقي هالشهر', pct: 75 });
   expect(snap.locked.small).toBeUndefined();
+  // DW-055: «جدول اليوم» يشمل اللي خلص اليوم (يطلع باهت)، بالبداية والنهاية، ولا شي وقت القفل
+  const today = snap.hidden.sched.filter((x) => new Date(x.s).toDateString() === new Date(snap.hidden.at).toDateString()).map((x) => [x.title, x.time, x.e - x.s]);
+  expect(today).toEqual([['Accounting', '10:00 ص – 11:15 ص', 75 * 6e4], ['Marketing', '1:00 م – 2:15 م', 75 * 6e4]]);
+  expect(snap.hidden.labels.schedToday).toBe('جدول اليوم');
+  expect(snap.locked.sched).toEqual([]);
 });
 
 test('Android widget (DW-031): the app sends the snapshot to the native plugin, and the widget buttons open «+ مصروف»', async ({ page }) => {
