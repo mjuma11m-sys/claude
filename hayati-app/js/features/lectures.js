@@ -138,7 +138,7 @@
       } else A.toast('ما قدرنا نطلع نتيجة');
     } catch (e) {
       const m = String(e && e.message || '');
-      A.toast(m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · جرّب بعدين' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
+      A.toast(m === 'quota' ? 'خلصت محاولاتك المجانية لهالشهر ✨ · ترجع أول الشهر' : m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · جرّب بعدين' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
     } finally { btns.forEach((b) => { b.disabled = false; }); btn.textContent = label; }
   }
 
@@ -165,7 +165,7 @@
       A.toast('انضاف النص للملاحظات · راجعه واضغط «حفظ»');
     } catch (e) {
       const m = String(e && e.message || '');
-      A.toast(m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · جرّب بعدين' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
+      A.toast(m === 'quota' ? 'خلصت محاولاتك المجانية لهالشهر ✨ · ترجع أول الشهر' : m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · جرّب بعدين' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
     } finally { btn.disabled = false; btn.textContent = label; }
   }
 
@@ -193,7 +193,7 @@
       A.toast('انضافت الملاحظات والملخص' + (add.length ? ' و' + add.length + ' سؤال' : '') + ' · راجعها واضغط «حفظ»');
     } catch (e) {
       const m = String(e && e.message || '');
-      A.toast(m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · جرّب بعدين' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
+      A.toast(m === 'quota' ? 'خلصت محاولاتك المجانية لهالشهر ✨ · ترجع أول الشهر' : m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · جرّب بعدين' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
     } finally { root.querySelectorAll('[data-ai],[data-photo],[data-pdf]').forEach((b) => { b.disabled = false; }); btn.textContent = label; }
   }
 
@@ -238,7 +238,7 @@
       } catch (e) {
         put(text);
         const m = String(e && e.message || '');
-        A.toast((m === 'limit' ? 'خلصت محاولات اليوم ✨' : 'ما قدرنا نسوي الملخص') + ' · حطينا نص الملف بالملاحظات');
+        A.toast((m === 'quota' ? 'خلصت محاولاتك المجانية لهالشهر ✨' : m === 'limit' ? 'خلصت محاولات اليوم ✨' : 'ما قدرنا نسوي الملخص') + ' · حطينا نص الملف بالملاحظات');
       }
     } finally { root.querySelectorAll('[data-ai],[data-photo],[data-pdf],[data-office]').forEach((b) => { b.disabled = false; }); btn.textContent = label; }
   }

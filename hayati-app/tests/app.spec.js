@@ -379,6 +379,15 @@ test('accounts: messages link by the last two digits, balance follows, statement
 });
 
 // DW-067: إصلاحات التقييم: «ابدأ هني»، Google مخفي لين ينشر، الذكاء يختفي لو الدالة مو منشورة، وتحويل المبالغ مع العملة
+test('free monthly AI quota: warns when one try is left', async ({ page }) => {
+  await open(page);
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent('hayati-ai-left', { detail: { feature: 'study', left: 1, limit: 3 } })));
+  await expect(page.locator('#toast')).toContainText('باقي لك محاولة مجانية وحدة', { timeout: 4000 });
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent('hayati-ai-left', { detail: { feature: 'study', left: 2, limit: 3 } })));
+  await page.waitForTimeout(2800);
+  await expect(page.locator('#toast')).not.toHaveClass(/show/);
+});
+
 test('review fixes: start-here card, hidden Google, AI hides when the function is missing, currency conversion', async ({ page }) => {
   await open(page);
   await store(page, () => { App.S.setSettings({ onboarded: true, roles: ['student'] }); App.go('today'); });

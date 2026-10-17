@@ -223,6 +223,13 @@
     toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2400);
   }
 
+  // DW-068: تنبيه لما تقرب المحاولات المجانية تخلص (بعد رسالة النجاح عشان ما تغطيها)
+  window.addEventListener('hayati-ai-left', (e) => {
+    const left = Number(e.detail && e.detail.left);
+    if (!(left <= 1)) return;
+    setTimeout(() => toast(left === 0 ? 'هذي آخر محاولة مجانية لهالشهر ✨' : 'باقي لك محاولة مجانية وحدة لهالشهر ✨'), 2600);
+  });
+
   // تركيز تلقائي على أول حقل، إلا بنسخة الآيفون (الكيبورد يدف الورقة وزر «حفظ» يختفي تحت الساعة)
   function autoFocus(el) { if (el && !window.HayatiNative) el.focus(); }
 

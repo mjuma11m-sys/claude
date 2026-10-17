@@ -54,3 +54,11 @@
 - مستخدم ما يقدر يقرا أو يكتب بيانات مستخدم ثاني (RLS) — مجرّب.
 - الرمز السري للرسايل ما ينقرا من برّا، والرمز الغلط ينرفض — مجرّب.
 - حد أقصى 60 رسالة بالساعة، وطول الرسالة 2000 حرف — مجرّب.
+
+## الذكاء (دالة `lecture-ai`): حد مجاني شهري (DW-068)
+1. **SQL Editor** ← شغّل `schema.sql` مرة ثانية (يضيف جدول `ai_quota` بأمان، ما يمسح شي).
+2. **Edge Functions → Secrets**: `ANTHROPIC_API_KEY` (إجباري). اختياري: `AI_MONTHLY` مثل `{"study":3,"slides":3,"schedule":2,"ask":5}`.
+3. انشر الدالة: `supabase functions deploy lecture-ai`.
+4. بعد شهر، كم واحد وصل الحد؟ (عدد بس، بدون أي محتوى):
+   `select feature, count(*) filter (where calls >= 3) as hit, count(*) as users from ai_quota where month = date_trunc('month', current_date)::date group by feature;`
+   لو 15% أو أكثر وصلوا الحد ← نفتح نقاش «حياتي بلس».

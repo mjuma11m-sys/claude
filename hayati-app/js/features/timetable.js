@@ -174,7 +174,7 @@
   const getSample = () => (samplePromise = samplePromise || (window.claude && typeof window.claude.use === 'function' ? window.claude.use('sample').catch(() => null) : Promise.resolve(null)));
   const PROMPT = 'This is a university student\'s weekly class timetable. Return only JSON: {"courses":[{"name":"course code and title","days":[0-6, 0=Sunday],"start":"HH:MM 24h","end":"HH:MM","room":""}]}. ' +
     'Day letters: U=Sunday M=Monday T=Tuesday W=Wednesday H or R=Thursday. Classes run 07:00–21:00, so 1:00–7:59 without am/pm is afternoon. Copy only what is shown; never guess.';
-  const aiError = (e) => { const m = String(e && e.message || ''); return m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · الصق الجدول كنص أو ارفع PDF' : 'ما قدرنا نوصل للخدمة · جرّب بعدين'; };
+  const aiError = (e) => { const m = String(e && e.message || ''); return m === 'quota' ? 'خلصت محاولاتك المجانية لهالشهر ✨ · ترجع أول الشهر' : m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · الصق الجدول كنص أو ارفع PDF' : 'ما قدرنا نوصل للخدمة · جرّب بعدين'; };
 
   // ---------- الواجهة ----------
   // DW-056: نفس الميزة لجدول الدوام والتمارين

@@ -8,9 +8,18 @@
 //   ANTHROPIC_API_KEY  required
 //   AI_MODEL           optional, default claude-opus-5-5 (summaries, questions, photos, PDFs)
 //   AI_MODEL_ASK       optional, default claude-sonnet-5-5 for «اسأل حياتي» (DW-046: short answers from ready numbers, about half the cost)
-//   AI_DAILY_LIMIT     optional, default 10 calls per user per day
+//   AI_DAILY_LIMIT     optional, default 10 calls per user per day (abuse guard)
+//   AI_MONTHLY         optional JSON, free uses per user per month by feature group (DW-068),
+//                      default {"study":3,"slides":3,"schedule":2,"ask":5}
 import Anthropic from "npm:@anthropic-ai/sdk";
 import { createClient } from "npm:@supabase/supabase-js@2";
+
+// DW-068: which free monthly quota each mode spends
+const GROUP: Record<string, string> = { summary: "study", quiz: "study", pdf: "study", photo: "study", slides: "slides", schedule: "schedule", ask: "ask" };
+const MONTHLY_DEFAULT: Record<string, number> = { study: 3, slides: 3, schedule: 2, ask: 5 };
+function monthly(): Record<string, number> {
+  try { return { ...MONTHLY_DEFAULT, ...JSON.parse(Deno.env.get("AI_MONTHLY") ?? "{}") }; } catch { return MONTHLY_DEFAULT; }
+}
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -200,6 +209,14 @@ Deno.serve(async (req) => {
   if (limErr) return json({ error: "usage" }, 500);
   if (!allowed) return json({ error: "limit" }, 429);
 
+  const feature = GROUP[mode], cap = Number(monthly()[feature]) || 0;
+  const { data: left, error: qErr } = await db.rpc("bump_ai_quota", { feat: feature, lim: cap });
+  if (qErr) return json({ error: "usage" }, 500);
+  if (left < 0) return json({ error: "quota", feature, limit: cap }, 429);
+  const quota = { feature, left, limit: cap };
+  // nothing useful came back → give the use back
+  const fail = async (body: unknown, status: number) => { await db.rpc("refund_ai_quota", { feat: feature }); return json(body, status); };
+
   const model = mode === "ask"
     ? Deno.env.get("AI_MODEL_ASK") ?? "claude-sonnet-5-5"
     : Deno.env.get("AI_MODEL") ?? "claude-opus-5-5";
@@ -214,9 +231,9 @@ Deno.serve(async (req) => {
         system: ASK_SYSTEM + "\n\n<data>\n" + data + "\n</data>",
         messages: turns,
       } as any);
-      if (r.stop_reason === "refusal") return json({ error: "refused" }, 422);
+      if (r.stop_reason === "refusal") return fail({ error: "refused" }, 422);
       const t = r.content.filter((b: { type: string }) => b.type === "text").map((b: { text: string }) => b.text).join("").trim();
-      return t ? json({ text: t }) : json({ error: "empty" }, 502);
+      return t ? json({ text: t, _quota: quota }) : fail({ error: "empty" }, 502);
     }
     const response = await client.beta.messages.create({
       model,
@@ -246,12 +263,12 @@ Deno.serve(async (req) => {
           : TASKS[mode] + "\n\n<title>" + title + "</title>\n<notes>\n" + notes + "\n</notes>",
       }],
     } as any);
-    if (response.stop_reason === "refusal") return json({ error: "refused" }, 422);
+    if (response.stop_reason === "refusal") return fail({ error: "refused" }, 422);
     const text = response.content.find((b: { type: string }) => b.type === "text") as { text: string } | undefined;
-    if (!text) return json({ error: "empty" }, 502);
-    return json(JSON.parse(text.text));
+    if (!text) return fail({ error: "empty" }, 502);
+    return json({ ...JSON.parse(text.text), _quota: quota });
   } catch (e) {
     console.error("lecture-ai", e instanceof Error ? e.message : e);
-    return json({ error: "upstream" }, 502);
+    return fail({ error: "upstream" }, 502);
   }
 });

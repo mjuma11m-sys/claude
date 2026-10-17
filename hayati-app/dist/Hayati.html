@@ -2262,6 +2262,10 @@ window.HAYATI_EN = {
 "ما طلع أسئلة جديدة": "No new questions came out",
 "ما قدرنا نطلع نتيجة": "Couldn't get a result",
 "خلصت محاولات اليوم ✨ · جرّب بكرة": "You've used today's tries ✨ · try tomorrow",
+"خلصت محاولاتك المجانية لهالشهر ✨ · ترجع أول الشهر": "You've used this month's free tries ✨ · they reset on the 1st",
+"خلصت محاولاتك المجانية لهالشهر ✨": "You've used this month's free tries ✨",
+"هذي آخر محاولة مجانية لهالشهر ✨": "That was your last free try this month ✨",
+"باقي لك محاولة مجانية وحدة لهالشهر ✨": "One free try left this month ✨",
 "سجّل دخول أول": "Sign in first",
 "ما قدرنا نوصل للخدمة · جرّب بعدين": "Couldn't reach the service · try later",
 "حذف التسجيل": "Delete recording",
@@ -4092,6 +4096,11 @@ window.HAYATI_CONFIG = {
       if (code === 404 || msg === 'not_configured' || /not found|failed to send/i.test(msg)) { status.aiOff = true; emit(); throw new Error('unavailable'); }
       throw new Error(msg);
     }
+    // DW-068: كم باقي من المحاولات المجانية لهالشهر (عدد بس)
+    if (data && data._quota) {
+      const q = data._quota; delete data._quota;
+      try { global.dispatchEvent(new CustomEvent('hayati-ai-left', { detail: q })); } catch (e) { /* تجاهل */ }
+    }
     return data;
   }
 
@@ -4689,6 +4698,13 @@ window.HAYATI_CONFIG = {
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2400);
   }
+
+  // DW-068: تنبيه لما تقرب المحاولات المجانية تخلص (بعد رسالة النجاح عشان ما تغطيها)
+  window.addEventListener('hayati-ai-left', (e) => {
+    const left = Number(e.detail && e.detail.left);
+    if (!(left <= 1)) return;
+    setTimeout(() => toast(left === 0 ? 'هذي آخر محاولة مجانية لهالشهر ✨' : 'باقي لك محاولة مجانية وحدة لهالشهر ✨'), 2600);
+  });
 
   // تركيز تلقائي على أول حقل، إلا بنسخة الآيفون (الكيبورد يدف الورقة وزر «حفظ» يختفي تحت الساعة)
   function autoFocus(el) { if (el && !window.HayatiNative) el.focus(); }
@@ -8056,7 +8072,7 @@ window.HAYATI_CONFIG = {
             chatTurns.push({ role: 'assistant', content: text });
           } catch (e) {
             const code = (e && e.code) || (e && e.message);
-            const msg = { not_granted: 'ما انسمح للمساعد يستخدم Claude.', rate_limited: 'وصلت الحد المسموح حالياً، جرّب بعد شوي.', limit: 'خلصت محاولات اليوم ✨ · جرّب بكرة', signin: 'سجّل دخول أول', cancelled: '' }[code];
+            const msg = { not_granted: 'ما انسمح للمساعد يستخدم Claude.', rate_limited: 'وصلت الحد المسموح حالياً، جرّب بعد شوي.', limit: 'خلصت محاولات اليوم ✨ · جرّب بكرة', quota: 'خلصت محاولاتك المجانية لهالشهر ✨ · ترجع أول الشهر', signin: 'سجّل دخول أول', cancelled: '' }[code];
             if (e && e.text) chatTurns.push({ role: 'assistant', content: e.text });
             bubble.classList.remove('typing');
             bubble.textContent = e && e.text ? e.text : msg != null ? msg : 'صار خلل، جرّب مرة ثانية.';
@@ -9384,7 +9400,7 @@ window.HAYATI_CONFIG = {
   const getSample = () => (samplePromise = samplePromise || (window.claude && typeof window.claude.use === 'function' ? window.claude.use('sample').catch(() => null) : Promise.resolve(null)));
   const PROMPT = 'This is a university student\'s weekly class timetable. Return only JSON: {"courses":[{"name":"course code and title","days":[0-6, 0=Sunday],"start":"HH:MM 24h","end":"HH:MM","room":""}]}. ' +
     'Day letters: U=Sunday M=Monday T=Tuesday W=Wednesday H or R=Thursday. Classes run 07:00–21:00, so 1:00–7:59 without am/pm is afternoon. Copy only what is shown; never guess.';
-  const aiError = (e) => { const m = String(e && e.message || ''); return m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · الصق الجدول كنص أو ارفع PDF' : 'ما قدرنا نوصل للخدمة · جرّب بعدين'; };
+  const aiError = (e) => { const m = String(e && e.message || ''); return m === 'quota' ? 'خلصت محاولاتك المجانية لهالشهر ✨ · ترجع أول الشهر' : m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · الصق الجدول كنص أو ارفع PDF' : 'ما قدرنا نوصل للخدمة · جرّب بعدين'; };
 
   // ---------- الواجهة ----------
   // DW-056: نفس الميزة لجدول الدوام والتمارين
@@ -12673,7 +12689,7 @@ window.HAYATI_CONFIG = {
       } else A.toast('ما قدرنا نطلع نتيجة');
     } catch (e) {
       const m = String(e && e.message || '');
-      A.toast(m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · جرّب بعدين' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
+      A.toast(m === 'quota' ? 'خلصت محاولاتك المجانية لهالشهر ✨ · ترجع أول الشهر' : m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · جرّب بعدين' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
     } finally { btns.forEach((b) => { b.disabled = false; }); btn.textContent = label; }
   }
 
@@ -12700,7 +12716,7 @@ window.HAYATI_CONFIG = {
       A.toast('انضاف النص للملاحظات · راجعه واضغط «حفظ»');
     } catch (e) {
       const m = String(e && e.message || '');
-      A.toast(m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · جرّب بعدين' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
+      A.toast(m === 'quota' ? 'خلصت محاولاتك المجانية لهالشهر ✨ · ترجع أول الشهر' : m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · جرّب بعدين' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
     } finally { btn.disabled = false; btn.textContent = label; }
   }
 
@@ -12728,7 +12744,7 @@ window.HAYATI_CONFIG = {
       A.toast('انضافت الملاحظات والملخص' + (add.length ? ' و' + add.length + ' سؤال' : '') + ' · راجعها واضغط «حفظ»');
     } catch (e) {
       const m = String(e && e.message || '');
-      A.toast(m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · جرّب بعدين' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
+      A.toast(m === 'quota' ? 'خلصت محاولاتك المجانية لهالشهر ✨ · ترجع أول الشهر' : m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · جرّب بعدين' : 'ما قدرنا نوصل للخدمة · جرّب بعدين');
     } finally { root.querySelectorAll('[data-ai],[data-photo],[data-pdf]').forEach((b) => { b.disabled = false; }); btn.textContent = label; }
   }
 
@@ -12773,7 +12789,7 @@ window.HAYATI_CONFIG = {
       } catch (e) {
         put(text);
         const m = String(e && e.message || '');
-        A.toast((m === 'limit' ? 'خلصت محاولات اليوم ✨' : 'ما قدرنا نسوي الملخص') + ' · حطينا نص الملف بالملاحظات');
+        A.toast((m === 'quota' ? 'خلصت محاولاتك المجانية لهالشهر ✨' : m === 'limit' ? 'خلصت محاولات اليوم ✨' : 'ما قدرنا نسوي الملخص') + ' · حطينا نص الملف بالملاحظات');
       }
     } finally { root.querySelectorAll('[data-ai],[data-photo],[data-pdf],[data-office]').forEach((b) => { b.disabled = false; }); btn.textContent = label; }
   }

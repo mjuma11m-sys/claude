@@ -642,7 +642,7 @@
             chatTurns.push({ role: 'assistant', content: text });
           } catch (e) {
             const code = (e && e.code) || (e && e.message);
-            const msg = { not_granted: 'ما انسمح للمساعد يستخدم Claude.', rate_limited: 'وصلت الحد المسموح حالياً، جرّب بعد شوي.', limit: 'خلصت محاولات اليوم ✨ · جرّب بكرة', signin: 'سجّل دخول أول', cancelled: '' }[code];
+            const msg = { not_granted: 'ما انسمح للمساعد يستخدم Claude.', rate_limited: 'وصلت الحد المسموح حالياً، جرّب بعد شوي.', limit: 'خلصت محاولات اليوم ✨ · جرّب بكرة', quota: 'خلصت محاولاتك المجانية لهالشهر ✨ · ترجع أول الشهر', signin: 'سجّل دخول أول', cancelled: '' }[code];
             if (e && e.text) chatTurns.push({ role: 'assistant', content: e.text });
             bubble.classList.remove('typing');
             bubble.textContent = e && e.text ? e.text : msg != null ? msg : 'صار خلل، جرّب مرة ثانية.';

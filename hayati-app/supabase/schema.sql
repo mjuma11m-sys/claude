@@ -238,6 +238,41 @@ end $$;
 revoke all on function public.bump_ai_usage(int) from public, anon;
 grant execute on function public.bump_ai_usage(int) to authenticated;
 
+-- DW-068: free monthly AI quota per feature group (study / slides / schedule / ask). A count only, never the content.
+-- It tells us how many people hit the free limit before deciding on «حياتي بلس».
+create table if not exists public.ai_quota (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  month date not null default date_trunc('month', current_date)::date,
+  feature text not null check (feature in ('study', 'slides', 'schedule', 'ask')),
+  calls int not null default 0,
+  primary key (user_id, month, feature)
+);
+alter table public.ai_quota enable row level security;
+-- returns the uses left this month after this one, or -1 when the free limit was already reached (nothing counted then)
+create or replace function public.bump_ai_quota(feat text, lim int) returns int
+language plpgsql security definer set search_path = public as $$
+declare n int; m date := date_trunc('month', current_date)::date;
+begin
+  if auth.uid() is null then return -1; end if;
+  insert into ai_quota (user_id, month, feature, calls) values (auth.uid(), m, feat, 0)
+  on conflict (user_id, month, feature) do nothing;
+  update ai_quota set calls = calls + 1
+  where user_id = auth.uid() and month = m and feature = feat and calls < lim
+  returning calls into n;
+  if n is null then return -1; end if;
+  return lim - n;
+end $$;
+-- a failed answer gives the use back
+create or replace function public.refund_ai_quota(feat text) returns void
+language sql security definer set search_path = public as $$
+  update ai_quota set calls = greatest(calls - 1, 0)
+  where user_id = auth.uid() and month = date_trunc('month', current_date)::date and feature = feat;
+$$;
+revoke all on function public.bump_ai_quota(text, int) from public, anon;
+revoke all on function public.refund_ai_quota(text) from public, anon;
+grant execute on function public.bump_ai_quota(text, int) to authenticated;
+grant execute on function public.refund_ai_quota(text) to authenticated;
+
 -- الإعدادات: سطر واحد لكل مستخدم
 create table if not exists public.settings (
   user_id    uuid primary key default auth.uid() references auth.users(id) on delete cascade,

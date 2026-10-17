@@ -689,6 +689,11 @@
       if (code === 404 || msg === 'not_configured' || /not found|failed to send/i.test(msg)) { status.aiOff = true; emit(); throw new Error('unavailable'); }
       throw new Error(msg);
     }
+    // DW-068: كم باقي من المحاولات المجانية لهالشهر (عدد بس)
+    if (data && data._quota) {
+      const q = data._quota; delete data._quota;
+      try { global.dispatchEvent(new CustomEvent('hayati-ai-left', { detail: q })); } catch (e) { /* تجاهل */ }
+    }
     return data;
   }
 
