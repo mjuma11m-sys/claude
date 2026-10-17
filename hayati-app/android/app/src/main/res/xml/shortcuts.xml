@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- DW-048: ضغطة مطوّلة على أيقونة «حياتي». نفس طريقة أزرار الودجت: extra «hayati_action» ياخذه WidgetPlugin -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="add_tx" android:enabled="true" android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_add_tx" android:shortcutLongLabel="@string/shortcut_add_tx">
+        <intent android:action="bh.hayati.app.SHORTCUT_ADD_TX" android:targetPackage="bh.hayati.app" android:targetClass="bh.hayati.app.MainActivity">
+            <extra android:name="hayati_action" android:value="add-tx" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="paste_sms" android:enabled="true" android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_paste_sms" android:shortcutLongLabel="@string/shortcut_paste_sms">
+        <intent android:action="bh.hayati.app.SHORTCUT_PASTE_SMS" android:targetPackage="bh.hayati.app" android:targetClass="bh.hayati.app.MainActivity">
+            <extra android:name="hayati_action" android:value="paste-sms" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="ask" android:enabled="true" android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_ask" android:shortcutLongLabel="@string/shortcut_ask">
+        <intent android:action="bh.hayati.app.SHORTCUT_ASK" android:targetPackage="bh.hayati.app" android:targetClass="bh.hayati.app.MainActivity">
+            <extra android:name="hayati_action" android:value="ask" />
+        </intent>
+    </shortcut>
+</shortcuts>

@@ -13,4 +13,8 @@
     <string name="widget_small_desc">كم باقي من الميزانية، وزر «+ مصروف»</string>
     <string name="widget_small_open">افتح حياتي مرة</string>
     <string name="widget_small_label">حياتي · صغير</string>
+    <!-- DW-048: اختصارات الأيقونة -->
+    <string name="shortcut_add_tx">+ مصروف</string>
+    <string name="shortcut_paste_sms">الصق رسالة</string>
+    <string name="shortcut_ask">اسأل حياتي</string>
 </resources>

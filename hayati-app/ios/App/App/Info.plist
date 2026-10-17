@@ -82,6 +82,33 @@
 	<string>«حياتي» يستخدم موقعك بس لما تضغط «استخدم موقعي» بالقبلة، عشان يحسب اتجاهها. الموقع ما ينحفظ ولا يطلع من جوالك.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>«حياتي» يستخدم المايك بس لما تسجّل محاضرة بنفسك، والتسجيل يظل على جوالك.</string>
+	<key>UIApplicationShortcutItems</key>
+	<array>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>bh.hayati.app.add-tx</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>+ مصروف</string>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeAdd</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>bh.hayati.app.paste-sms</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>الصق رسالة</string>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeCompose</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>bh.hayati.app.ask</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>اسأل حياتي</string>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeSearch</string>
+		</dict>
+	</array>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>«حياتي» يحوّل تسجيل محاضرتك لنص على جوالك نفسه، والصوت ما يطلع لأي مكان.</string>
 </dict>

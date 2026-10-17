@@ -660,6 +660,8 @@
   wrap('todayTop', (prev) => prev() + '<section data-tk="events">' + eventsCard() + '</section>');
   wrap('todayMid', (prev) => prev() + '<section data-tk="journal">' + journalCard() + '</section>');
   wrap('viewHealth', (prev) => prev() + moodSection());
+  // DW-048: اختصار «اسأل حياتي» من أيقونة التطبيق
+  E.openAssistant = () => { if (sampleFn || viaServer()) assistantSheet(); else A.toast('«اسأل حياتي» يشتغل لما تسجّل دخول بحسابك'); };
   E.goalsTop = goalsTop;
   E.moneyActions = () => '<button class="btn ghost block" style="margin:10px 0 4px" data-action="year">' + I('chart') + 'ملخص السنة</button>';
   E.courseExtra = courseExtra;

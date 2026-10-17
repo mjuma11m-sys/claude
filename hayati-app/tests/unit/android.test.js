@@ -205,3 +205,21 @@ test('lecture recording to text (DW-047): on-device only, permission text presen
   assert.match(iosRead('App/MainViewController.swift'), /registerPluginInstance\(SpeechPlugin\(\)\)/);
   assert.ok(iosRead('App.xcodeproj/project.pbxproj').includes('SpeechPlugin.swift in Sources'));
 });
+
+test('app icon shortcuts (DW-048): same actions on Android and iPhone, and the iPhone scene uses MainViewController so our plugins load', () => {
+  const sc = read('app/src/main/res/xml/shortcuts.xml');
+  for (const a of ['add-tx', 'paste-sms', 'ask']) assert.match(sc, new RegExp('android:name="hayati_action" android:value="' + a + '"'));
+  assert.match(sc, /android:targetClass="bh\.hayati\.app\.MainActivity"/);
+  assert.match(read('app/src/main/AndroidManifest.xml'), /android:name="android\.app\.shortcuts" android:resource="@xml\/shortcuts"/);
+  const strings = read('app/src/main/res/values/strings.xml');
+  for (const s of sc.matchAll(/@string\/(\w+)/g)) assert.ok(strings.includes('name="' + s[1] + '"'), 'missing string ' + s[1]);
+  assert.match(read('app/src/main/java/bh/hayati/app/WidgetPlugin.java'), /"ask"\.equals\(name\)/);
+  const iosRead = (f) => fs.readFileSync(path.join(W, 'ios/App', f), 'utf8');
+  const plist = iosRead('App/Info.plist');
+  for (const a of ['add-tx', 'paste-sms', 'ask']) assert.ok(plist.includes('<string>bh.hayati.app.' + a + '</string>'), a);
+  const scene = iosRead('App/SceneDelegate.swift');
+  assert.match(scene, /rootViewController = MainViewController\(\)/);   // كان CAPBridgeViewController: الإضافات ما كانت تتسجّل
+  assert.doesNotMatch(scene, /rootViewController = CAPBridgeViewController\(\)/);
+  assert.match(scene, /performActionFor shortcutItem/);
+  assert.match(scene, /connectionOptions\.shortcutItem/);
+});

@@ -2645,3 +2645,18 @@ test('bill split (DW-048): the message for friends lists each share', async ({ p
   const text = await store(page, () => window.Extras.Split.splitText({ merchant: 'مطعم البحر', category: 'أكل ومطاعم', amount: 12.5, occurred_at: '2026-10-16T18:00:00Z' }, [{ person: 'أحمد', amount: 4 }, { person: 'علي', amount: 3.25 }]));
   expect(text).toBe('🧾 مطعم البحر · 16/10\nالمجموع: 12.500 د.ب\nأحمد: 4.000 د.ب\nعلي: 3.250 د.ب');
 });
+
+// ================= DW-048: اختصارات أيقونة التطبيق =================
+test('app icon shortcuts (DW-048): «اسأل حياتي» from the icon opens the assistant, or says to sign in', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__act = null;
+    window.Capacitor = { isNativePlatform: () => true, getPlatform: () => 'android', Plugins: {
+      HayatiWidget: { update: async () => {}, take: async () => ({ name: 'ask' }), addListener: (ev, fn) => { window.__act = fn; return Promise.resolve({ remove() {} }); } },
+    } };
+  });
+  await open(page);
+  await expect(page.locator('#toast')).toContainText('«اسأل حياتي» يشتغل لما تسجّل دخول بحسابك', { timeout: 5000 });
+  // التطبيق مفتوح: نفس الاختصار يوصل كحدث
+  await store(page, () => { App.S.status.signedIn = true; App.S.invokeFn = async () => ({ text: 'ok' }); window.__act({ name: 'add-tx' }); });
+  await expect(page.locator('#sheet[open] [name="amount"]')).toBeVisible({ timeout: 5000 });
+});

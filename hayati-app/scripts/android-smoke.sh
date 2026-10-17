@@ -113,3 +113,20 @@ done
 adb exec-out screencap -p > "$OUT/widget-action.png" || true
 [ "$act" = "hayati-widget-action:add-tx" ] || { echo "❌ زر الودجت ما وصل للواجهة ($act)"; adb logcat -d -t 300 > "$OUT/logcat.txt"; exit 1; }
 echo "✅ زر الودجت وصل ($act)"
+
+# DW-048: اختصارات الأيقونة مسجّلة، و«الصق رسالة» منها يوصل للواجهة (نفس intent الاختصار بالضبط)
+echo "▶ اختصارات أيقونة التطبيق"
+sc=$(adb shell dumpsys shortcut 2>/dev/null | grep -A200 "Package: $PKG" | grep -o 'id=[a-z_]*' | sort -u | tr '\n' ' ')
+for id in add_tx paste_sms ask; do
+  echo "$sc" | grep -q "id=$id" || { echo "❌ الاختصار $id مو مسجّل ($sc)"; exit 1; }
+done
+adb logcat -c || true
+adb shell "am start -n $PKG/.MainActivity -a bh.hayati.app.SHORTCUT_PASTE_SMS --es hayati_action paste-sms" >/dev/null
+act=""
+for try in $(seq 1 10); do
+  sleep 2
+  act=$(adb logcat -d | grep -o 'hayati-widget-action:[a-z-]*' | head -1 || true)
+  [ -n "$act" ] && break
+done
+[ "$act" = "hayati-widget-action:paste-sms" ] || { echo "❌ اختصار «الصق رسالة» ما وصل ($act)"; adb logcat -d -t 300 > "$OUT/logcat.txt"; exit 1; }
+echo "✅ الاختصارات مسجّلة ووصلت ($sc)"

@@ -1913,5 +1913,7 @@ window.HAYATI_EN = {
 "انحذفت الحصص": "Shares deleted",
 "انسخت ✓ الصقها لربعك": "Copied ✓ paste it to your friends",
 // DW-048: نصيب
-"نصيب": "Share of"
+"نصيب": "Share of",
+// DW-048: اختصارات الأيقونة
+"«اسأل حياتي» يشتغل لما تسجّل دخول بحسابك": "«Ask Hayati» works once you sign in to your account"
 };

@@ -2673,7 +2673,9 @@ window.HAYATI_EN = {
 "انحذفت الحصص": "Shares deleted",
 "انسخت ✓ الصقها لربعك": "Copied ✓ paste it to your friends",
 // DW-048: نصيب
-"نصيب": "Share of"
+"نصيب": "Share of",
+// DW-048: اختصارات الأيقونة
+"«اسأل حياتي» يشتغل لما تسجّل دخول بحسابك": "«Ask Hayati» works once you sign in to your account"
 };
 
 </script>
@@ -7568,6 +7570,8 @@ window.HAYATI_CONFIG = {
   wrap('todayTop', (prev) => prev() + '<section data-tk="events">' + eventsCard() + '</section>');
   wrap('todayMid', (prev) => prev() + '<section data-tk="journal">' + journalCard() + '</section>');
   wrap('viewHealth', (prev) => prev() + moodSection());
+  // DW-048: اختصار «اسأل حياتي» من أيقونة التطبيق
+  E.openAssistant = () => { if (sampleFn || viaServer()) assistantSheet(); else A.toast('«اسأل حياتي» يشتغل لما تسجّل دخول بحسابك'); };
   E.goalsTop = goalsTop;
   E.moneyActions = () => '<button class="btn ghost block" style="margin:10px 0 4px" data-action="year">' + I('chart') + 'ملخص السنة</button>';
   E.courseExtra = courseExtra;
@@ -11187,6 +11191,7 @@ window.HAYATI_CONFIG = {
     setTimeout(() => {
       if (name === 'add-tx') A.txForm();
       else if (name === 'paste-sms') A.pasteSmsForm();
+      else if (name === 'ask' && window.Extras.openAssistant) window.Extras.openAssistant();   // DW-048: اختصار الأيقونة
     }, 300);
   }
   const W0 = plugin();

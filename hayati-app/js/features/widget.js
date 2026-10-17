@@ -86,6 +86,7 @@
     setTimeout(() => {
       if (name === 'add-tx') A.txForm();
       else if (name === 'paste-sms') A.pasteSmsForm();
+      else if (name === 'ask' && window.Extras.openAssistant) window.Extras.openAssistant();   // DW-048: اختصار الأيقونة
     }, 300);
   }
   const W0 = plugin();

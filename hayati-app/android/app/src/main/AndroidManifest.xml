@@ -37,6 +37,8 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
 
+            <!-- DW-048: اختصارات الأيقونة -->
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
         </activity>
 
         <!-- DW-031: ودجت الشاشة الرئيسية. البيانات من SharedPreferences الخاصة بالتطبيق، بدون صلاحيات إضافية -->

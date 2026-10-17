@@ -62,7 +62,7 @@ public class WidgetPlugin extends Plugin {
     static String actionOf(Intent intent) {
         if (intent == null) return null;
         String name = intent.getStringExtra(EXTRA);
-        if ("add-tx".equals(name) || "paste-sms".equals(name)) {
+        if ("add-tx".equals(name) || "paste-sms".equals(name) || "ask".equals(name)) {   // ask: اختصار الأيقونة (DW-048)
             intent.removeExtra(EXTRA);   // ما يتكرر لو النشاط انعاد إنشاؤه
             return name;
         }
