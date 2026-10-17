@@ -2572,3 +2572,76 @@ test('lecture recording to text (DW-047): no button on Android or the web', asyn
   await page.waitForTimeout(500);
   await expect(page.locator('[data-stt]')).toHaveCount(0);
 });
+
+// ================= DW-048: قسّم الفاتورة =================
+test('bill split (DW-048): shares add up to the exact fils, custom shares are checked', async ({ page }) => {
+  await open(page);
+  const r = await store(page, () => {
+    const s = window.Extras.Split.splitShares;
+    const err = (f) => { try { f(); return null; } catch (e) { return e.message; } };
+    return {
+      noMe: s(10, { mode: 'equal', me: false, names: ['أ', 'ب', 'ج'] }).map((x) => x.amount),
+      withMe: s(10, { mode: 'equal', me: true, names: ['أ', 'ب'] }).map((x) => x.amount),
+      custom: s(12.5, { mode: 'custom', me: true, names: ['أ', 'ب'], amounts: { 'أ': 4, 'ب': 3.25 } }).map((x) => x.amount),
+      over: err(() => s(5, { mode: 'custom', me: true, names: ['أ'], amounts: { 'أ': 6 } })),
+      notAll: err(() => s(5, { mode: 'custom', me: false, names: ['أ', 'ب'], amounts: { 'أ': 2, 'ب': 2 } })),
+      none: err(() => s(5, { mode: 'equal', me: true, names: [] })),
+    };
+  });
+  expect(r.noMe).toEqual([3.334, 3.333, 3.333]);            // 10.000 بالضبط
+  expect(r.withMe).toEqual([3.333, 3.333]);                  // والفلس الزايد على اللي دفع (3.334)
+  expect(r.custom).toEqual([4, 3.25]);
+  expect(r.over).toBe('الحصص أكثر من المبلغ');
+  expect(r.notAll).toContain('مجموع الحصص لازم يساوي');
+  expect(r.none).toBe('اكتب اسم واحد على الأقل');
+});
+
+test('bill split (DW-048): from a new expense, linked to it, re-split replaces, amount edit re-computes, delete asks about the shares', async ({ page }) => {
+  await open(page);
+  await store(page, () => App.txForm());
+  await page.fill('#sheet [name="amount"]', '9');
+  await page.check('#sheet [name="split_after"]');
+  await page.click('#sheetSave');
+  await expect(page.locator('#sheetTitle')).toHaveText('تقسيم الفاتورة', { timeout: 5000 });
+  await page.fill('[name="names"]', 'أحمد، علي');
+  await expect(page.locator('#splitPrev')).toContainText('3.000');
+  await page.click('#sheetSave');
+  const txId = await store(page, () => App.st.transactions[App.st.transactions.length - 1].id);
+  let debts = await store(page, (id) => App.st.debts.filter((d) => d.split_of === id).map((d) => [d.person, d.amount, d.direction]), txId);
+  expect(debts).toEqual([['أحمد', 3, 'lent'], ['علي', 3, 'lent']]);
+
+  // نفس العملية: الزر يقول إنها مقسّمة، وإعادة القسمة تستبدل الحصص (ما تتكرر)
+  await store(page, (id) => App.txForm(App.st.transactions.find((t) => t.id === id)), txId);
+  await expect(page.locator('[data-split]')).toContainText('مقسّمة على 2');
+  await page.click('[data-split]');
+  await expect(page.locator('#sheetTitle')).toHaveText('تقسيم الفاتورة', { timeout: 5000 });
+  await expect(page.locator('[name="names"]')).toHaveValue('أحمد، علي');
+  await page.fill('[name="names"]', 'أحمد، علي، حسين');
+  await page.click('#sheetSave');
+  debts = await store(page, (id) => App.st.debts.filter((d) => d.split_of === id).map((d) => d.amount), txId);
+  expect(debts).toEqual([2.25, 2.25, 2.25]);
+
+  // تعديل المبلغ (بالتساوي) يعيد الحساب
+  await page.waitForTimeout(400);
+  await store(page, (id) => App.txForm(App.st.transactions.find((t) => t.id === id)), txId);
+  await page.fill('#sheet [name="amount"]', '10');
+  await page.click('#sheetSave');
+  debts = await store(page, (id) => App.st.debts.filter((d) => d.split_of === id).map((d) => d.amount), txId);
+  expect(debts).toEqual([2.5, 2.5, 2.5]);
+
+  // حذف العملية يسأل عن الحصص
+  await page.waitForTimeout(400);
+  await store(page, (id) => App.txForm(App.st.transactions.find((t) => t.id === id)), txId);
+  await page.click('#delTx');
+  await page.click('#askDlg[open] [data-ok]');
+  await expect(page.locator('#askDlg[open] p')).toContainText('تحذف حصص الربع (3) بعد؟', { timeout: 5000 });
+  await page.click('#askDlg[open] [data-ok]');
+  await page.waitForTimeout(300);
+  expect(await store(page, (id) => App.st.debts.filter((d) => d.split_of === id).length, txId)).toBe(0);
+});
+
+test('bill split (DW-048): the message for friends lists each share', async ({ page }) => {
+  await open(page);
+  const text = await store(page, () => window.Extras.Split.splitText({ merchant: 'مطعم البحر', category: 'أكل ومطاعم', amount: 12.5, occurred_at: '2026-10-16T18:00:00Z' }, [{ person: 'أحمد', amount: 4 }, { person: 'علي', amount: 3.25 }]));
+  expect(text).toBe('🧾 مطعم البحر · 16/10\nالمجموع: 12.500 د.ب\nأحمد: 4.000 د.ب\nعلي: 3.250 د.ب');
+});

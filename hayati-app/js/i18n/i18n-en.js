@@ -1891,5 +1891,27 @@ window.HAYATI_EN = {
 "التسجيل كبير (أكثر من 25MB)": "The recording is too big (over 25MB)",
 "فيه تحويل شغّال، استنى يخلص": "A conversion is already running, wait for it to finish",
 "ما قدرنا نحوّله · جرّب مرة ثانية": "Couldn't convert it · try again",
-"(مسودة من الصوت):": "(draft from audio):"
+"(مسودة من الصوت):": "(draft from audio):",
+// DW-048: قسّم الفاتورة
+"👥 دفعت عن ربعك؟ قسّمها بعد الحفظ": "👥 Paid for friends? Split it after saving",
+"مقسّمة على": "Split between",
+"عدّل القسمة": "Edit the split",
+"بالتساوي": "Equally",
+"كل واحد حصته": "Custom shares",
+"📤 أرسل لهم حصصهم": "📤 Send them their shares",
+"المصروف يظل كامل (اللي طلع من حسابك)، وحصصهم تنسجل بـ «لي وعلي».": "The expense stays in full (what left your account); their shares go to «Owed».",
+"حصتك:": "Your share:",
+"بـ «لي وعلي»": "in «Owed»",
+"الحصص أكثر من المبلغ": "The shares are more than the amount",
+"مجموع الحصص لازم يساوي": "The shares must add up to",
+"اكتب حصة كل واحد": "Enter each person's share",
+"فيه حصص انسدّت · عدّلها من «لي وعلي»": "Some shares are already settled · edit them in «Owed»",
+"انعاد حساب القسمة على المبلغ الجديد": "The split was recalculated for the new amount",
+"عدّلت المبلغ · افتح «عدّل القسمة» وعدّل الحصص": "Amount changed · open «Edit the split» to update the shares",
+"تحذف حصص الربع": "Delete your friends' shares",
+"احذفها": "Delete",
+"انحذفت الحصص": "Shares deleted",
+"انسخت ✓ الصقها لربعك": "Copied ✓ paste it to your friends",
+// DW-048: نصيب
+"نصيب": "Share of"
 };

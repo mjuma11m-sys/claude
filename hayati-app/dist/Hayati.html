@@ -2651,7 +2651,29 @@ window.HAYATI_EN = {
 "التسجيل كبير (أكثر من 25MB)": "The recording is too big (over 25MB)",
 "فيه تحويل شغّال، استنى يخلص": "A conversion is already running, wait for it to finish",
 "ما قدرنا نحوّله · جرّب مرة ثانية": "Couldn't convert it · try again",
-"(مسودة من الصوت):": "(draft from audio):"
+"(مسودة من الصوت):": "(draft from audio):",
+// DW-048: قسّم الفاتورة
+"👥 دفعت عن ربعك؟ قسّمها بعد الحفظ": "👥 Paid for friends? Split it after saving",
+"مقسّمة على": "Split between",
+"عدّل القسمة": "Edit the split",
+"بالتساوي": "Equally",
+"كل واحد حصته": "Custom shares",
+"📤 أرسل لهم حصصهم": "📤 Send them their shares",
+"المصروف يظل كامل (اللي طلع من حسابك)، وحصصهم تنسجل بـ «لي وعلي».": "The expense stays in full (what left your account); their shares go to «Owed».",
+"حصتك:": "Your share:",
+"بـ «لي وعلي»": "in «Owed»",
+"الحصص أكثر من المبلغ": "The shares are more than the amount",
+"مجموع الحصص لازم يساوي": "The shares must add up to",
+"اكتب حصة كل واحد": "Enter each person's share",
+"فيه حصص انسدّت · عدّلها من «لي وعلي»": "Some shares are already settled · edit them in «Owed»",
+"انعاد حساب القسمة على المبلغ الجديد": "The split was recalculated for the new amount",
+"عدّلت المبلغ · افتح «عدّل القسمة» وعدّل الحصص": "Amount changed · open «Edit the split» to update the shares",
+"تحذف حصص الربع": "Delete your friends' shares",
+"احذفها": "Delete",
+"انحذفت الحصص": "Shares deleted",
+"انسخت ✓ الصقها لربعك": "Copied ✓ paste it to your friends",
+// DW-048: نصيب
+"نصيب": "Share of"
 };
 
 </script>
@@ -5270,7 +5292,7 @@ window.HAYATI_CONFIG = {
         };
         const del = root.querySelector('#delTx');
         X('txMount', root, tx);
-        if (del) del.onclick = async () => { if (await ask('تحذف هالعملية؟')) { S.remove('transactions', tx.id); closeSheet(); toast('انحذفت'); } };
+        if (del) del.onclick = async () => { if (await ask('تحذف هالعملية؟')) { S.remove('transactions', tx.id); closeSheet(); toast('انحذفت'); X('txDeleted', tx); } };
         if (!tx) setTimeout(() => autoFocus(root.querySelector('[name=amount]')), 300);
       },
       onSave(root) {
@@ -5288,6 +5310,7 @@ window.HAYATI_CONFIG = {
           needs_review: false,
         }));
         toast(tx ? 'تم التعديل' : 'انضافت ✓');
+        if (tx) X('txSaved', savedTx, tx);
         if (root.dataset.catTouched) learnCategory(savedTx, tx && tx.category);
         if (!tx) setTimeout(() => X('afterTx', savedTx), 450);
       },
@@ -6895,43 +6918,150 @@ window.HAYATI_CONFIG = {
   const seg = (items, cur, action) => '<div class="seg">' + items.map(([k, l]) => '<button class="' + (cur === k ? 'on' : '') + '" data-action="' + action + '" data-k="' + k + '">' + l + '</button>').join('') + '</div>';
   const wrap = (name, fn) => { const prev = E[name]; E[name] = (...a) => fn(prev ? prev : () => '', ...a); };
 
-  // ================= تقسيم الفاتورة =================
-  wrap('txExtra', (prev, tx) => prev(tx) + (tx && tx.kind === 'expense' ? '<button type="button" class="btn ghost block" data-split style="margin-bottom:12px">' + I('users') + 'قسّم الفاتورة مع ربعك</button>' : ''));
+  // ================= تقسيم الفاتورة (DW-048) =================
+  // الحصص تنحسب بالفلس: مجموعها = المبلغ بالضبط. الحصص مربوطة بالعملية (split_of): إعادة القسمة تستبدلها،
+  // وحذف العملية يسأل عن حصصها، وتعديل المبلغ يعيد حساب القسمة بالتساوي. المصروف نفسه يظل كامل (اللي طلع من حسابك).
+  const fils = (x) => Math.round((Number(x) || 0) * 1000);
+  const linked = (id) => st.debts.filter((d) => d.split_of === id);
+  // equal: {names, me} · custom: {names, me, amounts{name: dinars}} ← [{person, amount}] أو خطأ
+  function splitShares(total, cfg) {
+    const T = fils(total), names = cfg.names;
+    if (!names.length) throw new Error('اكتب اسم واحد على الأقل');
+    if (cfg.mode === 'custom') {
+      const out = names.map((n) => ({ person: n, f: fils(cfg.amounts[n]) }));
+      if (out.some((x) => !(x.f > 0))) throw new Error('اكتب حصة كل واحد');
+      const sum = out.reduce((a, x) => a + x.f, 0);
+      if (sum > T) throw new Error('الحصص أكثر من المبلغ');
+      if (!cfg.me && sum !== T) throw new Error('مجموع الحصص لازم يساوي ' + fmt(T / 1000));
+      return out.map((x) => ({ person: x.person, amount: x.f / 1000 }));
+    }
+    const count = names.length + (cfg.me ? 1 : 0), base = Math.floor(T / count), rest = T - base * count;
+    // الفلس الزايد: على اللي دفع لو داخل بالقسمة، وإلا على أول الربع
+    return names.map((n, i) => ({ person: n, amount: (base + (!cfg.me && i < rest ? 1 : 0)) / 1000 }));
+  }
+  function splitText(tx, shares) {
+    const d = new Date(tx.occurred_at);
+    return ['🧾 ' + (tx.merchant || tx.category) + ' · ' + d.getDate() + '/' + (d.getMonth() + 1), 'المجموع: ' + fmt(tx.amount) + ' د.ب']
+      .concat(shares.map((x) => x.person + ': ' + fmt(x.amount) + ' د.ب')).join('\n');
+  }
+  function applySplit(tx, cfg) {
+    const old = linked(tx.id);
+    if (old.some((d) => d.settled)) throw new Error('فيه حصص انسدّت · عدّلها من «لي وعلي»');
+    const shares = splitShares(tx.amount, cfg);
+    old.forEach((d) => S.remove('debts', d.id));
+    const note = 'نصيبه من ' + (tx.merchant || tx.category);
+    for (const x of shares) S.upsert('debts', { person: x.person, amount: x.amount, direction: 'lent', note, occurred_at: tx.occurred_at, settled: false, split_of: tx.id });
+    S.upsert('transactions', Object.assign({}, tx, { split: { mode: cfg.mode, me: cfg.me, names: cfg.names, amounts: cfg.mode === 'custom' ? cfg.amounts : undefined } }));
+    return shares;
+  }
+
+  let pendingSplit = false;   // «دفعت عن ربعك؟» بعملية جديدة: القسمة تنفتح بعد الحفظ
+  wrap('txExtra', (prev, tx) => {
+    let out = prev(tx);
+    if (!tx) out += '<label class="switch" id="splitAsk" style="margin-bottom:12px"><input type="checkbox" name="split_after"> 👥 دفعت عن ربعك؟ قسّمها بعد الحفظ</label>';
+    else if (tx.kind === 'expense') {
+      const n = linked(tx.id).length;
+      out += '<button type="button" class="btn ghost block" data-split style="margin-bottom:12px">' + I('users') + (n ? 'مقسّمة على ' + n + ' · عدّل القسمة' : 'قسّم الفاتورة مع ربعك') + '</button>';
+    }
+    return out;
+  });
   wrap('txMount', (prev, root, tx) => {
     prev(root, tx);
+    pendingSplit = false;
     const b = root.querySelector('[data-split]');
-    if (b) b.onclick = () => splitSheet(tx);
+    if (b) b.onclick = () => { A.closeSheet(); setTimeout(() => splitSheet(st.transactions.find((x) => x.id === tx.id) || tx), 280); };
+    const ask = root.querySelector('[name=split_after]');
+    if (ask) ask.onchange = () => { pendingSplit = ask.checked; };
+    const box = root.querySelector('#splitAsk');
+    if (box) { const sync = () => { box.hidden = root.dataset.kind !== 'expense'; }; root.querySelector('#kindSeg').addEventListener('click', () => setTimeout(sync)); sync(); }
   });
+  wrap('afterTx', (prev, tx) => {
+    if (pendingSplit && tx && tx.kind === 'expense') { pendingSplit = false; splitSheet(tx); return ''; }
+    pendingSplit = false;
+    return prev(tx);
+  });
+  // تعديل مبلغ عملية مقسّمة: بالتساوي ← نعيد الحساب، بحصص ← نطلب منك تعدّلها
+  wrap('txSaved', (prev, tx, old) => {
+    prev(tx, old);
+    if (!old || !tx.split || fils(old.amount) === fils(tx.amount) || !linked(tx.id).length) return '';
+    if (tx.split.mode === 'equal') {
+      try { applySplit(tx, tx.split); A.toast('انعاد حساب القسمة على المبلغ الجديد'); } catch (e) { A.toast(e.message); }
+    } else A.toast('عدّلت المبلغ · افتح «عدّل القسمة» وعدّل الحصص');
+    return '';
+  });
+  wrap('txDeleted', (prev, tx) => {
+    prev(tx);
+    const open = linked(tx.id).filter((d) => !d.settled);
+    if (open.length) setTimeout(async () => { if (await A.ask('تحذف حصص الربع (' + open.length + ') بعد؟', 'احذفها')) { open.forEach((d) => S.remove('debts', d.id)); A.toast('انحذفت الحصص'); } }, 320);
+    return '';
+  });
+
   function splitSheet(tx) {
-    const people = [...new Set(st.debts.map((d) => d.person))];
+    const prevCfg = tx.split || { mode: 'equal', me: true, names: [] };
+    const people = [...new Set(st.debts.map((d) => d.person).filter(Boolean))];
     A.openSheet({
       title: 'تقسيم الفاتورة',
       saveLabel: 'قسّم',
-      body: '<p class="small muted" style="margin:0 4px 10px;text-align:center">' + h(tx.merchant || tx.category) + ' · ' + money(tx.amount) + '</p>' +
-        (people.length ? '<div class="chips" id="pp" style="margin-bottom:10px">' + people.map((p) => '<button type="button" class="chip" data-p="' + h(p) + '">' + h(p) + '</button>').join('') + '</div>' : '') +
-        '<div class="field"><label>أسماء الربع (افصل بفاصلة)</label><input name="names" placeholder="أحمد، علي، حسين"></div>' +
-        '<label class="switch" style="margin-bottom:12px"><input type="checkbox" name="me" checked> أنا داخل بالقسمة</label>' +
-        '<div class="card" id="splitPrev" style="text-align:center"></div>',
+      body: '<p class="small muted" style="margin:0 4px 10px;text-align:center"><bdi>' + h(tx.merchant || tx.category) + '</bdi> · ' + money(tx.amount) + '</p>' +
+        (people.length ? '<div class="chips" id="pp" style="margin-bottom:10px">' + people.map((p) => '<button type="button" class="chip" data-p="' + h(p) + '" data-noi18n>' + h(p) + '</button>').join('') + '</div>' : '') +
+        '<div class="field"><label for="spNames">أسماء الربع (افصل بفاصلة)</label><input id="spNames" name="names" placeholder="أحمد، علي، حسين" value="' + h(prevCfg.names.join('، ')) + '"></div>' +
+        '<div class="seg" id="spMode" style="margin-bottom:12px"><button type="button" data-k="equal"' + (prevCfg.mode !== 'custom' ? ' class="on"' : '') + '>بالتساوي</button><button type="button" data-k="custom"' + (prevCfg.mode === 'custom' ? ' class="on"' : '') + '>كل واحد حصته</button></div>' +
+        '<div id="spCustom"></div>' +
+        '<label class="switch" style="margin-bottom:12px"><input type="checkbox" name="me"' + (prevCfg.me !== false ? ' checked' : '') + '> أنا داخل بالقسمة</label>' +
+        '<div class="card" id="splitPrev" style="text-align:center"></div>' +
+        '<button type="button" class="btn ghost block" id="spSend" style="margin-top:10px">📤 أرسل لهم حصصهم</button>' +
+        '<p class="small muted" style="margin:8px 4px 0">المصروف يظل كامل (اللي طلع من حسابك)، وحصصهم تنسجل بـ «لي وعلي».</p>',
       mount(root) {
-        const names = () => A.val(root, 'names').split(/[،,]/).map((x) => x.trim()).filter(Boolean);
-        const upd = () => {
-          const n = names().length, me = root.querySelector('[name=me]').checked, total = n + (me ? 1 : 0);
-          root.querySelector('#splitPrev').innerHTML = n ? 'كل واحد عليه <b>' + money(tx.amount / total) + '</b><div class="small muted">ينسجل ' + n + ' بـ«لي وعلي»</div>' : '<span class="muted small">اكتب أسماء الربع</span>';
+        root.dataset.mode = prevCfg.mode === 'custom' ? 'custom' : 'equal';
+        const amounts = Object.assign({}, prevCfg.amounts || {});
+        const names = () => [...new Set(A.val(root, 'names').split(/[،,]/).map((x) => x.trim()).filter(Boolean))];
+        const cfg = () => ({ mode: root.dataset.mode, me: root.querySelector('[name=me]').checked, names: names(), amounts });
+        const drawCustom = () => {
+          const box = root.querySelector('#spCustom');
+          box.innerHTML = root.dataset.mode !== 'custom' ? '' : names().map((n) => '<div class="field" style="display:flex;gap:8px;align-items:center"><label style="flex:1;margin:0"><bdi>' + h(n) + '</bdi></label><input data-amt="' + h(n) + '" inputmode="decimal" placeholder="0.000" style="width:130px" aria-label="نصيب ' + h(n) + '" value="' + (amounts[n] != null ? h(String(amounts[n])) : '') + '"></div>').join('');
         };
-        root.oninput = upd; root.onchange = upd;
+        const upd = () => {
+          const prev = root.querySelector('#splitPrev');
+          try {
+            const sh = splitShares(tx.amount, cfg());
+            const mine = fils(tx.amount) - sh.reduce((a, x) => a + fils(x.amount), 0);
+            prev.innerHTML = sh.map((x) => '<div><bdi>' + h(x.person) + '</bdi>: <b>' + money(x.amount) + '</b></div>').join('') + (cfg().me ? '<div class="small muted">حصتك: ' + money(mine / 1000) + '</div>' : '') + '<div class="small muted">ينسجل ' + sh.length + ' بـ «لي وعلي»</div>';
+          } catch (e) { prev.innerHTML = '<span class="muted small">' + h(e.message) + '</span>'; }
+        };
+        root.querySelector('#spMode').onclick = (e) => {
+          const b = e.target.closest('button'); if (!b) return;
+          root.dataset.mode = b.dataset.k;
+          root.querySelectorAll('#spMode button').forEach((x) => x.classList.toggle('on', x === b));
+          drawCustom(); upd();
+        };
+        root.oninput = (e) => {
+          const a = e.target.closest('[data-amt]');
+          if (a) amounts[a.dataset.amt] = parseAmountSafe(a.value);
+          if (e.target.name === 'names') drawCustom();
+          upd();
+        };
+        root.onchange = upd;
         const pp = root.querySelector('#pp');
-        if (pp) pp.onclick = (e) => { const b = e.target.closest('[data-p]'); if (!b) return; const cur = names(); if (!cur.includes(b.dataset.p)) root.querySelector('[name=names]').value = cur.concat(b.dataset.p).join('، '); b.classList.add('on'); upd(); };
-        upd();
+        if (pp) pp.onclick = (e) => { const b = e.target.closest('[data-p]'); if (!b) return; const cur = names(); if (!cur.includes(b.dataset.p)) { root.querySelector('[name=names]').value = cur.concat(b.dataset.p).join('، '); drawCustom(); } upd(); };
+        root.querySelector('#spSend').onclick = async () => {
+          let sh; try { sh = splitShares(tx.amount, cfg()); } catch (e) { A.toast(e.message); return; }
+          const text = splitText(tx, sh);
+          if (window.HayatiNative && window.HayatiNative.shareText && window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) { window.HayatiNative.shareText(text); return; }
+          if (navigator.share) { try { await navigator.share({ text }); return; } catch (e) { /* سكّر القائمة */ } }
+          try { await navigator.clipboard.writeText(text); A.toast('انسخت ✓ الصقها لربعك'); } catch (e) { A.toast('ما قدرنا ننسخ'); }
+        };
+        drawCustom(); upd();
       },
       onSave(root) {
-        const names = A.val(root, 'names').split(/[،,]/).map((x) => x.trim()).filter(Boolean);
-        if (!names.length) throw new Error('اكتب اسم واحد على الأقل');
-        const share = Math.round((tx.amount / (names.length + (root.querySelector('[name=me]').checked ? 1 : 0))) * 1000) / 1000;
-        for (const p of names) S.upsert('debts', { person: p, amount: share, direction: 'lent', note: 'نصيبه من ' + (tx.merchant || tx.category), occurred_at: tx.occurred_at, settled: false });
-        A.toast('انسجل على ' + names.length + ' أشخاص · ' + fmt(share) + ' لكل واحد');
+        const c = { mode: root.dataset.mode, me: root.querySelector('[name=me]').checked, names: [...new Set(A.val(root, 'names').split(/[،,]/).map((x) => x.trim()).filter(Boolean))], amounts: {} };
+        root.querySelectorAll('[data-amt]').forEach((i) => { c.amounts[i.dataset.amt] = parseAmountSafe(i.value); });
+        const sh = applySplit(st.transactions.find((x) => x.id === tx.id) || tx, c);
+        A.toast('انسجل على ' + sh.length + (sh.length === 1 ? ' شخص' : ' أشخاص') + ' بـ «لي وعلي»');
       },
     });
   }
+  const parseAmountSafe = (v) => { const n = Number(String(v || '').replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[٫,]/g, '.')); return isFinite(n) && n > 0 ? Math.round(n * 1000) / 1000 : 0; };
+  E.Split = { splitShares, splitText, linked };
 
   // ================= تحديات التوفير =================
   const CH = { '52w': { name: 'تحدي 52 أسبوع', emoji: '🗓️' }, nofood: { name: 'أسبوع بدون مطاعم', emoji: '🍔' } };

@@ -1267,7 +1267,7 @@
         };
         const del = root.querySelector('#delTx');
         X('txMount', root, tx);
-        if (del) del.onclick = async () => { if (await ask('تحذف هالعملية؟')) { S.remove('transactions', tx.id); closeSheet(); toast('انحذفت'); } };
+        if (del) del.onclick = async () => { if (await ask('تحذف هالعملية؟')) { S.remove('transactions', tx.id); closeSheet(); toast('انحذفت'); X('txDeleted', tx); } };
         if (!tx) setTimeout(() => autoFocus(root.querySelector('[name=amount]')), 300);
       },
       onSave(root) {
@@ -1285,6 +1285,7 @@
           needs_review: false,
         }));
         toast(tx ? 'تم التعديل' : 'انضافت ✓');
+        if (tx) X('txSaved', savedTx, tx);
         if (root.dataset.catTouched) learnCategory(savedTx, tx && tx.category);
         if (!tx) setTimeout(() => X('afterTx', savedTx), 450);
       },
