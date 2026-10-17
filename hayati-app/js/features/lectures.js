@@ -197,6 +197,52 @@
     } finally { root.querySelectorAll('[data-ai],[data-photo],[data-pdf]').forEach((b) => { b.disabled = false; }); btn.textContent = label; }
   }
 
+  // DW-054: بوربوينت أو وورد ← النص يطلع بالجهاز (بدون نت)، ولأصحاب الحسابات: ملاحظات مرتبة + ملخص + أسئلة
+  const OFFICE_MAX = 30 * 1024 * 1024;
+  function officeBlock() {
+    return '<button type="button" class="btn ghost block" data-office style="margin:0 0 6px">📑 ارفع بوربوينت أو وورد</button>' +
+      '<input type="file" id="lcOffice" accept=".pptx,.docx,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>' +
+      '<p class="small muted" style="margin:0 4px 12px">' + (S.status && S.status.signedIn && S.invokeFn ? 'نطلع نص الشرائح بجوالك، وبعدين نسوي منه ملاحظات مختصرة وملخص وأسئلة للمراجعة. الملف ما ينحفظ.' : 'نطلع نص الشرائح لملاحظاتك بجوالك (بدون نت). الملخص والأسئلة التلقائية تحتاج حساب.') + '</p>';
+  }
+  async function runOffice(root, l, file, redrawCards) {
+    if (file.size > OFFICE_MAX) { A.toast('الملف كبير · الحد 30MB'); return; }
+    const btn = root.querySelector('[data-office]'), label = btn.textContent;
+    root.querySelectorAll('[data-ai],[data-photo],[data-pdf],[data-office]').forEach((b) => { b.disabled = true; }); btn.textContent = 'نقرا الملف…';
+    try {
+      let doc;
+      try { doc = await window.HayatiOffice.extract(file); } catch (e) {
+        A.toast(e && e.message === 'old' ? 'هذا ملف قديم (.ppt أو .doc) · احفظه pptx أو docx أو PDF وارفعه' : 'ما قدرنا نقرا الملف · جرّب تحفظه PDF'); return;
+      }
+      const text = doc.text.trim();
+      if (!text) { A.toast('ما فيه نص بالملف (يمكن الشرائح صور) · جرّب «ملف PDF» أو «صوّر السبورة»'); return; }
+      const ta = root.querySelector('[name=lc_notes]'), sm = root.querySelector('[name=lc_summary]'), titleIn = root.querySelector('[name=lc_title]');
+      if (!titleIn.value.trim()) titleIn.value = file.name.replace(/\.(pptx|docx)$/i, '').slice(0, 120);
+      const put = (notes) => { ta.value = ((ta.value.trim() ? ta.value.trim() + '\n\n' : '') + notes).slice(0, 20000); ta.dispatchEvent(new Event('input')); };
+      if (!(S.status && S.status.signedIn && S.invokeFn)) {
+        put(text);
+        A.toast('انضاف نص ' + (doc.kind === 'pptx' ? doc.count + ' شريحة' : 'الملف') + ' للملاحظات · اضغط «حفظ»');
+        return;
+      }
+      btn.textContent = '✨ نسوي المراجعة… (نص دقيقة تقريباً)';
+      try {
+        const r = await S.invokeFn('lecture-ai', { mode: 'slides', title: A.val(root, 'lc_title'), notes: text.slice(0, 20000) });
+        const notes = String((r && r.notes) || '').trim().slice(0, 12000), summary = String((r && r.summary) || '').trim().slice(0, 4000);
+        if (!notes && !summary) throw new Error('empty');
+        put(notes || text);
+        if (summary && !sm.value.trim()) sm.value = summary;
+        const have = new Set(l.cards.map((c) => c.q.trim()));
+        const add = (Array.isArray(r.cards) ? r.cards : []).filter((c) => c && c.q && c.a && !have.has(String(c.q).trim())).slice(0, 10);
+        add.forEach((c) => l.cards.push({ id: S.uuid(), q: String(c.q).slice(0, 300), a: String(c.a).slice(0, 600) }));
+        if (add.length) redrawCards();
+        A.toast('المراجعة جاهزة: ملاحظات وملخص' + (add.length ? ' و' + add.length + ' سؤال' : '') + (text.length > 20000 ? ' (أول 20 ألف حرف)' : '') + ' · راجعها واضغط «حفظ»');
+      } catch (e) {
+        put(text);
+        const m = String(e && e.message || '');
+        A.toast((m === 'limit' ? 'خلصت محاولات اليوم ✨' : 'ما قدرنا نسوي الملخص') + ' · حطينا نص الملف بالملاحظات');
+      }
+    } finally { root.querySelectorAll('[data-ai],[data-photo],[data-pdf],[data-office]').forEach((b) => { b.disabled = false; }); btn.textContent = label; }
+  }
+
   function sheet(id) {
     const old = lectures().find((x) => x.id === id);
     const l = Object.assign({ id: S.uuid(), course_id: '', title: '', date: today(), notes: '', summary: '', cards: [], audio: [] }, old || {});
@@ -217,7 +263,7 @@
         '<button type="button" class="btn block" id="lcRec">🎙️ ابدأ التسجيل</button><div id="lcClips">' + audioList() + '</div>' +
         '<div class="group-title">' + I('book') + 'ملاحظاتك</div><div class="field"><textarea name="lc_notes" rows="5" maxlength="20000" placeholder="اللي قاله الدكتور، النقاط المهمة…">' + h(l.notes) + '</textarea></div>' + mathBar() +
         '<div class="field"><label>ملخصك بسطور</label><textarea name="lc_summary" rows="3" maxlength="4000" placeholder="لو بتشرحها لربعك بثلاث جمل، شنو بتقول؟">' + h(l.summary) + '</textarea></div>' +
-        aiBlock() +
+        officeBlock() + aiBlock() +
         '<div class="group-title">' + I('target') + 'أسئلة تختبر فيها نفسك</div>' +
         '<div class="field"><input name="lc_q" maxlength="300" placeholder="السؤال"></div><div class="field"><input name="lc_a" maxlength="600" placeholder="الجواب"></div>' +
         '<button type="button" class="btn ghost block" id="lcAddCard">' + I('plus') + 'أضف السؤال</button>' +
@@ -270,6 +316,8 @@
         if (ph && phIn) { ph.onclick = () => phIn.click(); phIn.onchange = () => { const f = phIn.files[0]; phIn.value = ''; if (f) runPhoto(root, f); }; }
         const pd = root.querySelector('[data-pdf]'), pdIn = root.querySelector('#lcPdf');
         if (pd && pdIn) { pd.onclick = () => pdIn.click(); pdIn.onchange = () => { const f = pdIn.files[0]; pdIn.value = ''; if (f) runPdf(root, l, f, () => { root.querySelector('#lcCards').innerHTML = cardsList(); }); }; }
+        const of = root.querySelector('[data-office]'), ofIn = root.querySelector('#lcOffice');
+        if (of && ofIn) { of.onclick = () => ofIn.click(); ofIn.onchange = () => { const f = ofIn.files[0]; ofIn.value = ''; if (f) runOffice(root, l, f, () => { root.querySelector('#lcCards').innerHTML = cardsList(); }); }; }
         root.querySelectorAll('[data-ai]').forEach((b) => { b.onclick = () => runAi(root, l, b.dataset.ai, () => { root.querySelector('#lcCards').innerHTML = cardsList(); }); });
         const qz = root.querySelector('#lcQuiz');
         if (qz) qz.onclick = () => { A.closeSheet(); setTimeout(() => quiz([l.id]), 280); };

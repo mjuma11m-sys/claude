@@ -2773,6 +2773,34 @@ window.HAYATI_EN = {
 "ما قدرنا نقرا تطبيق الصحة": "Couldn't read Apple Health",
 "ما انربط · افتح الإعدادات ← الصحة ← الوصول للبيانات ← «حياتي»": "Not connected · open Settings → Health → Data Access → Hayati",
 "وقّفنا القراءة · الأيام اللي انسجلت تظل بـ«صحتي»": "Reading stopped · days already saved stay in My Health",
+// DW-054: كل المراحل + البوربوينت
+"المرحلة الدراسية": "Study level",
+"مدرسة": "School",
+"ثانوي": "Secondary",
+"جامعة أو دبلوم": "University or diploma",
+"الدراسة لكل المراحل": "Study for every level",
+"مدرسة أو ثانوي أو جامعة: حصص ومعدل بالنسبة المئوية للمدرسة": "School, secondary or university: lessons, and a percentage GPA for school",
+"ارفع البوربوينت أو الوورد": "Upload PowerPoint or Word",
+"نص الشرائح لملاحظاتك، ومراجعة مختصرة وأسئلة لأصحاب الحسابات": "Slide text into your notes, plus a short review and questions for account holders",
+"📑 ارفع بوربوينت أو وورد": "📑 Upload PowerPoint or Word",
+"نطلع نص الشرائح بجوالك، وبعدين نسوي منه ملاحظات مختصرة وملخص وأسئلة للمراجعة. الملف ما ينحفظ.": "We extract the slide text on your phone, then make short notes, a summary and review questions. The file isn't stored.",
+"نطلع نص الشرائح لملاحظاتك بجوالك (بدون نت). الملخص والأسئلة التلقائية تحتاج حساب.": "We put the slide text into your notes on your phone (offline). Automatic summaries and questions need an account.",
+"الملف كبير · الحد 30MB": "File too large · 30MB max",
+"نقرا الملف…": "Reading the file…",
+"✨ نسوي المراجعة… (نص دقيقة تقريباً)": "✨ Making your review… (about half a minute)",
+"هذا ملف قديم (.ppt أو .doc) · احفظه pptx أو docx أو PDF وارفعه": "This is an old file (.ppt or .doc) · save it as pptx, docx or PDF and upload it",
+"ما قدرنا نقرا الملف · جرّب تحفظه PDF": "Couldn't read the file · try saving it as PDF",
+"ما فيه نص بالملف (يمكن الشرائح صور) · جرّب «ملف PDF» أو «صوّر السبورة»": "No text in the file (the slides may be images) · try PDF or a photo",
+"ما قدرنا نسوي الملخص": "Couldn't make the summary",
+"خلصت محاولات اليوم ✨": "Out of tries for today ✨",
+"الدرجة من 100": "Grade out of 100",
+"مثلاً 92": "e.g. 92",
+"الدرجة لازم بين 0 و 100": "Grade must be between 0 and 100",
+"بدون درجة من 100": "No grade out of 100",
+"ممتاز 🏆": "Excellent 🏆",
+"راسب ⚠️": "Fail ⚠️",
+"أضف موادك ودرجة كل وحدة من 100، وأحسب لك المعدل الفصلي والتراكمي.": "Add your subjects and each grade out of 100, and I'll calculate your term and cumulative GPA.",
+"النظام: النسبة المئوية، وكل مادة توزن بساعاتها (لو مدرستك ما تستخدم ساعات خلها 1). 50% نجاح.": "System: percentage, each subject weighted by its hours (if your school doesn't use hours, keep it 1). 50% to pass.",
 };
 
 </script>
@@ -3203,11 +3231,11 @@ window.HAYATI_CONFIG = {
   const KEY = 'hayati-v1';
   const CFG_KEY = 'hayati-supabase';
   const TABLES = ['transactions', 'courses', 'tasks', 'subscriptions', 'goals', 'grades', 'study_sessions', 'debts', 'habits', 'daily', 'lifts', 'body', 'cards', 'events', 'shopping', 'journal', 'matches', 'lectures', 'trips'];
-  const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges', 'name', 'roles', 'onboarded', 'payday', 'gold_price', 'today_hide'];
+  const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges', 'name', 'roles', 'onboarded', 'payday', 'gold_price', 'today_hide', 'study_level', 'kitchen_fav'];
   // على الجهاز بس (ما تروح لجدول settings بالسيرفر) بس تدخل بالنسخة الاحتياطية (DW-012)
   //   DW-035: يوم الراتب وسعر الذهب وترتيب «اليوم» صارت تتزامن؛ إعدادات العبادة تظل على الجهاز (خصوصية)
   const LOCAL_SETTINGS = ['madhhab', 'khums_start', 'wird', 'hijri_offset', 'tasbih'];
-  const NUMERIC = ['amount', 'target', 'saved', 'credits', 'minutes', 'day', 'month', 'duration', 'remind_days', 'weight', 'waist', 'water', 'sleep', 'absence_limit'];
+  const NUMERIC = ['amount', 'target', 'saved', 'credits', 'minutes', 'day', 'month', 'duration', 'remind_days', 'weight', 'waist', 'water', 'sleep', 'absence_limit', 'score'];
 
   const listeners = new Set();
   let sb = null;          // عميل Supabase
@@ -5121,17 +5149,23 @@ window.HAYATI_CONFIG = {
   }
 
   // ---------- المعدل ----------
+  // DW-054: المدرسة والثانوي بالنسبة المئوية (موزونة بالساعات)، والجامعة بنظام 4.00
+  const pctMode = () => st.settings.study_level === 'school' || st.settings.study_level === 'secondary';
+  const gpaFmt = (g) => (g == null ? '—' : pctMode() ? g.toFixed(1) + '%' : g.toFixed(2));
   function gpaOf(rows) {
     let pts = 0, cr = 0;
+    const pct = pctMode();
     for (const r of rows) {
-      if (!(r.grade in GRADE_POINTS)) continue;
-      pts += GRADE_POINTS[r.grade] * Number(r.credits);
+      const v = pct ? (r.score != null && r.score !== '' ? Number(r.score) : NaN) : GRADE_POINTS[r.grade];
+      if (!(v >= 0)) continue;
+      pts += v * Number(r.credits);
       cr += Number(r.credits);
     }
     return { gpa: cr ? pts / cr : null, credits: cr, points: pts };
   }
   function standing(g) {
     if (g == null) return '';
+    if (pctMode()) return g >= 90 ? 'ممتاز 🏆' : g >= 80 ? 'جيد جداً' : g >= 70 ? 'جيد' : g >= 50 ? 'مقبول' : 'راسب ⚠️';
     if (g >= 3.67) return 'امتياز 🏆';
     if (g >= 3) return 'جيد جداً';
     if (g >= 2.33) return 'جيد';
@@ -5145,38 +5179,43 @@ window.HAYATI_CONFIG = {
   }
   function cumulative() {
     const all = gpaOf(st.grades);
-    const pg = Number(st.settings.prior_gpa), pc = Number(st.settings.prior_credits);
+    const pg = pctMode() ? 0 : Number(st.settings.prior_gpa), pc = Number(st.settings.prior_credits);
     const extraPts = pg && pc ? pg * pc : 0, extraCr = pg && pc ? pc : 0;
     const cr = all.credits + extraCr;
     return { gpa: cr ? (all.points + extraPts) / cr : null, credits: cr };
   }
-  function gradeColor(g) { return g.startsWith('A') ? '#059669' : g.startsWith('B') ? '#2563eb' : g.startsWith('C') ? '#d97706' : '#e11d48'; }
+  function gradeColor(g) {
+    if (typeof g === 'number') return g >= 90 ? '#059669' : g >= 80 ? '#2563eb' : g >= 50 ? '#d97706' : '#e11d48'; return g.startsWith('A') ? '#059669' : g.startsWith('B') ? '#2563eb' : g.startsWith('C') ? '#d97706' : '#e11d48'; }
 
   function viewGpa() {
     const cum = cumulative();
     const sems = semesterOrder();
     const cur = sems[0] ? gpaOf(st.grades.filter((g) => g.semester === sems[0])) : null;
     let out = '<div class="hero"><div style="display:flex;align-items:center;gap:14px"><div style="flex:1;min-width:0">' +
-      '<span class="eyebrow">' + I('award') + 'المعدل التراكمي</span><div class="amount-big"><span class="num">' + (cum.gpa != null ? cum.gpa.toFixed(2) : '—') + '</span><span class="cur">/ 4.00</span></div>' +
+      '<span class="eyebrow">' + I('award') + 'المعدل التراكمي</span><div class="amount-big"><span class="num">' + gpaFmt(cum.gpa) + '</span>' + (pctMode() ? '' : '<span class="cur">/ 4.00</span>') + '</div>' +
       '<div class="meta"><span>' + (standing(cum.gpa) || 'أضف درجاتك عشان أحسب معدلك') + '</span></div></div>' +
-      (cum.gpa != null ? ring((cum.gpa / 4) * 100) : '') + '</div>' +
-      '<div class="split"><div><small>معدل ' + h(sems[0] || 'الفصل') + '</small><b class="num">' + (cur && cur.gpa != null ? cur.gpa.toFixed(2) : '—') + '</b></div>' +
+      (cum.gpa != null ? ring(pctMode() ? cum.gpa : (cum.gpa / 4) * 100) : '') + '</div>' +
+      '<div class="split"><div><small>معدل ' + h(sems[0] || 'الفصل') + '</small><b class="num">' + gpaFmt(cur && cur.gpa) + '</b></div>' +
       '<div><small>الساعات المحتسبة</small><b class="num">' + (cum.credits || 0) + '</b></div></div></div>';
 
     out += '<div class="actions"><button class="action" data-action="add-grade"><div class="ico" style="' + tint('#1A8A8F') + '">' + I('plus') + '</div>أضف درجة</button>' +
-      '<button class="action" data-action="prior-gpa"><div class="ico" style="' + tint('#0d9488') + '">' + I('chart') + '</div>' + (st.settings.prior_gpa ? 'المعدل السابق ' + Number(st.settings.prior_gpa).toFixed(2) : 'معدلك السابق') + '</button></div>';
+      (pctMode() ? '' : '<button class="action" data-action="prior-gpa"><div class="ico" style="' + tint('#0d9488') + '">' + I('chart') + '</div>' + (st.settings.prior_gpa ? 'المعدل السابق ' + Number(st.settings.prior_gpa).toFixed(2) : 'معدلك السابق') + '</button>') + '</div>';
 
-    out += X('gpaNeed');
-    if (!sems.length) return out + '<div class="card" style="margin-top:14px">' + empty('award', 'ما فيه درجات', 'أضف موادك ودرجاتها (A، B+…) وأحسب لك المعدل الفصلي والتراكمي. إذا عندك معدل قديم حطه من «معدلك السابق».') + '</div>';
+    if (!pctMode()) out += X('gpaNeed');
+    if (!sems.length) return out + '<div class="card" style="margin-top:14px">' + (pctMode() ? empty('award', 'ما فيه درجات', 'أضف موادك ودرجة كل وحدة من 100، وأحسب لك المعدل الفصلي والتراكمي.') : empty('award', 'ما فيه درجات', 'أضف موادك ودرجاتها (A، B+…) وأحسب لك المعدل الفصلي والتراكمي. إذا عندك معدل قديم حطه من «معدلك السابق».')) + '</div>';
     for (const sem of sems) {
       const rows = st.grades.filter((g) => g.semester === sem);
       const g = gpaOf(rows);
-      out += '<div class="sec-head"><h2>' + h(sem) + '</h2><span class="tag brand num">' + (g.gpa != null ? g.gpa.toFixed(2) : '—') + '</span><span class="count">' + g.credits + ' ساعة</span></div>' +
+      out += '<div class="sec-head"><h2>' + h(sem) + '</h2><span class="tag brand num">' + gpaFmt(g.gpa) + '</span><span class="count">' + g.credits + ' ساعة</span></div>' +
         '<div class="card flush"><ul class="list">' + rows.map((r) =>
-          '<li class="row" data-action="edit-grade" data-id="' + r.id + '"><div class="grade-badge" style="' + tint(gradeColor(r.grade)) + '">' + h(r.grade) + '</div>' +
-          '<div class="main"><div class="title"><span class="t">' + h(r.course_name) + '</span></div><div class="sub">' + r.credits + ' ساعات · ' + (GRADE_POINTS[r.grade] || 0).toFixed(2) + ' نقطة</div></div></li>').join('') + '</ul></div>';
+          (pctMode()
+            ? '<li class="row" data-action="edit-grade" data-id="' + r.id + '"><div class="grade-badge num" style="' + tint(gradeColor(Number(r.score) || 0)) + '">' + (r.score != null ? h(r.score) : '—') + '</div>' +
+              '<div class="main"><div class="title"><span class="t">' + h(r.course_name) + '</span></div><div class="sub">' + r.credits + ' ساعات · ' + (r.score != null ? standing(Number(r.score)) : 'بدون درجة من 100') + '</div></div></li>'
+            : '<li class="row" data-action="edit-grade" data-id="' + r.id + '"><div class="grade-badge" style="' + tint(gradeColor(r.grade || 'F')) + '">' + h(r.grade || '—') + '</div>' +
+              '<div class="main"><div class="title"><span class="t">' + h(r.course_name) + '</span></div><div class="sub">' + r.credits + ' ساعات · ' + (GRADE_POINTS[r.grade] || 0).toFixed(2) + ' نقطة</div></div></li>')).join('') + '</ul></div>';
     }
-    out += '<p class="small muted" style="margin:10px 6px">النظام: 4.00 (A=4، A-=3.67، B+=3.33…). إذا جامعتك تستخدم نظام مختلف قلّي.</p>';
+    out += pctMode() ? '<p class="small muted" style="margin:10px 6px">النظام: النسبة المئوية، وكل مادة توزن بساعاتها (لو مدرستك ما تستخدم ساعات خلها 1). 50% نجاح.</p>'
+      : '<p class="small muted" style="margin:10px 6px">النظام: 4.00 (A=4، A-=3.67، B+=3.33…). إذا جامعتك تستخدم نظام مختلف قلّي.</p>';
     return out;
   }
 
@@ -5941,14 +5980,15 @@ window.HAYATI_CONFIG = {
         '<div class="field"><label>المادة</label><input name="course_name" list="crsList" value="' + h(v.course_name) + '" placeholder="اسم المادة"><datalist id="crsList">' +
           names.map((x) => '<option value="' + h(x) + '">').join('') + '</datalist></div>' +
         '<div class="field"><label>الساعات</label><div class="seg" id="crSeg">' + [1, 2, 3, 4, 6].map((c) => '<button type="button" data-k="' + c + '" class="' + (Number(v.credits) === c ? 'on' : '') + '">' + c + '</button>').join('') + '</div></div>' +
-        '<div class="field"><label>الدرجة</label><div class="grade-grid" id="grSeg">' + Object.keys(GRADE_POINTS).map((k) =>
-          '<button type="button" data-k="' + k + '" class="' + (v.grade === k ? 'on' : '') + '">' + k + '<small>' + GRADE_POINTS[k].toFixed(2) + '</small></button>').join('') + '</div></div>' +
+        (pctMode() ? '<div class="field"><label>الدرجة من 100</label><input name="score" inputmode="decimal" placeholder="مثلاً 92" value="' + (v.score != null ? h(v.score) : '') + '"></div>'
+          : '<div class="field"><label>الدرجة</label><div class="grade-grid" id="grSeg">' + Object.keys(GRADE_POINTS).map((k) =>
+          '<button type="button" data-k="' + k + '" class="' + (v.grade === k ? 'on' : '') + '">' + k + '<small>' + GRADE_POINTS[k].toFixed(2) + '</small></button>').join('') + '</div></div>') +
         (g ? '<button class="btn danger block" type="button" id="delGrade">' + I('trash') + 'حذف</button>' : ''),
       mount(root) {
         root.dataset.cr = v.credits;
         root.dataset.gr = v.grade;
         segPick(root, '#crSeg', (k) => { root.dataset.cr = k; });
-        segPick(root, '#grSeg', (k) => { root.dataset.gr = k; });
+        if (root.querySelector('#grSeg')) segPick(root, '#grSeg', (k) => { root.dataset.gr = k; });
         const del = root.querySelector('#delGrade');
         if (del) del.onclick = async () => { if (await ask('تحذفها؟')) { S.remove('grades', g.id); closeSheet(); } };
       },
@@ -5956,9 +5996,15 @@ window.HAYATI_CONFIG = {
         const semester = val(root, 'semester'), course = val(root, 'course_name');
         if (!semester) throw new Error('اكتب الفصل');
         if (!course) throw new Error('اكتب اسم المادة');
-        S.upsert('grades', Object.assign({}, g || {}, { semester, course_name: course, credits: Number(root.dataset.cr), grade: root.dataset.gr }));
+        const patch = { semester, course_name: course, credits: Number(root.dataset.cr) };
+        if (pctMode()) {
+          const sc = parseAmount(val(root, 'score'));
+          if (!(sc >= 0 && sc <= 100)) throw new Error('الدرجة لازم بين 0 و 100');
+          patch.score = Math.round(sc * 10) / 10;
+        } else patch.grade = root.dataset.gr;
+        S.upsert('grades', Object.assign({}, g || {}, patch));
         const c = cumulative();
-        toast('المعدل التراكمي: ' + (c.gpa != null ? c.gpa.toFixed(2) : '—'));
+        toast('المعدل التراكمي: ' + gpaFmt(c.gpa));
       },
     });
   }
@@ -6401,7 +6447,7 @@ window.HAYATI_CONFIG = {
   window.App = {
     S, st, I, ui, h, fmt, money, tint, catMeta, catIcon, pad, monthKey, shiftKey, monthRange, monthLabel, payday, sameDay, startOfDay, daysBetween, time12, timeOf, minutesOf,
     nowMinutes, toLocalInput, dayLabel, nDays, toast, ask, courseById, lectures, lecturesOn, agendaOn, empty, secHead, ring, openSheet,
-    closeSheet, accountSheet, val, parseAmount, segPick, render, go, txForm, pasteSmsForm, txInMonth, txOnDay, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, courseForm, taskForm,
+    closeSheet, accountSheet, val, parseAmount, segPick, render, go, txForm, pasteSmsForm, txInMonth, txOnDay, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, pctMode, gpaFmt, courseForm, taskForm,
     notify, has, nextRenewal, sharedSms, expensesCSV, lastBackup, markBackup, backupNow, APP_VERSION, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
   };
   setInterval(timerTickUI, 1000);
@@ -7652,7 +7698,7 @@ window.HAYATI_CONFIG = {
       body_weight: st.body.slice(-4).map((b) => ({ date: b.date, kg: b.weight })),
     };
   }
-  const RULES = () => 'أنت مساعد داخل تطبيق «حياتي» الشخصي لطالب جامعي بالبحرين. جاوب بالعربي بلهجة خليجية بسيطة، باختصار (3–6 أسطر أو نقاط قليلة)، ' +
+  const RULES = () => 'أنت مساعد داخل تطبيق «حياتي» الشخصي لشخص بالبحرين (طالب مدرسة أو جامعة، أو موظف…). جاوب بالعربي بلهجة خليجية بسيطة، باختصار (3–6 أسطر أو نقاط قليلة)، ' +
     'وبالأرقام من البيانات تحت فقط. لا تخترع أرقام أو مواعيد مو موجودة؛ لو المعلومة ناقصة قل كذا. المبالغ بالدينار البحريني بثلاث خانات عشرية. ' +
     'لو طلب خطة (مذاكرة/توفير) اعطه خطة عملية بأيام وأوقات تناسب جدوله.\n\nبيانات المستخدم (JSON):\n' + JSON.stringify(dataSnapshot());
   function assistantSheet() {
@@ -11192,6 +11238,76 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
+  <script>/* js/features/officetext.js */
+// DW-054: نص ملفات البوربوينت (.pptx) والوورد (.docx) بالجهاز، بدون نت وبدون مكتبات
+// الملفين ZIP فيه XML: نقرا الفهرس، نفك الضغط بـ DecompressionStream، ونطلع النص سطر سطر
+(function () {
+  'use strict';
+
+  const u16 = (b, o) => b[o] | (b[o + 1] << 8);
+  const u32 = (b, o) => (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0;
+  const dec = new TextDecoder('utf-8');
+
+  function entries(buf) {
+    const b = new Uint8Array(buf);
+    let eocd = -1;
+    for (let i = b.length - 22; i >= Math.max(0, b.length - 65557); i--) if (u32(b, i) === 0x06054b50) { eocd = i; break; }
+    if (eocd < 0) throw new Error('zip');
+    const n = u16(b, eocd + 10);
+    let p = u32(b, eocd + 16);
+    const out = [];
+    for (let k = 0; k < n && u32(b, p) === 0x02014b50; k++) {
+      const method = u16(b, p + 10), csize = u32(b, p + 20), nlen = u16(b, p + 28), xlen = u16(b, p + 30), clen = u16(b, p + 32), off = u32(b, p + 42);
+      out.push({ name: dec.decode(b.subarray(p + 46, p + 46 + nlen)), method, csize, off });
+      p += 46 + nlen + xlen + clen;
+    }
+    return { b, out };
+  }
+  async function read(b, e) {
+    const start = e.off + 30 + u16(b, e.off + 26) + u16(b, e.off + 28);
+    const raw = b.subarray(start, start + e.csize);
+    if (e.method === 0) return dec.decode(raw);
+    if (e.method !== 8 || typeof DecompressionStream !== 'function') throw new Error('inflate');
+    const stream = new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    return dec.decode(await new Response(stream).arrayBuffer());
+  }
+  const ENT = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
+  const unxml = (s) => s.replace(/&(#x?[0-9a-f]+|\w+);/gi, (m, c) => c[0] === '#' ? String.fromCodePoint(c[1].toLowerCase() === 'x' ? parseInt(c.slice(2), 16) : Number(c.slice(1))) : (ENT[c] || m));
+  // كل فقرة <a:p> أو <w:p> سطر، والنص داخل <a:t> أو <w:t>
+  function paras(xml, ns) {
+    const lines = [];
+    for (const p of xml.split(new RegExp('</' + ns + ':p>'))) {
+      const t = [...p.matchAll(new RegExp('<' + ns + ':t(?:\\s[^>]*)?>([^<]*)</' + ns + ':t>', 'g'))].map((m) => m[1]).join('');
+      if (t.trim()) lines.push(unxml(t).trim());
+    }
+    return lines;
+  }
+
+  async function extract(file) {
+    const name = String(file.name || '').toLowerCase();
+    if (/\.(ppt|doc)$/.test(name)) throw new Error('old');
+    const { b, out } = entries(await file.arrayBuffer());
+    const slides = out.filter((e) => /^ppt\/slides\/slide\d+\.xml$/.test(e.name)).sort((x, y) => Number(x.name.match(/\d+/)[0]) - Number(y.name.match(/\d+/)[0]));
+    if (slides.length) {
+      const parts = [];
+      for (let i = 0; i < slides.length; i++) {
+        const lines = paras(await read(b, slides[i]), 'a');
+        if (lines.length) parts.push('— ' + (i + 1) + ' —\n' + lines.join('\n'));
+      }
+      return { kind: 'pptx', count: slides.length, text: parts.join('\n\n') };
+    }
+    const doc = out.find((e) => e.name === 'word/document.xml');
+    if (doc) {
+      const lines = paras(await read(b, doc), 'w');
+      return { kind: 'docx', count: lines.length, text: lines.join('\n') };
+    }
+    throw new Error('type');
+  }
+
+  window.HayatiOffice = { extract };
+})();
+
+</script>
   <script>/* js/features/lectures.js */
 // «المحاضرات» (DW-021، المرحلة 1 بدون ذكاء اصطناعي): ملف لكل محاضرة داخل مادتها
 // ملاحظات + ملخصك + تسجيل صوتي + أسئلة تختبر فيها نفسك. التسجيلات على الجهاز بس (IndexedDB)، ما تنرفع ولا تتزامن
@@ -11392,6 +11508,52 @@ window.HAYATI_CONFIG = {
     } finally { root.querySelectorAll('[data-ai],[data-photo],[data-pdf]').forEach((b) => { b.disabled = false; }); btn.textContent = label; }
   }
 
+  // DW-054: بوربوينت أو وورد ← النص يطلع بالجهاز (بدون نت)، ولأصحاب الحسابات: ملاحظات مرتبة + ملخص + أسئلة
+  const OFFICE_MAX = 30 * 1024 * 1024;
+  function officeBlock() {
+    return '<button type="button" class="btn ghost block" data-office style="margin:0 0 6px">📑 ارفع بوربوينت أو وورد</button>' +
+      '<input type="file" id="lcOffice" accept=".pptx,.docx,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>' +
+      '<p class="small muted" style="margin:0 4px 12px">' + (S.status && S.status.signedIn && S.invokeFn ? 'نطلع نص الشرائح بجوالك، وبعدين نسوي منه ملاحظات مختصرة وملخص وأسئلة للمراجعة. الملف ما ينحفظ.' : 'نطلع نص الشرائح لملاحظاتك بجوالك (بدون نت). الملخص والأسئلة التلقائية تحتاج حساب.') + '</p>';
+  }
+  async function runOffice(root, l, file, redrawCards) {
+    if (file.size > OFFICE_MAX) { A.toast('الملف كبير · الحد 30MB'); return; }
+    const btn = root.querySelector('[data-office]'), label = btn.textContent;
+    root.querySelectorAll('[data-ai],[data-photo],[data-pdf],[data-office]').forEach((b) => { b.disabled = true; }); btn.textContent = 'نقرا الملف…';
+    try {
+      let doc;
+      try { doc = await window.HayatiOffice.extract(file); } catch (e) {
+        A.toast(e && e.message === 'old' ? 'هذا ملف قديم (.ppt أو .doc) · احفظه pptx أو docx أو PDF وارفعه' : 'ما قدرنا نقرا الملف · جرّب تحفظه PDF'); return;
+      }
+      const text = doc.text.trim();
+      if (!text) { A.toast('ما فيه نص بالملف (يمكن الشرائح صور) · جرّب «ملف PDF» أو «صوّر السبورة»'); return; }
+      const ta = root.querySelector('[name=lc_notes]'), sm = root.querySelector('[name=lc_summary]'), titleIn = root.querySelector('[name=lc_title]');
+      if (!titleIn.value.trim()) titleIn.value = file.name.replace(/\.(pptx|docx)$/i, '').slice(0, 120);
+      const put = (notes) => { ta.value = ((ta.value.trim() ? ta.value.trim() + '\n\n' : '') + notes).slice(0, 20000); ta.dispatchEvent(new Event('input')); };
+      if (!(S.status && S.status.signedIn && S.invokeFn)) {
+        put(text);
+        A.toast('انضاف نص ' + (doc.kind === 'pptx' ? doc.count + ' شريحة' : 'الملف') + ' للملاحظات · اضغط «حفظ»');
+        return;
+      }
+      btn.textContent = '✨ نسوي المراجعة… (نص دقيقة تقريباً)';
+      try {
+        const r = await S.invokeFn('lecture-ai', { mode: 'slides', title: A.val(root, 'lc_title'), notes: text.slice(0, 20000) });
+        const notes = String((r && r.notes) || '').trim().slice(0, 12000), summary = String((r && r.summary) || '').trim().slice(0, 4000);
+        if (!notes && !summary) throw new Error('empty');
+        put(notes || text);
+        if (summary && !sm.value.trim()) sm.value = summary;
+        const have = new Set(l.cards.map((c) => c.q.trim()));
+        const add = (Array.isArray(r.cards) ? r.cards : []).filter((c) => c && c.q && c.a && !have.has(String(c.q).trim())).slice(0, 10);
+        add.forEach((c) => l.cards.push({ id: S.uuid(), q: String(c.q).slice(0, 300), a: String(c.a).slice(0, 600) }));
+        if (add.length) redrawCards();
+        A.toast('المراجعة جاهزة: ملاحظات وملخص' + (add.length ? ' و' + add.length + ' سؤال' : '') + (text.length > 20000 ? ' (أول 20 ألف حرف)' : '') + ' · راجعها واضغط «حفظ»');
+      } catch (e) {
+        put(text);
+        const m = String(e && e.message || '');
+        A.toast((m === 'limit' ? 'خلصت محاولات اليوم ✨' : 'ما قدرنا نسوي الملخص') + ' · حطينا نص الملف بالملاحظات');
+      }
+    } finally { root.querySelectorAll('[data-ai],[data-photo],[data-pdf],[data-office]').forEach((b) => { b.disabled = false; }); btn.textContent = label; }
+  }
+
   function sheet(id) {
     const old = lectures().find((x) => x.id === id);
     const l = Object.assign({ id: S.uuid(), course_id: '', title: '', date: today(), notes: '', summary: '', cards: [], audio: [] }, old || {});
@@ -11412,7 +11574,7 @@ window.HAYATI_CONFIG = {
         '<button type="button" class="btn block" id="lcRec">🎙️ ابدأ التسجيل</button><div id="lcClips">' + audioList() + '</div>' +
         '<div class="group-title">' + I('book') + 'ملاحظاتك</div><div class="field"><textarea name="lc_notes" rows="5" maxlength="20000" placeholder="اللي قاله الدكتور، النقاط المهمة…">' + h(l.notes) + '</textarea></div>' + mathBar() +
         '<div class="field"><label>ملخصك بسطور</label><textarea name="lc_summary" rows="3" maxlength="4000" placeholder="لو بتشرحها لربعك بثلاث جمل، شنو بتقول؟">' + h(l.summary) + '</textarea></div>' +
-        aiBlock() +
+        officeBlock() + aiBlock() +
         '<div class="group-title">' + I('target') + 'أسئلة تختبر فيها نفسك</div>' +
         '<div class="field"><input name="lc_q" maxlength="300" placeholder="السؤال"></div><div class="field"><input name="lc_a" maxlength="600" placeholder="الجواب"></div>' +
         '<button type="button" class="btn ghost block" id="lcAddCard">' + I('plus') + 'أضف السؤال</button>' +
@@ -11465,6 +11627,8 @@ window.HAYATI_CONFIG = {
         if (ph && phIn) { ph.onclick = () => phIn.click(); phIn.onchange = () => { const f = phIn.files[0]; phIn.value = ''; if (f) runPhoto(root, f); }; }
         const pd = root.querySelector('[data-pdf]'), pdIn = root.querySelector('#lcPdf');
         if (pd && pdIn) { pd.onclick = () => pdIn.click(); pdIn.onchange = () => { const f = pdIn.files[0]; pdIn.value = ''; if (f) runPdf(root, l, f, () => { root.querySelector('#lcCards').innerHTML = cardsList(); }); }; }
+        const of = root.querySelector('[data-office]'), ofIn = root.querySelector('#lcOffice');
+        if (of && ofIn) { of.onclick = () => ofIn.click(); ofIn.onchange = () => { const f = ofIn.files[0]; ofIn.value = ''; if (f) runOffice(root, l, f, () => { root.querySelector('#lcCards').innerHTML = cardsList(); }); }; }
         root.querySelectorAll('[data-ai]').forEach((b) => { b.onclick = () => runAi(root, l, b.dataset.ai, () => { root.querySelector('#lcCards').innerHTML = cardsList(); }); });
         const qz = root.querySelector('#lcQuiz');
         if (qz) qz.onclick = () => { A.closeSheet(); setTimeout(() => quiz([l.id]), 280); };
@@ -12175,6 +12339,8 @@ window.HAYATI_CONFIG = {
   // الجديد لكل نسخة (نصوص قصيرة وصادقة: شي يشتغل اليوم بس)
   const NEWS = {
     v25: [
+      ['🏫', 'الدراسة لكل المراحل', 'مدرسة أو ثانوي أو جامعة: حصص ومعدل بالنسبة المئوية للمدرسة'],
+      ['📑', 'ارفع البوربوينت أو الوورد', 'نص الشرائح لملاحظاتك، ومراجعة مختصرة وأسئلة لأصحاب الحسابات'],
       ['⌚', 'اربط ساعتك', 'Apple Watch وأي ساعة تشارك مع تطبيق الصحة: نومك ونبضك وخطواتك تلقائياً'],
       ['🍳', 'المطبخ', 'وصفات خليجية بمقادير تتغيّر حسب عدد الأشخاص، والناقص يروح للمشتريات'],
       ['🎓', 'ارفع جدولك الجامعي', 'سكرين شوت أو PDF أو نص من البوابة، والمواد تنضاف بأيامها ووقتها'],
@@ -12361,6 +12527,8 @@ window.HAYATI_CONFIG = {
     ['student', '🎓', 'طالب'], ['employee', '💼', 'موظف'], ['athlete', '🏃', 'رياضي'],
     ['keeper', '🧤', 'حارس مرمى'], ['home', '🏠', 'شؤون البيت'],
   ];
+  // DW-054: الدراسة لكل المراحل (مدرسة، ثانوي، جامعة) — تغيّر الكلمات (حصة بدال محاضرة) والمعدل (٪ بدال 4.00)
+  const LEVELS = [['school', 'مدرسة'], ['secondary', 'ثانوي'], ['university', 'جامعة أو دبلوم']];
   const PRAYER = [['gulf', 'أهل السنة (5 أوقات)'], ['jafari', 'جعفري (3 أوقات)'], ['off', 'لا تظهرها']];
 
   // تطلع بس لمستخدم جديد: ما عرّفنا عليه، وما عنده بيانات
@@ -12376,6 +12544,8 @@ window.HAYATI_CONFIG = {
     return '<div class="field"><label for="obName">اسمك (اختياري)</label><input id="obName" maxlength="24" autocomplete="given-name" placeholder="مثلاً: فاطمة" value="' + h(s.name || '') + '"></div>' +
       '<div class="field"><label>أنا… (اختار كل اللي ينطبق)</label><div class="ob-roles">' +
       ROLES.map(([k, e, l]) => '<button type="button" class="ob-chip' + (roles.includes(k) ? ' on' : '') + '" data-role="' + k + '" aria-pressed="' + roles.includes(k) + '">' + e + ' ' + l + '</button>').join('') + '</div></div>' +
+      '<div class="field" id="obLevelF"' + (roles.includes('student') ? '' : ' hidden') + '><label>المرحلة الدراسية</label><div class="seg" id="obLevel">' +
+      LEVELS.map(([k, l]) => '<button type="button" data-lv="' + k + '" class="' + ((s.study_level || 'university') === k ? 'on' : '') + '">' + l + '</button>').join('') + '</div></div>' +
       '<div class="field"><label>أوقات الصلاة</label><div class="seg" id="obPrayer">' +
       PRAYER.map(([k, l]) => '<button type="button" data-p="' + k + '" class="' + (pm === k ? 'on' : '') + '">' + l + '</button>').join('') + '</div></div>' +
       (compact ? '' : '<div class="field"><label for="obBudget">ميزانيتك الشهرية (اختياري)</label><input id="obBudget" inputmode="decimal" placeholder="مثلاً 300" value="' + h(s.budget || '') + '"></div>');
@@ -12384,6 +12554,8 @@ window.HAYATI_CONFIG = {
     const roles = [...root.querySelectorAll('.ob-chip.on')].map((b) => b.dataset.role);
     // حارس المرمى رياضي أصلاً
     if (roles.includes('keeper') && !roles.includes('athlete')) roles.push('athlete');
+    const lv = root.querySelector('#obLevel .on');
+    if (lv && roles.includes('student')) patch.study_level = lv.dataset.lv;
     const p = root.querySelector('#obPrayer .on');
     const patch = { name: root.querySelector('#obName').value.trim(), roles, onboarded: true };
     if (p) { if (p.dataset.p === 'off') patch.prayer_on = false; else { patch.prayer_on = true; patch.prayer_method = p.dataset.p; } }
@@ -12394,7 +12566,14 @@ window.HAYATI_CONFIG = {
   function bind(root) {
     root.addEventListener('click', (e) => {
       const c = e.target.closest('.ob-chip');
-      if (c) { c.classList.toggle('on'); c.setAttribute('aria-pressed', c.classList.contains('on')); return; }
+      if (c) {
+        c.classList.toggle('on'); c.setAttribute('aria-pressed', c.classList.contains('on'));
+        const lf = root.querySelector('#obLevelF');
+        if (lf && c.dataset.role === 'student') lf.hidden = !c.classList.contains('on');
+        return;
+      }
+      const lv = e.target.closest('#obLevel button');
+      if (lv) { root.querySelectorAll('#obLevel button').forEach((x) => x.classList.toggle('on', x === lv)); return; }
       const p = e.target.closest('#obPrayer button');
       if (p) root.querySelectorAll('#obPrayer button').forEach((x) => x.classList.toggle('on', x === p));
     });
@@ -12670,6 +12849,67 @@ window.HAYATI_CONFIG = {
   }
 
   window.HayatiPrivacy = { maskOld };
+})();
+
+</script>
+  <script>/* js/features/levels.js */
+// DW-054: الدراسة لكل المراحل — طالب المدرسة أو الثانوي يشوف «حصة» بدال «محاضرة»، و«المدرسة» بدال «الجامعة»
+// يشتغل على الكلام اللي بالشاشة بس (العربي)، وما يلمس بيانات المستخدم المحفوظة ولا الحقول
+(function () {
+  'use strict';
+
+  const A = window.App;
+  if (!A) return;
+  const lang = () => (window.HayatiLang && window.HayatiLang.lang) || 'ar';
+  const on = () => lang() !== 'en' && ['school', 'secondary'].includes((A.st.settings || {}).study_level);
+
+  // الأطول أول؛ «حصة» مؤنث مثل «محاضرة» فالصفات تظل صح («المحاضرة الجاية» ← «الحصة الجاية»)
+  const MAP = [
+    [/المحاضرات/g, 'الحصص'], [/محاضرات/g, 'حصص'], [/المحاضرة/g, 'الحصة'], [/محاضرة/g, 'حصة'],
+    [/الجامعية/g, 'الدراسية'], [/جامعية/g, 'دراسية'], [/الجامعي/g, 'الدراسي'], [/جامعي/g, 'دراسي'],
+    [/جامعتك/g, 'مدرستك'], [/الجامعة/g, 'المدرسة'],
+    [/الدكاترة/g, 'المعلمين'], [/الدكتور/g, 'المعلم'], [/دكتور/g, 'معلم'],
+  ];
+  const HIT = /محاضر|جامع|دكت|دكاترة/;
+  const swap = (s) => MAP.reduce((x, [re, to]) => x.replace(re, to), s);
+  const ATTRS = ['placeholder', 'aria-label', 'title'];
+  const SKIP = /^(SCRIPT|STYLE|TEXTAREA|INPUT|CODE|SELECT|OPTION)$/;
+  // اسم المادة أو المحاضرة اللي كتبه المستخدم ما نغيّره
+  const USER = '[data-noi18n],.list .title .t,.lec-row,#lcCards';
+
+  function text(n) {
+    const p = n.parentElement;
+    if (!p || SKIP.test(p.tagName) || p.closest(USER) || !HIT.test(n.nodeValue)) return;
+    const t = swap(n.nodeValue);
+    if (t !== n.nodeValue) n.nodeValue = t;
+  }
+  function attrs(el) {
+    for (const a of ATTRS) {
+      const v = el.getAttribute && el.getAttribute(a);
+      if (v && HIT.test(v)) { const t = swap(v); if (t !== v) el.setAttribute(a, t); }
+    }
+  }
+  function walk(root) {
+    if (!on() || !root) return;
+    if (root.nodeType === 3) { text(root); return; }
+    if (root.nodeType !== 1 || root.closest(USER)) return;
+    attrs(root);
+    const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
+    let n;
+    while ((n = tw.nextNode())) { if (n.nodeType === 3) text(n); else attrs(n); }
+  }
+  const go = () => {
+    walk(document.body);
+    new MutationObserver((ms) => {
+      if (!on()) return;
+      for (const m of ms) {
+        if (m.type === 'childList') m.addedNodes.forEach(walk);
+        else walk(m.target);
+      }
+    }).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ATTRS });
+  };
+  if (document.body) go(); else addEventListener('DOMContentLoaded', go);
+  window.HayatiLevels = { swap, on };
 })();
 
 </script>

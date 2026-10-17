@@ -1,7 +1,8 @@
 // DW-021 phase 2 — lecture notes → summary / practice questions.
 // DW-034 — photo of a board or page → notes text (the image is only passed through, never stored).
 // DW-036 — lecture PDF → notes + summary + practice questions in one call (the file is only passed through, never stored).
-// DW-051 — university timetable (photo, PDF or pasted text) → weekly classes with days and times (the file is only passed through, never stored).
+// DW-051 — class timetable (photo, PDF or pasted text) → weekly classes with days and times (the file is only passed through, never stored).
+// DW-054 — text of a PowerPoint/Word file (extracted on the phone) → short review notes + summary + practice questions.
 // DW-037 — «اسأل حياتي»: a question about the user's own numbers, answered from a snapshot the app sends with it (nothing is stored here).
 // Secrets (Supabase → Edge Functions → Secrets, never in the app or repo):
 //   ANTHROPIC_API_KEY  required
@@ -97,7 +98,7 @@ const MATH =
 
 const TASKS = {
   summary:
-    "Summarize the lecture notes below for a university student revising for an exam. " +
+    "Summarize the lesson notes below for a student (school or university) revising for an exam. " +
     "Write 5–8 short lines, each one key idea, most important first. Keep technical terms as they appear in the notes. " +
     "Write in the same language the notes are mostly written in. Use only what is in the notes; do not add outside facts. If a formula is central, put it on its own line." + MATH,
   quiz:
@@ -107,23 +108,31 @@ const TASKS = {
     "If the notes contain formulas, include 1–3 short calculation questions with small round numbers; " +
     "each answer shows the formula, the numbers substituted and the result, checked carefully." + MATH,
   photo:
-    "This is a photo a university student took of a whiteboard, slide or page during a lecture. " +
+    "This is a photo a student took of a whiteboard, slide or page during a lecture. " +
     "Transcribe the lecture content into clean study notes: keep headings, bullet points and every formula, in reading order. " +
     "Keep the original language of each line (Arabic or English). Do not add explanations or anything that is not in the photo. " +
     "If nothing is readable, or the photo is not lecture material, return an empty string." + MATH,
   pdf:
-    "This PDF is a university lecture (slides or handout). Produce three things for a student revising for an exam: " +
+    "This PDF is a lesson or lecture (slides or handout) for a school or university student. Produce three things for a student revising for an exam: " +
     "notes: the key points as short lines in reading order, every definition and formula kept exactly (at most about 40 lines); " +
     "summary: 5–8 short lines, each one key idea, most important first; " +
     "cards: 5–8 practice questions with one- or two-sentence answers, mixing recall and 'why/how', plus 1–3 short calculation questions if the lecture has formulas " +
     "(each answer shows the formula, the numbers substituted and the result, checked carefully). " +
     "Write in the language the lecture is mostly written in. Use only what is in the PDF; do not add outside facts. " +
     "If the PDF is not lecture material or has no readable text, return empty notes and summary and no cards." + MATH,
+  slides:
+    "Below is the text of a lesson's PowerPoint slides or Word handout (extracted from the file, one block per slide), for a student revising for an exam (school or university; adapt depth to the level of the material). Produce three things: " +
+    "notes: a short review of what the student must know, as short lines in slide order: key points, every definition, rule, date and formula kept exactly (at most about 40 lines; skip titles, page numbers and repeated headers); " +
+    "summary: 5–8 short lines, each one key idea, most important first; " +
+    "cards: 5–8 practice questions with one- or two-sentence answers, mixing recall and 'why/how', plus 1–3 short calculation questions if the material has formulas " +
+    "(each answer shows the formula, the numbers substituted and the result, checked carefully). " +
+    "Write in the language the material is mostly written in. Use only what is in the text; do not add outside facts. " +
+    "If the text is not study material, return empty notes and summary and no cards." + MATH,
   schedule:
-    "This is a university student's weekly class timetable (a screenshot of the registration portal, a photo, a PDF or copied text), most likely from a university in Bahrain. " +
-    "List every weekly class meeting. For each: name = course code and title as written (e.g. \"ITCS 113 Computer Programming I\"), add \" (Lab)\" or \" (Tutorial)\" if that meeting is a lab or tutorial; " +
+    "This is a student's weekly class timetable (school or university: a screenshot of the portal, a photo, a PDF or copied text), most likely from Bahrain. " +
+    "List every weekly class meeting. For each: name = course code and title as written, or the subject name for a school timetable (e.g. \"ITCS 113 Computer Programming I\"), add \" (Lab)\" or \" (Tutorial)\" if that meeting is a lab or tutorial; " +
     "days = weekday numbers, 0=Sunday 1=Monday 2=Tuesday 3=Wednesday 4=Thursday 5=Friday 6=Saturday. Day letters on Bahraini portals: U=Sunday, M=Monday, T=Tuesday, W=Wednesday, H=Thursday (R also means Thursday), so UTH = [0,2,4] and MW = [1,3]; " +
-    "start and end = 24-hour HH:MM (university classes run about 07:00–21:00, so 1:00–7:59 without am/pm means afternoon); room = building and room as written, or empty. " +
+    "start and end = 24-hour HH:MM (classes run about 07:00–21:00, so 1:00–7:59 without am/pm means afternoon); room = building and room as written, or empty. " +
     "Put meetings of the same course at different times as separate items. Copy only what is in the timetable; never guess a time or day that is not shown. " +
     "If this is not a timetable or nothing is readable, return no courses.",
 };
@@ -131,7 +140,7 @@ const MEDIA = ["image/jpeg", "image/png", "image/webp"];
 
 // DW-037: the app sends a compact JSON snapshot of the user's data with each question; the answer may only use it.
 const ASK_SYSTEM =
-  "You are the assistant inside «حياتي» (Hayati), a personal planner app for a university student in Bahrain. " +
+  "You are the assistant inside «حياتي» (Hayati), a personal planner app for students (school or university) and others in Bahrain. " +
   "Answer in the language of the question; for Arabic use simple Gulf Arabic. Be brief: 3–6 short lines or a few bullet points. " +
   "Use only the numbers and facts in <data>; never invent amounts, dates or appointments. If the data does not contain the answer, say so plainly. " +
   "Amounts are Bahraini dinars with three decimals (e.g. 12.500 د.ب). If asked for a plan (study or saving), give a practical plan with days and times that fit the schedule. " +
@@ -150,7 +159,7 @@ Deno.serve(async (req) => {
 
   let body: { mode?: string; title?: string; notes?: string; image?: string; media?: string; data?: string; messages?: { role: string; content: string }[] };
   try { body = await req.json(); } catch { return json({ error: "bad" }, 400); }
-  const mode = body.mode === "quiz" ? "quiz" : body.mode === "summary" ? "summary" : body.mode === "photo" ? "photo" : body.mode === "pdf" ? "pdf" : body.mode === "ask" ? "ask" : body.mode === "schedule" ? "schedule" : null;
+  const mode = body.mode === "quiz" ? "quiz" : body.mode === "summary" ? "summary" : body.mode === "photo" ? "photo" : body.mode === "pdf" ? "pdf" : body.mode === "ask" ? "ask" : body.mode === "schedule" ? "schedule" : body.mode === "slides" ? "slides" : null;
   // ask: last 8 turns, alternating, ending with the user's question
   const turns = (Array.isArray(body.messages) ? body.messages : []).slice(-8)
     .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content.trim())
@@ -172,6 +181,8 @@ Deno.serve(async (req) => {
     const pdf = image.startsWith("JVBER");
     if (image && (image.length > 8_400_000 || (!pdf && (image.length > 5_000_000 || !/^[A-Za-z0-9+/=]+$/.test(image.slice(0, 200)) || !MEDIA.includes(media))))) return json({ error: "bad" }, 400);
     if (!image && notes.length < 20) return json({ error: "bad" }, 400);
+  } else if (mode === "slides") {
+    if (notes.length < 50) return json({ error: "bad" }, 400);
   } else if (mode === "ask") {
     if (!turns.length || turns[turns.length - 1].role !== "user" || !data) return json({ error: "bad" }, 400);
   } else if (notes.length < 200) return json({ error: "bad" }, 400);
@@ -206,7 +217,7 @@ Deno.serve(async (req) => {
       model,
       max_tokens: 8000,   // Edge Function wall-clock limit: keep answers short enough to finish in time
       ...(opus5 ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" } : {}),
-      output_config: { format: { type: "json_schema", schema: SCHEMAS[mode] } },
+      output_config: { format: { type: "json_schema", schema: SCHEMAS[mode === "slides" ? "pdf" : mode] } },
       messages: [{
         role: "user",
         content: mode === "schedule"
@@ -215,6 +226,8 @@ Deno.serve(async (req) => {
             : image
             ? [{ type: "image", source: { type: "base64", media_type: media, data: image } }, { type: "text", text: TASKS.schedule }]
             : TASKS.schedule + "\n\n<timetable>\n" + notes + "\n</timetable>")
+          : mode === "slides"
+          ? TASKS.slides + (title ? "\n\n<title>" + title + "</title>" : "") + "\n<slides>\n" + notes + "\n</slides>"
           : mode === "pdf"
           ? [
             { type: "document", source: { type: "base64", media_type: "application/pdf", data: image } },

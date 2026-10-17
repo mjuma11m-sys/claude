@@ -5,11 +5,11 @@
   const KEY = 'hayati-v1';
   const CFG_KEY = 'hayati-supabase';
   const TABLES = ['transactions', 'courses', 'tasks', 'subscriptions', 'goals', 'grades', 'study_sessions', 'debts', 'habits', 'daily', 'lifts', 'body', 'cards', 'events', 'shopping', 'journal', 'matches', 'lectures', 'trips'];
-  const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges', 'name', 'roles', 'onboarded', 'payday', 'gold_price', 'today_hide'];
+  const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges', 'name', 'roles', 'onboarded', 'payday', 'gold_price', 'today_hide', 'study_level', 'kitchen_fav'];
   // على الجهاز بس (ما تروح لجدول settings بالسيرفر) بس تدخل بالنسخة الاحتياطية (DW-012)
   //   DW-035: يوم الراتب وسعر الذهب وترتيب «اليوم» صارت تتزامن؛ إعدادات العبادة تظل على الجهاز (خصوصية)
   const LOCAL_SETTINGS = ['madhhab', 'khums_start', 'wird', 'hijri_offset', 'tasbih'];
-  const NUMERIC = ['amount', 'target', 'saved', 'credits', 'minutes', 'day', 'month', 'duration', 'remind_days', 'weight', 'waist', 'water', 'sleep', 'absence_limit'];
+  const NUMERIC = ['amount', 'target', 'saved', 'credits', 'minutes', 'day', 'month', 'duration', 'remind_days', 'weight', 'waist', 'water', 'sleep', 'absence_limit', 'score'];
 
   const listeners = new Set();
   let sb = null;          // عميل Supabase

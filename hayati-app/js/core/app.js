@@ -955,17 +955,23 @@
   }
 
   // ---------- المعدل ----------
+  // DW-054: المدرسة والثانوي بالنسبة المئوية (موزونة بالساعات)، والجامعة بنظام 4.00
+  const pctMode = () => st.settings.study_level === 'school' || st.settings.study_level === 'secondary';
+  const gpaFmt = (g) => (g == null ? '—' : pctMode() ? g.toFixed(1) + '%' : g.toFixed(2));
   function gpaOf(rows) {
     let pts = 0, cr = 0;
+    const pct = pctMode();
     for (const r of rows) {
-      if (!(r.grade in GRADE_POINTS)) continue;
-      pts += GRADE_POINTS[r.grade] * Number(r.credits);
+      const v = pct ? (r.score != null && r.score !== '' ? Number(r.score) : NaN) : GRADE_POINTS[r.grade];
+      if (!(v >= 0)) continue;
+      pts += v * Number(r.credits);
       cr += Number(r.credits);
     }
     return { gpa: cr ? pts / cr : null, credits: cr, points: pts };
   }
   function standing(g) {
     if (g == null) return '';
+    if (pctMode()) return g >= 90 ? 'ممتاز 🏆' : g >= 80 ? 'جيد جداً' : g >= 70 ? 'جيد' : g >= 50 ? 'مقبول' : 'راسب ⚠️';
     if (g >= 3.67) return 'امتياز 🏆';
     if (g >= 3) return 'جيد جداً';
     if (g >= 2.33) return 'جيد';
@@ -979,38 +985,43 @@
   }
   function cumulative() {
     const all = gpaOf(st.grades);
-    const pg = Number(st.settings.prior_gpa), pc = Number(st.settings.prior_credits);
+    const pg = pctMode() ? 0 : Number(st.settings.prior_gpa), pc = Number(st.settings.prior_credits);
     const extraPts = pg && pc ? pg * pc : 0, extraCr = pg && pc ? pc : 0;
     const cr = all.credits + extraCr;
     return { gpa: cr ? (all.points + extraPts) / cr : null, credits: cr };
   }
-  function gradeColor(g) { return g.startsWith('A') ? '#059669' : g.startsWith('B') ? '#2563eb' : g.startsWith('C') ? '#d97706' : '#e11d48'; }
+  function gradeColor(g) {
+    if (typeof g === 'number') return g >= 90 ? '#059669' : g >= 80 ? '#2563eb' : g >= 50 ? '#d97706' : '#e11d48'; return g.startsWith('A') ? '#059669' : g.startsWith('B') ? '#2563eb' : g.startsWith('C') ? '#d97706' : '#e11d48'; }
 
   function viewGpa() {
     const cum = cumulative();
     const sems = semesterOrder();
     const cur = sems[0] ? gpaOf(st.grades.filter((g) => g.semester === sems[0])) : null;
     let out = '<div class="hero"><div style="display:flex;align-items:center;gap:14px"><div style="flex:1;min-width:0">' +
-      '<span class="eyebrow">' + I('award') + 'المعدل التراكمي</span><div class="amount-big"><span class="num">' + (cum.gpa != null ? cum.gpa.toFixed(2) : '—') + '</span><span class="cur">/ 4.00</span></div>' +
+      '<span class="eyebrow">' + I('award') + 'المعدل التراكمي</span><div class="amount-big"><span class="num">' + gpaFmt(cum.gpa) + '</span>' + (pctMode() ? '' : '<span class="cur">/ 4.00</span>') + '</div>' +
       '<div class="meta"><span>' + (standing(cum.gpa) || 'أضف درجاتك عشان أحسب معدلك') + '</span></div></div>' +
-      (cum.gpa != null ? ring((cum.gpa / 4) * 100) : '') + '</div>' +
-      '<div class="split"><div><small>معدل ' + h(sems[0] || 'الفصل') + '</small><b class="num">' + (cur && cur.gpa != null ? cur.gpa.toFixed(2) : '—') + '</b></div>' +
+      (cum.gpa != null ? ring(pctMode() ? cum.gpa : (cum.gpa / 4) * 100) : '') + '</div>' +
+      '<div class="split"><div><small>معدل ' + h(sems[0] || 'الفصل') + '</small><b class="num">' + gpaFmt(cur && cur.gpa) + '</b></div>' +
       '<div><small>الساعات المحتسبة</small><b class="num">' + (cum.credits || 0) + '</b></div></div></div>';
 
     out += '<div class="actions"><button class="action" data-action="add-grade"><div class="ico" style="' + tint('#1A8A8F') + '">' + I('plus') + '</div>أضف درجة</button>' +
-      '<button class="action" data-action="prior-gpa"><div class="ico" style="' + tint('#0d9488') + '">' + I('chart') + '</div>' + (st.settings.prior_gpa ? 'المعدل السابق ' + Number(st.settings.prior_gpa).toFixed(2) : 'معدلك السابق') + '</button></div>';
+      (pctMode() ? '' : '<button class="action" data-action="prior-gpa"><div class="ico" style="' + tint('#0d9488') + '">' + I('chart') + '</div>' + (st.settings.prior_gpa ? 'المعدل السابق ' + Number(st.settings.prior_gpa).toFixed(2) : 'معدلك السابق') + '</button>') + '</div>';
 
-    out += X('gpaNeed');
-    if (!sems.length) return out + '<div class="card" style="margin-top:14px">' + empty('award', 'ما فيه درجات', 'أضف موادك ودرجاتها (A، B+…) وأحسب لك المعدل الفصلي والتراكمي. إذا عندك معدل قديم حطه من «معدلك السابق».') + '</div>';
+    if (!pctMode()) out += X('gpaNeed');
+    if (!sems.length) return out + '<div class="card" style="margin-top:14px">' + (pctMode() ? empty('award', 'ما فيه درجات', 'أضف موادك ودرجة كل وحدة من 100، وأحسب لك المعدل الفصلي والتراكمي.') : empty('award', 'ما فيه درجات', 'أضف موادك ودرجاتها (A، B+…) وأحسب لك المعدل الفصلي والتراكمي. إذا عندك معدل قديم حطه من «معدلك السابق».')) + '</div>';
     for (const sem of sems) {
       const rows = st.grades.filter((g) => g.semester === sem);
       const g = gpaOf(rows);
-      out += '<div class="sec-head"><h2>' + h(sem) + '</h2><span class="tag brand num">' + (g.gpa != null ? g.gpa.toFixed(2) : '—') + '</span><span class="count">' + g.credits + ' ساعة</span></div>' +
+      out += '<div class="sec-head"><h2>' + h(sem) + '</h2><span class="tag brand num">' + gpaFmt(g.gpa) + '</span><span class="count">' + g.credits + ' ساعة</span></div>' +
         '<div class="card flush"><ul class="list">' + rows.map((r) =>
-          '<li class="row" data-action="edit-grade" data-id="' + r.id + '"><div class="grade-badge" style="' + tint(gradeColor(r.grade)) + '">' + h(r.grade) + '</div>' +
-          '<div class="main"><div class="title"><span class="t">' + h(r.course_name) + '</span></div><div class="sub">' + r.credits + ' ساعات · ' + (GRADE_POINTS[r.grade] || 0).toFixed(2) + ' نقطة</div></div></li>').join('') + '</ul></div>';
+          (pctMode()
+            ? '<li class="row" data-action="edit-grade" data-id="' + r.id + '"><div class="grade-badge num" style="' + tint(gradeColor(Number(r.score) || 0)) + '">' + (r.score != null ? h(r.score) : '—') + '</div>' +
+              '<div class="main"><div class="title"><span class="t">' + h(r.course_name) + '</span></div><div class="sub">' + r.credits + ' ساعات · ' + (r.score != null ? standing(Number(r.score)) : 'بدون درجة من 100') + '</div></div></li>'
+            : '<li class="row" data-action="edit-grade" data-id="' + r.id + '"><div class="grade-badge" style="' + tint(gradeColor(r.grade || 'F')) + '">' + h(r.grade || '—') + '</div>' +
+              '<div class="main"><div class="title"><span class="t">' + h(r.course_name) + '</span></div><div class="sub">' + r.credits + ' ساعات · ' + (GRADE_POINTS[r.grade] || 0).toFixed(2) + ' نقطة</div></div></li>')).join('') + '</ul></div>';
     }
-    out += '<p class="small muted" style="margin:10px 6px">النظام: 4.00 (A=4، A-=3.67، B+=3.33…). إذا جامعتك تستخدم نظام مختلف قلّي.</p>';
+    out += pctMode() ? '<p class="small muted" style="margin:10px 6px">النظام: النسبة المئوية، وكل مادة توزن بساعاتها (لو مدرستك ما تستخدم ساعات خلها 1). 50% نجاح.</p>'
+      : '<p class="small muted" style="margin:10px 6px">النظام: 4.00 (A=4، A-=3.67، B+=3.33…). إذا جامعتك تستخدم نظام مختلف قلّي.</p>';
     return out;
   }
 
@@ -1775,14 +1786,15 @@
         '<div class="field"><label>المادة</label><input name="course_name" list="crsList" value="' + h(v.course_name) + '" placeholder="اسم المادة"><datalist id="crsList">' +
           names.map((x) => '<option value="' + h(x) + '">').join('') + '</datalist></div>' +
         '<div class="field"><label>الساعات</label><div class="seg" id="crSeg">' + [1, 2, 3, 4, 6].map((c) => '<button type="button" data-k="' + c + '" class="' + (Number(v.credits) === c ? 'on' : '') + '">' + c + '</button>').join('') + '</div></div>' +
-        '<div class="field"><label>الدرجة</label><div class="grade-grid" id="grSeg">' + Object.keys(GRADE_POINTS).map((k) =>
-          '<button type="button" data-k="' + k + '" class="' + (v.grade === k ? 'on' : '') + '">' + k + '<small>' + GRADE_POINTS[k].toFixed(2) + '</small></button>').join('') + '</div></div>' +
+        (pctMode() ? '<div class="field"><label>الدرجة من 100</label><input name="score" inputmode="decimal" placeholder="مثلاً 92" value="' + (v.score != null ? h(v.score) : '') + '"></div>'
+          : '<div class="field"><label>الدرجة</label><div class="grade-grid" id="grSeg">' + Object.keys(GRADE_POINTS).map((k) =>
+          '<button type="button" data-k="' + k + '" class="' + (v.grade === k ? 'on' : '') + '">' + k + '<small>' + GRADE_POINTS[k].toFixed(2) + '</small></button>').join('') + '</div></div>') +
         (g ? '<button class="btn danger block" type="button" id="delGrade">' + I('trash') + 'حذف</button>' : ''),
       mount(root) {
         root.dataset.cr = v.credits;
         root.dataset.gr = v.grade;
         segPick(root, '#crSeg', (k) => { root.dataset.cr = k; });
-        segPick(root, '#grSeg', (k) => { root.dataset.gr = k; });
+        if (root.querySelector('#grSeg')) segPick(root, '#grSeg', (k) => { root.dataset.gr = k; });
         const del = root.querySelector('#delGrade');
         if (del) del.onclick = async () => { if (await ask('تحذفها؟')) { S.remove('grades', g.id); closeSheet(); } };
       },
@@ -1790,9 +1802,15 @@
         const semester = val(root, 'semester'), course = val(root, 'course_name');
         if (!semester) throw new Error('اكتب الفصل');
         if (!course) throw new Error('اكتب اسم المادة');
-        S.upsert('grades', Object.assign({}, g || {}, { semester, course_name: course, credits: Number(root.dataset.cr), grade: root.dataset.gr }));
+        const patch = { semester, course_name: course, credits: Number(root.dataset.cr) };
+        if (pctMode()) {
+          const sc = parseAmount(val(root, 'score'));
+          if (!(sc >= 0 && sc <= 100)) throw new Error('الدرجة لازم بين 0 و 100');
+          patch.score = Math.round(sc * 10) / 10;
+        } else patch.grade = root.dataset.gr;
+        S.upsert('grades', Object.assign({}, g || {}, patch));
         const c = cumulative();
-        toast('المعدل التراكمي: ' + (c.gpa != null ? c.gpa.toFixed(2) : '—'));
+        toast('المعدل التراكمي: ' + gpaFmt(c.gpa));
       },
     });
   }
@@ -2235,7 +2253,7 @@
   window.App = {
     S, st, I, ui, h, fmt, money, tint, catMeta, catIcon, pad, monthKey, shiftKey, monthRange, monthLabel, payday, sameDay, startOfDay, daysBetween, time12, timeOf, minutesOf,
     nowMinutes, toLocalInput, dayLabel, nDays, toast, ask, courseById, lectures, lecturesOn, agendaOn, empty, secHead, ring, openSheet,
-    closeSheet, accountSheet, val, parseAmount, segPick, render, go, txForm, pasteSmsForm, txInMonth, txOnDay, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, courseForm, taskForm,
+    closeSheet, accountSheet, val, parseAmount, segPick, render, go, txForm, pasteSmsForm, txInMonth, txOnDay, sums, mmss, hhmm, gpaOf, cumulative, semesterOrder, pctMode, gpaFmt, courseForm, taskForm,
     notify, has, nextRenewal, sharedSms, expensesCSV, lastBackup, markBackup, backupNow, APP_VERSION, DAYS, DAYS_SHORT, MONTHS, EXPENSE_CATS, COLORS, GRADE_POINTS, TASK_KINDS, ACT_TYPES, saveFile,
   };
   setInterval(timerTickUI, 1000);

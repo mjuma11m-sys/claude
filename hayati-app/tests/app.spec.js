@@ -1668,7 +1668,7 @@ test('«جديد بحياتي»: an existing user sees what is new once after th
   await store(page, () => localStorage.setItem('hayati-seen-version', 'v23'));   // كان على النسخة اللي قبل
   await open(page);
   await expect(page.locator('#sheetTitle')).toHaveText('جديد بحياتي ✨', { timeout: 5000 });
-  await expect(page.locator('#sheetBody .news-item')).toHaveCount(7);
+  await expect(page.locator('#sheetBody .news-item')).toHaveCount(9);
   await page.click('#sheetCancel');
   expect(await store(page, () => localStorage.getItem('hayati-seen-version'))).toBe(await store(page, () => App.APP_VERSION));
   await open(page);
@@ -1697,6 +1697,60 @@ test('«جديد بحياتي»: waits behind the PIN lock and shows after unloc
 
 // ================= DW-021: «المحاضرات» =================
 const asStudent = (page) => store(page, () => { App.S.setSettings({ onboarded: true, roles: ['student'] }); App.S.upsert('courses', { id: 'c1', name: 'محاسبة إدارية', type: 'lecture', days: [1], start_time: '10:00', end_time: '11:15', color: '#1A8A8F' }); });
+
+// DW-054: بوربوينت أو وورد ← نص الشرائح بالجهاز، ولأصحاب الحسابات مراجعة مختصرة وأسئلة
+test('lectures: PowerPoint and Word files become notes on the device, and a short review when signed in', async ({ page }) => {
+  await open(page);
+  await asStudent(page);
+  await store(page, () => { App.ui.studySeg = 'lectures'; App.go('schedule'); });
+  await page.click('[data-action="lec-new"]');
+  await page.setInputFiles('#lcOffice', path.join(__dirname, 'fixtures/lesson.pptx'));
+  await expect(page.locator('#toast')).toContainText('3 شريحة');
+  const notes = await page.inputValue('[name=lc_notes]');
+  expect(notes.indexOf('الفيزياء: الحركة')).toBeLessThan(notes.indexOf('قانون نيوتن'));
+  expect(notes.indexOf('F = m × a')).toBeLessThan(notes.indexOf('Summary & review'));
+  expect(await page.inputValue('[name=lc_title]')).toBe('lesson');
+  await page.click('#sheetCancel');
+  await page.waitForTimeout(350);
+  await store(page, () => {
+    App.S.status.signedIn = true;
+    window.__aiCalls = [];
+    App.S.invokeFn = async (name, body) => { window.__aiCalls.push(body); return { notes: '• الخلية وحدة الحياة', summary: 'الخلية أساس الكائن الحي', cards: [{ q: 'ما وحدة الحياة؟', a: 'الخلية' }] }; };
+  });
+  await page.click('[data-action="lec-new"]');
+  await page.setInputFiles('#lcOffice', path.join(__dirname, 'fixtures/lesson.docx'));
+  await expect(page.locator('#toast')).toContainText('المراجعة جاهزة');
+  const call = await store(page, () => window.__aiCalls[0]);
+  expect(call.mode).toBe('slides');
+  expect(call.notes).toContain('الخلية وحدة الحياة');
+  expect(await page.inputValue('[name=lc_notes]')).toBe('• الخلية وحدة الحياة');
+  expect(await page.inputValue('[name=lc_summary]')).toBe('الخلية أساس الكائن الحي');
+  await expect(page.locator('#lcCards li')).toHaveCount(1);
+});
+
+// DW-054: طالب مدرسة ← «حصة» بدال «محاضرة»، والمعدل بالنسبة المئوية
+test('school student: lessons instead of lectures, and a percentage GPA', async ({ page }) => {
+  await open(page);
+  await store(page, () => App.S.setSettings({ onboarded: true, roles: ['student'], study_level: 'secondary' }));
+  await store(page, () => { App.ui.studySeg = 'schedule'; App.go('schedule'); });
+  await expect(page.locator('.seg').first()).toContainText('الحصص');
+  await expect(page.locator('.seg').first()).not.toContainText('المحاضرات');
+  await store(page, () => { App.ui.studySeg = 'gpa'; App.go('schedule'); });
+  await page.click('[data-action="add-grade"]');
+  await page.fill('#sheetBody [name=course_name]', 'رياضيات 201');
+  await page.fill('#sheetBody [name=score]', '94');
+  await page.click('#sheetSave');
+  await page.click('[data-action="add-grade"]');
+  await page.fill('#sheetBody [name=course_name]', 'كيمياء 101');
+  await page.fill('#sheetBody [name=score]', '81.5');
+  await page.click('#sheetSave');
+  await expect(page.locator('.hero .amount-big')).toContainText('87.8%');
+  await expect(page.locator('.hero')).toContainText('جيد جداً');
+  await expect(page.locator('[data-action="prior-gpa"]')).toHaveCount(0);
+  // يقدر يغيّر المرحلة من «ملفك»
+  const lv = await page.evaluate(() => [window.HayatiLevels.swap('ارفع جدولك الجامعي'), window.HayatiLevels.swap('المحاضرة الجاية')]);
+  expect(lv).toEqual(['ارفع جدولك الدراسي', 'الحصة الجاية']);
+});
 
 test('lectures: a file per lecture under its course with notes, summary and self-test questions; the practice quiz scores and is saved', async ({ page }) => {
   await open(page);

@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 54,
+  "next": 55,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -421,6 +421,14 @@
     },
     "DW-053": {
       "title": "ربط الساعات الذكية: Apple Health (Apple Watch وكل ساعة تكتب فيه) بالآيفون، وHealth Connect بالأندرويد",
+      "owner": "CEO",
+      "priority": "P1",
+      "status": "review",
+      "opened": "2026-10-17",
+      "updated": "2026-10-17"
+    },
+    "DW-054": {
+      "title": "الدراسة لكل المراحل (مدرسة، ثانوي، جامعة) + ارفع البوربوينت/الوورد ← ملاحظات وملخص وأسئلة",
       "owner": "CEO",
       "priority": "P1",
       "status": "review",

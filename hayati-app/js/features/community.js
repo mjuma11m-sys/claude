@@ -12,6 +12,8 @@
     ['student', '🎓', 'طالب'], ['employee', '💼', 'موظف'], ['athlete', '🏃', 'رياضي'],
     ['keeper', '🧤', 'حارس مرمى'], ['home', '🏠', 'شؤون البيت'],
   ];
+  // DW-054: الدراسة لكل المراحل (مدرسة، ثانوي، جامعة) — تغيّر الكلمات (حصة بدال محاضرة) والمعدل (٪ بدال 4.00)
+  const LEVELS = [['school', 'مدرسة'], ['secondary', 'ثانوي'], ['university', 'جامعة أو دبلوم']];
   const PRAYER = [['gulf', 'أهل السنة (5 أوقات)'], ['jafari', 'جعفري (3 أوقات)'], ['off', 'لا تظهرها']];
 
   // تطلع بس لمستخدم جديد: ما عرّفنا عليه، وما عنده بيانات
@@ -27,6 +29,8 @@
     return '<div class="field"><label for="obName">اسمك (اختياري)</label><input id="obName" maxlength="24" autocomplete="given-name" placeholder="مثلاً: فاطمة" value="' + h(s.name || '') + '"></div>' +
       '<div class="field"><label>أنا… (اختار كل اللي ينطبق)</label><div class="ob-roles">' +
       ROLES.map(([k, e, l]) => '<button type="button" class="ob-chip' + (roles.includes(k) ? ' on' : '') + '" data-role="' + k + '" aria-pressed="' + roles.includes(k) + '">' + e + ' ' + l + '</button>').join('') + '</div></div>' +
+      '<div class="field" id="obLevelF"' + (roles.includes('student') ? '' : ' hidden') + '><label>المرحلة الدراسية</label><div class="seg" id="obLevel">' +
+      LEVELS.map(([k, l]) => '<button type="button" data-lv="' + k + '" class="' + ((s.study_level || 'university') === k ? 'on' : '') + '">' + l + '</button>').join('') + '</div></div>' +
       '<div class="field"><label>أوقات الصلاة</label><div class="seg" id="obPrayer">' +
       PRAYER.map(([k, l]) => '<button type="button" data-p="' + k + '" class="' + (pm === k ? 'on' : '') + '">' + l + '</button>').join('') + '</div></div>' +
       (compact ? '' : '<div class="field"><label for="obBudget">ميزانيتك الشهرية (اختياري)</label><input id="obBudget" inputmode="decimal" placeholder="مثلاً 300" value="' + h(s.budget || '') + '"></div>');
@@ -35,6 +39,8 @@
     const roles = [...root.querySelectorAll('.ob-chip.on')].map((b) => b.dataset.role);
     // حارس المرمى رياضي أصلاً
     if (roles.includes('keeper') && !roles.includes('athlete')) roles.push('athlete');
+    const lv = root.querySelector('#obLevel .on');
+    if (lv && roles.includes('student')) patch.study_level = lv.dataset.lv;
     const p = root.querySelector('#obPrayer .on');
     const patch = { name: root.querySelector('#obName').value.trim(), roles, onboarded: true };
     if (p) { if (p.dataset.p === 'off') patch.prayer_on = false; else { patch.prayer_on = true; patch.prayer_method = p.dataset.p; } }
@@ -45,7 +51,14 @@
   function bind(root) {
     root.addEventListener('click', (e) => {
       const c = e.target.closest('.ob-chip');
-      if (c) { c.classList.toggle('on'); c.setAttribute('aria-pressed', c.classList.contains('on')); return; }
+      if (c) {
+        c.classList.toggle('on'); c.setAttribute('aria-pressed', c.classList.contains('on'));
+        const lf = root.querySelector('#obLevelF');
+        if (lf && c.dataset.role === 'student') lf.hidden = !c.classList.contains('on');
+        return;
+      }
+      const lv = e.target.closest('#obLevel button');
+      if (lv) { root.querySelectorAll('#obLevel button').forEach((x) => x.classList.toggle('on', x === lv)); return; }
       const p = e.target.closest('#obPrayer button');
       if (p) root.querySelectorAll('#obPrayer button').forEach((x) => x.classList.toggle('on', x === p));
     });
