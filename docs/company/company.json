@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 64,
+  "next": 65,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -503,6 +503,14 @@
       "title": "الأندرويد: Health Connect + ودجت الجدول الكامل",
       "owner": "CEO",
       "priority": "P2",
+      "status": "blocked",
+      "opened": "2026-10-17",
+      "updated": "2026-10-17"
+    },
+    "DW-064": {
+      "title": "رفع مباشر: Xcode Cloud يبني كل تحديث ويرفعه لـ TestFlight لحاله",
+      "owner": "CEO",
+      "priority": "P1",
       "status": "blocked",
       "opened": "2026-10-17",
       "updated": "2026-10-17"

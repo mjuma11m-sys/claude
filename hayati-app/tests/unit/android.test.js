@@ -236,3 +236,14 @@ test('App Store privacy manifests (DW-049): app, widget and share extension each
     assert.match(x, /<key>NSPrivacyTracking<\/key>\s*<false\/>/);
   }
 });
+
+// DW-064: Xcode Cloud يجهّز node_modules وpublic/ قبل البناء، ورقم بناء جديد كل مرة، بدون أسرار
+test('Xcode Cloud: ci_post_clone prepares Capacitor and bumps the build number, no secrets', () => {
+  const f = path.join(__dirname, '../../ios/App/ci_scripts/ci_post_clone.sh');
+  const s = fs.readFileSync(f, 'utf8');
+  assert.ok(fs.statSync(f).mode & 0o111, 'executable');
+  assert.match(s, /npm ci/);
+  assert.match(s, /cap sync ios/);
+  assert.match(s, /CI_BUILD_NUMBER/);
+  assert.doesNotMatch(s, /\.p8|API_KEY|PASSWORD|BEGIN PRIVATE/i);
+});
