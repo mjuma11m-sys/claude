@@ -6,9 +6,10 @@
     BHD: 'BHD', BD: 'BHD', 'د.ب': 'BHD', 'دب': 'BHD', 'دينار': 'BHD', 'دينار بحريني': 'BHD',
     USD: 'USD', '$': 'USD', SAR: 'SAR', 'ر.س': 'SAR', AED: 'AED', 'د.إ': 'AED',
     KWD: 'KWD', 'د.ك': 'KWD', QAR: 'QAR', OMR: 'OMR', EUR: 'EUR', GBP: 'GBP',
+    'ر.ق': 'QAR', 'ر.ع': 'OMR', JOD: 'JOD', 'د.أ': 'JOD', EGP: 'EGP', 'ج.م': 'EGP', 'جنيه': 'EGP', 'درهم': 'AED', 'ريال': 'SAR',
   };
 
-  const CUR = '(BHD|BD|USD|SAR|AED|KWD|QAR|OMR|EUR|GBP|\\$|د\\.?\\s?ب|د\\.?\\s?إ|د\\.?\\s?ك|ر\\.?\\s?س|دينار(?:\\s+بحريني)?)';
+  const CUR = '(BHD|BD|USD|SAR|AED|KWD|QAR|OMR|JOD|EGP|EUR|GBP|\\$|ر\\.?\\s?ق|ر\\.?\\s?ع|د\\.?\\s?أ|ج\\.?\\s?م|جنيه|درهم|ريال|د\\.?\\s?ب|د\\.?\\s?إ|د\\.?\\s?ك|ر\\.?\\s?س|دينار(?:\\s+بحريني)?)';
   const NUM = '(\\d{1,3}(?:,\\d{3})+(?:\\.\\d{1,3})?|\\d+(?:\\.\\d{1,3})?)';
   const AMOUNT_RES = [
     new RegExp(CUR + '\\s*' + NUM, 'gi'),
@@ -58,14 +59,22 @@
       .replace(/٬/g, ',');
   }
 
+  // DW-059: «دينار» أو «ريال» بدون بلد = عملة المستخدم لو من نفس العائلة (دينار كويتي، ريال قطري…)
+  const FAMILY = { 'دينار': ['BHD', 'KWD', 'JOD'], 'ريال': ['SAR', 'QAR', 'OMR'], 'درهم': ['AED'], 'جنيه': ['EGP'] };
   function currencyCode(token) {
     const t = token.replace(/\s+/g, '').replace(/\.$/, '');
+    const mine = global.HayatiCur ? global.HayatiCur.code() : 'BHD';
+    for (const [w, fam] of Object.entries(FAMILY)) if (t === w) return fam.includes(mine) ? mine : fam[0];
     if (CURRENCIES[t.toUpperCase()]) return CURRENCIES[t.toUpperCase()];
     if (/^د\.?ب$/.test(t) || /^دينار/.test(t)) return 'BHD';
     if (/^د\.?إ$/.test(t)) return 'AED';
     if (/^د\.?ك$/.test(t)) return 'KWD';
     if (/^ر\.?س$/.test(t)) return 'SAR';
-    return 'BHD';
+    if (/^ر\.?ق$/.test(t)) return 'QAR';
+    if (/^ر\.?ع$/.test(t)) return 'OMR';
+    if (/^د\.?أ$/.test(t)) return 'JOD';
+    if (/^ج\.?م$/.test(t)) return 'EGP';
+    return mine;
   }
 
   function findAmount(text) {
@@ -225,7 +234,8 @@
       currency: amt.currency,
       merchant,
       category: categorize(kind, text, merchant),
-      needs_review: !sure || amt.currency !== 'BHD',
+      needs_review: !sure || amt.currency !== (global.HayatiCur ? global.HayatiCur.code() : 'BHD'),
+      sure,
       date: findDate(text, now),
     };
   }

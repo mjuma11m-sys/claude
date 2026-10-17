@@ -72,12 +72,12 @@
     if (budget) {
       const left = budget - spent;
       pct = Math.max(0, Math.min(100, Math.round((left / budget) * 100)));
-      const amt = (n) => A.fmt(n) + (en ? ' BHD' : ' د.ب');
+      const amt = (n) => A.fmt(n) + ' ' + (window.HayatiCur ? HayatiCur.sym() : en ? 'BHD' : 'د.ب');
       if (left < 0) line = (en ? 'Over budget' : 'تجاوزت الميزانية') + (p.amounts ? (en ? ' by ' : ' بـ ') + amt(-left) : '');
       else line = en ? (p.amounts ? amt(left) : pct + '%') + ' of budget left' : 'باقي ' + (p.amounts ? amt(left) : pct + '%') + ' من الميزانية';
       small = left < 0
         ? { big: p.amounts ? '−' + A.fmt(-left) : '0%', cap: en ? 'Over budget' : 'تجاوزت الميزانية', pct: 0 }
-        : { big: p.amounts ? A.fmt(left) : pct + '%', cap: p.amounts ? (en ? 'BHD left this month' : 'د.ب باقي هالشهر') : (en ? 'of budget left' : 'باقي من الميزانية'), pct };
+        : { big: p.amounts ? A.fmt(left) : pct + '%', cap: p.amounts ? (en ? (window.HayatiCur ? HayatiCur.sym() : 'BHD') + ' left this month' : (window.HayatiCur ? HayatiCur.sym() : 'د.ب') + ' باقي هالشهر') : (en ? 'of budget left' : 'باقي من الميزانية'), pct };
     }
     return Object.assign(base, { locked: false, budget: { line, pct }, small, items: items(now), sched: sched(now) });
   }

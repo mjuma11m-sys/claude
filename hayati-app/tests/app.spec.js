@@ -267,6 +267,36 @@ test('bank import: statement Excel, message files and PDF lines, each on its dat
   expect(r.pdf).toEqual([['expense', 12.5, '2026-10-5'], ['income', 50, '2026-10-6']]);
 });
 
+// DW-059: عملة المستخدم: الرمز والخانات بالشاشة، والرسائل بعملته ما تتحول، وغيرها يتحول تقريبياً
+test('user currency: Saudi riyal shows everywhere, riyal messages stay as they are, dinars convert', async ({ page }) => {
+  await open(page);
+  await store(page, () => { App.S.setSettings({ onboarded: true, currency: 'SAR', budget: 3000, sms_consent_at: new Date().toISOString() }); App.render(); });
+  const r = await store(page, () => {
+    const a = App.S.smsToTransaction('تم خصم 50 ريال من بطاقتك لدى جرير'), b = App.S.smsToTransaction('Purchase of BHD 10.000 at COSTA');
+    return { fmt: App.fmt(1234.5), money: App.money(12), a: [a.amount, a.note], b: [b.amount, b.note] };
+  });
+  expect(r.fmt).toBe('1,234.50');
+  expect(r.money).toContain('ر.س');
+  expect(r.a).toEqual([50, null]);
+  expect(r.b[0]).toBeCloseTo(99.73, 1);
+  expect(r.b[1]).toContain('BHD');
+  await store(page, () => App.txForm());
+  await expect(page.locator('#sheetBody')).not.toContainText('د.ب');
+  await page.click('#sheetCancel');
+  // «ملفك»: طالب + مرحلة + عملة تنحفظ (كان read يستخدم patch قبل تعريفه)
+  await store(page, () => window.Extras.settingsAction && window.Extras.settingsAction('profile'));
+  await page.waitForSelector('#obCur');
+  await page.click('.ob-chip[data-role="student"]');
+  await page.click('#obLevel [data-lv="secondary"]');
+  await page.selectOption('#obCur', 'KWD');
+  await page.click('#sheetSave');
+  await expect.poll(() => store(page, () => [App.st.settings.currency, App.st.settings.study_level])).toEqual(['KWD', 'secondary']);
+  await page.waitForTimeout(350);
+  // تختارها من «ملفك»، والمطبخ موجود بقائمة +
+  await page.click('#addBtn');
+  await expect(page.locator('[data-pick="kitchen"]')).toHaveCount(1);
+});
+
 test('weekly report shows on Friday evening and opens', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-10-16T20:00:00+03:00') });
   await open(page);
@@ -1756,7 +1786,7 @@ test('«جديد بحياتي»: an existing user sees what is new once after th
   await store(page, () => localStorage.setItem('hayati-seen-version', 'v23'));   // كان على النسخة اللي قبل
   await open(page);
   await expect(page.locator('#sheetTitle')).toHaveText('جديد بحياتي ✨', { timeout: 5000 });
-  await expect(page.locator('#sheetBody .news-item')).toHaveCount(12);
+  await expect(page.locator('#sheetBody .news-item')).toHaveCount(13);
   await page.click('#sheetCancel');
   expect(await store(page, () => localStorage.getItem('hayati-seen-version'))).toBe(await store(page, () => App.APP_VERSION));
   await open(page);

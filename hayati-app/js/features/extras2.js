@@ -137,7 +137,7 @@
         if (pp) pp.onclick = (e) => { const b = e.target.closest('[data-p]'); if (!b) return; const cur = names(); if (!cur.includes(b.dataset.p)) { root.querySelector('[name=names]').value = cur.concat(b.dataset.p).join('، '); drawCustom(); } upd(); };
         root.querySelector('#spSend').onclick = async () => {
           let sh; try { sh = splitShares(tx.amount, cfg()); } catch (e) { A.toast(e.message); return; }
-          const text = splitText(tx, sh);
+          const text = window.HayatiCur ? HayatiCur.swap(splitText(tx, sh)) : splitText(tx, sh);
           if (window.HayatiNative && window.HayatiNative.shareText && window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) { window.HayatiNative.shareText(text); return; }
           if (navigator.share) { try { await navigator.share({ text }); return; } catch (e) { /* سكّر القائمة */ } }
           try { await navigator.clipboard.writeText(text); A.toast('انسخت ✓ الصقها لربعك'); } catch (e) { A.toast('ما قدرنا ننسخ'); }
@@ -590,7 +590,7 @@
     const cum = A.cumulative();
     return {
       today: dateKey() + ' ' + A.DAYS[now.getDay()] + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()),
-      currency: 'BHD', budget: st.settings.budget, category_budgets: st.settings.cat_budgets || {},
+      currency: window.HayatiCur ? HayatiCur.code() : 'BHD', budget: st.settings.budget, category_budgets: st.settings.cat_budgets || {},
       this_month: { by_category: byCat, top_merchants: Object.entries(byMer).sort((a, b) => b[1] - a[1]).slice(0, 8) }, last_months: months,
       weekly_schedule: st.courses.map((c) => ({ name: c.name, type: c.type || 'lecture', days: (c.days || []).map((d) => A.DAYS[d]), time: c.start_time + '-' + c.end_time, room: c.room || '', absences: (c.absences || []).length })),
       open_tasks: st.tasks.filter((t) => !t.done).map((t) => ({ title: t.title, kind: t.kind, due: t.due_at ? t.due_at.slice(0, 16) : null })).slice(0, 30),

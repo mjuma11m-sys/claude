@@ -143,6 +143,9 @@
   }
 
   // ================= الربط =================
+  wrap('chooserItems', (prev, item) => prev(item) + item('kitchen', 'utensils', '#ea580c', 'المطبخ', 'وصفات خليجية بمقاديرها'));
+  const prevPick = E.pick;
+  E.pick = (k) => { if (k === 'kitchen') { sheet(); return; } if (prevPick) prevPick(k); };
   wrap('action', (prev, name, el, e) => { if (name === 'kitchen') { sheet(); return; } return prev(name, el, e); });
   E.kitchen = sheet;
   E._kitchenQty = qty; // للاختبار

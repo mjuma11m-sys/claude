@@ -31,18 +31,28 @@
       ROLES.map(([k, e, l]) => '<button type="button" class="ob-chip' + (roles.includes(k) ? ' on' : '') + '" data-role="' + k + '" aria-pressed="' + roles.includes(k) + '">' + e + ' ' + l + '</button>').join('') + '</div></div>' +
       '<div class="field" id="obLevelF"' + (roles.includes('student') ? '' : ' hidden') + '><label>المرحلة الدراسية</label><div class="seg" id="obLevel">' +
       LEVELS.map(([k, l]) => '<button type="button" data-lv="' + k + '" class="' + ((s.study_level || 'university') === k ? 'on' : '') + '">' + l + '</button>').join('') + '</div></div>' +
+      curField(s) +
       '<div class="field"><label>أوقات الصلاة</label><div class="seg" id="obPrayer">' +
       PRAYER.map(([k, l]) => '<button type="button" data-p="' + k + '" class="' + (pm === k ? 'on' : '') + '">' + l + '</button>').join('') + '</div></div>' +
       (compact ? '' : '<div class="field"><label for="obBudget">ميزانيتك الشهرية (اختياري)</label><input id="obBudget" inputmode="decimal" placeholder="مثلاً 300" value="' + h(s.budget || '') + '"></div>');
+  }
+  // DW-059: عملتك (أول مرة نخمّنها من منطقة الجهاز)
+  function curField(s) {
+    const C = window.HayatiCur; if (!C) return '';
+    const cur = C.LIST[s.currency] ? s.currency : C.guess();
+    return '<div class="field"><label for="obCur">عملتك</label><select id="obCur">' + Object.entries(C.LIST).map(([k, x]) =>
+      '<option data-noi18n value="' + k + '"' + (k === cur ? ' selected' : '') + '>' + (window.HayatiLang && HayatiLang.lang === 'en' ? k : x[4] + ' (' + x[0] + ')') + '</option>').join('') + '</select></div>';
   }
   function read(root) {
     const roles = [...root.querySelectorAll('.ob-chip.on')].map((b) => b.dataset.role);
     // حارس المرمى رياضي أصلاً
     if (roles.includes('keeper') && !roles.includes('athlete')) roles.push('athlete');
-    const lv = root.querySelector('#obLevel .on');
-    if (lv && roles.includes('student')) patch.study_level = lv.dataset.lv;
     const p = root.querySelector('#obPrayer .on');
     const patch = { name: root.querySelector('#obName').value.trim(), roles, onboarded: true };
+    const cs = root.querySelector('#obCur');
+    if (cs) patch.currency = cs.value;
+    const lv = root.querySelector('#obLevel .on');
+    if (lv && roles.includes('student')) patch.study_level = lv.dataset.lv;
     if (p) { if (p.dataset.p === 'off') patch.prayer_on = false; else { patch.prayer_on = true; patch.prayer_method = p.dataset.p; } }
     const b = root.querySelector('#obBudget');
     if (b && b.value.trim()) { const v = A.parseAmount(b.value); if (v > 0) patch.budget = v; }
@@ -152,7 +162,7 @@
       title: 'ملفك',
       body: '<p class="small muted" style="margin:0 0 12px">اللي تختاره يحدد وش يطلع لك: المعدل للطالب، الجاهزية للرياضي، ووضع الحارس للحارس. ما تختار شي = كل شي يطلع.</p>' + form(st.settings || {}, true),
       mount: bind,
-      onSave(root) { S.setSettings(read(root)); A.toast('انحفظ ✓'); },
+      onSave(root) { S.setSettings(read(root)); A.render(); A.toast('انحفظ ✓'); },
     });
   }
 

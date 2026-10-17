@@ -139,10 +139,10 @@
   }
   function fmt(n) {
     const v = Number(n) || 0;
-    const [a, b] = Math.abs(v).toFixed(3).split('.');
-    return (v < 0 ? '−' : '') + a.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + b;
+    const [a, b] = Math.abs(v).toFixed(window.HayatiCur ? HayatiCur.dec() : 3).split('.');   // DW-059: خانات عملة المستخدم
+    return (v < 0 ? '−' : '') + a.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (b ? '.' + b : '');
   }
-  function money(n) { return '<span class="num">' + fmt(n) + '</span><span class="cur">د.ب</span>'; }
+  function money(n) { return '<span class="num">' + fmt(n) + '</span><span class="cur">' + (window.HayatiCur ? HayatiCur.sym() : 'د.ب') + '</span>'; }
   function short(n) {
     const v = Number(n) || 0;
     if (v >= 1000) return (v / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
@@ -614,7 +614,7 @@
   function expensesCSV() {
     const list = st.transactions.slice().sort((a, b) => new Date(a.occurred_at) - new Date(b.occurred_at));
     if (!list.length) return '';
-    const rows = [['التاريخ', 'الوقت', 'النوع', 'المبلغ (د.ب)', 'المحل', 'الفئة', 'ملاحظة']];
+    const rows = [['التاريخ', 'الوقت', 'النوع', 'المبلغ (' + (window.HayatiCur ? HayatiCur.sym() : 'د.ب') + ')', 'المحل', 'الفئة', 'ملاحظة']];
     for (const t of list) {
       const d = new Date(t.occurred_at);
       rows.push([
@@ -1251,7 +1251,7 @@
       body:
         '<div class="seg" id="kindSeg"><button type="button" data-k="expense" class="expense' + (t.kind === 'expense' ? ' on' : '') + '">صرف</button>' +
         '<button type="button" data-k="income" class="income' + (t.kind === 'income' ? ' on' : '') + '">دخل</button></div>' +
-        '<div class="amount-box"><input name="amount" inputmode="decimal" placeholder="0.000" value="' + (t.amount !== '' ? Number(t.amount).toFixed(3) : '') + '"><small>دينار بحريني</small></div>' +
+        '<div class="amount-box"><input name="amount" inputmode="decimal" placeholder="0.000" value="' + (t.amount !== '' ? Number(t.amount).toFixed((window.HayatiCur ? HayatiCur.dec() : 3)) : '') + '"><small>دينار بحريني</small></div>' +
         '<div class="field"><label>التصنيف</label><div class="cat-grid" id="catGrid">' + catGrid(t.kind, t.category) + '</div></div>' +
         '<div class="field"><label>المحل / الوصف</label><input name="merchant" value="' + h(t.merchant || '') + '" placeholder="مثلاً: طلبات، كوستا، راتب"></div>' +
         '<div class="field"><label>الوقت</label><input type="datetime-local" name="occurred_at" value="' + toLocalInput(new Date(t.occurred_at)) + '"></div>' +
@@ -1456,7 +1456,7 @@
     openSheet({
       title: 'الميزانية الشهرية',
       body: '<p class="small muted" style="margin:0 4px 4px;text-align:center">كم تبي تصرف بالشهر بالحد الأقصى؟</p>' +
-        '<div class="amount-box"><input name="budget" inputmode="decimal" placeholder="0.000" value="' + (st.settings.budget ? Number(st.settings.budget).toFixed(3) : '') + '"><small>دينار بحريني</small></div>' +
+        '<div class="amount-box"><input name="budget" inputmode="decimal" placeholder="0.000" value="' + (st.settings.budget ? Number(st.settings.budget).toFixed((window.HayatiCur ? HayatiCur.dec() : 3)) : '') + '"><small>دينار بحريني</small></div>' +
         '<div class="chips" style="justify-content:center;margin:12px 0 18px">' + [100, 150, 200, 300].map((n) => '<button type="button" class="chip" data-v="' + n + '">' + n + '</button>').join('') + '</div>' +
         (st.settings.budget ? '<button class="btn danger block" type="button" id="rmBudget">' + I('trash') + 'إلغاء الميزانية</button>' : ''),
       mount(root) {
@@ -1608,7 +1608,7 @@
       body:
         (x ? '' : '<div class="chips" id="subPresets" style="margin-bottom:14px">' + SUB_PRESETS.map(([n]) => '<button type="button" class="chip" data-n="' + h(n) + '">' + h(n) + '</button>').join('') + '</div>') +
         '<div class="field"><label>الاسم</label><input name="name" value="' + h(v.name) + '" placeholder="مثلاً: نتفليكس"></div>' +
-        '<div class="amount-box"><input name="amount" inputmode="decimal" placeholder="0.000" value="' + (v.amount !== '' ? Number(v.amount).toFixed(3) : '') + '"><small>دينار بحريني</small></div>' +
+        '<div class="amount-box"><input name="amount" inputmode="decimal" placeholder="0.000" value="' + (v.amount !== '' ? Number(v.amount).toFixed((window.HayatiCur ? HayatiCur.dec() : 3)) : '') + '"><small>دينار بحريني</small></div>' +
         '<div class="seg" id="cycleSeg"><button type="button" data-k="monthly" class="' + (v.cycle !== 'yearly' ? 'on' : '') + '">شهري</button><button type="button" data-k="yearly" class="' + (v.cycle === 'yearly' ? 'on' : '') + '">سنوي</button></div>' +
         '<div class="two"><div class="field"><label>يوم التجديد</label><input name="day" type="number" min="1" max="31" inputmode="numeric" value="' + (v.day || 1) + '"></div>' +
         '<div class="field" id="monthField"' + (v.cycle === 'yearly' ? '' : ' style="display:none"') + '><label>الشهر</label><select name="month">' + MONTHS.map((mn, i) => '<option value="' + (i + 1) + '"' + (Number(v.month) === i + 1 ? ' selected' : '') + '>' + mn + '</option>').join('') + '</select></div></div>' +
@@ -1676,7 +1676,7 @@
   function goalForm(g) {
     const v = g || { name: '', emoji: '', target: '', saved: 0, deadline: '', color: COLORS[st.goals.length % COLORS.length], items: [] };
     const itemRow = (it) => '<div class="item-row"><input class="it-name" value="' + h(it.name || '') + '" placeholder="البند">' +
-      '<input class="it-amt" inputmode="decimal" value="' + (it.amount ? Number(it.amount).toFixed(3) : '') + '" placeholder="0.000">' +
+      '<input class="it-amt" inputmode="decimal" value="' + (it.amount ? Number(it.amount).toFixed((window.HayatiCur ? HayatiCur.dec() : 3)) : '') + '" placeholder="0.000">' +
       '<button type="button" class="it-del" aria-label="حذف البند">' + I('minus') + '</button></div>';
     openSheet({
       title: g ? 'تعديل الهدف' : 'هدف جديد',
@@ -1685,7 +1685,7 @@
         '<div class="field"><label>وش تبي توفّر له؟</label><input name="name" value="' + h(v.name) + '" placeholder="مثلاً: الزواج، سيارة، لابتوب"></div>' +
         '<div class="field"><label>بنود التكلفة (اختياري — المجموع يصير هو الهدف)</label><div id="items">' + (v.items || []).map(itemRow).join('') + '</div>' +
         '<button type="button" class="btn ghost block" id="addItem" style="margin-top:6px">' + I('plus') + 'إضافة بند</button></div>' +
-        '<div class="amount-box"><input name="target" inputmode="decimal" placeholder="0.000" value="' + (v.target !== '' ? Number(v.target).toFixed(3) : '') + '"><small id="targetHint">المبلغ المطلوب (د.ب)</small></div>' +
+        '<div class="amount-box"><input name="target" inputmode="decimal" placeholder="0.000" value="' + (v.target !== '' ? Number(v.target).toFixed((window.HayatiCur ? HayatiCur.dec() : 3)) : '') + '"><small id="targetHint">المبلغ المطلوب (د.ب)</small></div>' +
         (g ? '' : '<div class="field"><label>وفّرت منه للحين (اختياري)</label><input name="saved" inputmode="decimal" placeholder="0.000"></div>') +
         '<div class="field"><label>متى تبي توصل له؟ (اختياري)</label><input type="date" name="deadline" value="' + h(v.deadline || '') + '"></div>' +
         X('goalFormExtra', g) +
@@ -1780,7 +1780,7 @@
       body:
         '<div class="seg" id="dirSeg"><button type="button" data-k="lent" class="income' + (v.direction === 'lent' ? ' on' : '') + '">لي (سلّفت)</button>' +
         '<button type="button" data-k="borrowed" class="expense' + (v.direction === 'borrowed' ? ' on' : '') + '">علي (استلفت)</button></div>' +
-        '<div class="amount-box"><input name="amount" inputmode="decimal" placeholder="0.000" value="' + (v.amount !== '' ? Number(v.amount).toFixed(3) : '') + '"><small>دينار بحريني</small></div>' +
+        '<div class="amount-box"><input name="amount" inputmode="decimal" placeholder="0.000" value="' + (v.amount !== '' ? Number(v.amount).toFixed((window.HayatiCur ? HayatiCur.dec() : 3)) : '') + '"><small>دينار بحريني</small></div>' +
         '<div class="field"><label>الشخص</label><input name="person" list="peopleList" value="' + h(v.person) + '" placeholder="مثلاً: أحمد"><datalist id="peopleList">' + people.map((p) => '<option value="' + h(p) + '">').join('') + '</datalist></div>' +
         '<div class="field"><label>ملاحظة</label><input name="note" value="' + h(v.note || '') + '" placeholder="مثلاً: غدا يوم الخميس"></div>' +
         '<div class="field"><label>التاريخ</label><input type="datetime-local" name="occurred_at" value="' + toLocalInput(new Date(v.occurred_at)) + '"></div>' +
@@ -2260,6 +2260,7 @@
   // ---------- تنبيهات داخل التطبيق (لما يكون مفتوح) ----------
   const fired = new Set();
   async function notify(title, body) {
+    if (window.HayatiCur) { title = HayatiCur.swap(title); body = HayatiCur.swap(body); }
     toast(title + (body ? ' — ' + body : ''));
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
     try {

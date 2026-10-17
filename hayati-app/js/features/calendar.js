@@ -141,7 +141,7 @@
         'DTSTART:' + local(first),
         'DTEND:' + local(new Date(first.getTime() + 15 * 60000)),
         'RRULE:' + rule,
-        'SUMMARY:' + esc('💳 تجديد ' + s.name + ' — ' + Number(s.amount).toFixed(3) + ' د.ب'),
+        'SUMMARY:' + esc('💳 تجديد ' + s.name + ' — ' + A.fmt(s.amount) + ' ' + (window.HayatiCur ? HayatiCur.sym() : 'د.ب')),
         ...alarm(rd ? '-P' + rd + 'D' : 'PT0M', (rd ? 'بعد ' + rd + ' يوم ' : 'اليوم ') + 'يتجدد ' + s.name),
         'END:VEVENT'
       );

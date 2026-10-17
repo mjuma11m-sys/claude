@@ -92,7 +92,7 @@
       }
       if (!amt || !(amt > 0)) continue;
       if (col.balance != null) { const b = money(r[col.balance]); if (b != null) lastBal = { b, at: d }; }
-      out.push({ kind, amount: Math.round(amt * 1000) / 1000, currency: 'BHD', merchant: desc.slice(0, 60), category: P.categorize(kind, desc, desc), at: d, review: col.amount != null && !(money(r[col.amount]) < 0) && !P.detectKind(desc).sure });
+      out.push({ kind, amount: Math.round(amt * 1000) / 1000, currency: window.HayatiCur ? HayatiCur.code() : 'BHD', merchant: desc.slice(0, 60), category: P.categorize(kind, desc, desc), at: d, review: col.amount != null && !(money(r[col.amount]) < 0) && !P.detectKind(desc).sure });
     }
     return { list: out, balance: lastBal };
   }
@@ -164,7 +164,7 @@
       if (!a) continue;
       const desc = line.slice(m[0].length).replace(/-?\(?\d{1,3}(?:,\d{3})*\.\d{2,3}\)?(?:\s*(?:DR|CR))?/gi, ' ').replace(/\s+/g, ' ').trim();
       const k = a < 0 || /\bDR\b/i.test(nums[0]) ? 'expense' : /\bCR\b/i.test(nums[0]) ? 'income' : P.detectKind(desc).kind;
-      out.push({ kind: k, amount: Math.round(Math.abs(a) * 1000) / 1000, currency: 'BHD', merchant: desc.slice(0, 60), category: P.categorize(k, desc, desc), at: d, review: true });
+      out.push({ kind: k, amount: Math.round(Math.abs(a) * 1000) / 1000, currency: window.HayatiCur ? HayatiCur.code() : 'BHD', merchant: desc.slice(0, 60), category: P.categorize(k, desc, desc), at: d, review: true });
     }
     return { list: out, balance: null };
   }
@@ -254,10 +254,10 @@
       },
       onSave() {
         if (!res || !res.fresh.length) { A.toast(res && res.dup ? 'كل العمليات موجودة عندك قبل' : 'اختار الملف أول'); return false; }
-        const RATES = { USD: 0.376, SAR: 0.1003, AED: 0.1024, QAR: 0.1033, KWD: 1.226, OMR: 0.977, EUR: 0.43, GBP: 0.5 };
+        const C = window.HayatiCur, mine = C ? C.code() : 'BHD';
         for (const x of res.fresh) {
           let amount = x.amount, note = 'من ملف الاستيراد';
-          if (x.currency && x.currency !== 'BHD' && RATES[x.currency]) { note = 'أصلها ' + x.amount + ' ' + x.currency + ' ≈ بالدينار'; amount = Math.round(x.amount * RATES[x.currency] * 1000) / 1000; }
+          if (C && x.currency && x.currency !== mine && C.LIST[x.currency]) { note = 'أصلها ' + x.amount + ' ' + x.currency + ' ≈ بعملتك'; amount = C.convert(x.amount, x.currency, mine); }
           S.upsert('transactions', { kind: x.kind, amount, category: x.category, merchant: x.merchant || null, note, occurred_at: x.at.toISOString(), source: 'import',
             needs_review: !!x.review, raw: x.raw ? P.mask(x.raw) : null });
         }

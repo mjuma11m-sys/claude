@@ -2853,6 +2853,10 @@ window.HAYATI_EN = {
 "كل العمليات موجودة عندك قبل": "All these transactions are already in your app",
 "اختار الملف أول": "Choose the file first",
 "عندك كشف حساب أو ملف رسائل كامل؟ ارفعه": "Have a full statement or messages file? Upload it",
+// DW-059: عملة المستخدم
+"عملتك": "Your currency",
+"دينار، ريال، درهم أو غيرها: التطبيق كله يشتغل بعملتك": "Dinar, riyal, dirham or another: the whole app works in your currency",
+"وصفات خليجية بمقاديرها": "Gulf recipes with amounts",
 };
 
 </script>
@@ -2994,9 +2998,10 @@ window.HAYATI_CONFIG = {
     BHD: 'BHD', BD: 'BHD', 'د.ب': 'BHD', 'دب': 'BHD', 'دينار': 'BHD', 'دينار بحريني': 'BHD',
     USD: 'USD', '$': 'USD', SAR: 'SAR', 'ر.س': 'SAR', AED: 'AED', 'د.إ': 'AED',
     KWD: 'KWD', 'د.ك': 'KWD', QAR: 'QAR', OMR: 'OMR', EUR: 'EUR', GBP: 'GBP',
+    'ر.ق': 'QAR', 'ر.ع': 'OMR', JOD: 'JOD', 'د.أ': 'JOD', EGP: 'EGP', 'ج.م': 'EGP', 'جنيه': 'EGP', 'درهم': 'AED', 'ريال': 'SAR',
   };
 
-  const CUR = '(BHD|BD|USD|SAR|AED|KWD|QAR|OMR|EUR|GBP|\\$|د\\.?\\s?ب|د\\.?\\s?إ|د\\.?\\s?ك|ر\\.?\\s?س|دينار(?:\\s+بحريني)?)';
+  const CUR = '(BHD|BD|USD|SAR|AED|KWD|QAR|OMR|JOD|EGP|EUR|GBP|\\$|ر\\.?\\s?ق|ر\\.?\\s?ع|د\\.?\\s?أ|ج\\.?\\s?م|جنيه|درهم|ريال|د\\.?\\s?ب|د\\.?\\s?إ|د\\.?\\s?ك|ر\\.?\\s?س|دينار(?:\\s+بحريني)?)';
   const NUM = '(\\d{1,3}(?:,\\d{3})+(?:\\.\\d{1,3})?|\\d+(?:\\.\\d{1,3})?)';
   const AMOUNT_RES = [
     new RegExp(CUR + '\\s*' + NUM, 'gi'),
@@ -3046,14 +3051,22 @@ window.HAYATI_CONFIG = {
       .replace(/٬/g, ',');
   }
 
+  // DW-059: «دينار» أو «ريال» بدون بلد = عملة المستخدم لو من نفس العائلة (دينار كويتي، ريال قطري…)
+  const FAMILY = { 'دينار': ['BHD', 'KWD', 'JOD'], 'ريال': ['SAR', 'QAR', 'OMR'], 'درهم': ['AED'], 'جنيه': ['EGP'] };
   function currencyCode(token) {
     const t = token.replace(/\s+/g, '').replace(/\.$/, '');
+    const mine = global.HayatiCur ? global.HayatiCur.code() : 'BHD';
+    for (const [w, fam] of Object.entries(FAMILY)) if (t === w) return fam.includes(mine) ? mine : fam[0];
     if (CURRENCIES[t.toUpperCase()]) return CURRENCIES[t.toUpperCase()];
     if (/^د\.?ب$/.test(t) || /^دينار/.test(t)) return 'BHD';
     if (/^د\.?إ$/.test(t)) return 'AED';
     if (/^د\.?ك$/.test(t)) return 'KWD';
     if (/^ر\.?س$/.test(t)) return 'SAR';
-    return 'BHD';
+    if (/^ر\.?ق$/.test(t)) return 'QAR';
+    if (/^ر\.?ع$/.test(t)) return 'OMR';
+    if (/^د\.?أ$/.test(t)) return 'JOD';
+    if (/^ج\.?م$/.test(t)) return 'EGP';
+    return mine;
   }
 
   function findAmount(text) {
@@ -3213,7 +3226,8 @@ window.HAYATI_CONFIG = {
       currency: amt.currency,
       merchant,
       category: categorize(kind, text, merchant),
-      needs_review: !sure || amt.currency !== 'BHD',
+      needs_review: !sure || amt.currency !== (global.HayatiCur ? global.HayatiCur.code() : 'BHD'),
+      sure,
       date: findDate(text, now),
     };
   }
@@ -3324,7 +3338,7 @@ window.HAYATI_CONFIG = {
   const KEY = 'hayati-v1';
   const CFG_KEY = 'hayati-supabase';
   const TABLES = ['transactions', 'courses', 'tasks', 'subscriptions', 'goals', 'grades', 'study_sessions', 'debts', 'habits', 'daily', 'lifts', 'body', 'cards', 'events', 'shopping', 'journal', 'matches', 'lectures', 'trips'];
-  const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges', 'name', 'roles', 'onboarded', 'payday', 'gold_price', 'today_hide', 'study_level', 'kitchen_fav'];
+  const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges', 'name', 'roles', 'onboarded', 'payday', 'gold_price', 'today_hide', 'study_level', 'kitchen_fav', 'currency'];
   // على الجهاز بس (ما تروح لجدول settings بالسيرفر) بس تدخل بالنسخة الاحتياطية (DW-012)
   //   DW-035: يوم الراتب وسعر الذهب وترتيب «اليوم» صارت تتزامن؛ إعدادات العبادة تظل على الجهاز (خصوصية)
   const LOCAL_SETTINGS = ['madhhab', 'khums_start', 'wird', 'hijri_offset', 'tasbih'];
@@ -3910,13 +3924,15 @@ window.HAYATI_CONFIG = {
     const p = global.SmsParser.parse(body);
     if (!p) return null;
     // تحويل العملات الأجنبية للدينار (الدينار مربوط بالدولار؛ الباقي تقريبي)
-    const RATES = { USD: 0.376, SAR: 0.1003, AED: 0.1024, QAR: 0.1033, KWD: 1.226, OMR: 0.977, EUR: 0.43, GBP: 0.5 };
+    // DW-059: بعملة المستخدم؛ غيرها يتحوّل تقريبياً
+    const C = global.HayatiCur, mine = C ? C.code() : 'BHD';
     let note = '';
-    if (p.currency !== 'BHD' && RATES[p.currency]) {
-      note = 'أصلها ' + p.amount + ' ' + p.currency + ' ≈ بالدينار';
-      p.amount = Math.round(p.amount * RATES[p.currency] * 1000) / 1000;
-      p.needs_review = false;
-    } else if (p.currency !== 'BHD') note = 'العملة: ' + p.currency;
+    if (p.currency === mine) p.needs_review = !p.sure;
+    else if (C && C.LIST[p.currency]) {
+      note = 'أصلها ' + p.amount + ' ' + p.currency + ' ≈ بعملتك';
+      p.amount = C.convert(p.amount, p.currency, mine);
+      p.needs_review = !p.sure;
+    } else note = 'العملة: ' + p.currency;
     return {
       id: id || uuid(),
       kind: p.kind,
@@ -4007,6 +4023,89 @@ window.HAYATI_CONFIG = {
     ensureIngestToken, rotateIngestToken, exportJSON, importJSON, wipeAll,
   };
 })(window);
+
+</script>
+  <script>/* js/core/currency.js */
+// DW-059: عملة المستخدم — يختارها من «ملفك»، والتطبيق كله يعرض فيها (الرمز وعدد الخانات)
+// المبالغ المسجلة ما تتحول لما تغيّر العملة؛ التحويل بس للرسائل اللي بعملة ثانية (أسعار تقريبية مربوطة بالدولار)
+(function (global) {
+  'use strict';
+
+  // [الرمز بالعربي، بالإنقليزي، الخانات، كم وحدة بالدولار (تقريبي)، الاسم]
+  const LIST = {
+    BHD: ['د.ب', 'BHD', 3, 0.376, 'دينار بحريني'],
+    SAR: ['ر.س', 'SAR', 2, 3.75, 'ريال سعودي'],
+    AED: ['د.إ', 'AED', 2, 3.6725, 'درهم إماراتي'],
+    KWD: ['د.ك', 'KWD', 3, 0.307, 'دينار كويتي'],
+    QAR: ['ر.ق', 'QAR', 2, 3.64, 'ريال قطري'],
+    OMR: ['ر.ع', 'OMR', 3, 0.3845, 'ريال عماني'],
+    JOD: ['د.أ', 'JOD', 3, 0.709, 'دينار أردني'],
+    EGP: ['ج.م', 'EGP', 2, 48.5, 'جنيه مصري'],
+    USD: ['$', 'USD', 2, 1, 'دولار أمريكي'],
+    EUR: ['€', 'EUR', 2, 0.92, 'يورو'],
+    GBP: ['£', 'GBP', 2, 0.79, 'جنيه إسترليني'],
+  };
+  // تخمين أول مرة من المنطقة الزمنية للجهاز (المستخدم يقدر يغيّرها)
+  const ZONES = { 'Asia/Bahrain': 'BHD', 'Asia/Riyadh': 'SAR', 'Asia/Dubai': 'AED', 'Asia/Kuwait': 'KWD', 'Asia/Qatar': 'QAR', 'Asia/Muscat': 'OMR', 'Asia/Amman': 'JOD', 'Africa/Cairo': 'EGP' };
+
+  let guessed = null;
+  const guess = () => guessed || (guessed = (() => { try { return ZONES[Intl.DateTimeFormat().resolvedOptions().timeZone] || 'BHD'; } catch (e) { return 'BHD'; } })());
+  const code = () => {
+    const c = global.Store && global.Store.state && global.Store.state.settings && global.Store.state.settings.currency;
+    return LIST[c] ? c : guess();   // ما اختار للحين = منطقة جهازه (البحرين ← دينار)
+  };
+  const en = () => !!(global.HayatiLang && global.HayatiLang.lang === 'en');
+  const sym = (c) => LIST[c || code()][en() ? 1 : 0];
+  const dec = (c) => LIST[c || code()][2];
+  // من عملة لعملة المستخدم (تقريبي)
+  function convert(amount, from, to) {
+    to = to || code();
+    if (!LIST[from] || !LIST[to] || from === to) return amount;
+    const d = 10 ** dec(to);
+    return Math.round((amount / LIST[from][3]) * LIST[to][3] * d) / d;
+  }
+  // نص مكتوب بالدينار (د.ب / BHD / دينار بحريني) ← عملة المستخدم
+  function swap(s) {
+    const c = code();
+    if (c === 'BHD' || s == null) return s;
+    const x = LIST[c];
+    return String(s).replace(/دينار بحريني/g, x[4]).replace(/د\.ب/g, x[0]).replace(/\bBHD\b/g, x[1]).replace(/\b0\.000\b/g, (0).toFixed(x[2]));
+  }
+
+  // الشاشة: أي «د.ب» مكتوب بالواجهة يصير رمز عملتك (الحقول اللي يكتبها المستخدم ما تنلمس)
+  const SKIP = /^(SCRIPT|STYLE|TEXTAREA|INPUT|CODE)$/;
+  const HIT = /د\.ب|دينار بحريني|\bBHD\b|\b0\.000\b/;
+  function walk(root) {
+    if (code() === 'BHD' || !root) return;
+    const one = (n) => {
+      if (n.nodeType === 3) {
+        const p = n.parentElement;
+        if (!p || SKIP.test(p.tagName) || p.closest('[data-nocur]') || !HIT.test(n.nodeValue)) return;
+        const t = swap(n.nodeValue); if (t !== n.nodeValue) n.nodeValue = t;
+      } else if (n.nodeType === 1) {
+        const v = n.getAttribute('placeholder');
+        if (v && HIT.test(v)) { const t = swap(v); if (t !== v) n.setAttribute('placeholder', t); }
+      }
+    };
+    if (root.nodeType === 3) { one(root); return; }
+    if (root.nodeType !== 1) return;
+    one(root);
+    const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
+    let n; while ((n = tw.nextNode())) one(n);
+  }
+  if (typeof document !== 'undefined' && typeof MutationObserver !== 'undefined') {
+    const go = () => {
+      walk(document.body);
+      new MutationObserver((ms) => {
+        if (code() === 'BHD') return;
+        for (const m of ms) { if (m.type === 'childList') m.addedNodes.forEach(walk); else walk(m.target); }
+      }).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['placeholder'] });
+    };
+    if (document.body) go(); else document.addEventListener('DOMContentLoaded', go);
+  }
+
+  global.HayatiCur = { LIST, code, sym, dec, convert, swap, guess, walk };
+})(typeof window !== 'undefined' ? window : globalThis);
 
 </script>
   <script>/* js/features/calendar.js */
@@ -4153,7 +4252,7 @@ window.HAYATI_CONFIG = {
         'DTSTART:' + local(first),
         'DTEND:' + local(new Date(first.getTime() + 15 * 60000)),
         'RRULE:' + rule,
-        'SUMMARY:' + esc('💳 تجديد ' + s.name + ' — ' + Number(s.amount).toFixed(3) + ' د.ب'),
+        'SUMMARY:' + esc('💳 تجديد ' + s.name + ' — ' + A.fmt(s.amount) + ' ' + (window.HayatiCur ? HayatiCur.sym() : 'د.ب')),
         ...alarm(rd ? '-P' + rd + 'D' : 'PT0M', (rd ? 'بعد ' + rd + ' يوم ' : 'اليوم ') + 'يتجدد ' + s.name),
         'END:VEVENT'
       );
@@ -4426,10 +4525,10 @@ window.HAYATI_CONFIG = {
   }
   function fmt(n) {
     const v = Number(n) || 0;
-    const [a, b] = Math.abs(v).toFixed(3).split('.');
-    return (v < 0 ? '−' : '') + a.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + b;
+    const [a, b] = Math.abs(v).toFixed(window.HayatiCur ? HayatiCur.dec() : 3).split('.');   // DW-059: خانات عملة المستخدم
+    return (v < 0 ? '−' : '') + a.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (b ? '.' + b : '');
   }
-  function money(n) { return '<span class="num">' + fmt(n) + '</span><span class="cur">د.ب</span>'; }
+  function money(n) { return '<span class="num">' + fmt(n) + '</span><span class="cur">' + (window.HayatiCur ? HayatiCur.sym() : 'د.ب') + '</span>'; }
   function short(n) {
     const v = Number(n) || 0;
     if (v >= 1000) return (v / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
@@ -4901,7 +5000,7 @@ window.HAYATI_CONFIG = {
   function expensesCSV() {
     const list = st.transactions.slice().sort((a, b) => new Date(a.occurred_at) - new Date(b.occurred_at));
     if (!list.length) return '';
-    const rows = [['التاريخ', 'الوقت', 'النوع', 'المبلغ (د.ب)', 'المحل', 'الفئة', 'ملاحظة']];
+    const rows = [['التاريخ', 'الوقت', 'النوع', 'المبلغ (' + (window.HayatiCur ? HayatiCur.sym() : 'د.ب') + ')', 'المحل', 'الفئة', 'ملاحظة']];
     for (const t of list) {
       const d = new Date(t.occurred_at);
       rows.push([
@@ -5538,7 +5637,7 @@ window.HAYATI_CONFIG = {
       body:
         '<div class="seg" id="kindSeg"><button type="button" data-k="expense" class="expense' + (t.kind === 'expense' ? ' on' : '') + '">صرف</button>' +
         '<button type="button" data-k="income" class="income' + (t.kind === 'income' ? ' on' : '') + '">دخل</button></div>' +
-        '<div class="amount-box"><input name="amount" inputmode="decimal" placeholder="0.000" value="' + (t.amount !== '' ? Number(t.amount).toFixed(3) : '') + '"><small>دينار بحريني</small></div>' +
+        '<div class="amount-box"><input name="amount" inputmode="decimal" placeholder="0.000" value="' + (t.amount !== '' ? Number(t.amount).toFixed((window.HayatiCur ? HayatiCur.dec() : 3)) : '') + '"><small>دينار بحريني</small></div>' +
         '<div class="field"><label>التصنيف</label><div class="cat-grid" id="catGrid">' + catGrid(t.kind, t.category) + '</div></div>' +
         '<div class="field"><label>المحل / الوصف</label><input name="merchant" value="' + h(t.merchant || '') + '" placeholder="مثلاً: طلبات، كوستا، راتب"></div>' +
         '<div class="field"><label>الوقت</label><input type="datetime-local" name="occurred_at" value="' + toLocalInput(new Date(t.occurred_at)) + '"></div>' +
@@ -5743,7 +5842,7 @@ window.HAYATI_CONFIG = {
     openSheet({
       title: 'الميزانية الشهرية',
       body: '<p class="small muted" style="margin:0 4px 4px;text-align:center">كم تبي تصرف بالشهر بالحد الأقصى؟</p>' +
-        '<div class="amount-box"><input name="budget" inputmode="decimal" placeholder="0.000" value="' + (st.settings.budget ? Number(st.settings.budget).toFixed(3) : '') + '"><small>دينار بحريني</small></div>' +
+        '<div class="amount-box"><input name="budget" inputmode="decimal" placeholder="0.000" value="' + (st.settings.budget ? Number(st.settings.budget).toFixed((window.HayatiCur ? HayatiCur.dec() : 3)) : '') + '"><small>دينار بحريني</small></div>' +
         '<div class="chips" style="justify-content:center;margin:12px 0 18px">' + [100, 150, 200, 300].map((n) => '<button type="button" class="chip" data-v="' + n + '">' + n + '</button>').join('') + '</div>' +
         (st.settings.budget ? '<button class="btn danger block" type="button" id="rmBudget">' + I('trash') + 'إلغاء الميزانية</button>' : ''),
       mount(root) {
@@ -5895,7 +5994,7 @@ window.HAYATI_CONFIG = {
       body:
         (x ? '' : '<div class="chips" id="subPresets" style="margin-bottom:14px">' + SUB_PRESETS.map(([n]) => '<button type="button" class="chip" data-n="' + h(n) + '">' + h(n) + '</button>').join('') + '</div>') +
         '<div class="field"><label>الاسم</label><input name="name" value="' + h(v.name) + '" placeholder="مثلاً: نتفليكس"></div>' +
-        '<div class="amount-box"><input name="amount" inputmode="decimal" placeholder="0.000" value="' + (v.amount !== '' ? Number(v.amount).toFixed(3) : '') + '"><small>دينار بحريني</small></div>' +
+        '<div class="amount-box"><input name="amount" inputmode="decimal" placeholder="0.000" value="' + (v.amount !== '' ? Number(v.amount).toFixed((window.HayatiCur ? HayatiCur.dec() : 3)) : '') + '"><small>دينار بحريني</small></div>' +
         '<div class="seg" id="cycleSeg"><button type="button" data-k="monthly" class="' + (v.cycle !== 'yearly' ? 'on' : '') + '">شهري</button><button type="button" data-k="yearly" class="' + (v.cycle === 'yearly' ? 'on' : '') + '">سنوي</button></div>' +
         '<div class="two"><div class="field"><label>يوم التجديد</label><input name="day" type="number" min="1" max="31" inputmode="numeric" value="' + (v.day || 1) + '"></div>' +
         '<div class="field" id="monthField"' + (v.cycle === 'yearly' ? '' : ' style="display:none"') + '><label>الشهر</label><select name="month">' + MONTHS.map((mn, i) => '<option value="' + (i + 1) + '"' + (Number(v.month) === i + 1 ? ' selected' : '') + '>' + mn + '</option>').join('') + '</select></div></div>' +
@@ -5963,7 +6062,7 @@ window.HAYATI_CONFIG = {
   function goalForm(g) {
     const v = g || { name: '', emoji: '', target: '', saved: 0, deadline: '', color: COLORS[st.goals.length % COLORS.length], items: [] };
     const itemRow = (it) => '<div class="item-row"><input class="it-name" value="' + h(it.name || '') + '" placeholder="البند">' +
-      '<input class="it-amt" inputmode="decimal" value="' + (it.amount ? Number(it.amount).toFixed(3) : '') + '" placeholder="0.000">' +
+      '<input class="it-amt" inputmode="decimal" value="' + (it.amount ? Number(it.amount).toFixed((window.HayatiCur ? HayatiCur.dec() : 3)) : '') + '" placeholder="0.000">' +
       '<button type="button" class="it-del" aria-label="حذف البند">' + I('minus') + '</button></div>';
     openSheet({
       title: g ? 'تعديل الهدف' : 'هدف جديد',
@@ -5972,7 +6071,7 @@ window.HAYATI_CONFIG = {
         '<div class="field"><label>وش تبي توفّر له؟</label><input name="name" value="' + h(v.name) + '" placeholder="مثلاً: الزواج، سيارة، لابتوب"></div>' +
         '<div class="field"><label>بنود التكلفة (اختياري — المجموع يصير هو الهدف)</label><div id="items">' + (v.items || []).map(itemRow).join('') + '</div>' +
         '<button type="button" class="btn ghost block" id="addItem" style="margin-top:6px">' + I('plus') + 'إضافة بند</button></div>' +
-        '<div class="amount-box"><input name="target" inputmode="decimal" placeholder="0.000" value="' + (v.target !== '' ? Number(v.target).toFixed(3) : '') + '"><small id="targetHint">المبلغ المطلوب (د.ب)</small></div>' +
+        '<div class="amount-box"><input name="target" inputmode="decimal" placeholder="0.000" value="' + (v.target !== '' ? Number(v.target).toFixed((window.HayatiCur ? HayatiCur.dec() : 3)) : '') + '"><small id="targetHint">المبلغ المطلوب (د.ب)</small></div>' +
         (g ? '' : '<div class="field"><label>وفّرت منه للحين (اختياري)</label><input name="saved" inputmode="decimal" placeholder="0.000"></div>') +
         '<div class="field"><label>متى تبي توصل له؟ (اختياري)</label><input type="date" name="deadline" value="' + h(v.deadline || '') + '"></div>' +
         X('goalFormExtra', g) +
@@ -6067,7 +6166,7 @@ window.HAYATI_CONFIG = {
       body:
         '<div class="seg" id="dirSeg"><button type="button" data-k="lent" class="income' + (v.direction === 'lent' ? ' on' : '') + '">لي (سلّفت)</button>' +
         '<button type="button" data-k="borrowed" class="expense' + (v.direction === 'borrowed' ? ' on' : '') + '">علي (استلفت)</button></div>' +
-        '<div class="amount-box"><input name="amount" inputmode="decimal" placeholder="0.000" value="' + (v.amount !== '' ? Number(v.amount).toFixed(3) : '') + '"><small>دينار بحريني</small></div>' +
+        '<div class="amount-box"><input name="amount" inputmode="decimal" placeholder="0.000" value="' + (v.amount !== '' ? Number(v.amount).toFixed((window.HayatiCur ? HayatiCur.dec() : 3)) : '') + '"><small>دينار بحريني</small></div>' +
         '<div class="field"><label>الشخص</label><input name="person" list="peopleList" value="' + h(v.person) + '" placeholder="مثلاً: أحمد"><datalist id="peopleList">' + people.map((p) => '<option value="' + h(p) + '">').join('') + '</datalist></div>' +
         '<div class="field"><label>ملاحظة</label><input name="note" value="' + h(v.note || '') + '" placeholder="مثلاً: غدا يوم الخميس"></div>' +
         '<div class="field"><label>التاريخ</label><input type="datetime-local" name="occurred_at" value="' + toLocalInput(new Date(v.occurred_at)) + '"></div>' +
@@ -6547,6 +6646,7 @@ window.HAYATI_CONFIG = {
   // ---------- تنبيهات داخل التطبيق (لما يكون مفتوح) ----------
   const fired = new Set();
   async function notify(title, body) {
+    if (window.HayatiCur) { title = HayatiCur.swap(title); body = HayatiCur.swap(body); }
     toast(title + (body ? ' — ' + body : ''));
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
     try {
@@ -6809,7 +6909,7 @@ window.HAYATI_CONFIG = {
       saveLabel: 'وفّر',
       body: '<p class="small muted" style="margin:0 4px 10px;text-align:center">نزل لك ' + money(tx.amount) + ' — كم تبي تحط منه بهدفك؟</p>' +
         '<div class="seg" id="pctSeg">' + [10, 20, 30, 50].map((p) => '<button type="button" data-k="' + p + '" class="' + (p === pct0 ? 'on' : '') + '">' + p + '%</button>').join('') + '</div>' +
-        '<div class="amount-box"><input name="amt" inputmode="decimal" value="' + (tx.amount * pct0 / 100).toFixed(3) + '"><small>دينار بحريني</small></div>' +
+        '<div class="amount-box"><input name="amt" inputmode="decimal" value="' + (tx.amount * pct0 / 100).toFixed((window.HayatiCur ? HayatiCur.dec() : 3)) + '"><small>دينار بحريني</small></div>' +
         '<div class="field"><label>الهدف</label><select name="goal">' + goals.map((g) => '<option value="' + g.id + '">' + h((g.emoji ? g.emoji + ' ' : '') + g.name) + ' — باقي ' + fmt(g.target - g.saved) + '</option>').join('') + '</select></div>',
       mount(root) {
         root.dataset.pct = pct0;
@@ -6857,7 +6957,7 @@ window.HAYATI_CONFIG = {
     A.openSheet({
       title: 'ميزانية التصنيفات',
       body: '<p class="small muted" style="margin:0 4px 12px">حط حد شهري لكل تصنيف (اختياري). يطلع لك شريط يوضح كم باقي.</p>' +
-        A.EXPENSE_CATS.map((c) => { const [ic, col] = A.catMeta(c); return '<div class="cb-row"><div class="ico" style="' + tint(col) + '">' + I(ic) + '</div><span>' + c + '</span><input inputmode="decimal" data-cat="' + h(c) + '" placeholder="—" value="' + (cur[c] ? Number(cur[c]).toFixed(3) : '') + '"></div>'; }).join(''),
+        A.EXPENSE_CATS.map((c) => { const [ic, col] = A.catMeta(c); return '<div class="cb-row"><div class="ico" style="' + tint(col) + '">' + I(ic) + '</div><span>' + c + '</span><input inputmode="decimal" data-cat="' + h(c) + '" placeholder="—" value="' + (cur[c] ? Number(cur[c]).toFixed((window.HayatiCur ? HayatiCur.dec() : 3)) : '') + '"></div>'; }).join(''),
       onSave(root) {
         const out = {};
         root.querySelectorAll('[data-cat]').forEach((el) => { const v = A.parseAmount(el.value); if (v > 0) out[el.dataset.cat] = Math.round(v * 1000) / 1000; });
@@ -7368,7 +7468,7 @@ window.HAYATI_CONFIG = {
         if (pp) pp.onclick = (e) => { const b = e.target.closest('[data-p]'); if (!b) return; const cur = names(); if (!cur.includes(b.dataset.p)) { root.querySelector('[name=names]').value = cur.concat(b.dataset.p).join('، '); drawCustom(); } upd(); };
         root.querySelector('#spSend').onclick = async () => {
           let sh; try { sh = splitShares(tx.amount, cfg()); } catch (e) { A.toast(e.message); return; }
-          const text = splitText(tx, sh);
+          const text = window.HayatiCur ? HayatiCur.swap(splitText(tx, sh)) : splitText(tx, sh);
           if (window.HayatiNative && window.HayatiNative.shareText && window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) { window.HayatiNative.shareText(text); return; }
           if (navigator.share) { try { await navigator.share({ text }); return; } catch (e) { /* سكّر القائمة */ } }
           try { await navigator.clipboard.writeText(text); A.toast('انسخت ✓ الصقها لربعك'); } catch (e) { A.toast('ما قدرنا ننسخ'); }
@@ -7821,7 +7921,7 @@ window.HAYATI_CONFIG = {
     const cum = A.cumulative();
     return {
       today: dateKey() + ' ' + A.DAYS[now.getDay()] + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()),
-      currency: 'BHD', budget: st.settings.budget, category_budgets: st.settings.cat_budgets || {},
+      currency: window.HayatiCur ? HayatiCur.code() : 'BHD', budget: st.settings.budget, category_budgets: st.settings.cat_budgets || {},
       this_month: { by_category: byCat, top_merchants: Object.entries(byMer).sort((a, b) => b[1] - a[1]).slice(0, 8) }, last_months: months,
       weekly_schedule: st.courses.map((c) => ({ name: c.name, type: c.type || 'lecture', days: (c.days || []).map((d) => A.DAYS[d]), time: c.start_time + '-' + c.end_time, room: c.room || '', absences: (c.absences || []).length })),
       open_tasks: st.tasks.filter((t) => !t.done).map((t) => ({ title: t.title, kind: t.kind, due: t.due_at ? t.due_at.slice(0, 16) : null })).slice(0, 30),
@@ -9212,7 +9312,7 @@ window.HAYATI_CONFIG = {
       }
       if (!amt || !(amt > 0)) continue;
       if (col.balance != null) { const b = money(r[col.balance]); if (b != null) lastBal = { b, at: d }; }
-      out.push({ kind, amount: Math.round(amt * 1000) / 1000, currency: 'BHD', merchant: desc.slice(0, 60), category: P.categorize(kind, desc, desc), at: d, review: col.amount != null && !(money(r[col.amount]) < 0) && !P.detectKind(desc).sure });
+      out.push({ kind, amount: Math.round(amt * 1000) / 1000, currency: window.HayatiCur ? HayatiCur.code() : 'BHD', merchant: desc.slice(0, 60), category: P.categorize(kind, desc, desc), at: d, review: col.amount != null && !(money(r[col.amount]) < 0) && !P.detectKind(desc).sure });
     }
     return { list: out, balance: lastBal };
   }
@@ -9284,7 +9384,7 @@ window.HAYATI_CONFIG = {
       if (!a) continue;
       const desc = line.slice(m[0].length).replace(/-?\(?\d{1,3}(?:,\d{3})*\.\d{2,3}\)?(?:\s*(?:DR|CR))?/gi, ' ').replace(/\s+/g, ' ').trim();
       const k = a < 0 || /\bDR\b/i.test(nums[0]) ? 'expense' : /\bCR\b/i.test(nums[0]) ? 'income' : P.detectKind(desc).kind;
-      out.push({ kind: k, amount: Math.round(Math.abs(a) * 1000) / 1000, currency: 'BHD', merchant: desc.slice(0, 60), category: P.categorize(k, desc, desc), at: d, review: true });
+      out.push({ kind: k, amount: Math.round(Math.abs(a) * 1000) / 1000, currency: window.HayatiCur ? HayatiCur.code() : 'BHD', merchant: desc.slice(0, 60), category: P.categorize(k, desc, desc), at: d, review: true });
     }
     return { list: out, balance: null };
   }
@@ -9374,10 +9474,10 @@ window.HAYATI_CONFIG = {
       },
       onSave() {
         if (!res || !res.fresh.length) { A.toast(res && res.dup ? 'كل العمليات موجودة عندك قبل' : 'اختار الملف أول'); return false; }
-        const RATES = { USD: 0.376, SAR: 0.1003, AED: 0.1024, QAR: 0.1033, KWD: 1.226, OMR: 0.977, EUR: 0.43, GBP: 0.5 };
+        const C = window.HayatiCur, mine = C ? C.code() : 'BHD';
         for (const x of res.fresh) {
           let amount = x.amount, note = 'من ملف الاستيراد';
-          if (x.currency && x.currency !== 'BHD' && RATES[x.currency]) { note = 'أصلها ' + x.amount + ' ' + x.currency + ' ≈ بالدينار'; amount = Math.round(x.amount * RATES[x.currency] * 1000) / 1000; }
+          if (C && x.currency && x.currency !== mine && C.LIST[x.currency]) { note = 'أصلها ' + x.amount + ' ' + x.currency + ' ≈ بعملتك'; amount = C.convert(x.amount, x.currency, mine); }
           S.upsert('transactions', { kind: x.kind, amount, category: x.category, merchant: x.merchant || null, note, occurred_at: x.at.toISOString(), source: 'import',
             needs_review: !!x.review, raw: x.raw ? P.mask(x.raw) : null });
         }
@@ -9829,6 +9929,9 @@ window.HAYATI_CONFIG = {
   }
 
   // ================= الربط =================
+  wrap('chooserItems', (prev, item) => prev(item) + item('kitchen', 'utensils', '#ea580c', 'المطبخ', 'وصفات خليجية بمقاديرها'));
+  const prevPick = E.pick;
+  E.pick = (k) => { if (k === 'kitchen') { sheet(); return; } if (prevPick) prevPick(k); };
   wrap('action', (prev, name, el, e) => { if (name === 'kitchen') { sheet(); return; } return prev(name, el, e); });
   E.kitchen = sheet;
   E._kitchenQty = qty; // للاختبار
@@ -12382,7 +12485,7 @@ window.HAYATI_CONFIG = {
     const alignS = E2 ? 'left' : 'right', alignE = E2 ? 'right' : 'left';
     const F = (w, px) => w + ' ' + px + 'px ' + font;
     const txt = (s, X, Y, f, col, al, max) => { x.font = f; x.fillStyle = col; x.textAlign = al; x.fillText(s, X, Y, max || W - 180); };
-    const money = (n) => A.fmt(n) + (E2 ? ' BHD' : ' د.ب');
+    const money = (n) => A.fmt(n) + ' ' + (window.HayatiCur ? HayatiCur.sym() : E2 ? 'BHD' : 'د.ب');
     const ltr = (s) => '\u2066' + s + '\u2069';   // رقم ثابت الاتجاه داخل نص عربي
 
     // الخلفية
@@ -12710,12 +12813,12 @@ window.HAYATI_CONFIG = {
     if (budget) {
       const left = budget - spent;
       pct = Math.max(0, Math.min(100, Math.round((left / budget) * 100)));
-      const amt = (n) => A.fmt(n) + (en ? ' BHD' : ' د.ب');
+      const amt = (n) => A.fmt(n) + ' ' + (window.HayatiCur ? HayatiCur.sym() : en ? 'BHD' : 'د.ب');
       if (left < 0) line = (en ? 'Over budget' : 'تجاوزت الميزانية') + (p.amounts ? (en ? ' by ' : ' بـ ') + amt(-left) : '');
       else line = en ? (p.amounts ? amt(left) : pct + '%') + ' of budget left' : 'باقي ' + (p.amounts ? amt(left) : pct + '%') + ' من الميزانية';
       small = left < 0
         ? { big: p.amounts ? '−' + A.fmt(-left) : '0%', cap: en ? 'Over budget' : 'تجاوزت الميزانية', pct: 0 }
-        : { big: p.amounts ? A.fmt(left) : pct + '%', cap: p.amounts ? (en ? 'BHD left this month' : 'د.ب باقي هالشهر') : (en ? 'of budget left' : 'باقي من الميزانية'), pct };
+        : { big: p.amounts ? A.fmt(left) : pct + '%', cap: p.amounts ? (en ? (window.HayatiCur ? HayatiCur.sym() : 'BHD') + ' left this month' : (window.HayatiCur ? HayatiCur.sym() : 'د.ب') + ' باقي هالشهر') : (en ? 'of budget left' : 'باقي من الميزانية'), pct };
     }
     return Object.assign(base, { locked: false, budget: { line, pct }, small, items: items(now), sched: sched(now) });
   }
@@ -12833,6 +12936,7 @@ window.HAYATI_CONFIG = {
   // الجديد لكل نسخة (نصوص قصيرة وصادقة: شي يشتغل اليوم بس)
   const NEWS = {
     v25: [
+      ['💱', 'عملتك', 'دينار، ريال، درهم أو غيرها: التطبيق كله يشتغل بعملتك'],
       ['🏦', 'استيراد الحساب كامل', 'كشف الحساب (Excel أو CSV أو PDF) أو ملف رسائل البنك: كل العمليات بتواريخها'],
       ['📅', 'رسالة البنك بتاريخها', 'الصق رسالة قديمة وتنحفظ بيوم العملية نفسه، أو كذا رسالة مرة وحدة'],
       ['📅', 'جدولك على الشاشة الرئيسية', 'ودجت «جدول اليوم» وعلى شاشة القفل: الحين والجاي بدون ما تفتح التطبيق'],
@@ -13043,18 +13147,28 @@ window.HAYATI_CONFIG = {
       ROLES.map(([k, e, l]) => '<button type="button" class="ob-chip' + (roles.includes(k) ? ' on' : '') + '" data-role="' + k + '" aria-pressed="' + roles.includes(k) + '">' + e + ' ' + l + '</button>').join('') + '</div></div>' +
       '<div class="field" id="obLevelF"' + (roles.includes('student') ? '' : ' hidden') + '><label>المرحلة الدراسية</label><div class="seg" id="obLevel">' +
       LEVELS.map(([k, l]) => '<button type="button" data-lv="' + k + '" class="' + ((s.study_level || 'university') === k ? 'on' : '') + '">' + l + '</button>').join('') + '</div></div>' +
+      curField(s) +
       '<div class="field"><label>أوقات الصلاة</label><div class="seg" id="obPrayer">' +
       PRAYER.map(([k, l]) => '<button type="button" data-p="' + k + '" class="' + (pm === k ? 'on' : '') + '">' + l + '</button>').join('') + '</div></div>' +
       (compact ? '' : '<div class="field"><label for="obBudget">ميزانيتك الشهرية (اختياري)</label><input id="obBudget" inputmode="decimal" placeholder="مثلاً 300" value="' + h(s.budget || '') + '"></div>');
+  }
+  // DW-059: عملتك (أول مرة نخمّنها من منطقة الجهاز)
+  function curField(s) {
+    const C = window.HayatiCur; if (!C) return '';
+    const cur = C.LIST[s.currency] ? s.currency : C.guess();
+    return '<div class="field"><label for="obCur">عملتك</label><select id="obCur">' + Object.entries(C.LIST).map(([k, x]) =>
+      '<option data-noi18n value="' + k + '"' + (k === cur ? ' selected' : '') + '>' + (window.HayatiLang && HayatiLang.lang === 'en' ? k : x[4] + ' (' + x[0] + ')') + '</option>').join('') + '</select></div>';
   }
   function read(root) {
     const roles = [...root.querySelectorAll('.ob-chip.on')].map((b) => b.dataset.role);
     // حارس المرمى رياضي أصلاً
     if (roles.includes('keeper') && !roles.includes('athlete')) roles.push('athlete');
-    const lv = root.querySelector('#obLevel .on');
-    if (lv && roles.includes('student')) patch.study_level = lv.dataset.lv;
     const p = root.querySelector('#obPrayer .on');
     const patch = { name: root.querySelector('#obName').value.trim(), roles, onboarded: true };
+    const cs = root.querySelector('#obCur');
+    if (cs) patch.currency = cs.value;
+    const lv = root.querySelector('#obLevel .on');
+    if (lv && roles.includes('student')) patch.study_level = lv.dataset.lv;
     if (p) { if (p.dataset.p === 'off') patch.prayer_on = false; else { patch.prayer_on = true; patch.prayer_method = p.dataset.p; } }
     const b = root.querySelector('#obBudget');
     if (b && b.value.trim()) { const v = A.parseAmount(b.value); if (v > 0) patch.budget = v; }
@@ -13164,7 +13278,7 @@ window.HAYATI_CONFIG = {
       title: 'ملفك',
       body: '<p class="small muted" style="margin:0 0 12px">اللي تختاره يحدد وش يطلع لك: المعدل للطالب، الجاهزية للرياضي، ووضع الحارس للحارس. ما تختار شي = كل شي يطلع.</p>' + form(st.settings || {}, true),
       mount: bind,
-      onSave(root) { S.setSettings(read(root)); A.toast('انحفظ ✓'); },
+      onSave(root) { S.setSettings(read(root)); A.render(); A.toast('انحفظ ✓'); },
     });
   }
 
@@ -13728,6 +13842,7 @@ window.HAYATI_CONFIG = {
   }
   async function shareText(text) {
     if (!Share) return;
+    if (window.HayatiCur) text = window.HayatiCur.swap(text);
     try { await Share.share({ text }); } catch (e) { /* المستخدم سكّر القائمة */ }
   }
 

@@ -205,7 +205,7 @@
       saveLabel: 'وفّر',
       body: '<p class="small muted" style="margin:0 4px 10px;text-align:center">نزل لك ' + money(tx.amount) + ' — كم تبي تحط منه بهدفك؟</p>' +
         '<div class="seg" id="pctSeg">' + [10, 20, 30, 50].map((p) => '<button type="button" data-k="' + p + '" class="' + (p === pct0 ? 'on' : '') + '">' + p + '%</button>').join('') + '</div>' +
-        '<div class="amount-box"><input name="amt" inputmode="decimal" value="' + (tx.amount * pct0 / 100).toFixed(3) + '"><small>دينار بحريني</small></div>' +
+        '<div class="amount-box"><input name="amt" inputmode="decimal" value="' + (tx.amount * pct0 / 100).toFixed((window.HayatiCur ? HayatiCur.dec() : 3)) + '"><small>دينار بحريني</small></div>' +
         '<div class="field"><label>الهدف</label><select name="goal">' + goals.map((g) => '<option value="' + g.id + '">' + h((g.emoji ? g.emoji + ' ' : '') + g.name) + ' — باقي ' + fmt(g.target - g.saved) + '</option>').join('') + '</select></div>',
       mount(root) {
         root.dataset.pct = pct0;
@@ -253,7 +253,7 @@
     A.openSheet({
       title: 'ميزانية التصنيفات',
       body: '<p class="small muted" style="margin:0 4px 12px">حط حد شهري لكل تصنيف (اختياري). يطلع لك شريط يوضح كم باقي.</p>' +
-        A.EXPENSE_CATS.map((c) => { const [ic, col] = A.catMeta(c); return '<div class="cb-row"><div class="ico" style="' + tint(col) + '">' + I(ic) + '</div><span>' + c + '</span><input inputmode="decimal" data-cat="' + h(c) + '" placeholder="—" value="' + (cur[c] ? Number(cur[c]).toFixed(3) : '') + '"></div>'; }).join(''),
+        A.EXPENSE_CATS.map((c) => { const [ic, col] = A.catMeta(c); return '<div class="cb-row"><div class="ico" style="' + tint(col) + '">' + I(ic) + '</div><span>' + c + '</span><input inputmode="decimal" data-cat="' + h(c) + '" placeholder="—" value="' + (cur[c] ? Number(cur[c]).toFixed((window.HayatiCur ? HayatiCur.dec() : 3)) : '') + '"></div>'; }).join(''),
       onSave(root) {
         const out = {};
         root.querySelectorAll('[data-cat]').forEach((el) => { const v = A.parseAmount(el.value); if (v > 0) out[el.dataset.cat] = Math.round(v * 1000) / 1000; });

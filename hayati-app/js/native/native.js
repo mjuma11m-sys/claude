@@ -315,6 +315,7 @@
   }
   async function shareText(text) {
     if (!Share) return;
+    if (window.HayatiCur) text = window.HayatiCur.swap(text);
     try { await Share.share({ text }); } catch (e) { /* المستخدم سكّر القائمة */ }
   }
 

@@ -5,7 +5,7 @@
   const KEY = 'hayati-v1';
   const CFG_KEY = 'hayati-supabase';
   const TABLES = ['transactions', 'courses', 'tasks', 'subscriptions', 'goals', 'grades', 'study_sessions', 'debts', 'habits', 'daily', 'lifts', 'body', 'cards', 'events', 'shopping', 'journal', 'matches', 'lectures', 'trips'];
-  const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges', 'name', 'roles', 'onboarded', 'payday', 'gold_price', 'today_hide', 'study_level', 'kitchen_fav'];
+  const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges', 'name', 'roles', 'onboarded', 'payday', 'gold_price', 'today_hide', 'study_level', 'kitchen_fav', 'currency'];
   // على الجهاز بس (ما تروح لجدول settings بالسيرفر) بس تدخل بالنسخة الاحتياطية (DW-012)
   //   DW-035: يوم الراتب وسعر الذهب وترتيب «اليوم» صارت تتزامن؛ إعدادات العبادة تظل على الجهاز (خصوصية)
   const LOCAL_SETTINGS = ['madhhab', 'khums_start', 'wird', 'hijri_offset', 'tasbih'];
@@ -591,13 +591,15 @@
     const p = global.SmsParser.parse(body);
     if (!p) return null;
     // تحويل العملات الأجنبية للدينار (الدينار مربوط بالدولار؛ الباقي تقريبي)
-    const RATES = { USD: 0.376, SAR: 0.1003, AED: 0.1024, QAR: 0.1033, KWD: 1.226, OMR: 0.977, EUR: 0.43, GBP: 0.5 };
+    // DW-059: بعملة المستخدم؛ غيرها يتحوّل تقريبياً
+    const C = global.HayatiCur, mine = C ? C.code() : 'BHD';
     let note = '';
-    if (p.currency !== 'BHD' && RATES[p.currency]) {
-      note = 'أصلها ' + p.amount + ' ' + p.currency + ' ≈ بالدينار';
-      p.amount = Math.round(p.amount * RATES[p.currency] * 1000) / 1000;
-      p.needs_review = false;
-    } else if (p.currency !== 'BHD') note = 'العملة: ' + p.currency;
+    if (p.currency === mine) p.needs_review = !p.sure;
+    else if (C && C.LIST[p.currency]) {
+      note = 'أصلها ' + p.amount + ' ' + p.currency + ' ≈ بعملتك';
+      p.amount = C.convert(p.amount, p.currency, mine);
+      p.needs_review = !p.sure;
+    } else note = 'العملة: ' + p.currency;
     return {
       id: id || uuid(),
       kind: p.kind,

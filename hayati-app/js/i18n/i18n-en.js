@@ -2093,4 +2093,8 @@ window.HAYATI_EN = {
 "كل العمليات موجودة عندك قبل": "All these transactions are already in your app",
 "اختار الملف أول": "Choose the file first",
 "عندك كشف حساب أو ملف رسائل كامل؟ ارفعه": "Have a full statement or messages file? Upload it",
+// DW-059: عملة المستخدم
+"عملتك": "Your currency",
+"دينار، ريال، درهم أو غيرها: التطبيق كله يشتغل بعملتك": "Dinar, riyal, dirham or another: the whole app works in your currency",
+"وصفات خليجية بمقاديرها": "Gulf recipes with amounts",
 };

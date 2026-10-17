@@ -45,7 +45,7 @@
     const alignS = E2 ? 'left' : 'right', alignE = E2 ? 'right' : 'left';
     const F = (w, px) => w + ' ' + px + 'px ' + font;
     const txt = (s, X, Y, f, col, al, max) => { x.font = f; x.fillStyle = col; x.textAlign = al; x.fillText(s, X, Y, max || W - 180); };
-    const money = (n) => A.fmt(n) + (E2 ? ' BHD' : ' د.ب');
+    const money = (n) => A.fmt(n) + ' ' + (window.HayatiCur ? HayatiCur.sym() : E2 ? 'BHD' : 'د.ب');
     const ltr = (s) => '\u2066' + s + '\u2069';   // رقم ثابت الاتجاه داخل نص عربي
 
     // الخلفية
