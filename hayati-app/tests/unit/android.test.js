@@ -169,7 +169,7 @@ test('release bundle is signed only from CI secrets, and no key material lives i
   assert.match(ign, /\*\.keystore/);
 });
 
-test('iPhone share (DW-046): share extension embedded, plain text only, hands the message to the same ShareIn flow as Android', () => {
+test('iPhone share (DW-046, DW-062): share extension embedded, text or one file, hands the message to the same ShareIn flow as Android', () => {
   const iosRead = (f) => fs.readFileSync(path.join(W, 'ios/App', f), 'utf8');
   const pbx = iosRead('App.xcodeproj/project.pbxproj');
   // المشروع ينقرا بنفس المكتبة اللي تستخدمها Capacitor
@@ -183,7 +183,8 @@ test('iPhone share (DW-046): share extension embedded, plain text only, hands th
   const info = iosRead('HayatiShare/Info.plist');
   assert.match(info, /com\.apple\.share-services/);
   assert.match(info, /NSExtensionActivationSupportsText/);
-  assert.doesNotMatch(info, /SupportsImage|SupportsWebURL|SupportsFileWithMaxCount/);   // نص بس
+  assert.doesNotMatch(info, /SupportsImage|SupportsWebURL/);   // نص أو ملف بس (DW-062)، مو صور ولا روابط
+  assert.match(info, /NSExtensionActivationSupportsFileWithMaxCount<\/key>\s*<integer>1<\/integer>/);   // ملف واحد
   assert.match(iosRead('HayatiShare/HayatiShare.entitlements'), /group\.bh\.hayati\.app/);
   const ext = iosRead('HayatiShare/ShareViewController.swift'), plug = iosRead('App/ShareInPlugin.swift');
   assert.match(ext, /static let maxChars = 2000/);   // نفس حد الأندرويد

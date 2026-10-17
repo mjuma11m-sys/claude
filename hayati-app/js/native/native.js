@@ -471,13 +471,32 @@
   }
 
   // «شارك ← حياتي» (أندرويد DW-009 · آيفون DW-046 عبر امتداد المشاركة): رسالة البنك توصل من تطبيق الرسائل وتفتح نافذة اللصق معبّاة
-  function onShared(text) {
+  function onShared(text, ev) {
+    if (ev && ev.file && ev.data) return onSharedFile(ev.file, ev.data);
     if (!text || typeof A.sharedSms !== 'function') return Promise.resolve(null);
     return A.sharedSms(text).then((kind) => { console.info('hayati-share:' + kind); return kind; });
   }
   if (ShareIn && typeof ShareIn.take === 'function') {
-    try { const r = ShareIn.addListener('shared', (ev) => onShared(ev && ev.text)); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
-    Promise.resolve().then(() => ShareIn.take()).then((r) => onShared(r && r.text)).catch(() => {});
+    try { const r = ShareIn.addListener('shared', (ev) => onShared(ev && ev.text, ev)); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
+    Promise.resolve().then(() => ShareIn.take()).then((r) => onShared(r && r.text, r)).catch(() => {});
+  }
+
+  // DW-062: ملف انشارك (كشف حساب…) ← «استيراد الحساب كامل» معبّى، بعد ما يفتح القفل وتخلص البداية
+  function onSharedFile(name, b64) {
+    let file;
+    try {
+      const bin = atob(b64), u = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+      file = new File([u], String(name).slice(0, 120));
+    } catch (e) { return Promise.resolve(null); }
+    return new Promise((done) => {
+      const go = () => {
+        if (document.body.classList.contains('locked') || !A.st || !window.Extras || !window.Extras.bankImport) { setTimeout(go, 500); return; }
+        if (document.querySelector('#sheet[open]')) A.closeSheet();
+        setTimeout(() => { window.Extras.bankImport(file); console.info('hayati-share:file'); done('file'); }, 300);
+      };
+      setTimeout(go, 600);
+    });
   }
 
   // رابط خارجي (زر «اقرأ»): متصفح النظام

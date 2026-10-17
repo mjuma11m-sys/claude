@@ -1,12 +1,14 @@
 // «شارك ← حياتي» بالآيفون (DW-046): يستلم نص رسالة البنك من قائمة المشاركة ويحطه بـ App Group،
 // والتطبيق ياخذه أول ما ينفتح (ShareInPlugin) ويمرّره لنفس مسار الأندرويد (موافقة أول مرة، تمويه الأرقام).
 // ما يقرا الرسائل بنفسه، وما يرسل شي لأي مكان.
+// DW-062: وملف (كشف حساب Excel/CSV/PDF أو ملف رسائل): ينسخه لمجلد App Group «share/» والتطبيق ياخذه ويفتح «استيراد الحساب كامل».
 import UIKit
 import UniformTypeIdentifiers
 
 final class ShareViewController: UIViewController {
     static let group = "group.bh.hayati.app"
     static let maxChars = 2000
+    static let maxFile = 15 * 1024 * 1024
     private let label = UILabel()
 
     private var arabic: Bool { (Locale.preferredLanguages.first ?? "ar").hasPrefix("ar") }
@@ -37,6 +39,15 @@ final class ShareViewController: UIViewController {
             done.heightAnchor.constraint(greaterThanOrEqualToConstant: 44),
         ])
         label.text = "…"
+        if loadFile({ [weak self] name in
+            guard let self = self else { return }
+            if let name = name {
+                UserDefaults(suiteName: ShareViewController.group)?.set(["file": name, "at": Date().timeIntervalSince1970], forKey: "share")
+                self.label.text = self.arabic ? "✓ وصل الملف\nافتح «حياتي» وبتلقاه" : "✓ File received\nOpen Hayati to import it"
+            } else {
+                self.label.text = self.arabic ? "ما قدرنا ناخذ الملف (الحد 15MB)" : "Couldn't take the file (15MB max)"
+            }
+        }) { return }
         loadText { [weak self] text in
             guard let self = self else { return }
             if let text = text, !text.isEmpty {
@@ -51,6 +62,32 @@ final class ShareViewController: UIViewController {
     static func save(_ text: String) {
         let t = String(text.prefix(maxChars))
         UserDefaults(suiteName: group)?.set(["text": t, "at": Date().timeIntervalSince1970], forKey: "share")
+    }
+
+    // ملف من «الملفات» أو الواتساب أو الإيميل: ننسخه وهو مفتوح (الرابط المؤقت يروح بعد الدالة)
+    private func loadFile(_ done: @escaping (String?) -> Void) -> Bool {
+        let items = (extensionContext?.inputItems as? [NSExtensionItem]) ?? []
+        for item in items {
+            for p in item.attachments ?? [] where p.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier)
+                || (!p.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) && p.hasItemConformingToTypeIdentifier(UTType.data.identifier)) {
+                let type = p.registeredTypeIdentifiers.first { UTType($0)?.conforms(to: .data) == true } ?? UTType.data.identifier
+                _ = p.loadFileRepresentation(forTypeIdentifier: type) { url, _ in
+                    var saved: String?
+                    let fm = FileManager.default
+                    if let url = url, let dir = fm.containerURL(forSecurityApplicationGroupIdentifier: ShareViewController.group)?.appendingPathComponent("share", isDirectory: true),
+                       let size = (try? fm.attributesOfItem(atPath: url.path)[.size] as? NSNumber)?.intValue, size <= ShareViewController.maxFile {
+                        try? fm.removeItem(at: dir)
+                        try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
+                        var name = url.lastPathComponent
+                        if (name as NSString).pathExtension.isEmpty, let ext = UTType(type)?.preferredFilenameExtension { name += "." + ext }
+                        if (try? fm.copyItem(at: url, to: dir.appendingPathComponent(name))) != nil { saved = name }
+                    }
+                    DispatchQueue.main.async { done(saved) }
+                }
+                return true
+            }
+        }
+        return false
     }
 
     private func loadText(_ done: @escaping (String?) -> Void) {

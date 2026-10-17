@@ -9467,7 +9467,7 @@ window.HAYATI_CONFIG = {
   }
 
   // ---------- الواجهة ----------
-  function sheet() {
+  function sheet(preload) {
     let res = null;
     const fmt = (n) => A.fmt(n);
     const summary = () => {
@@ -9503,8 +9503,7 @@ window.HAYATI_CONFIG = {
         '<p class="small muted" style="margin:10px 4px 0">الملف يتقرا بجوالك وما يطلع منه، وأرقام البطاقات تنخفى قبل الحفظ.</p>',
       mount(root) {
         const status = (t) => { root.querySelector('#biStatus').textContent = t; };
-        root.querySelector('#biFile').onchange = async (e) => {
-          const file = e.target.files[0]; e.target.value = '';
+        const handle = async (file) => {
           if (!file) return;
           if (/\.pdf$/i.test(file.name) && file.size > PDF_MAX * 4) { status('الملف كبير · قسّم الفترة'); return; }
           status('📎 ' + file.name + ' · نقرا…'); res = null; root.querySelector('#biOut').innerHTML = '';
@@ -9521,6 +9520,8 @@ window.HAYATI_CONFIG = {
           }
           root.querySelector('#biOut').innerHTML = summary();
         };
+        root.querySelector('#biFile').onchange = (e) => { const f = e.target.files[0]; e.target.value = ''; handle(f); };
+        if (preload instanceof Blob) handle(preload);   // DW-062: «شارك ← حياتي»
       },
       onSave(root) {
         const accSel = root.querySelector('#biAcc'), acc = accSel && accSel.value ? accSel.value : null;
@@ -9548,7 +9549,7 @@ window.HAYATI_CONFIG = {
   const prevPick = E.pick;
   E.pick = (k) => { if (k === 'bankfile') { sheet(); return; } if (prevPick) prevPick(k); };
   wrap('action', (prev, name, el, e) => { if (name === 'bankfile') { sheet(); return; } return prev(name, el, e); });
-  E.bankImport = sheet;
+  E.bankImport = (file) => sheet(file);
   E._bank = { csv, fromRows, fromText, fromXml, fromPdfLines, dedupe, money, when }; // للاختبار
 })();
 
@@ -14392,13 +14393,32 @@ window.HAYATI_CONFIG = {
   }
 
   // «شارك ← حياتي» (أندرويد DW-009 · آيفون DW-046 عبر امتداد المشاركة): رسالة البنك توصل من تطبيق الرسائل وتفتح نافذة اللصق معبّاة
-  function onShared(text) {
+  function onShared(text, ev) {
+    if (ev && ev.file && ev.data) return onSharedFile(ev.file, ev.data);
     if (!text || typeof A.sharedSms !== 'function') return Promise.resolve(null);
     return A.sharedSms(text).then((kind) => { console.info('hayati-share:' + kind); return kind; });
   }
   if (ShareIn && typeof ShareIn.take === 'function') {
-    try { const r = ShareIn.addListener('shared', (ev) => onShared(ev && ev.text)); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
-    Promise.resolve().then(() => ShareIn.take()).then((r) => onShared(r && r.text)).catch(() => {});
+    try { const r = ShareIn.addListener('shared', (ev) => onShared(ev && ev.text, ev)); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
+    Promise.resolve().then(() => ShareIn.take()).then((r) => onShared(r && r.text, r)).catch(() => {});
+  }
+
+  // DW-062: ملف انشارك (كشف حساب…) ← «استيراد الحساب كامل» معبّى، بعد ما يفتح القفل وتخلص البداية
+  function onSharedFile(name, b64) {
+    let file;
+    try {
+      const bin = atob(b64), u = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+      file = new File([u], String(name).slice(0, 120));
+    } catch (e) { return Promise.resolve(null); }
+    return new Promise((done) => {
+      const go = () => {
+        if (document.body.classList.contains('locked') || !A.st || !window.Extras || !window.Extras.bankImport) { setTimeout(go, 500); return; }
+        if (document.querySelector('#sheet[open]')) A.closeSheet();
+        setTimeout(() => { window.Extras.bankImport(file); console.info('hayati-share:file'); done('file'); }, 300);
+      };
+      setTimeout(go, 600);
+    });
   }
 
   // رابط خارجي (زر «اقرأ»): متصفح النظام

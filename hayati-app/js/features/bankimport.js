@@ -199,7 +199,7 @@
   }
 
   // ---------- الواجهة ----------
-  function sheet() {
+  function sheet(preload) {
     let res = null;
     const fmt = (n) => A.fmt(n);
     const summary = () => {
@@ -235,8 +235,7 @@
         '<p class="small muted" style="margin:10px 4px 0">الملف يتقرا بجوالك وما يطلع منه، وأرقام البطاقات تنخفى قبل الحفظ.</p>',
       mount(root) {
         const status = (t) => { root.querySelector('#biStatus').textContent = t; };
-        root.querySelector('#biFile').onchange = async (e) => {
-          const file = e.target.files[0]; e.target.value = '';
+        const handle = async (file) => {
           if (!file) return;
           if (/\.pdf$/i.test(file.name) && file.size > PDF_MAX * 4) { status('الملف كبير · قسّم الفترة'); return; }
           status('📎 ' + file.name + ' · نقرا…'); res = null; root.querySelector('#biOut').innerHTML = '';
@@ -253,6 +252,8 @@
           }
           root.querySelector('#biOut').innerHTML = summary();
         };
+        root.querySelector('#biFile').onchange = (e) => { const f = e.target.files[0]; e.target.value = ''; handle(f); };
+        if (preload instanceof Blob) handle(preload);   // DW-062: «شارك ← حياتي»
       },
       onSave(root) {
         const accSel = root.querySelector('#biAcc'), acc = accSel && accSel.value ? accSel.value : null;
@@ -280,6 +281,6 @@
   const prevPick = E.pick;
   E.pick = (k) => { if (k === 'bankfile') { sheet(); return; } if (prevPick) prevPick(k); };
   wrap('action', (prev, name, el, e) => { if (name === 'bankfile') { sheet(); return; } return prev(name, el, e); });
-  E.bankImport = sheet;
+  E.bankImport = (file) => sheet(file);
   E._bank = { csv, fromRows, fromText, fromXml, fromPdfLines, dedupe, money, when }; // للاختبار
 })();

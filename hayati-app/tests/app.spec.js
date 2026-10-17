@@ -774,6 +774,18 @@ test('iPhone: connects Apple Health and fills «صحتي» from the watch', asyn
   expect([up.sleep, up.rhr, up.hrv, up.steps, up.sleep_deep, up.date != null]).toEqual([undefined, undefined, undefined, undefined, undefined, true]);
 });
 
+// DW-062: «شارك ← حياتي» لملف: كشف الحساب يفتح «استيراد الحساب كامل» معبّى
+test('iPhone: a shared statement file opens the import sheet already read', async ({ page }) => {
+  const b64 = fs.readFileSync(path.join(__dirname, 'fixtures/statement.xlsx')).toString('base64');
+  await page.addInitScript((data) => {
+    window.Capacitor = { isNativePlatform: () => true, getPlatform: () => 'ios',
+      Plugins: { ShareIn: { take: async () => ({ file: 'Statement Oct.xlsx', data }), addListener: () => ({ remove() {} }) } } };
+  }, b64);
+  await open(page);
+  await expect(page.locator('#biOut')).toContainText('لقيت 3 عملية', { timeout: 8000 });
+  await expect(page.locator('#biStatus')).toContainText('Statement Oct.xlsx');
+});
+
 // نسخة الآيفون كما تنبني فعلاً: www/ (من cap-www.js) + مكتبة Capacitor الحقيقية + جسر iOS مزيّف
 // (الاختبار اللي قبله يعطي Plugins جاهزة، وهذا اللي خبّى إن الإضافات ما تتسجل بدون capacitor.js)
 test('iPhone build (www/ + real Capacitor core): plugins register through the native bridge and alerts get scheduled @webkit', async ({ page }) => {
