@@ -1,6 +1,6 @@
 # نصوص App Store (نسخة الآيفون) — انسخ والصق
 
-> بدون كلمة «تجريبي/بيتا» (إرشاد 2.2). كل ميزة مكتوبة هني تشتغل بنسخة 0.23.
+> بدون كلمة «تجريبي/بيتا» (إرشاد 2.2). كل ميزة مكتوبة هني تشتغل بنسخة 0.25.
 > الروابط: بدّل `<رابطك>` برابط Vercel Production حقك (نفس اللي فيه `privacy.html`).
 
 ## صفحة النسخة (iOS App Version)
@@ -28,6 +28,7 @@
 • حاسبة تقدير للزكاة والخُمس، وتختار سني أو شيعي. تقدير يساعدك تحسب، مو فتوى.
 
 الدراسة والجدول
+• ارفع جدولك الجامعي (سكرين شوت أو PDF أو نص) والمواد تنضاف بأيامها ووقتها.
 • جدولك الأسبوعي: محاضرة، تمرين، أو دوام.
 • المذاكرة والمعدل الفصلي والتراكمي.
 • المهام والاختبارات بمواعيدها.
@@ -36,6 +37,12 @@
 • أوقات الصلاة بالطريقة اللي تختارها، والصلاة الجاية.
 • التاريخ الهجري، والمناسبات الجاية (رمضان، العيد، القرقاعون، الناصفة…).
 • عداد ورد القرآن والختمة، ومسبحة.
+
+المطبخ
+• وصفات خليجية بمقادير تتغيّر حسب عدد الأشخاص، وخطوات سهلة للمبتدي، والناقص يروح لقائمة المشتريات.
+
+صحتي
+• اربط Apple Watch أو أي ساعة تشارك مع تطبيق الصحة: نومك ومراحله ونبضك وخطواتك (قراءة بس، وتظل على جوالك).
 
 على الآيفون
 • ودجت للشاشة الرئيسية: الجاي اليوم وكم باقي من ميزانيتك.
@@ -57,7 +64,7 @@
 
 **Support URL:** `https://<رابطك>/`
 **Marketing URL:** (فاضي)
-**Version:** `0.23`
+**Version:** `0.25`
 **Copyright:** `2026 <اسمك>`  ← اكتب اسمك القانوني مثل ما تبيه يطلع
 
 ## App Review Information
@@ -66,7 +73,8 @@
 ```
 The account is optional. Every feature works on the device without signing in.
 To try the bank-message parser: Money tab → "Paste message" → paste: Purchase of BHD 3.200 at COSTA SEEF using card XXXX4821
-AI features ("Ask Hayati", lecture summaries) appear only for signed-in users and are not required to review the app.
+AI features ("Ask Hayati", lecture summaries, reading a timetable photo) appear only for signed-in users and are not required to review the app.
+HealthKit: read-only (sleep analysis, resting heart rate, HRV, steps), requested only when the user taps "Connect Apple Health" in Study → My Health. Nothing is written to HealthKit. HealthKit data stays on the device: it is not synced to the account, not sent to any server or AI service, and not used for advertising.
 ```
 - **Contact:** اسمك، إيميلك، رقمك (لـ Apple بس).
 

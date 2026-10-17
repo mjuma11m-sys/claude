@@ -1,4 +1,5 @@
-// ⌚ Apple Watch: اختصار بالآيفون يقرا النوم من تطبيق الصحة كل صبح ويفتح التطبيق برابط فيه الأرقام
+// ⌚ الساعة الذكية — DW-053: بنسخة الآيفون نقرا تطبيق الصحة مباشرة (Apple Watch وأي ساعة تكتب فيه)
+// وبالمتصفح: اختصار بالآيفون يقرا النوم من تطبيق الصحة كل صبح ويفتح التطبيق برابط فيه الأرقام
 //   …/#health?sleep=7.25&deep=1.1&rem=1.6&rhr=54&hrv=48&steps=8200   (date اختياري = اليوم)
 (function () {
   'use strict';
@@ -34,15 +35,52 @@
     return Object.keys(out).length > 1 ? out : null;
   }
 
-  function apply(data) {
+  function apply(data, quiet) {
     const cur = st.daily.find((x) => x.date === data.date) || { id: S.stableId('daily:' + data.date), date: data.date, water: 0, sleep: null, habits: {} };
     const patch = Object.assign({}, data, { watch: true, watch_at: new Date().toISOString() });
     S.upsert('daily', Object.assign({}, cur, patch));
+    if (quiet) return;
     const parts = [];
     if (data.sleep != null) parts.push('نومك ' + fmtH(data.sleep));
     if (data.steps != null) parts.push(data.steps.toLocaleString('en') + ' خطوة');
     A.toast('⌚ ' + (parts.join(' · ') || 'انسجلت بيانات الساعة'));
   }
+
+  // ---------- تطبيق الصحة (نسخة الآيفون) ----------
+  const Cap = window.Capacitor;
+  const HK = Cap && typeof Cap.isNativePlatform === 'function' && Cap.isNativePlatform() && typeof Cap.getPlatform === 'function' && Cap.getPlatform() === 'ios'
+    ? ((Cap.Plugins && Cap.Plugins.HayatiHealth) || (typeof Cap.registerPlugin === 'function' ? Cap.registerPlugin('HayatiHealth') : null)) : null;
+  const HK_ON = 'hayati-health-on', HK_AT = 'hayati-health-at';
+  const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } return null; };
+  const hkOn = () => !!HK && ls(HK_ON) === '1';
+  let hkBusy = false;
+  async function hkSync(manual) {
+    if (!hkOn() || hkBusy) return;
+    if (!manual && Date.now() - Number(ls(HK_AT) || 0) < 3600e3) return;   // مرة بالساعة بالكثير
+    hkBusy = true;
+    try {
+      const r = await HK.read({ days: 7 });
+      let n = 0;
+      for (const d of (r && r.days) || []) {
+        const q = Object.keys(FIELDS).filter((k) => d[k] != null).map((k) => k + '=' + d[k]).join('&');
+        const one = q && parse(q + '&date=' + d.date);
+        if (one) { apply(one, true); n++; }
+      }
+      ls(HK_AT, String(Date.now()));
+      if (manual) A.toast(n ? '⌚ تحدّثت ' + n + ' أيام من تطبيق الصحة' : 'ما لقينا بيانات بتطبيق الصحة · تأكد إنك سمحت لـ«حياتي» بالقراءة');
+    } catch (e) {
+      if (manual) A.toast('ما قدرنا نقرا تطبيق الصحة');
+    } finally { hkBusy = false; }
+  }
+  async function hkConnect() {
+    try {
+      await HK.authorize();
+      ls(HK_ON, '1');
+      await hkSync(true);
+      A.render();
+    } catch (e) { A.toast('ما انربط · افتح الإعدادات ← الصحة ← الوصول للبيانات ← «حياتي»'); }
+  }
+  function hkDisconnect() { ls(HK_ON, null); ls(HK_AT, null); A.render(); A.toast('وقّفنا القراءة · الأيام اللي انسجلت تظل بـ«صحتي»'); }
 
   function fromHash() {
     if (!/^#health/.test(location.hash)) return;
@@ -62,9 +100,12 @@
   function watchCard() {
     const goal = Number((st.settings || {}).sleep_goal) || 8;
     const nights = st.daily.filter((d) => d.watch && d.sleep != null).sort((a, b) => (a.date < b.date ? 1 : -1));
-    let out = A.secHead('⌚ Apple Watch', '<button class="link" data-action="watch-setup">' + (nights.length ? 'الإعداد' : 'اربط') + '</button>');
+    let out = A.secHead('⌚ الساعة الذكية', hkOn() ? '<button class="link" data-action="health-sync">تحديث</button>' : '<button class="link" data-action="watch-setup">' + (nights.length ? 'الإعداد' : 'اربط') + '</button>');
+    if (!nights.length && hkOn()) {
+      return out + '<div class="card"><b>متصل بتطبيق الصحة ✓</b><p class="small muted" style="margin:4px 0 0">ما فيه نوم مسجّل للحين. البس الساعة وأنت نايم، ونومك يطلع هني الصبح.</p></div>';
+    }
     if (!nights.length) {
-      return out + '<button class="cta" data-action="watch-setup"><div class="ico">⌚</div><div style="flex:1"><b>اربط ساعتك للنوم</b><small>كل صبح تنسجل ساعات نومك ومراحله ونبضك تلقائياً</small></div>' + I('chevL') + '</button>';
+      return out + '<button class="cta" data-action="watch-setup"><div class="ico">⌚</div><div style="flex:1"><b>اربط ساعتك</b><small>' + (HK ? 'Apple Watch أو أي ساعة تشارك مع تطبيق الصحة: نومك ونبضك وخطواتك تلقائياً' : 'كل صبح تنسجل ساعات نومك ومراحله ونبضك تلقائياً') + '</small></div>' + I('chevL') + '</button>';
     }
     const n = nights[0];
     const pct = Math.min(1, n.sleep / goal), R = 52, C = 2 * Math.PI * R;
@@ -111,10 +152,14 @@
     const isClaude = /claude\.ai|claudeusercontent|artifact/.test(location.href);
     const copy = (label, value) => '<div class="copy-box"><code style="word-break:keep-all;white-space:nowrap">' + h(label) + '</code><button type="button" data-copy="' + h(value) + '">' + I('copy') + 'نسخ</button></div>';
     A.openSheet({
-      title: 'ربط Apple Watch',
+      title: 'ربط الساعة',
       cancelLabel: 'تم',
       saveLabel: 'سجّل',
       body:
+        (HK ? '<div class="card" style="margin-bottom:12px"><b>📲 تطبيق الصحة</b><p class="small muted" style="margin:4px 0 10px">Apple Watch، وأي ساعة تطبيقها يشارك مع تطبيق الصحة (مثل Garmin وHuawei وAmazfit وXiaomi). نقرا بس، وما نكتب شي فيه.</p>' +
+          (hkOn() ? '<button type="button" class="btn block" id="hkSync">' + I('refresh') + 'حدّث الحين</button><button type="button" class="btn ghost block" id="hkOff" style="margin-top:8px">وقّف القراءة</button>'
+            : '<button type="button" class="btn primary block" id="hkConnect">⌚ اربط تطبيق الصحة</button>') + '</div>' +
+          '<details><summary class="small muted">أو بالاختصارات (الطريقة القديمة)</summary>' : '') +
         (isClaude ? '<div class="card notice"><p class="small" style="margin:10px 0">⚠️ الربط التلقائي يشتغل على رابط Vercel أو الملف المحمّل. داخل رابط Claude استخدم «لصق» تحت.</p></div>' : '') +
         '<p class="small muted" style="margin:0 0 8px">مرة وحدة بتطبيق <b>الاختصارات</b> بالآيفون (الساعة تسجّل النوم بتطبيق الصحة، والاختصار يوصله هني):</p>' +
         '<ol class="steps">' +
@@ -126,8 +171,10 @@
         '<p class="small muted" style="margin:0 0 4px">والإضافي هكذا: <code style="word-break:keep-all;white-space:nowrap">&amp;deep=1.2&amp;rem=1.6&amp;rhr=54&amp;steps=8200</code></p>' +
         '<ol class="steps" start="6"><li>إجراء <b>«فتح عناوين URL»</b> على النص. خلاص — كل ما توقف المنبّه ينفتح التطبيق ونومك مسجّل.</li></ol>' +
         A.secHead('أو الصق يدوياً') +
-        '<div class="field"><textarea name="paste" class="ltr" placeholder="sleep=7.5&amp;deep=1.2&amp;rem=1.6&amp;rhr=54"></textarea></div>',
+        '<div class="field"><textarea name="paste" class="ltr" placeholder="sleep=7.5&amp;deep=1.2&amp;rem=1.6&amp;rhr=54"></textarea></div>' + (HK ? '</details>' : ''),
       mount(root) {
+        const on = (id, fn) => { const b = root.querySelector(id); if (b) b.onclick = (e) => { e.stopPropagation(); A.closeSheet(); fn(); }; };
+        on('#hkConnect', hkConnect); on('#hkSync', () => hkSync(true)); on('#hkOff', hkDisconnect);
         root.onclick = (e) => {
           const b = e.target.closest('[data-copy]');
           if (!b) return;
@@ -146,12 +193,13 @@
   wrap('viewHealth', (prev) => watchCard() + prev());
   wrap('action', (prev, name, el, e) => {
     if (name === 'watch-setup') { setupSheet(); return; }
+    if (name === 'health-sync') { hkSync(true); return; }
     return prev(name, el, e);
   });
   const prevExtra = E.settingsExtra;
   E.settingsExtra = function () {
-    return (prevExtra ? prevExtra.apply(this, arguments) : '') + '<div class="group-title">⌚ Apple Watch</div><div class="menu">' +
-      '<button data-set="watch-setup"><div class="ico" style="' + tint('#13636B') + '">⌚</div><div style="flex:1"><b>ربط الساعة (النوم والنبض)</b><small>اختصار واحد بالآيفون، مرة وحدة</small></div>' + I('chevL') + '</button></div>';
+    return (prevExtra ? prevExtra.apply(this, arguments) : '') + '<div class="group-title">⌚ الساعة الذكية</div><div class="menu">' +
+      '<button data-set="watch-setup"><div class="ico" style="' + tint('#13636B') + '">⌚</div><div style="flex:1"><b>ربط الساعة (النوم والنبض)</b><small>' + (HK ? (hkOn() ? 'متصل بتطبيق الصحة ✓' : 'Apple Watch وأي ساعة تشارك مع تطبيق الصحة') : 'اختصار واحد بالآيفون، مرة وحدة') + '</small></div>' + I('chevL') + '</button></div>';
   };
   const prevSet = E.settingsAction;
   E.settingsAction = async function (act) {
@@ -161,5 +209,10 @@
   new MutationObserver(drawRing).observe(document.getElementById('view'), { childList: true });
   window.addEventListener('hashchange', fromHash);
   fromHash();
+  if (HK) {
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) hkSync(false); });
+    setTimeout(() => hkSync(false), 1500);
+  }
+  E._healthSync = hkSync; // للاختبار
   A.render();
 })();

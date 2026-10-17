@@ -581,6 +581,36 @@ test('iPhone (Capacitor): schedules «الحين وقت…» notifications, hapt
   expect(text).toContain('Costa');
 });
 
+// DW-053: تطبيق الصحة بنسخة الآيفون ← النوم والنبض والخطوات بـ«صحتي»
+test('iPhone: connects Apple Health and fills «صحتي» from the watch', async ({ page }) => {
+  await page.addInitScript(() => {
+    const log = window.__hk = { auth: 0, reads: 0 };
+    const k = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+    window.Capacitor = {
+      isNativePlatform: () => true, getPlatform: () => 'ios',
+      Plugins: {
+        HayatiHealth: {
+          authorize: async () => { log.auth++; return { ok: true }; },
+          read: async () => { log.reads++; return { days: [{ date: k(1), steps: 9120.6 }, { date: k(0), sleep: 7.26, deep: 0.94, rem: 1.61, core: 4.4, rhr: 55.4, hrv: 47.8, steps: 3201 }] }; },
+        },
+      },
+    };
+  });
+  await open(page);
+  await store(page, () => { App.ui.studySeg = 'health'; App.go('schedule'); });
+  await page.click('.cta[data-action="watch-setup"]');
+  await page.click('#hkConnect');
+  await expect.poll(() => store(page, () => App.st.daily.length)).toBe(2);
+  const d = await store(page, () => App.st.daily.slice().sort((a, b) => (a.date < b.date ? 1 : -1)).map((x) => [x.sleep, x.sleep_deep, x.rhr, x.hrv, x.steps, x.watch]));
+  expect(d).toEqual([[7.3, 0.9, 55, 48, 3201, true], [null, undefined, undefined, undefined, 9121, true]]);
+  await expect(page.locator('#view')).toContainText('الساعة الذكية');
+  await expect(page.locator('#view [data-action="health-sync"]')).toHaveCount(1);
+  expect(await store(page, () => window.__hk.auth)).toBe(1);
+  // ما يرتفع للحساب: النوم والنبض والخطوات من الساعة تظل بالجهاز
+  const up = await store(page, () => App.S._stripLocal('daily', App.st.daily.find((x) => x.sleep != null)));
+  expect([up.sleep, up.rhr, up.hrv, up.steps, up.sleep_deep, up.date != null]).toEqual([undefined, undefined, undefined, undefined, undefined, true]);
+});
+
 // نسخة الآيفون كما تنبني فعلاً: www/ (من cap-www.js) + مكتبة Capacitor الحقيقية + جسر iOS مزيّف
 // (الاختبار اللي قبله يعطي Plugins جاهزة، وهذا اللي خبّى إن الإضافات ما تتسجل بدون capacitor.js)
 test('iPhone build (www/ + real Capacitor core): plugins register through the native bridge and alerts get scheduled @webkit', async ({ page }) => {
@@ -1638,7 +1668,7 @@ test('«جديد بحياتي»: an existing user sees what is new once after th
   await store(page, () => localStorage.setItem('hayati-seen-version', 'v23'));   // كان على النسخة اللي قبل
   await open(page);
   await expect(page.locator('#sheetTitle')).toHaveText('جديد بحياتي ✨', { timeout: 5000 });
-  await expect(page.locator('#sheetBody .news-item')).toHaveCount(6);
+  await expect(page.locator('#sheetBody .news-item')).toHaveCount(7);
   await page.click('#sheetCancel');
   expect(await store(page, () => localStorage.getItem('hayati-seen-version'))).toBe(await store(page, () => App.APP_VERSION));
   await open(page);

@@ -439,7 +439,7 @@
         let res;
         if (op.op === 'delete') res = await sb.from(op.table).delete().eq('id', op.id);
         else if (op.table === 'settings') res = await sb.from('settings').upsert({ user_id: session.user.id, data: op.row, updated_at: new Date().toISOString() });
-        else res = await sb.from(op.table).upsert(wrap(op.row));
+        else res = await sb.from(op.table).upsert(wrap(stripLocal(op.table, op.row)));
         if (res.error) throw res.error;
         state.pending.shift();
         save();
@@ -460,7 +460,7 @@
     emit();
     try {
       const results = await Promise.all(TABLES.map((t) => sb.from(t).select('*')));
-      results.forEach((r, i) => { if (r.error) throw r.error; state[TABLES[i]] = r.data.map((x) => clean(unwrap(x))); });
+      results.forEach((r, i) => { if (r.error) throw r.error; state[TABLES[i]] = keepLocal(TABLES[i], r.data.map((x) => clean(unwrap(x))), state[TABLES[i]] || []); });
       const st = await sb.from('settings').select('*').maybeSingle();
       if (st.error) throw st.error;
       const sd = st.data && st.data.data;
@@ -495,6 +495,28 @@
   }
 
   // كل جدول بـSupabase شكله واحد: id + user_id + data (jsonb) + updated_at
+  // DW-053: أرقام الساعة وتطبيق الصحة (النوم ومراحله، النبض، HRV، الخطوات) تظل بالجهاز ولا ترتفع للحساب
+  const LOCAL_ONLY = { daily: ['sleep_deep', 'sleep_rem', 'sleep_core', 'sleep_awake', 'rhr', 'hrv', 'steps', 'watch_at'] };
+  function stripLocal(table, row) {
+    const f = LOCAL_ONLY[table];
+    if (!f) return row;
+    const r = Object.assign({}, row);
+    f.forEach((k) => delete r[k]);
+    if (r.watch) delete r.sleep;   // نوم الساعة بعد
+    return r;
+  }
+  function keepLocal(table, rows, prev) {
+    const f = LOCAL_ONLY[table];
+    if (!f) return rows;
+    const old = new Map(prev.map((x) => [x.id, x]));
+    return rows.map((x) => {
+      const o = old.get(x.id);
+      if (!o) return x;
+      const add = {};
+      f.concat(o.watch ? ['sleep', 'watch'] : []).forEach((k) => { if (o[k] != null && x[k] == null) add[k] = o[k]; });
+      return Object.assign(x, add);
+    });
+  }
   function wrap(row) {
     const data = Object.assign({}, row);
     delete data.user_id;
@@ -658,7 +680,7 @@
   }
 
   global.Store = {
-    state, status, uuid, stableId, invokeFn, rev: () => rev,
+    state, status, uuid, _stripLocal: stripLocal, stableId, invokeFn, rev: () => rev,
     subscribe: (fn) => { listeners.add(fn); return () => listeners.delete(fn); },
     upsert, remove, setSettings,
     init, getConfig, saveConfig, clearConfig,

@@ -78,6 +78,8 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSHealthShareUsageDescription</key>
+	<string>«حياتي» يقرا من تطبيق الصحة نومك ومراحله، ونبض الراحة، وHRV، وخطواتك (من Apple Watch أو ساعتك) عشان يعرضها بـ«صحتي». ما نكتب شي بتطبيق الصحة، وما نستخدمها لإعلانات ولا نعطيها لأحد.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>«حياتي» يستخدم موقعك بس لما تضغط «استخدم موقعي» بالقبلة، عشان يحسب اتجاهها. الموقع ما ينحفظ ولا يطلع من جوالك.</string>
 	<key>NSMicrophoneUsageDescription</key>
