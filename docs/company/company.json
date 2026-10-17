@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 49,
+  "next": 50,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -383,6 +383,14 @@
       "title": "اقتراح الميزات الجاية: أهم 3 بالأرقام",
       "owner": "CEO",
       "priority": "P2",
+      "status": "review",
+      "opened": "2026-10-17",
+      "updated": "2026-10-17"
+    },
+    "DW-049": {
+      "title": "تجهيز نسخة الآيفون للرفع (TestFlight ثم App Store)",
+      "owner": "CEO",
+      "priority": "P1",
       "status": "review",
       "opened": "2026-10-17",
       "updated": "2026-10-17"

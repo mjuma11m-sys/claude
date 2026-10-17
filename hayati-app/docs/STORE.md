@@ -94,19 +94,76 @@ Google تطلب 12 شخص يجربونه 14 يوم قبل ما ينزل للكل
 
 ---
 
-## 🍎 iOS
-- مشروع Capacitor iOS جاهز (`ios/`) بنفس كود الأندرويد: التنبيهات المحلية والاهتزاز موجودين (يغطي الإرشاد **4.2**).
-- رقم النسخة: `CURRENT_PROJECT_VERSION` = رقم `APP_VERSION` و`MARKETING_VERSION` = `0.xx` (فيه اختبار يمنع يختلفون).
-- **يحتاج:** ماك + **Xcode** (من App Store) + **Apple Developer Program 99$ بالسنة** (≈ 37.3 د.ب).
-- الخطوات:
-  1. `cd ~/Desktop/claude/hayati-app && git pull && npm install`
-  2. `npm run cap:sync` ← `npm run cap:open` (يفتح Xcode).
-  3. Xcode ← **App** ← **Signing & Capabilities** ← Team = حسابك ← Bundle ID `bh.hayati.app`.
-  4. جرّبه: اختار iPhone Simulator ← ▶️.
-  5. فوق اختار **Any iOS Device (arm64)** ← **Product ← Archive** ← **Distribute App ← App Store Connect ← Upload**.
-  6. **appstoreconnect.apple.com** ← My Apps ← ➕ ← الاسم `حياتي - Hayati` ← Bundle ID `bh.hayati.app` ← SKU `hayati-ios`.
-  7. **TestFlight** أول (لين 10,000 مختبر، بدون شرط 12×14 يوم)، بعدين المراجعة للمتجر.
-- الصور: `store/out/ios-01…07_*.png` (1290×2796، مقاس 6.9") و`icon-ios-1024.png`.
+## 🍎 iOS: رفع النسخة خطوة بخطوة (DW-049)
+> الرفع يصير **من ماكك** بـ Xcode (التوقيع يحتاج حسابك، وما ينسوّى من السيرفر). أول مرة ≈ ساعة، وبعدها ≈ 15 دقيقة لكل نسخة.
+> 🔐 لا ترسل بالشات: كلمة سر Apple ID، رموز التحقق، ملف `.p8`، ولا بيانات البطاقة.
+
+**قبل:** حساب Apple Developer **مفعّل** (فيه إيميل «Welcome to the Apple Developer Program»)، ماك عليه **Xcode 16 أو أحدث**، و**Node.js 22+**.
+
+### 1) جهّز المشروع (Terminal)
+```bash
+cd ~/Desktop/claude && git pull
+cd hayati-app && npm install
+npm run cap:sync      # ينسخ ملفات التطبيق لمشروع الآيفون
+npm run cap:open      # يفتح Xcode
+```
+
+### 2) التوقيع: 3 أهداف (Targets)
+التطبيق فيه 3 أجزاء، وكل واحد يحتاج نفس الخطوة. بـ Xcode اضغط **App** (أزرق، فوق يسار) ← تحت **TARGETS**:
+
+| Target | Bundle ID | لازم يكون فيه |
+|---|---|---|
+| **App** | `bh.hayati.app` | App Groups ← `group.bh.hayati.app` ✓ |
+| **HayatiWidgetExtension** | `bh.hayati.app.HayatiWidget` | App Groups ← `group.bh.hayati.app` ✓ |
+| **HayatiShareExtension** | `bh.hayati.app.HayatiShare` | App Groups ← `group.bh.hayati.app` ✓ |
+
+لكل واحد: **Signing & Capabilities** ← ✓ **Automatically manage signing** ← **Team** = اسمك (Individual).
+- Xcode يسجّل الـ Bundle IDs والـ App Group بحسابك بروحه. لو طلع خطأ أحمر، اضغط **Try Again**.
+- تحت **App Groups** لازم يكون ✓ جنب `group.bh.hayati.app` بالثلاثة. لو مو موجود: ➕ ← `group.bh.hayati.app`.
+- بالتأكد: **developer.apple.com ← Certificates, IDs & Profiles ← Identifiers** تلقى الثلاثة.
+
+### 3) جرّبه قبل الرفع
+- فوق اختار **iPhone 16** (Simulator) ← ▶️. يفتح؟ كمّل.
+- (أحسن) وصّل جوالك بالكيبل ← اختاره فوق ← ▶️. أول مرة: بالجوال **الإعدادات ← عام ← VPN وإدارة الجهاز** ← وثّق حسابك، و**الخصوصية والأمان ← وضع المطوّر** ← شغّله.
+
+### 4) سوّ التطبيق بـ App Store Connect (مرة وحدة)
+**appstoreconnect.apple.com ← Apps ← ➕ ← New App**:
+| الحقل | القيمة |
+|---|---|
+| Platforms | iOS |
+| Name | `حياتي - Hayati` (لو مأخوذ: `Hayati - حياتي`) |
+| Primary Language | Arabic |
+| Bundle ID | `bh.hayati.app` (يطلع بالقائمة بعد خطوة 2) |
+| SKU | `hayati-ios` |
+| User Access | Full Access |
+
+### 5) الأرشيف والرفع (كل نسخة)
+1. فوق بـ Xcode اختار **Any iOS Device (arm64)** (مو Simulator).
+2. **Product ← Archive** (≈ 3–5 دقايق).
+3. تنفتح نافذة **Organizer** ← اختار الأرشيف ← **Distribute App** ← **App Store Connect** ← **Upload** ← خلّ الخيارات مثل ما هي ← **Upload**.
+4. بعد 10–30 دقيقة يوصلك إيميل «has completed processing». لو وصلك إيميل فيه **ITMS-** انسخ رقمه وأرسله لي.
+
+### 6) TestFlight أول (بدون شرط 12×14 يوم)
+**App Store Connect ← حياتي ← TestFlight**:
+- **Export Compliance**: ما يسألك (مضبوط بالملف: `ITSAppUsesNonExemptEncryption = NO`، التشفير من النظام نفسه).
+- **Internal Testing** ← ➕ ← أضف نفسك ← ينزل لك تطبيق **TestFlight** على الجوال ← ثبّت «حياتي».
+- **External Testing** (للربع، لين 10,000): أول مرة يحتاج مراجعة بيتا من Apple (≈ يوم). عبّ **Test Information** (إيميل، ووش يجربون) ← ينطيك **Public Link** ترسله.
+- سوّ قائمة الفحص [`DEVICE-TEST.md`](DEVICE-TEST.md) على النسخة هذي.
+
+### 7) المتجر (بعد ما تخلص التجربة)
+**App Store ← iOS App ← 1.0 Prepare for Submission**:
+- **Screenshots (6.9")**: `store/out/ios-01…07_*.png` · **App Icon**: ينسحب من التطبيق.
+- **Description / Keywords / Support URL / Privacy Policy URL**: من الأقسام تحت.
+- **App Privacy**: الإجابات تحت («Apple: App Privacy»)، ونفس ملف `PrivacyInfo.xcprivacy` اللي بالتطبيق.
+- **App Review Information**: «الحساب اختياري، التطبيق يشتغل بدون تسجيل». ما يحتاج حساب تجريبي.
+- **Build** ← اختار النسخة اللي جربتها ← **Add for Review** ← **Submit**.
+
+> ⚠️ **قبل المتجر (مو TestFlight):**
+> - **إرشاد 2.2:** Apple ترفض أي كلمة «تجريبي/بيتا» بوصف المتجر. شيل «تطبيق بحريني تجريبي» من الوصف القصير لنسخة App Store (TestFlight عادي).
+> - **إرشاد 4.8:** لو «الدخول بـ Google» شغّال، لازم **Sign in with Apple** يكون شغّال بعد. فعّل الاثنين بـ Supabase مع بعض، أو لا تفعّل Google.
+> - رقم النسخة: كل رفع لازم رقم Build جديد. الرقم يمشي مع `APP_VERSION` (فيه اختبار)، فاسحب آخر نسخة قبل كل رفع.
+
+**الصور:** `store/out/ios-01…07_*.png` (1290×2796، مقاس 6.9") و`icon-ios-1024.png`.
 
 ---
 

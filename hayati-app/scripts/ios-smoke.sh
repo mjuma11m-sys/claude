@@ -30,6 +30,9 @@ SX="$APP/PlugIns/HayatiShareExtension.appex"
 [ "$(/usr/libexec/PlistBuddy -c 'Print :NSExtension:NSExtensionPointIdentifier' "$SX/Info.plist")" = "com.apple.share-services" ] \
   || { echo "❌ الامتداد مو Share Extension"; exit 1; }
 echo "✅ «شارك ← حياتي» انبنى وداخل التطبيق"
+# DW-049: ملف الخصوصية اللي تطلبه Apple داخل التطبيق وكل امتداد
+for f in "$APP" "$WX" "$SX"; do [ -f "$f/PrivacyInfo.xcprivacy" ] || { echo "❌ PrivacyInfo.xcprivacy ناقص بـ $(basename "$f")"; exit 1; }; done
+echo "✅ ملفات الخصوصية (PrivacyInfo) داخل التطبيق والامتدادين"
 
 echo "▶ نشغّل آيفون سميوليتر"
 UDID=$(xcrun simctl list devices available -j | python3 -c '

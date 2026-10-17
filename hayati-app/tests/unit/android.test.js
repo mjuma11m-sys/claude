@@ -223,3 +223,15 @@ test('app icon shortcuts (DW-048): same actions on Android and iPhone, and the i
   assert.match(scene, /performActionFor shortcutItem/);
   assert.match(scene, /connectionOptions\.shortcutItem/);
 });
+
+test('App Store privacy manifests (DW-049): app, widget and share extension each ship PrivacyInfo.xcprivacy with the UserDefaults reason', () => {
+  const plistDir = path.join(W, 'ios/App');
+  const pbx = fs.readFileSync(path.join(plistDir, 'App.xcodeproj/project.pbxproj'), 'utf8');
+  assert.strictEqual((pbx.match(/PrivacyInfo\.xcprivacy in Resources \*\/,/g) || []).length, 3);
+  for (const d of ['App', 'HayatiWidget', 'HayatiShare']) {
+    const x = fs.readFileSync(path.join(plistDir, d, 'PrivacyInfo.xcprivacy'), 'utf8');
+    assert.match(x, /NSPrivacyAccessedAPICategoryUserDefaults/);
+    assert.match(x, /<string>1C8F\.1<\/string>/);   // نفس App Group
+    assert.match(x, /<key>NSPrivacyTracking<\/key>\s*<false\/>/);
+  }
+});
