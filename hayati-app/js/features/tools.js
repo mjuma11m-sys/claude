@@ -30,6 +30,7 @@
     ]],
     ['🗓️ يومك', [
       ['shop', 'cart', '#16a34a', 'المشتريات', () => goSeg('tasks', 'tasksSeg', 'shop')],
+      ['kitchen', 'utensils', '#ea580c', 'المطبخ', () => run('kitchen')],
       ['events', 'gift', '#ec4899', 'المناسبات', () => goSeg('tasks', 'tasksSeg', 'events')],
       ['tasks', 'tasks', '#0d9488', 'المهام', () => goSeg('tasks', 'tasksSeg', 'tasks')],
       ['weekly', 'chart', '#13636B', 'تقرير الأسبوع', () => run('weekly')],

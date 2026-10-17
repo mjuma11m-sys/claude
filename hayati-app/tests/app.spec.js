@@ -160,6 +160,25 @@ test('timetable image without an account asks to sign in or paste text', async (
   expect(await store(page, () => App.st.courses.length)).toBe(0);
 });
 
+// DW-052: المطبخ ← المقادير تتغيّر حسب الأشخاص، والناقص للمشتريات
+test('kitchen: recipe scales with people and missing items go to shopping', async ({ page }) => {
+  await open(page);
+  await page.click('#toolsBtn');
+  await page.click('[data-tool="kitchen"]');
+  await page.fill('#sheetBody [name=kq]', 'مجبوس دجاج');
+  await expect(page.locator('#kList [data-recipe]')).toHaveCount(1);
+  await page.click('#kList [data-recipe="majboos-chicken"]');
+  await expect(page.locator('#kIng [data-ing="1"]')).toContainText('3 كوب');
+  await page.click('#kPlus'); await page.click('#kPlus');   // 4 ← 6
+  await expect(page.locator('#kIng [data-ing="1"]')).toContainText('4½ كوب');
+  await expect(page.locator('#kNote')).toContainText('1½');
+  await page.click('#kIng [data-ing="0"]'); await page.click('#kIng [data-ing="1"]');
+  await page.click('#kShop');
+  await expect.poll(() => store(page, () => App.st.shopping.map((x) => [x.name, x.qty]))).toEqual(expect.arrayContaining([['دجاجة مقطّعة 4 قطع', '1½ حبة'], ['رز بسمتي', '4½ كوب']]));
+  const q = await page.evaluate(() => [Extras._kitchenQty(500, 'غرام', 3), Extras._kitchenQty(1, 'كغ', 0.25), Extras._kitchenQty(0.25, 'م.ص', 0.5), Extras._kitchenQty(4, 'حبة', 0.25)]);
+  expect(q).toEqual(['1½ كغ', '250 غرام', '¼ م.ص', '1 حبة']);
+});
+
 test('weekly report shows on Friday evening and opens', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-10-16T20:00:00+03:00') });
   await open(page);
@@ -1619,7 +1638,7 @@ test('«جديد بحياتي»: an existing user sees what is new once after th
   await store(page, () => localStorage.setItem('hayati-seen-version', 'v23'));   // كان على النسخة اللي قبل
   await open(page);
   await expect(page.locator('#sheetTitle')).toHaveText('جديد بحياتي ✨', { timeout: 5000 });
-  await expect(page.locator('#sheetBody .news-item')).toHaveCount(5);
+  await expect(page.locator('#sheetBody .news-item')).toHaveCount(6);
   await page.click('#sheetCancel');
   expect(await store(page, () => localStorage.getItem('hayati-seen-version'))).toBe(await store(page, () => App.APP_VERSION));
   await open(page);
