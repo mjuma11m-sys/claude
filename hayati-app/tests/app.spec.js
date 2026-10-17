@@ -1586,10 +1586,10 @@ const seedOld = (page) => store(page, () => { App.S.setSettings({ onboarded: tru
 test('«جديد بحياتي»: an existing user sees what is new once after the update, and «تمام» keeps it away', async ({ page }) => {
   await open(page);
   await seedOld(page);
-  await store(page, () => localStorage.setItem('hayati-seen-version', 'v22'));   // كان على النسخة اللي قبل
+  await store(page, () => localStorage.setItem('hayati-seen-version', 'v23'));   // كان على النسخة اللي قبل
   await open(page);
   await expect(page.locator('#sheetTitle')).toHaveText('جديد بحياتي ✨', { timeout: 5000 });
-  await expect(page.locator('#sheetBody .news-item')).toHaveCount(5);
+  await expect(page.locator('#sheetBody .news-item')).toHaveCount(4);
   await page.click('#sheetCancel');
   expect(await store(page, () => localStorage.getItem('hayati-seen-version'))).toBe(await store(page, () => App.APP_VERSION));
   await open(page);
@@ -2682,4 +2682,16 @@ test('app icon shortcuts (DW-048): «اسأل حياتي» from the icon opens t
   // التطبيق مفتوح: نفس الاختصار يوصل كحدث
   await store(page, () => { App.S.status.signedIn = true; App.S.invokeFn = async () => ({ text: 'ok' }); window.__act({ name: 'add-tx' }); });
   await expect(page.locator('#sheet[open] [name="amount"]')).toBeVisible({ timeout: 5000 });
+});
+
+test('sign-up catches email typos before the server (.con, gmial) and says it in Arabic', async ({ page }) => {
+  await open(page);
+  await store(page, () => App.accountSheet());
+  await page.fill('#sheetBody [name=email]', 'someone@gmail.con');
+  await page.fill('#sheetBody [name=password]', 'secret123');
+  await page.click('#sheetBody [data-set="signup"]');
+  await expect(page.locator('#toast')).toContainText('someone@gmail.com');
+  await page.fill('#sheetBody [name=email]', 'someone@site.con');
+  await page.click('#sheetBody [data-set="signin"]');
+  await expect(page.locator('#toast')).toContainText('.com');
 });

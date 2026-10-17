@@ -5,7 +5,7 @@
   const S = window.Store;
   const st = S.state;
   const I = window.icon;
-  const APP_VERSION = 'v23';   // نفس رقم sw.js (فيه اختبار يتأكد)
+  const APP_VERSION = 'v24';   // نفس رقم sw.js (فيه اختبار يتأكد)
 
   // ---------- ثوابت ----------
   const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
@@ -2058,7 +2058,7 @@
         if (act === 'signin') { await S.signIn(email, pw); toast('أهلاً 👋'); }
         else {
           const confirmNeeded = await S.signUp(email, pw);
-          toast(confirmNeeded ? 'أرسلنا لك إيميل تأكيد، أكّده وارجع سجّل دخول' : 'تم إنشاء الحساب ✓');
+          toast(confirmNeeded ? 'أرسلنا لك إيميل تأكيد. افتح الرابط من هالجهاز، ويدخلك على طول' : 'تم إنشاء الحساب ✓');
         }
         setTimeout(back, 300);
       } else if (act === 'sso') {

@@ -1920,5 +1920,19 @@ window.HAYATI_EN = {
 "👋 هلا فيك بـ«حياتي»": "👋 Welcome to Hayati",
 "سجّل دخول عشان بياناتك تنحفظ بحسابك وتوصل لك على أي جهاز، وما تضيع لو بدّلت جوالك.": "Sign in so your data is saved to your account, reaches you on any device, and isn't lost if you change phones.",
 "تخطَّ الحين": "Skip for now",
-"بدون حساب التطبيق يشتغل كامل، وبياناتك تظل على هالجهاز بس. تقدر تسجّل بعدين من الإعدادات ← «حسابك».": "Without an account the app works fully, and your data stays on this device only. You can sign in later from Settings → «Your account»."
+"بدون حساب التطبيق يشتغل كامل، وبياناتك تظل على هالجهاز بس. تقدر تسجّل بعدين من الإعدادات ← «حسابك».": "Without an account the app works fully, and your data stays on this device only. You can sign in later from Settings → «Your account».",
+// DW-051: v24 والتحقق من الإيميل
+"قسّم الفاتورة": "Split the bill",
+"بالتساوي أو كل واحد حصته، وأرسل لربعك حصصهم": "Equally or custom shares, and send your friends their shares",
+"اختصارات الأيقونة": "App icon shortcuts",
+"اضغط مطوّل: «+ مصروف» أو «الصق رسالة» أو «اسأل حياتي»": "Long-press: «+ Expense», «Paste message» or «Ask Hayati»",
+"الحساب من أول شاشة": "Account from the first screen",
+"سجّل أو تخطَّ، والتطبيق يشتغل كامل بدون حساب": "Sign in or skip; the app works fully without an account",
+"إيميل أوضح": "Clearer email check",
+"لو كتبت .con بدال .com ينبهك قبل لا يضيع إنشاء الحساب": "Typed .con instead of .com? It tells you before sign-up fails",
+"اكتب الإيميل كامل وصحيح (مثل name@gmail.com)": "Enter a full, valid email (like name@gmail.com)",
+"الإيميل ينتهي بـ .con، غالباً تقصد .com": "The email ends in .con; you probably mean .com",
+"الإيميل مو صحيح، تأكد منه (مثلاً .com مو .con)": "That email isn't valid; check it (e.g. .com, not .con)",
+"كلمة المرور ضعيفة، خلّها أطول وفيها أرقام وحروف": "Weak password; make it longer with letters and numbers",
+"أرسلنا لك إيميل تأكيد. افتح الرابط من هالجهاز، ويدخلك على طول": "We sent you a confirmation email. Open the link on this device and you'll be signed in"
 };

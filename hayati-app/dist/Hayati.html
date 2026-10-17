@@ -2680,7 +2680,21 @@ window.HAYATI_EN = {
 "👋 هلا فيك بـ«حياتي»": "👋 Welcome to Hayati",
 "سجّل دخول عشان بياناتك تنحفظ بحسابك وتوصل لك على أي جهاز، وما تضيع لو بدّلت جوالك.": "Sign in so your data is saved to your account, reaches you on any device, and isn't lost if you change phones.",
 "تخطَّ الحين": "Skip for now",
-"بدون حساب التطبيق يشتغل كامل، وبياناتك تظل على هالجهاز بس. تقدر تسجّل بعدين من الإعدادات ← «حسابك».": "Without an account the app works fully, and your data stays on this device only. You can sign in later from Settings → «Your account»."
+"بدون حساب التطبيق يشتغل كامل، وبياناتك تظل على هالجهاز بس. تقدر تسجّل بعدين من الإعدادات ← «حسابك».": "Without an account the app works fully, and your data stays on this device only. You can sign in later from Settings → «Your account».",
+// DW-051: v24 والتحقق من الإيميل
+"قسّم الفاتورة": "Split the bill",
+"بالتساوي أو كل واحد حصته، وأرسل لربعك حصصهم": "Equally or custom shares, and send your friends their shares",
+"اختصارات الأيقونة": "App icon shortcuts",
+"اضغط مطوّل: «+ مصروف» أو «الصق رسالة» أو «اسأل حياتي»": "Long-press: «+ Expense», «Paste message» or «Ask Hayati»",
+"الحساب من أول شاشة": "Account from the first screen",
+"سجّل أو تخطَّ، والتطبيق يشتغل كامل بدون حساب": "Sign in or skip; the app works fully without an account",
+"إيميل أوضح": "Clearer email check",
+"لو كتبت .con بدال .com ينبهك قبل لا يضيع إنشاء الحساب": "Typed .con instead of .com? It tells you before sign-up fails",
+"اكتب الإيميل كامل وصحيح (مثل name@gmail.com)": "Enter a full, valid email (like name@gmail.com)",
+"الإيميل ينتهي بـ .con، غالباً تقصد .com": "The email ends in .con; you probably mean .com",
+"الإيميل مو صحيح، تأكد منه (مثلاً .com مو .con)": "That email isn't valid; check it (e.g. .com, not .con)",
+"كلمة المرور ضعيفة، خلّها أطول وفيها أرقام وحروف": "Weak password; make it longer with letters and numbers",
+"أرسلنا لك إيميل تأكيد. افتح الرابط من هالجهاز، ويدخلك على طول": "We sent you a confirmation email. Open the link on this device and you'll be signed in"
 };
 
 </script>
@@ -3420,12 +3434,30 @@ window.HAYATI_CONFIG = {
   }
 
   async function signIn(email, password) {
+    email = checkEmail(email);
     const { error } = await sb.auth.signInWithPassword({ email, password });
     if (error) throw new Error(arabicAuthError(error.message));
   }
 
+  // رابط تأكيد الإيميل: بالجوال يرجع للتطبيق نفسه (bh.hayati.app://auth، نفس رابط Google/Apple)، وبالمتصفح للصفحة
+  function authRedirect() {
+    const C = global.Capacitor;
+    return C && typeof C.isNativePlatform === 'function' && C.isNativePlatform() ? 'bh.hayati.app://auth' : location.origin + location.pathname;
+  }
+  // غلطات الكتابة الشائعة بالإيميل (gmail.con، gmial.com…) نوقفها قبل لا تروح للسيرفر
+  const DOMAIN_FIX = { 'gmail.con': 'gmail.com', 'gmail.co': 'gmail.com', 'gmial.com': 'gmail.com', 'gmal.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gamil.com': 'gmail.com',
+    'hotmail.con': 'hotmail.com', 'hotmial.com': 'hotmail.com', 'outlook.con': 'outlook.com', 'yahoo.con': 'yahoo.com', 'icloud.con': 'icloud.com' };
+  function checkEmail(email) {
+    const e = String(email || '').trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/.test(e)) throw new Error('اكتب الإيميل كامل وصحيح (مثل name@gmail.com)');
+    const dom = e.split('@')[1];
+    if (DOMAIN_FIX[dom]) throw new Error('تقصد ' + e.split('@')[0] + '@' + DOMAIN_FIX[dom] + '؟ صحّح الإيميل وجرّب مرة ثانية');
+    if (/\.con$/.test(dom)) throw new Error('الإيميل ينتهي بـ .con، غالباً تقصد .com');
+    return e;
+  }
   async function signUp(email, password) {
-    const { data, error } = await sb.auth.signUp({ email, password });
+    email = checkEmail(email);
+    const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: authRedirect() } });
     if (error) throw new Error(arabicAuthError(error.message));
     return !data.session; // true = يحتاج تأكيد الإيميل
   }
@@ -3468,7 +3500,7 @@ window.HAYATI_CONFIG = {
   }
   async function resetPassword(email) {
     if (!sb) throw new Error('الحسابات تحتاج ربط Supabase');
-    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: authRedirect() });
     if (error) throw new Error(arabicAuthError(error.message));
   }
   async function updatePassword(password) {
@@ -3502,6 +3534,8 @@ window.HAYATI_CONFIG = {
     if (/at least 6/i.test(msg)) return 'كلمة المرور لازم ٦ أحرف أو أكثر';
     if (/provider is not enabled|Unsupported provider/i.test(msg)) return 'هالطريقة مو مفعّلة للحين، استخدم الإيميل';
     if (/rate limit/i.test(msg)) return 'محاولات كثيرة، جرّب بعد شوي';
+    if (/email address .* is invalid|invalid email|email_address_invalid/i.test(msg)) return 'الإيميل مو صحيح، تأكد منه (مثلاً .com مو .con)';
+    if (/password should|weak password/i.test(msg)) return 'كلمة المرور ضعيفة، خلّها أطول وفيها أرقام وحروف';
     return msg;
   }
 
@@ -4037,7 +4071,7 @@ window.HAYATI_CONFIG = {
   const S = window.Store;
   const st = S.state;
   const I = window.icon;
-  const APP_VERSION = 'v23';   // نفس رقم sw.js (فيه اختبار يتأكد)
+  const APP_VERSION = 'v24';   // نفس رقم sw.js (فيه اختبار يتأكد)
 
   // ---------- ثوابت ----------
   const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
@@ -6090,7 +6124,7 @@ window.HAYATI_CONFIG = {
         if (act === 'signin') { await S.signIn(email, pw); toast('أهلاً 👋'); }
         else {
           const confirmNeeded = await S.signUp(email, pw);
-          toast(confirmNeeded ? 'أرسلنا لك إيميل تأكيد، أكّده وارجع سجّل دخول' : 'تم إنشاء الحساب ✓');
+          toast(confirmNeeded ? 'أرسلنا لك إيميل تأكيد. افتح الرابط من هالجهاز، ويدخلك على طول' : 'تم إنشاء الحساب ✓');
         }
         setTimeout(back, 300);
       } else if (act === 'sso') {
@@ -11286,6 +11320,12 @@ window.HAYATI_CONFIG = {
 
   // الجديد لكل نسخة (نصوص قصيرة وصادقة: شي يشتغل اليوم بس)
   const NEWS = {
+    v24: [
+      ['🧾', 'قسّم الفاتورة', 'بالتساوي أو كل واحد حصته، وأرسل لربعك حصصهم'],
+      ['📲', 'اختصارات الأيقونة', 'اضغط مطوّل: «+ مصروف» أو «الصق رسالة» أو «اسأل حياتي»'],
+      ['👤', 'الحساب من أول شاشة', 'سجّل أو تخطَّ، والتطبيق يشتغل كامل بدون حساب'],
+      ['✉️', 'إيميل أوضح', 'لو كتبت .con بدال .com ينبهك قبل لا يضيع إنشاء الحساب'],
+    ],
     v23: [
       ['✍️', 'سجّل من التنبيه', 'اكتب «1.200 قهوة» بتنبيه «سكّر يومك» وينحفظ'],
       ['🎯', 'هدف بصورة', 'صورة الشي اللي توفّر له، على جوالك بس'],

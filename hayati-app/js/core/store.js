@@ -314,12 +314,30 @@
   }
 
   async function signIn(email, password) {
+    email = checkEmail(email);
     const { error } = await sb.auth.signInWithPassword({ email, password });
     if (error) throw new Error(arabicAuthError(error.message));
   }
 
+  // رابط تأكيد الإيميل: بالجوال يرجع للتطبيق نفسه (bh.hayati.app://auth، نفس رابط Google/Apple)، وبالمتصفح للصفحة
+  function authRedirect() {
+    const C = global.Capacitor;
+    return C && typeof C.isNativePlatform === 'function' && C.isNativePlatform() ? 'bh.hayati.app://auth' : location.origin + location.pathname;
+  }
+  // غلطات الكتابة الشائعة بالإيميل (gmail.con، gmial.com…) نوقفها قبل لا تروح للسيرفر
+  const DOMAIN_FIX = { 'gmail.con': 'gmail.com', 'gmail.co': 'gmail.com', 'gmial.com': 'gmail.com', 'gmal.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gamil.com': 'gmail.com',
+    'hotmail.con': 'hotmail.com', 'hotmial.com': 'hotmail.com', 'outlook.con': 'outlook.com', 'yahoo.con': 'yahoo.com', 'icloud.con': 'icloud.com' };
+  function checkEmail(email) {
+    const e = String(email || '').trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/.test(e)) throw new Error('اكتب الإيميل كامل وصحيح (مثل name@gmail.com)');
+    const dom = e.split('@')[1];
+    if (DOMAIN_FIX[dom]) throw new Error('تقصد ' + e.split('@')[0] + '@' + DOMAIN_FIX[dom] + '؟ صحّح الإيميل وجرّب مرة ثانية');
+    if (/\.con$/.test(dom)) throw new Error('الإيميل ينتهي بـ .con، غالباً تقصد .com');
+    return e;
+  }
   async function signUp(email, password) {
-    const { data, error } = await sb.auth.signUp({ email, password });
+    email = checkEmail(email);
+    const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: authRedirect() } });
     if (error) throw new Error(arabicAuthError(error.message));
     return !data.session; // true = يحتاج تأكيد الإيميل
   }
@@ -362,7 +380,7 @@
   }
   async function resetPassword(email) {
     if (!sb) throw new Error('الحسابات تحتاج ربط Supabase');
-    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: authRedirect() });
     if (error) throw new Error(arabicAuthError(error.message));
   }
   async function updatePassword(password) {
@@ -396,6 +414,8 @@
     if (/at least 6/i.test(msg)) return 'كلمة المرور لازم ٦ أحرف أو أكثر';
     if (/provider is not enabled|Unsupported provider/i.test(msg)) return 'هالطريقة مو مفعّلة للحين، استخدم الإيميل';
     if (/rate limit/i.test(msg)) return 'محاولات كثيرة، جرّب بعد شوي';
+    if (/email address .* is invalid|invalid email|email_address_invalid/i.test(msg)) return 'الإيميل مو صحيح، تأكد منه (مثلاً .com مو .con)';
+    if (/password should|weak password/i.test(msg)) return 'كلمة المرور ضعيفة، خلّها أطول وفيها أرقام وحروف';
     return msg;
   }
 
