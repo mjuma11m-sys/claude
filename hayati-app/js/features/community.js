@@ -63,9 +63,25 @@
     window.HayatiLang.set(b.dataset.lang);
   });
 
+  // ---------- DW-050: أول شاشة لمستخدم جديد: سجّل دخول أو «تخطَّ الحين» (الحساب اختياري، Apple 5.1.1(v)) ----------
+  const GATE = 'hayati-account-step';   // skip = تخطّاها، وما ترجع
+  const skipped = () => { try { return localStorage.getItem(GATE) === 'skip'; } catch (e) { return true; } };
+  function gateDue() {
+    const s = S.status || {};
+    return isNew() && s.configured && !s.signedIn && s.mode !== 'artifact' && !skipped();
+  }
+  function gateCard() {
+    return '<div class="card ob" id="obGate">' + langSeg() + '<b class="ob-title">👋 هلا فيك بـ«حياتي»</b>' +
+      '<p class="small muted" style="margin:2px 0 12px">سجّل دخول عشان بياناتك تنحفظ بحسابك وتوصل لك على أي جهاز، وما تضيع لو بدّلت جوالك.</p>' +
+      '<button type="button" class="btn primary block" data-action="ob-gate-account">' + I('user') + 'سجّل دخول أو أنشئ حساب</button>' +
+      '<button type="button" class="btn ghost block" style="margin-top:8px" data-action="ob-gate-skip">تخطَّ الحين</button>' +
+      '<p class="small muted" style="margin:10px 2px 0">بدون حساب التطبيق يشتغل كامل، وبياناتك تظل على هالجهاز بس. تقدر تسجّل بعدين من الإعدادات ← «حسابك».</p></div>';
+  }
+
   // ---------- بطاقة التعارف بأول صفحة ----------
   function welcomeCard() {
     if (!isNew()) return '';
+    if (gateDue()) return gateCard();
     return '<div class="card ob" id="obCard">' + langSeg() + '<b class="ob-title">👋 هلا! خلّنا نعرفك</b>' +
       '<p class="small muted" style="margin:2px 0 12px">عشان «حياتي» يوريك اللي يهمك بس. بياناتك تظل بجهازك.</p>' +
       form(st.settings || {}) +
@@ -84,9 +100,11 @@
       A.render(); scrollTo({ top: 0, behavior: 'smooth' }); return;   // «أول دقيقة» تطلع فوق
     }
     if (name === 'ob-skip') { S.setSettings({ onboarded: true }); A.render(); scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    if (name === 'ob-gate-account') { A.accountSheet(); return; }
+    if (name === 'ob-gate-skip') { try { localStorage.setItem(GATE, 'skip'); } catch (er) { /* بدون تخزين: ترجع مع الجلسة الجاية */ } A.render(); return; }
     if (name === 'ob-account') {
       S.setSettings(read(document.getElementById('obCard')));
-      A.render(); setTimeout(() => { const b = document.getElementById('settingsBtn'); if (b) b.click(); }, 200);
+      A.render(); setTimeout(A.accountSheet, 200);   // DW-050: على صفحة «حسابك» مباشرة، مو الإعدادات
       return;
     }
     return prev(name, el, e);

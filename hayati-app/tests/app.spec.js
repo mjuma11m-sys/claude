@@ -10,6 +10,8 @@ const test = base.extend({
   page: async ({ page, baseURL }, use, testInfo) => {
     if (!/جديد بحياتي/.test(testInfo.title)) await page.addInitScript((v) => { try { localStorage.setItem('hayati-seen-version', v); } catch (e) { /* تجاهل */ } }, APP_V);
     if (!/أول دقيقة/.test(testInfo.title)) await page.addInitScript(() => { try { localStorage.setItem('hayati-first-step', 'done'); } catch (e) { /* تجاهل */ } });
+    // DW-050: شاشة «سجّل دخول أو تخطَّ» تطلع أول مرة لأن Supabase مربوط؛ الاختبارات تعتبرها انتخطّت إلا اختبارها هي
+    if (!/شاشة الدخول/.test(testInfo.title)) await page.addInitScript(() => { try { localStorage.setItem('hayati-account-step', 'skip'); } catch (e) { /* تجاهل */ } });
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.route('**/*', (r) => (r.request().url().startsWith(baseURL) ? r.continue() : r.abort()));
@@ -862,9 +864,30 @@ test('terms of use page loads and is linked from settings, welcome card and the 
 });
 
 test('first-run welcome card mentions the terms with a link', async ({ page }) => {
-  await page.addInitScript(() => localStorage.clear());
+  await page.addInitScript(() => { localStorage.clear(); localStorage.setItem('hayati-account-step', 'skip'); });
   await page.goto('/');
   await expect(page.locator('#obCard .ob-terms a[href="terms.html"]')).toBeVisible();
+});
+
+test('شاشة الدخول أول مرة (DW-050): optional sign-in first, «تخطَّ الحين» goes to the welcome card for good, existing users never see it', async ({ page }) => {
+  await open(page);
+  await expect(page.locator('#obGate')).toBeVisible();
+  await expect(page.locator('#obCard')).toHaveCount(0);
+  // «سجّل دخول» يفتح صفحة «حسابك» مباشرة
+  await page.click('[data-action="ob-gate-account"]');
+  await expect(page.locator('#sheetBody .account-page')).toBeVisible();
+  await expect(page.locator('#sheetBody [data-set="signin"]')).toBeVisible();
+  await store(page, () => App.closeSheet());
+  // تخطَّ ← بطاقة التعارف، وما ترجع بعد إعادة الفتح
+  await page.click('[data-action="ob-gate-skip"]');
+  await expect(page.locator('#obGate')).toHaveCount(0);
+  await expect(page.locator('#obCard')).toBeVisible();
+  await page.reload(); await page.waitForFunction(() => window.App && window.App.st);
+  await expect(page.locator('#obGate')).toHaveCount(0);
+  // مستخدم قديم عنده بيانات: ما تطلع له أبداً
+  await page.evaluate(() => localStorage.removeItem('hayati-account-step'));
+  await store(page, () => { App.S.upsert('tasks', { id: 'x', title: 'قديم', kind: 'homework' }); App.render(); });
+  await expect(page.locator('#obGate')).toHaveCount(0);
 });
 
 test('«صدّر مصاريفك»: Excel-ready CSV with BOM, numbers as numbers, no bank text, formulas neutralised', async ({ page }) => {

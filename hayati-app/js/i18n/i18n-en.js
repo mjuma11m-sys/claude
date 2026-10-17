@@ -1915,5 +1915,10 @@ window.HAYATI_EN = {
 // DW-048: نصيب
 "نصيب": "Share of",
 // DW-048: اختصارات الأيقونة
-"«اسأل حياتي» يشتغل لما تسجّل دخول بحسابك": "«Ask Hayati» works once you sign in to your account"
+"«اسأل حياتي» يشتغل لما تسجّل دخول بحسابك": "«Ask Hayati» works once you sign in to your account",
+// DW-050: شاشة الدخول أول مرة
+"👋 هلا فيك بـ«حياتي»": "👋 Welcome to Hayati",
+"سجّل دخول عشان بياناتك تنحفظ بحسابك وتوصل لك على أي جهاز، وما تضيع لو بدّلت جوالك.": "Sign in so your data is saved to your account, reaches you on any device, and isn't lost if you change phones.",
+"تخطَّ الحين": "Skip for now",
+"بدون حساب التطبيق يشتغل كامل، وبياناتك تظل على هالجهاز بس. تقدر تسجّل بعدين من الإعدادات ← «حسابك».": "Without an account the app works fully, and your data stays on this device only. You can sign in later from Settings → «Your account»."
 };
