@@ -2046,4 +2046,15 @@ window.HAYATI_EN = {
 "ما فيه شي اليوم وبكرة 🎉": "Nothing today or tomorrow 🎉",
 "جدولك على الشاشة الرئيسية": "Your schedule on the Home Screen",
 "ودجت «جدول اليوم» وعلى شاشة القفل: الحين والجاي بدون ما تفتح التطبيق": "\"Today's schedule\" widget, also on the Lock Screen: now and next without opening the app",
+"ارفع جدولك (صورة أو PDF)": "Upload your timetable (image or PDF)",
+"ارفع جدولك": "Upload timetable",
+// DW-056: جدول الدوام والتمارين
+"دوام": "Work",
+"الدراسة أو الدوام أو التمارين: صورة أو PDF أو نص، وينضاف بأيامه ووقته": "Study, work or training: image, PDF or text, added with its days and times",
+"دراسة، دوام، أو تمارين: صورة أو PDF أو نص": "Study, work or training: image, PDF or text",
+"صوّر الجدول أو خذ <b>سكرين شوت</b> (من بوابة الجامعة، أو جدول المناوبات، أو المدرب)، أو ارفع <b>PDF</b>، أو انسخ الجدول <b>كنص</b> والصقه.": "Take a photo or <b>screenshot</b> of the schedule (university portal, shift roster or coach), upload a <b>PDF</b>, or copy the schedule <b>as text</b> and paste it.",
+"دوامات": "shifts",
+"مادة": "class",
+"لجدولك ✓ — لا تنسى تحدّث التقويم": "to your schedule ✓ — remember to update your calendar",
+"دراسة أو دوام أو تمارين: سكرين شوت أو PDF أو نص، وينضاف بأيامه ووقته": "Study, work or training: screenshot, PDF or text, added with its days and times",
 };

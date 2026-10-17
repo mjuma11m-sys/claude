@@ -150,10 +150,39 @@ test('university timetable from pasted portal text', async ({ page }) => {
   ]));
 });
 
+// DW-056: نفس الميزة لجدول الدوام والتمارين
+test('timetable: a work roster with a day range and a training schedule', async ({ page }) => {
+  await open(page);
+  await store(page, () => App.go('schedule'));
+  await page.click('[data-action="timetable"]');
+  await page.click('#ttKind [data-k="work"]');
+  await page.fill('#sheetBody [name=tt_txt]', 'الأحد – الخميس 7:00 - 3:00\nالسبت 8 - 12 دوام نص يوم');
+  await page.click('#ttRead');
+  await expect(page.locator('#ttStatus')).toContainText('2 دوامات');
+  await page.click('#sheetSave');
+  await expect.poll(() => store(page, () => App.st.courses.length)).toBe(2);
+  await page.waitForTimeout(350);
+  await page.click('[data-action="timetable"]');
+  await page.click('#ttKind [data-k="gym"]');
+  await page.fill('#sheetBody [name=tt_txt]', 'الأحد والثلاثاء 6 - 8 جيم صدر وتراي\nالاثنين والأربعاء 5:30 - 7 جري');
+  await page.click('#ttRead');
+  await expect(page.locator('#ttStatus')).toContainText('2 تمارين');
+  await page.click('#sheetSave');
+  await expect.poll(() => store(page, () => App.st.courses.length)).toBe(4);
+  const c = await store(page, () => App.st.courses.map((x) => [x.name, x.type, x.days.join(','), x.start_time, x.end_time]));
+  expect(c).toEqual(expect.arrayContaining([
+    ['دوام', 'activity', '0,1,2,3,4', '07:00', '15:00'],
+    ['دوام نص يوم', 'activity', '6', '08:00', '12:00'],
+    ['جيم صدر وتراي', 'gym', '0,2', '18:00', '20:00'],
+    ['جري', 'gym', '1,3', '17:30', '19:00'],
+  ]));
+});
+
 test('timetable image without an account asks to sign in or paste text', async ({ page }) => {
   await open(page);
-  await page.click('#addBtn');
-  await page.click('[data-pick="timetable"]');
+  await store(page, () => App.S.setSettings({ onboarded: true, roles: ['keeper', 'athlete'] }));   // يطلع حتى لو ملفه مو «طالب»
+  await page.click('#toolsBtn');
+  await page.click('[data-tool="timetable"]');
   await page.setInputFiles('#ttFile', { name: 'schedule.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgo=', 'base64') });
   await page.click('#ttRead');
   await expect(page.locator('#ttStatus')).toContainText('تحتاج حساب');

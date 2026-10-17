@@ -136,6 +136,11 @@ const TASKS = {
     "Put meetings of the same course at different times as separate items. Copy only what is in the timetable; never guess a time or day that is not shown. " +
     "If this is not a timetable or nothing is readable, return no courses.",
 };
+// DW-056: the same reader for a work shift roster or a training schedule
+const KIND_HINT = (k?: string) =>
+  k === "work" ? " This is a work shift roster, not a class timetable: name = the shift or job as written (or \"دوام\" if none); a day range like Sun–Thu means every day in between; room = the workplace if shown."
+  : k === "gym" ? " This is a training or workout schedule, not a class timetable: name = the session as written (e.g. \"جيم صدر\", \"Running\"), or \"تمرين\" if none; room = the gym, pitch or place if shown. Sessions without am/pm between 1:00 and 9:59 are usually in the evening."
+  : "";
 const MEDIA = ["image/jpeg", "image/png", "image/webp"];
 
 // DW-037: the app sends a compact JSON snapshot of the user's data with each question; the answer may only use it.
@@ -157,7 +162,7 @@ Deno.serve(async (req) => {
   const { data: { user } } = await db.auth.getUser();
   if (!user) return json({ error: "signin" }, 401);
 
-  let body: { mode?: string; title?: string; notes?: string; image?: string; media?: string; data?: string; messages?: { role: string; content: string }[] };
+  let body: { kind?: string; mode?: string; title?: string; notes?: string; image?: string; media?: string; data?: string; messages?: { role: string; content: string }[] };
   try { body = await req.json(); } catch { return json({ error: "bad" }, 400); }
   const mode = body.mode === "quiz" ? "quiz" : body.mode === "summary" ? "summary" : body.mode === "photo" ? "photo" : body.mode === "pdf" ? "pdf" : body.mode === "ask" ? "ask" : body.mode === "schedule" ? "schedule" : body.mode === "slides" ? "slides" : null;
   // ask: last 8 turns, alternating, ending with the user's question
@@ -222,10 +227,10 @@ Deno.serve(async (req) => {
         role: "user",
         content: mode === "schedule"
           ? (image.startsWith("JVBER")
-            ? [{ type: "document", source: { type: "base64", media_type: "application/pdf", data: image } }, { type: "text", text: TASKS.schedule }]
+            ? [{ type: "document", source: { type: "base64", media_type: "application/pdf", data: image } }, { type: "text", text: TASKS.schedule + KIND_HINT(body.kind) }]
             : image
-            ? [{ type: "image", source: { type: "base64", media_type: media, data: image } }, { type: "text", text: TASKS.schedule }]
-            : TASKS.schedule + "\n\n<timetable>\n" + notes + "\n</timetable>")
+            ? [{ type: "image", source: { type: "base64", media_type: media, data: image } }, { type: "text", text: TASKS.schedule + KIND_HINT(body.kind) }]
+            : TASKS.schedule + KIND_HINT(body.kind) + "\n\n<timetable>\n" + notes + "\n</timetable>")
           : mode === "slides"
           ? TASKS.slides + (title ? "\n\n<title>" + title + "</title>" : "") + "\n<slides>\n" + notes + "\n</slides>"
           : mode === "pdf"
