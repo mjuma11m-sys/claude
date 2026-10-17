@@ -1,0 +1,223 @@
+<!doctype html>
+<html dir="rtl" lang="ar"><head><meta charset="utf-8">
+<!-- «حياتي على الآيفون» 20 ث · 1080×1920 · كل فريم يتحسب من setT(t) -->
+<style>
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Bold.ttf);font-weight:700}
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Regular.ttf);font-weight:400}
+:root{--sea:#0E3B43;--deep:#0A1A1E;--pearl:#E8DCC4;--coral:#FF6B4A;--mint:#5EC4B6}
+*{box-sizing:border-box}
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:var(--deep);font-family:P;color:var(--pearl)}
+#stage{position:absolute;inset:0;overflow:hidden;background:radial-gradient(120% 75% at 50% 38%,#145a62 0%,var(--sea) 42%,var(--deep) 100%)}
+.blob{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(232,220,196,.10),rgba(232,220,196,0) 70%)}
+.grain{position:absolute;inset:0;opacity:.05;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.kin{position:absolute;left:60px;right:60px;text-align:center;font-weight:700;line-height:1.15}
+.kin .w{display:inline-block;margin:0 .12em}
+.mask{display:inline-block;overflow:hidden;padding:.08em .02em .18em;vertical-align:bottom}
+.acc{color:var(--coral)}
+#hook{top:600px;font-size:132px}
+#hook2{top:900px;font-size:132px}
+#title{top:140px;font-size:74px}
+/* الجوال */
+#phoneWrap{position:absolute;left:50%;top:430px;width:600px;height:1298px;margin-left:-300px;perspective:2400px}
+#phone{position:absolute;inset:0;border-radius:92px;background:#0b1416;padding:18px;box-shadow:0 70px 120px -40px rgba(0,0,0,.75),inset 0 0 0 3px #2a4a50,inset 0 0 0 7px #0b1416}
+#screen{position:relative;width:100%;height:100%;border-radius:76px;overflow:hidden;background:#0B2328}
+#screen img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top}
+#island{position:absolute;top:34px;left:50%;width:170px;height:50px;margin-left:-85px;border-radius:30px;background:#000;z-index:9}
+/* الشاشة الرئيسية (رسم توضيحي) */
+#home{position:absolute;inset:0;z-index:5;background:linear-gradient(160deg,#1d6b73 0%,#0E3B43 45%,#081a1e 100%)}
+#home .sb{position:absolute;top:34px;left:46px;right:46px;display:flex;justify-content:space-between;font:600 26px -apple-system,Helvetica,Arial;color:#fff;direction:ltr}
+#grid{position:absolute;top:150px;left:40px;right:40px;display:grid;grid-template-columns:repeat(4,1fr);row-gap:52px;justify-items:center}
+.ic{width:104px;height:104px;border-radius:26px;background:rgba(255,255,255,.14)}
+#blur{position:absolute;inset:0;background:rgba(5,15,18,.55);backdrop-filter:blur(14px);opacity:0}
+#hIcon{position:absolute;width:104px;height:104px;border-radius:26px;overflow:hidden;box-shadow:0 20px 40px -10px rgba(0,0,0,.6)}
+#hIcon img{width:100%;height:100%}
+#menu{position:absolute;width:420px;border-radius:30px;background:rgba(40,52,55,.92);overflow:hidden;transform-origin:85% 100%;box-shadow:0 30px 60px -20px rgba(0,0,0,.7)}
+#menu div{display:flex;justify-content:space-between;align-items:center;padding:24px 30px;font:400 32px P;color:#fff;border-bottom:1px solid rgba(255,255,255,.12)}
+#menu div:last-child{border:0}
+#menu div span{font-size:30px;opacity:.85;direction:ltr}
+#menu div.hi{background:rgba(255,255,255,.14)}
+/* كروت */
+.card{position:absolute;left:0;top:0;padding:26px 40px;border-radius:40px;background:var(--pearl);color:var(--sea);font-weight:700;box-shadow:0 40px 80px -30px rgba(0,0,0,.6);white-space:nowrap}
+.bubble{position:absolute;left:0;top:0;width:640px;padding:30px 38px;border-radius:44px 44px 12px 44px;background:#E9E9EB;color:#111;font:400 36px/1.35 -apple-system,"Helvetica Neue",Arial,sans-serif;direction:ltr;text-align:left;box-shadow:0 40px 80px -30px rgba(0,0,0,.55)}
+.bubble small{display:block;font-size:26px;color:#6b6b70;margin-bottom:8px}
+.share{font-size:44px}
+.share b{color:var(--coral)}
+.person{font-size:52px;font-variant-numeric:tabular-nums}
+.person bdi{direction:ltr;unicode-bidi:isolate}
+.pill{font-size:40px;background:#0B2328;color:var(--pearl);border:2px solid rgba(232,220,196,.3)}
+.tap{position:absolute;left:0;top:0;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:6px solid #fff;opacity:0;z-index:20}
+/* الختام */
+#logo{position:absolute;left:50%;top:440px;width:380px;height:380px;margin-left:-190px}
+#brand{position:absolute;left:0;right:0;top:860px;text-align:center}
+#brand h1{margin:0;font-size:170px;line-height:1}
+#brand p{margin:24px 0 0;font-size:54px;font-weight:400;opacity:.85}
+#beta{position:absolute;left:50%;top:1180px;padding:14px 40px;border-radius:999px;border:3px solid rgba(232,220,196,.45);font-size:42px;font-weight:700;white-space:nowrap}
+#cta{position:absolute;left:50%;top:1320px;padding:28px 56px;border-radius:999px;background:var(--coral);color:#fff;font-size:44px;font-weight:700;white-space:nowrap;box-shadow:0 30px 60px -24px rgba(255,107,74,.7)}
+#demo{position:absolute;left:0;right:0;top:1792px;text-align:center;font-size:30px;font-weight:400;opacity:0}
+</style></head>
+<body><div id="stage">
+  <div class="blob" id="b1" style="width:900px;height:900px"></div>
+  <div class="blob" id="b2" style="width:700px;height:700px"></div>
+  <div class="kin" id="hook"></div>
+  <div class="kin" id="hook2"></div>
+  <div class="kin" id="title"></div>
+
+  <div id="phoneWrap"><div id="phone"><div id="screen">
+    <img id="imgA"><img id="imgB">
+    <div id="home">
+      <div class="sb"><span>9:41</span><span>●●●● ᯤ ▮▮▮▯</span></div>
+      <div id="grid"></div>
+      <div id="blur"></div>
+      <div id="menu"><div id="m1"><b>+ مصروف</b><span>＋</span></div><div id="m2"><b>الصق رسالة</b><span>✎</span></div><div id="m3"><b>اسأل حياتي</b><span>⌕</span></div></div>
+      <div id="hIcon"><img src="icon.png"></div>
+    </div>
+    <div id="island"></div>
+  </div></div></div>
+
+  <div class="bubble" id="sms"><small>BENEFIT · الآن</small>Purchase of BHD 3.200 at COSTA SEEF using card XXXX4821</div>
+  <div class="card share" id="shareTip">مشاركة ← <b>حياتي</b></div>
+  <div class="card person" id="p1">أحمد <bdi>6.000</bdi></div>
+  <div class="card person" id="p2">علي <bdi>6.000</bdi></div>
+  <div class="card person" id="p3">يوسف <bdi>6.000</bdi></div>
+  <div class="card pill" id="acct">🔒 الحساب اختياري · بياناتك على جوالك</div>
+  <div class="tap" id="tap"></div>
+
+  <svg id="logo" viewBox="0 0 512 512">
+    <rect width="512" height="512" rx="116" fill="#0E3B43"/>
+    <path id="arc" d="M 383.3 172.7 A 160 160 0 1 1 300 102.2" fill="none" stroke="#E8DCC4" stroke-opacity=".28" stroke-width="22" stroke-linecap="round" pathLength="1" stroke-dasharray="1"/>
+    <path id="ha" d="M 304 166 L 196 166 L 264 222 C 204 222 168 254 168 292 C 168 336 206 360 256 360 C 292 360 318 348 338 332" fill="none" stroke="#E8DCC4" stroke-width="38" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1"/>
+    <circle id="dot" cx="352" cy="128" r="30" fill="#FF6B4A"/>
+  </svg>
+  <div id="brand"><h1 id="bname">حياتي</h1><p id="btag"></p></div>
+  <div id="beta">🛠️ قيد التطوير · نسخة تجريبية</div>
+  <div id="cta">تبي تجربه على الآيفون؟ اكتب «آيفون» 👇</div>
+  <div id="demo">* لقطات ببيانات تجريبية · القائمة والشاشة الرئيسية رسم توضيحي</div>
+  <div class="grain"></div>
+</div>
+<script>
+'use strict';
+function bezier(x1, y1, x2, y2) {
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  const sx = (t) => ((ax * t + bx) * t + cx) * t, sy = (t) => ((ay * t + by) * t + cy) * t, dx = (t) => (3 * ax * t + 2 * bx) * t + cx;
+  return (x) => { if (x <= 0) return 0; if (x >= 1) return 1; let t = x; for (let i = 0; i < 8; i++) { const d = dx(t); if (Math.abs(d) < 1e-6) break; t -= (sx(t) - x) / d; } return sy(t); };
+}
+const OUT = bezier(0.23, 1, 0.32, 1), INOUT = bezier(0.77, 0, 0.175, 1), DRAWER = bezier(0.32, 0.72, 0, 1);
+const clamp = (x) => Math.max(0, Math.min(1, x));
+const seg = (t, a, d, e = OUT) => e(clamp((t - a) / d));
+const lerp = (a, b, k) => a + (b - a) * k;
+const $ = (id) => document.getElementById(id);
+const SHOT = (n) => 'shots/' + n + '.png';
+
+function words(el, html) { el.innerHTML = html.match(/<span[^>]*>.*?<\/span>|\S+/g).map((w) => '<span class="mask"><span class="w">' + w + '</span></span>').join(' '); return [...el.querySelectorAll('.w')]; }
+function wordIn(ws, t, start, end, stagger) {
+  ws.forEach((w, i) => {
+    const kIn = seg(t, start + i * stagger, 0.42), kOut = end != null ? seg(t, end - 0.28, 0.26) : 0;
+    w.style.transform = 'translateY(' + ((1 - kIn) * 105 - kOut * 105) + '%)';
+    w.style.opacity = kIn * (1 - kOut);
+  });
+}
+function pop(el, t, s, e, x, y, extra) {
+  const kIn = seg(t, s, 0.5), kOut = seg(t, e - 0.3, 0.3, INOUT);
+  el.style.opacity = kIn * (1 - kOut);
+  el.style.transform = 'translate(' + x + 'px,' + (y + (1 - kIn) * 40) + 'px) scale(' + (lerp(0.92, 1, kIn) * lerp(1, 0.94, kOut)) + ')' + (extra || '');
+}
+
+const hookW = words($('hook'), '«حياتي» <span class="acc">صار</span>');
+const hook2W = words($('hook2'), 'على الآيفون 📱');
+const TITLES = [
+  { s: 3.0, e: 7.1, html: 'ضغطة مطوّلة على <span class="acc">الأيقونة</span>' },
+  { s: 7.4, e: 11.1, html: 'شارك رسالة البنك ← <span class="acc">حياتي</span>' },
+  { s: 11.4, e: 15.3, html: 'تقاسمتوا العشا؟ <span class="acc">قسّمها</span>' },
+  { s: 15.6, e: 17.6, html: 'وكل يومك <span class="acc">بمكان واحد</span>' },
+];
+let titleIdx = -1;
+// شبكة أيقونات محايدة (بدون شعارات تطبيقات ثانية)، وأيقونة حياتي بالخانة 7
+const ICON_AT = 6, tints = ['#5d8f94', '#7a6f99', '#9a7f5c', '#4f7f6e', '#8a5f66', '#6a7f9a', null, '#7d8f6a', '#5f6f7a', '#94735d', '#6a9480', '#7f6a8f', '#5c7f94', '#8f856a', '#6f5f7f', '#5f8f86'];
+tints.forEach((c) => { const d = document.createElement('div'); d.className = 'ic'; if (c) d.style.background = c + '55'; else d.style.visibility = 'hidden'; $('grid').appendChild(d); });
+// أيقونة حياتي: العمود الثالث من اليمين، الصف الثاني (RTL)
+const IC = { x: 0, y: 0 };
+const SCREENS = [['02_sms', 7.2], ['03_split', 11.3], ['01_today', 15.4]];
+let curA = null, curB = null;
+
+window.setT = function (t) {
+  $('b1').style.transform = 'translate(' + (-200 + Math.sin(t * 0.35) * 80) + 'px,' + (-150 + Math.cos(t * 0.3) * 60) + 'px)';
+  $('b2').style.transform = 'translate(' + (520 + Math.cos(t * 0.28) * 90) + 'px,' + (1250 + Math.sin(t * 0.33) * 70) + 'px)';
+
+  // ===== 1) الهوك 0–2.7 =====
+  wordIn(hookW, t, 0.1, 2.6, 0.2);
+  wordIn(hook2W, t, 0.5, 2.6, 0.16);
+
+  // ===== الجوال 2.4–17.8 =====
+  const pIn = seg(t, 2.4, 0.85, DRAWER), pOut = seg(t, 17.6, 0.65, INOUT);
+  $('phoneWrap').style.transform = 'translateY(' + ((1 - pIn) * 1500 + pOut * 1500) + 'px)';
+  $('phone').style.transform = 'rotateX(' + lerp(18, 4, pIn) + 'deg) rotateY(' + (Math.sin(t * 0.6) * 4) + 'deg)';
+
+  // الشاشة الرئيسية + القائمة 2.4–7.2
+  const g = $('grid').children[ICON_AT], gr = g.getBoundingClientRect(), hr = $('home').getBoundingClientRect();
+  const sc = hr.width / 564;   // شاشة الجوال بالبكسل الداخلي
+  const press = seg(t, 3.9, 0.35), lift = seg(t, 4.2, 0.45);
+  $('blur').style.opacity = lift;
+  const ix = g.offsetLeft + $('grid').offsetLeft, iy = g.offsetTop + $('grid').offsetTop;
+  $('hIcon').style.left = ix + 'px'; $('hIcon').style.top = iy + 'px';
+  $('hIcon').style.transform = 'scale(' + (lerp(1, 0.9, press) * lerp(1, 1.12 / 0.9, lift)) + ')';
+  const mIn = seg(t, 4.35, 0.5);
+  $('menu').style.left = (ix + 104 - 420) + 'px'; $('menu').style.top = (iy + 104 + 26) + 'px';
+  $('menu').style.opacity = mIn; $('menu').style.transform = 'scale(' + lerp(0.6, 1, mIn) + ')';
+  $('m1').className = t > 5.9 && t < 7.2 ? 'hi' : '';
+  $('m2').className = ''; $('m3').className = '';
+  $('home').style.opacity = 1 - seg(t, 7.0, 0.35);
+  // نقرة الضغط المطوّل ثم اختيار «+ مصروف»
+  const ph = $('phoneWrap').getBoundingClientRect(), k = (ph.width - 36) / 564;
+  const tapAt = (tt, x, y) => { const tk = seg(t, tt, 0.55); return t > tt - 0.02 && t < tt + 0.6 ? [(1 - tk) * 0.9, x, y, lerp(0.4, 1.6, tk)] : null; };
+  const tp = tapAt(3.85, ph.left + 18 + (ix + 52) * k, ph.top + 18 + (iy + 52) * k) || tapAt(5.85, ph.left + 18 + (ix + 104 - 210) * k, ph.top + 18 + (iy + 130 + 45) * k);
+  $('tap').style.opacity = tp ? tp[0] : 0;
+  if (tp) $('tap').style.transform = 'translate(' + tp[1] + 'px,' + tp[2] + 'px) scale(' + tp[3] + ')';
+
+  // لقطات التطبيق
+  let a = SCREENS[0], b = SCREENS[0], kk = 1;
+  for (let i = 0; i < SCREENS.length; i++) if (t >= SCREENS[i][1]) { a = SCREENS[i - 1] || SCREENS[i]; b = SCREENS[i]; kk = i ? seg(t, SCREENS[i][1], 0.45, INOUT) : 1; }
+  if (curA !== a[0]) { $('imgA').src = SHOT(a[0]); curA = a[0]; }
+  if (curB !== b[0]) { $('imgB').src = SHOT(b[0]); curB = b[0]; }
+  $('imgA').style.transform = 'translateX(' + (kk * 100) + '%)';
+  $('imgB').style.transform = 'translateX(' + ((kk - 1) * 100) + '%)';
+  $('imgA').style.opacity = a === b ? 0 : 1;
+
+  const ti = TITLES.findIndex((x) => t >= x.s - 0.05 && t <= x.e + 0.4);
+  if (ti !== titleIdx) { titleIdx = ti; if (ti >= 0) words($('title'), TITLES[ti].html); else $('title').innerHTML = ''; }
+  if (ti >= 0) wordIn([...$('title').querySelectorAll('.mask > .w')], t, TITLES[ti].s, TITLES[ti].e, 0.08);
+
+  // رسالة البنك تطير للجوال 6.6–8.4، وبعدها «مشاركة ← حياتي»
+  const sIn = seg(t, 6.6, 0.5), sGo = seg(t, 7.6, 0.7, INOUT);
+  $('sms').style.opacity = sIn * (1 - seg(t, 8.1, 0.25));
+  $('sms').style.transform = 'translate(' + lerp(220, 300, sGo) + 'px,' + lerp(lerp(330, 300, sIn), 1250, sGo) + 'px) scale(' + lerp(1, 0.4, sGo) + ')';
+  pop($('shareTip'), t, 8.3, 11.0, 90, 1200);
+
+  // الحصص 11.9–15.3
+  pop($('p1'), t, 11.9, 15.2, 640, 640);
+  pop($('p2'), t, 12.15, 15.2, 60, 900);
+  pop($('p3'), t, 12.4, 15.2, 650, 1180);
+
+  // الحساب اختياري 15.9–17.6
+  pop($('acct'), t, 16.0, 17.6, 110, 1560);
+
+  $('demo').style.opacity = 0.7 * seg(t, 3.0, 0.5);
+
+  // ===== الختام 17.9–20 =====
+  const eIn = seg(t, 17.95, 0.5);
+  $('logo').style.opacity = eIn; $('logo').style.transform = 'translateY(' + ((1 - eIn) * 40) + 'px) scale(' + lerp(0.94, 1, eIn) + ')';
+  $('arc').style.strokeDashoffset = 1 - seg(t, 18.0, 0.8);
+  $('ha').style.strokeDashoffset = 1 - seg(t, 18.1, 0.7);
+  const dk = seg(t, 18.7, 0.3);
+  $('dot').style.opacity = dk; $('dot').style.transformOrigin = '352px 128px'; $('dot').style.transform = 'scale(' + lerp(0.6, 1, dk) + ')';
+  const nIn = seg(t, 18.3, 0.45);
+  $('bname').style.opacity = nIn; $('bname').style.transform = 'translateY(' + ((1 - nIn) * 30) + 'px)';
+  if (!window._tagW) window._tagW = words($('btag'), 'كل يومك بمكان واحد');
+  wordIn(window._tagW, t, 18.5, null, 0.08);
+  const btIn = seg(t, 18.85, 0.45);
+  $('beta').style.opacity = btIn; $('beta').style.transform = 'translateX(-50%) translateY(' + ((1 - btIn) * 30) + 'px)';
+  const cIn = seg(t, 19.15, 0.45);
+  $('cta').style.opacity = cIn; $('cta').style.transform = 'translateX(-50%) translateY(' + ((1 - cIn) * 40) + 'px) scale(' + lerp(0.94, 1, cIn) + ')';
+};
+window.READY = Promise.all([document.fonts.ready, ...['02_sms', '03_split', '01_today'].map((n) => new Promise((r) => { const i = new Image(); i.onload = i.onerror = r; i.src = SHOT(n); })), new Promise((r) => { const i = new Image(); i.onload = i.onerror = r; i.src = 'icon.png'; })]);
+setT(0);
+</script></body></html>
