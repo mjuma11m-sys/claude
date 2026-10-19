@@ -30,6 +30,7 @@
       ['travel', 'briefcase', '#0d9488', 'تخطيط السفر', () => run('travel')],
     ]],
     ['🗓️ يومك', [
+      ['anyfile', 'upload', '#13636B', 'اقرأ أي ملف', () => run('anyfile')],
       ['shop', 'cart', '#16a34a', 'المشتريات', () => goSeg('tasks', 'tasksSeg', 'shop')],
       ['kitchen', 'utensils', '#ea580c', 'المطبخ', () => run('kitchen')],
       ['events', 'gift', '#ec4899', 'المناسبات', () => goSeg('tasks', 'tasksSeg', 'events')],

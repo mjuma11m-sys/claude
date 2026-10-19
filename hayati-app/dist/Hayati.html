@@ -2698,7 +2698,33 @@ window.HAYATI_EN = {
 "اضغط مطوّل: «+ مصروف» أو «الصق رسالة» أو «اسأل حياتي»": "Long-press: «+ Expense», «Paste message» or «Ask Hayati»",
 "الحساب من أول شاشة": "Account from the first screen",
 "سجّل أو تخطَّ، والتطبيق يشتغل كامل بدون حساب": "Sign in or skip; the app works fully without an account",
+// DW-074: اقرأ أي ملف + مهارات المساعد
+"اقرأ أي ملف": "Read any file",
+"PDF، صورة، Word، PowerPoint، Excel: نعرف وش هو ونرتبه": "PDF, photo, Word, PowerPoint, Excel: we figure out what it is and file it",
+"وش هالملف؟": "What is this file?",
+"وش هالصورة؟": "What is this photo?",
+"عمليات البنك بتواريخها": "Bank transactions with their dates",
+"دراسة، دوام، أو برنامج جيم": "Study, work, or a gym program",
+"برنامج الفريق": "Team program",
+"تمارين ومباريات بتواريخها": "Trainings and matches on their dates",
+"ملف المادة أو الشرائح": "Course file or slides",
+"سبورة أو ملاحظات محاضرة": "Whiteboard or lecture notes",
+"تنحفظ بمحاضرة جديدة": "Saved in a new lecture",
+"📎 أقرا الملف…": "📎 Reading the file…",
+"حطّينا نص الملف بالملاحظات ✓": "The file's text is in your notes ✓",
+"قراءة الصور تحتاج حساب · سجّل دخول من الإعدادات، أو ارفع PDF أو الصق النص": "Reading photos needs an account · sign in from Settings, or upload a PDF or paste the text",
+"سجّل مصروف، ذكّرني، المشتريات، وش عندي، كم صرفت… بجوالك وبدون نت": "Log a spend, remind me, shopping, what's on, how much I spent… on your phone, offline",
+"مثلاً: صرفت 1.5 قهوة": "e.g. coffee 1.5",
+"المهارات تشتغل بجوالك وما يطلع شي منه. الأسئلة المفتوحة (Claude ✨) تحتاج حساب.": "Skills run on your phone and nothing leaves it. Open questions (Claude ✨) need an account.",
+"وش عندي اليوم؟": "What's on today?",
+"كم صرفت هالشهر؟": "How much did I spend this month?",
+"كم باقي من الميزانية؟": "How much budget is left?",
+"وش تقدر تسوي؟": "What can you do?",
+"تمام، ما سوّيت شي": "OK, I didn't do anything",
 // DW-071: جديد 0.26
+"PDF أو Word أو PowerPoint أو Excel: التطبيق يعرف وش هو ويوديه لمكانه (كشف، جدول، برنامج الفريق، محاضرة)": "PDF, Word, PowerPoint or Excel: the app recognizes it and files it (statement, schedule, team program, lecture)",
+"المساعد بدون حساب": "Assistant without an account",
+"«صرفت 1.5 قهوة»، «ذكّرني بكرة 5 م…»، «وش عندي اليوم؟»: يسويها بجوالك، وكل شي يكتبه يطلب تأكيدك": "«coffee 1.5», «remind me tomorrow 5 pm…», «what's on today?»: done on your phone, and anything it saves asks you first",
 "اختصارات بالرئيسية": "Home shortcuts",
 "جدولك، المطبخ، حساباتي، وكشف الحساب: ضغطة وحدة من شاشة «اليوم»": "Your schedule, kitchen, accounts and bank statement: one tap from «Today»",
 "تسجيل المحاضرة يكمل": "Lecture recording keeps going",
@@ -8017,12 +8043,13 @@ window.HAYATI_CONFIG = {
   function showBtn() {
     const btn = document.getElementById('assistBtn');
     if (!btn) return;
-    const on = !!sampleFn || viaServer();
-    btn.classList.toggle('hidden', !on);
-    if (on && !btn.onclick) { btn.innerHTML = I('sparkle'); btn.onclick = assistantSheet; }
+    // DW-074: المساعد يطلع دايماً (مهاراته بالجهاز تشتغل بدون حساب)، والذكاء للأسئلة المفتوحة لما يتوفر
+    btn.classList.remove('hidden');
+    if (!btn.onclick) { btn.innerHTML = I('sparkle'); btn.onclick = assistantSheet; }
   }
   (async () => {
     if (window.claude && typeof window.claude.use === 'function') sampleFn = await window.claude.use('sample');
+    window.__hayatiSample = !!sampleFn;
     showBtn();
   })();
   if (S && S.subscribe) S.subscribe(showBtn);
@@ -8052,18 +8079,31 @@ window.HAYATI_CONFIG = {
     'وبالأرقام من البيانات تحت فقط. لا تخترع أرقام أو مواعيد مو موجودة؛ لو المعلومة ناقصة قل كذا. المبالغ بالدينار البحريني بثلاث خانات عشرية. ' +
     'لو طلب خطة (مذاكرة/توفير) اعطه خطة عملية بأيام وأوقات تناسب جدوله.\n\nبيانات المستخدم (JSON):\n' + JSON.stringify(dataSnapshot());
   function assistantSheet() {
-    const QUICK = ['كم صرفت على القهوة والأكل هالشهر؟', 'رتّب لي مذاكرة هالأسبوع حسب جدولي واختباراتي', 'كيف أوفّر أسرع لهدف الزواج؟', 'وش أكثر شي يضيّع فلوسي؟'];
-    const drawMsgs = () => chatTurns.map((t) => '<div class="msg ' + t.role + '">' + h(t.content).replace(/\n/g, '<br>') + '</div>').join('');
+    const ai = !!sampleFn || viaServer();
+    const QUICK = ['وش عندي اليوم؟', 'كم صرفت هالشهر؟', 'كم باقي من الميزانية؟'].concat(ai ? ['رتّب لي مذاكرة هالأسبوع حسب جدولي واختباراتي', 'وش أكثر شي يضيّع فلوسي؟'] : ['وش تقدر تسوي؟']);
+    // DW-074: رد المهارة المحلية فيه زر تأكيد (ما نكتب شي ببياناتك إلا بعد ضغطتك)
+    const acts = new Map();
+    const drawMsgs = () => chatTurns.map((t, i) => '<div class="msg ' + t.role + '">' + h(t.content).replace(/\n/g, '<br>') +
+      (t.act && acts.has(i) ? '<div style="margin-top:8px;display:flex;gap:8px"><button type="button" class="btn primary" data-do="' + i + '">' + h(t.act) + '</button><button type="button" class="btn ghost" data-no="' + i + '">لا</button></div>' : '') + '</div>').join('');
     A.openSheet({
       title: 'المساعد الذكي', cancelLabel: 'تم',
-      body: '<div class="chat" id="chat">' + (chatTurns.length ? drawMsgs() : '<div class="empty"><div class="ico">' + I('sparkle') + '</div><b>اسألني عن يومك</b><p>أجاوبك من بياناتك: صرفك، جدولك، مهامك، وأهدافك</p></div>') + '</div>' +
+      body: '<div class="chat" id="chat">' + (chatTurns.length ? drawMsgs() : '<div class="empty"><div class="ico">' + I('sparkle') + '</div><b>اسألني عن يومك</b><p>' + (ai ? 'أجاوبك من بياناتك: صرفك، جدولك، مهامك، وأهدافك' : 'سجّل مصروف، ذكّرني، المشتريات، وش عندي، كم صرفت… بجوالك وبدون نت') + '</p></div>') + '</div>' +
         '<div class="chips quick" style="margin:10px 0">' + QUICK.map((q) => '<button type="button" class="chip" data-q="' + h(q) + '">' + h(q) + '</button>').join('') + '</div>' +
-        '<form class="chat-form" id="chatForm"><input name="q" placeholder="اكتب سؤالك…" autocomplete="off"><button class="btn primary" type="submit" aria-label="إرسال">' + I('arrowUp') + '</button></form>' +
-        '<p class="small muted" style="margin:8px 4px 0">' + (viaServer() ? 'سؤالك وملخص أرقامك (بدون أسماء الناس) يروحون لـ Claude عشان الجواب، وما ينحفظون. كل سؤال يحسب من محاولات اليوم.' : 'يستخدم حسابك في Claude. أول مرة بيطلب إذنك.') + '</p>',
+        '<form class="chat-form" id="chatForm"><button type="button" class="btn ghost" id="chatFile" aria-label="ارفع ملف">📎</button><input name="q" placeholder="' + (ai ? 'اكتب سؤالك…' : 'مثلاً: صرفت 1.5 قهوة') + '" autocomplete="off"><button class="btn primary" type="submit" aria-label="إرسال">' + I('arrowUp') + '</button></form>' +
+        '<p class="small muted" style="margin:8px 4px 0">' + (!ai ? 'المهارات تشتغل بجوالك وما يطلع شي منه. الأسئلة المفتوحة (Claude ✨) تحتاج حساب.' : viaServer() ? 'سؤالك وملخص أرقامك (بدون أسماء الناس) يروحون لـ Claude عشان الجواب، وما ينحفظون. كل سؤال يحسب من محاولات اليوم.' : 'يستخدم حسابك في Claude. أول مرة بيطلب إذنك.') + '</p>',
       mount(root) {
         const chat = root.querySelector('#chat');
         const ask = async (q) => {
-          if (!q || (!sampleFn && !viaServer())) return;
+          if (!q) return;
+          const loc = E.localSkill && E.localSkill(q);
+          if (loc || (!sampleFn && !viaServer())) {
+            chatTurns.push({ role: 'user', content: q, local: true });
+            const r = loc || { text: 'هذا سؤال مفتوح يحتاج الذكاء (Claude ✨)، ويشتغل لما تسجّل دخول بحسابك.\n\n' + E.skillsHelp() };
+            chatTurns.push({ role: 'assistant', content: r.text, local: true, act: r.run ? r.label : null });
+            if (r.run) acts.set(chatTurns.length - 1, r.run);
+            chat.innerHTML = drawMsgs(); chat.scrollTop = chat.scrollHeight;
+            return;
+          }
           if (chatCtl) chatCtl.abort();
           chatTurns.push({ role: 'user', content: q });
           chat.innerHTML = drawMsgs() + '<div class="msg assistant typing">يفكّر…</div>';
@@ -8071,7 +8111,7 @@ window.HAYATI_CONFIG = {
           const bubble = chat.lastElementChild;
           chatCtl = new AbortController();
           try {
-            const turns = chatTurns.slice(-8);
+            const turns = chatTurns.filter((t) => !t.local).slice(-8).map((t) => ({ role: t.role, content: t.content }));
             if (viaServer()) {
               const r = await S.invokeFn('lecture-ai', { mode: 'ask', messages: turns, data: JSON.stringify(dataSnapshot()) });
               const text = String((r && r.text) || '').trim();
@@ -8096,6 +8136,16 @@ window.HAYATI_CONFIG = {
         };
         root.querySelector('#chatForm').onsubmit = (e) => { e.preventDefault(); const q = e.target.q.value.trim(); e.target.q.value = ''; ask(q); };
         root.querySelector('.quick').onclick = (e) => { const b = e.target.closest('[data-q]'); if (b) ask(b.dataset.q); };
+        root.querySelector('#chatFile').onclick = () => { if (E.chooseAnyFile) E.chooseAnyFile(); };
+        chat.onclick = (e) => {
+          const btn = e.target.closest('[data-do],[data-no]');
+          if (!btn) return;
+          const yes = 'do' in btn.dataset, i = Number(yes ? btn.dataset.do : btn.dataset.no);
+          if (!acts.has(i)) return;
+          const run = acts.get(i); acts.delete(i);
+          chatTurns.push({ role: 'assistant', content: yes ? run() : 'تمام، ما سوّيت شي', local: true });
+          chat.innerHTML = drawMsgs(); chat.scrollTop = chat.scrollHeight;
+        };
         chat.scrollTop = chat.scrollHeight;
       },
     });
@@ -8106,7 +8156,7 @@ window.HAYATI_CONFIG = {
   wrap('todayMid', (prev) => prev() + '<section data-tk="journal">' + journalCard() + '</section>');
   wrap('viewHealth', (prev) => prev() + moodSection());
   // DW-048: اختصار «اسأل حياتي» من أيقونة التطبيق
-  E.openAssistant = () => { if (sampleFn || viaServer()) assistantSheet(); else A.toast('«اسأل حياتي» يشتغل لما تسجّل دخول بحسابك'); };
+  E.openAssistant = () => assistantSheet();
   E.goalsTop = goalsTop;
   E.moneyActions = () => '<button class="btn ghost block" style="margin:10px 0 4px" data-action="year">' + I('chart') + 'ملخص السنة</button>';
   E.courseExtra = courseExtra;
@@ -12397,6 +12447,7 @@ window.HAYATI_CONFIG = {
       ['travel', 'briefcase', '#0d9488', 'تخطيط السفر', () => run('travel')],
     ]],
     ['🗓️ يومك', [
+      ['anyfile', 'upload', '#13636B', 'اقرأ أي ملف', () => run('anyfile')],
       ['shop', 'cart', '#16a34a', 'المشتريات', () => goSeg('tasks', 'tasksSeg', 'shop')],
       ['kitchen', 'utensils', '#ea580c', 'المطبخ', () => run('kitchen')],
       ['events', 'gift', '#ec4899', 'المناسبات', () => goSeg('tasks', 'tasksSeg', 'events')],
@@ -13140,6 +13191,293 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
+  <script>/* js/features/anyfile.js */
+// DW-074: «اقرأ أي ملف» — مدخل واحد: نعرف نوع الملف بالجهاز ونوديه للمكان الصح
+// PDF (برنامج جيم/جدول جامعة/برنامج الفريق/كشف حساب/محاضرة) · Word وPowerPoint ← محاضرة · Excel وCSV ← كشف · نص ← رسالة المدرب أو البنك أو جدول
+// الصور تحتاج الذكاء (حساب)؛ ولو ما عرفنا النوع نسأل «وش هالملف؟»
+(function () {
+  'use strict';
+
+  const A = window.App, E = window.Extras;
+  if (!A || !E) return;
+  const { S, I, h } = A;
+  const wrap = (name, fn) => { const prev = E[name]; E[name] = (...a) => fn(prev ? prev : () => '', ...a); };
+
+  const ext = (f) => (/\.([a-z0-9]+)$/i.exec(f.name || '') || [, ''])[1].toLowerCase();
+  const isPdf = (f) => /pdf$/i.test(f.type) || ext(f) === 'pdf';
+  const isImg = (f) => /^image\//.test(f.type) || /^(png|jpe?g|heic|webp)$/.test(ext(f));
+  const aiOn = () => !!(S.status && S.status.signedIn && S.invokeFn && !S.status.aiOff);
+  const TEAM = /تمرين|تمارين|مباراة|مباراه|تدريب/;
+
+  // ---------- وش هالملف؟ ----------
+  async function classify(file) {
+    const x = ext(file);
+    if (/^(pptx|docx)$/.test(x)) return { to: 'lecture-office' };
+    if (/^(xlsx|xls|csv|xml|ofx|qif)$/.test(x)) return { to: 'bank' };
+    if (isImg(file)) return { to: 'image' };
+    if (isPdf(file)) {
+      const R = window.HayatiPdfRead;
+      if (!R) return { to: 'ask' };
+      let its;
+      try { its = await R.items(file, 6); } catch (e) { return { to: 'ask' }; }
+      if (R.workout(its).length || R.schedule(its).length) return { to: 'timetable' };
+      const text = R.lines(its);
+      return fromText(text, true);
+    }
+    if (/^(txt|text|md)$/.test(x) || /^text\//.test(file.type)) return fromText(await file.text(), false);
+    return { to: 'ask' };
+  }
+  function fromText(text, pdf) {
+    const now = new Date();
+    if (TEAM.test(text) && E._parseFootball && E._parseFootball(text).length) return { to: 'football', text };
+    const lines = text.split('\n');
+    if (E._bank && ((pdf && E._bank.fromPdfLines(lines, now).length >= 3) || (!pdf && E._bank.fromText(text, now).length >= 2))) return { to: 'bank' };
+    if (!pdf && E._parseTimetable && E._parseTimetable(text, '').length) return { to: 'timetable-text', text };
+    if (text.replace(/\s/g, '').length >= 150) return { to: 'lecture-text', text };
+    return { to: 'ask' };
+  }
+
+  // ---------- نسلّم الملف للشاشة المناسبة ----------
+  // نحط الملف بخانة الرفع حقها ونضغط «اقرأ» عنه
+  function inject(sel, file) {
+    const inp = document.querySelector(sel);
+    if (!inp) return false;
+    try { const dt = new DataTransfer(); dt.items.add(file); inp.files = dt.files; } catch (e) { return false; }
+    inp.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
+  }
+  const later = (fn) => setTimeout(fn, 300);   // بعد ما تتسكر النافذة اللي قبل وتنفتح الجديدة
+  const click = (sel) => { const b = document.querySelector(sel); if (b) b.click(); };
+  const title = (file) => String(file.name || '').replace(/\.[a-z0-9]+$/i, '').replace(/[_-]+/g, ' ').trim().slice(0, 60);
+
+  function lectureWith(fill) {
+    E.lectureForm();
+    later(() => fill());
+  }
+  function route(r, file) {
+    A.closeSheet();
+    later(() => {
+      switch (r.to) {
+        case 'bank': E.bankImport(file); return;
+        case 'football': E.footballImport(r.text); return;
+        case 'timetable': E.timetable(); later(() => { if (inject('#ttFile', file)) click('#ttRead'); }); return;
+        case 'timetable-text': E.timetable(); later(() => { const t = document.querySelector('[name=tt_txt]'); if (t) { t.value = r.text; click('#ttRead'); } }); return;
+        case 'lecture-office': lectureWith(() => inject('#lcOffice', file)); return;
+        case 'lecture-photo': lectureWith(() => inject('#lcPhoto', file)); return;
+        case 'lecture-text':
+          // الذكاء يطلع ملاحظات وملخص وأسئلة؛ بدونه نحط نص الملف بملاحظات المحاضرة (بالجهاز)
+          if (aiOn() && isPdf(file)) { lectureWith(() => inject('#lcPdf', file)); return; }
+          lectureWith(() => {
+            const t = document.querySelector('[name=lc_title]'), n = document.querySelector('[name=lc_notes]');
+            if (t && !t.value) t.value = title(file);
+            if (n) { n.value = r.text.slice(0, 20000); n.dispatchEvent(new Event('input', { bubbles: true })); }
+            A.toast('حطّينا نص الملف بالملاحظات ✓');
+          });
+          return;
+        case 'image': imageSheet(file); return;
+        default: askSheet(file);
+      }
+    });
+  }
+
+  // الصورة: الذكاء يقراها (لأصحاب الحسابات)، فنسأل وش هي
+  function imageSheet(file) {
+    if (!aiOn()) { A.toast('قراءة الصور تحتاج حساب · سجّل دخول من الإعدادات، أو ارفع PDF أو الصق النص'); return; }
+    pick(file, 'وش هالصورة؟', [['timetable', 'calendar', 'جدول', 'دراسة، دوام، أو تمارين'], ['lecture-photo', 'book', 'سبورة أو ملاحظات محاضرة', 'تنحفظ بمحاضرة جديدة']]);
+  }
+  function askSheet(file) {
+    pick(file, 'وش هالملف؟', [['bank', 'download', 'كشف حساب', 'عمليات البنك بتواريخها'], ['timetable', 'calendar', 'جدول', 'دراسة، دوام، أو برنامج جيم'],
+      ['football', 'upload', 'برنامج الفريق', 'تمارين ومباريات بتواريخها'], ['lecture', 'book', 'محاضرة', 'ملف المادة أو الشرائح']]);
+  }
+  function pick(file, ttl, opts) {
+    A.openSheet({
+      title: ttl, cancelLabel: 'إلغاء',
+      body: '<p class="small muted" style="margin:0 4px 10px">📎 <bdi>' + h(file.name || '') + '</bdi></p><div class="card flush"><ul class="list">' +
+        opts.map(([k, ic, t, sub]) => '<li class="row" data-to="' + k + '"><div class="ico">' + I(ic) + '</div><div class="main"><div class="title"><span class="t">' + h(t) + '</span></div><div class="sub">' + h(sub) + '</div></div>' + I('chevL') + '</li>').join('') + '</ul></div>',
+      mount(root) {
+        root.querySelector('.list').onclick = (e) => {
+          const li = e.target.closest('[data-to]'); if (!li) return;
+          const to = li.dataset.to;
+          if (to === 'football') { A.closeSheet(); later(() => { E.footballImport(); later(() => { if (inject('#impFile', file)) click('#impRead'); }); }); return; }
+          if (to === 'lecture') { route({ to: /^(pptx|docx)$/.test(ext(file)) ? 'lecture-office' : isPdf(file) && aiOn() ? 'lecture-text' : 'lecture-photo' }, file); return; }
+          route({ to }, file);
+        };
+      },
+    });
+  }
+
+  // ---------- المدخل ----------
+  async function readAny(file) {
+    if (!file) return;
+    if (file.size > 30 * 1024 * 1024) { A.toast('الملف كبير · الحد 30MB'); return; }
+    A.toast('📎 أقرا الملف…');
+    let r;
+    try { r = await classify(file); } catch (e) { r = { to: 'ask' }; }
+    route(r, file);
+  }
+  function choose() {
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.hidden = true;
+    inp.accept = 'application/pdf,.pdf,image/*,.pptx,.docx,.xlsx,.xls,.csv,.xml,.txt';
+    inp.onchange = () => { const f = inp.files[0]; inp.remove(); readAny(f); };
+    document.body.appendChild(inp);
+    inp.click();
+  }
+
+  wrap('chooserItems', (prev, item) => prev(item) + item('anyfile', 'upload', '#13636B', 'اقرأ أي ملف', 'PDF، صورة، Word، PowerPoint، Excel: نعرف وش هو ونرتبه'));
+  const prevPick = E.pick;
+  E.pick = (k) => { if (k === 'anyfile') { A.closeSheet(); later(choose); return; } if (prevPick) prevPick(k); };
+  wrap('action', (prev, name, el, e) => { if (name === 'anyfile') { choose(); return; } return prev(name, el, e); });
+  E.readAnyFile = readAny;
+  E.chooseAnyFile = choose;
+  E._classifyFile = classify; // للاختبار
+})();
+
+</script>
+  <script>/* js/features/skills.js */
+// DW-074: مهارات المساعد بالجهاز (بدون حساب وبدون نت): سجّل مصروف أو دخل، ذكّرني، المشتريات، وش عندي، كم صرفت، كم باقي
+// أي شي يكتب ببياناتك يطلع كاقتراح وتأكده أنت؛ والأسئلة المفتوحة تروح للذكاء (لو متوفر)
+(function () {
+  'use strict';
+
+  const A = window.App, E = window.Extras;
+  if (!A || !E) return;
+  const { S, st } = A;
+  const P = window.SmsParser;
+  const pad = (n) => String(n).padStart(2, '0');
+  const digits = (s) => String(s).replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/٫/g, '.');
+  const money = (n) => A.fmt(n);
+  const DAYS = [[0, /الأحد|الاحد/], [1, /الاثنين|الإثنين/], [2, /الثلاثاء/], [3, /الأربعاء|الاربعاء/], [4, /الخميس/], [5, /الجمعة|الجمعه/], [6, /السبت/]];
+
+  // ---------- الوقت: اليوم/بكرة/بعد بكرة/يوم بالاسم + الساعة ----------
+  function whenOf(q) {
+    const now = new Date();
+    const d = new Date(now); d.setSeconds(0, 0);
+    let dayGiven = false;
+    if (/بعد\s*بكر[ةه]/.test(q)) { d.setDate(d.getDate() + 2); dayGiven = true; }
+    else if (/بكر[ةه]|باچر|باكر/.test(q)) { d.setDate(d.getDate() + 1); dayGiven = true; }
+    else if (/اليوم|الليلة|الحين/.test(q)) dayGiven = true;
+    else { const w = DAYS.find(([, re]) => re.test(q)); if (w) { let add = (w[0] - d.getDay() + 7) % 7; if (add === 0) add = 7; d.setDate(d.getDate() + add); dayGiven = true; } }
+    const m = /(?:الساعة|الساعه|ساعة|@)\s*(\d{1,2})(?:[:.](\d{2}))?\s*(ص|م|الصبح|العصر|المغرب|بالليل|الليل|am|pm)?/i.exec(q) || /\b(\d{1,2})[:.](\d{2})\s*(ص|م|am|pm)?/i.exec(q);
+    let timed = false;
+    if (m) {
+      let H = Number(m[1]); const M = Number(m[2] || 0);
+      const mer = m[3] || '';
+      if (H > 23 || M > 59) return null;
+      if (/م|العصر|المغرب|الليل|pm/i.test(mer) && H < 12) H += 12;
+      else if (/ص|الصبح|am/i.test(mer) && H === 12) H = 0;
+      else if (!mer && H >= 1 && H <= 7) H += 12;   // «الساعة 5» بدون ص/م = العصر
+      d.setHours(H, M);
+      timed = true;
+      if (!dayGiven && d < now) d.setDate(d.getDate() + 1);
+    } else d.setHours(9, 0);
+    return (dayGiven || timed) ? { at: d, timed, re: m } : null;
+  }
+  const whenLabel = (d) => {
+    const t0 = new Date(); t0.setHours(0, 0, 0, 0);
+    const diff = Math.round((new Date(d).setHours(0, 0, 0, 0) - t0) / 86400000);
+    const day = diff === 0 ? 'اليوم' : diff === 1 ? 'بكرة' : A.DAYS[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1);
+    return day + ' ' + A.time12(pad(d.getHours()) + ':' + pad(d.getMinutes()));
+  };
+  const dayOffset = (q) => (/بعد\s*بكر[ةه]/.test(q) ? 2 : /بكر[ةه]|باچر|باكر/.test(q) ? 1 : 0);
+
+  // ---------- المهارات ----------
+  const SKILLS = [
+    // مساعدة
+    [/^(وش|شو|ايش|شنو)\s+(تقدر|تسوي)|^مساعد[ةه]$|^help$/i, () => ({ text: helpText() })],
+
+    // ذكّرني / موعد ← مهمة بوقت
+    [/^(ذكرني|ذكّرني|نبهني|نبّهني|فكرني|موعد|عندي موعد)(?=\s|$)/, (q) => {
+      const w = whenOf(q);
+      if (!w) return { text: 'متى أذكّرك؟ مثلاً: «ذكّرني بكرة الساعة 5 م أدفع الإيجار»' };
+      let title = q.replace(/^(ذكرني|ذكّرني|نبهني|نبّهني|فكرني|عندي موعد|موعد)\s*/, '').replace(w.re ? w.re[0] : '', ' ')
+        .replace(/بعد\s*بكر[ةه]|بكر[ةه]|باچر|باكر|اليوم|الليلة|الحين/g, ' ').replace(/(?:يوم\s+)?(?:الأحد|الاحد|الاثنين|الإثنين|الثلاثاء|الأربعاء|الاربعاء|الخميس|الجمعة|الجمعه|السبت)/g, ' ')
+        .replace(/^\s*(إني|اني|ان|أن|ب|على)\s+/, '').replace(/\s+/g, ' ').trim();
+      if (!title) title = 'تذكير';
+      const kind = /^(موعد|عندي موعد)/.test(q) ? 'appointment' : 'personal';
+      return { text: 'أضيف مهمة «' + title + '» ' + whenLabel(w.at) + '؟', label: 'أضف', run: () => { S.upsert('tasks', { title: title.slice(0, 80), kind, due_at: w.at.toISOString(), done: false, notes: null }); return 'انضافت ✓ تلقاها بالمهام'; } };
+    }],
+
+    // المشتريات
+    [/(للمشتريات|بالمشتريات|لقائمة المشتريات|بقائمة المشتريات)|^(ضيف|أضف|اضف)\s+.+\s+(للبقالة|بالبقالة)$/, (q) => {
+      const body = q.replace(/(للمشتريات|بالمشتريات|لقائمة المشتريات|بقائمة المشتريات|للبقالة|بالبقالة)/g, ' ').replace(/^\s*(ضيف|أضف|اضف|حط|زيد|نبي|ابي|أبي)\s+/, '').trim();
+      const items = body.split(/\s*(?:،|,|\s+و(?=\S))\s*/).map((x) => x.trim()).filter(Boolean).slice(0, 12);
+      if (!items.length) return { text: 'وش أضيف؟ مثلاً: «ضيف حليب وخبز للمشتريات»' };
+      return { text: 'أضيف للمشتريات: ' + items.join('، ') + '؟', label: 'أضف', run: () => { items.forEach((name) => S.upsert('shopping', { name: name.slice(0, 60), qty: null, done: false })); return 'انضافت ✓ (' + items.length + ')'; } };
+    }],
+
+    // وش عندي اليوم/بكرة
+    [/(وش|شو|ايش|شنو)\s+(عندي|جدولي|برنامجي)|^جدول(ي)?\s+(اليوم|بكر[ةه])/, (q) => {
+      const off = dayOffset(q);
+      const d = new Date(); d.setDate(d.getDate() + off);
+      const key = d.toDateString();
+      const cls = st.courses.filter((c) => (c.days || []).includes(d.getDay())).sort((a, b) => String(a.start_time).localeCompare(String(b.start_time)))
+        .map((c) => '• ' + A.time12(c.start_time) + ' ' + c.name);
+      const tasks = st.tasks.filter((t) => !t.done && t.due_at && new Date(t.due_at).toDateString() === key).sort((a, b) => new Date(a.due_at) - new Date(b.due_at))
+        .map((t) => '• ' + A.time12(pad(new Date(t.due_at).getHours()) + ':' + pad(new Date(t.due_at).getMinutes())) + ' ' + t.title);
+      const label = off === 0 ? 'اليوم' : off === 1 ? 'بكرة' : 'بعد بكرة';
+      if (!cls.length && !tasks.length) return { text: label + ' فاضي 👌 ما عندك حصص ولا مهام بموعد' };
+      return { text: label + ':\n' + cls.concat(tasks).join('\n') };
+    }],
+
+    // كم باقي من الميزانية
+    [/(كم|شكثر)\s+(باقي|بقى|تبقى)|باقي\s+من\s+(الميزانية|ميزانيتي)|^ميزانيتي/, () => {
+      const b = Number(st.settings.budget) || 0;
+      const spent = A.sums(A.txInMonth(A.monthKey(new Date()))).exp;
+      if (!b) return { text: 'صرفت هالشهر ' + money(spent) + ' · ما حطيت ميزانية للحين (من «الفلوس»)' };
+      const left = b - spent;
+      const end = new Date(); end.setMonth(end.getMonth() + 1, 0);
+      const days = Math.max(1, end.getDate() - new Date().getDate() + 1);
+      return { text: left >= 0 ? 'باقي ' + money(left) + ' من ' + money(b) + ' · يعني تقريباً ' + money(left / days) + ' باليوم لآخر الشهر' : 'تعدّيت الميزانية بـ ' + money(-left) + ' (الميزانية ' + money(b) + ')' };
+    }],
+
+    // كم صرفت (على X) اليوم/هالأسبوع/هالشهر
+    [/كم\s+(صرفت|دفعت)/, (q) => {
+      const now = new Date();
+      let from, label;
+      if (/اليوم/.test(q)) { from = new Date(now); from.setHours(0, 0, 0, 0); label = 'اليوم'; }
+      else if (/(هال|هذا ال|ال)?أسبوع|الاسبوع|هالاسبوع/.test(q)) { from = new Date(now); from.setDate(from.getDate() - 6); from.setHours(0, 0, 0, 0); label = 'آخر 7 أيام'; }
+      else { from = new Date(now.getFullYear(), now.getMonth(), 1); label = 'هالشهر'; }
+      const on = (/على\s+(.+?)\s*(?:اليوم|هالشهر|هالاسبوع|هالأسبوع|الشهر|الاسبوع|الأسبوع|؟|\?|$)/.exec(q) || [])[1];
+      let list = st.transactions.filter((t) => t.kind === 'expense' && new Date(t.occurred_at) >= from);
+      if (on) {
+        const words = on.split(/\s+و|\s+/).map((w) => w.trim()).filter((w) => w.length > 1);
+        list = list.filter((t) => words.some((w) => String(t.category || '').includes(w) || String(t.merchant || '').toLowerCase().includes(w.toLowerCase()) || (P && String(P.categorize('expense', w, w)) === t.category && !/أخرى|اخرى/.test(t.category))));
+      }
+      const sum = list.reduce((s, t) => s + Number(t.amount || 0), 0);
+      return { text: 'صرفت ' + label + (on ? ' على ' + on : '') + ': ' + money(sum) + ' (' + list.length + ' عملية)' };
+    }],
+
+    // سجّل مصروف أو دخل: «صرفت 2.5 قهوة» · «سجل 3 بنزين» · «استلمت 450 راتب»
+    [/^(صرفت|دفعت|سجل|سجّل|اشتريت|حط مصروف|استلمت|جاني|انضاف|دخل)(?=\s|$)|^[+-]?\d+(?:[.,]\d+)?\s+\S|\S\s+\d+(?:[.,]\d+)?\s*(?:د\.?\s?ب|bd|bhd|دينار)?$/i, (q) => {
+      if (!P) return null;
+      const income = /^(استلمت|جاني|انضاف|دخل)(?=\s|$)|راتب/.test(q);
+      const rest = digits(q).replace(/^(صرفت|دفعت|سجل|سجّل|اشتريت|حط مصروف|استلمت|جاني|انضاف|دخل)\s*/, '').replace(/\s(على|في|ب|حق)\s/g, ' ').trim();
+      const r = P.quick((income ? '+' : '') + rest.replace(/^\+/, ''));
+      if (!r) return null;
+      const t = { kind: r.kind, amount: r.amount, merchant: r.merchant || null, category: r.category, occurred_at: new Date().toISOString(), source: 'assistant' };
+      return { text: (r.kind === 'income' ? 'أسجّل دخل ' : 'أسجّل مصروف ') + money(r.amount) + (r.merchant ? ' · ' + r.merchant : '') + (r.merchant === r.category ? '' : ' (' + r.category + ')') + '؟', label: 'سجّل', run: () => { S.upsert('transactions', t); return 'انسجّل ✓'; } };
+    }],
+  ];
+
+  function helpText() {
+    return 'أقدر بدون نت:\n• «صرفت 1.5 قهوة» ← أسجّل المصروف\n• «ذكّرني بكرة الساعة 5 م أدفع الإيجار»\n• «ضيف حليب وخبز للمشتريات»\n• «وش عندي اليوم؟» أو بكرة\n• «كم صرفت هالشهر على الأكل؟»\n• «كم باقي من الميزانية؟»\n• 📎 ارفع أي ملف وأرتّبه' +
+      (aiReady() ? '\nوأي سؤال ثاني أسأل فيه Claude ✨' : '');
+  }
+  const aiReady = () => !!(window.__hayatiSample || (S.status && S.status.signedIn && S.invokeFn && !S.status.aiOff));
+
+  function localSkill(raw) {
+    const q = digits(String(raw || '')).replace(/[؟?!.]+$/, '').replace(/\s+/g, ' ').trim();
+    if (!q) return null;
+    for (const [re, fn] of SKILLS) if (re.test(q)) { const r = fn(q); if (r) return r; }
+    return null;
+  }
+
+  E.localSkill = localSkill;
+  E.skillsHelp = helpText;
+})();
+
+</script>
   <script>/* js/features/fit.js */
 // المبالغ الكبيرة تركب بمكانها (DW-025): أي مبلغ (فيه .cur) ما يركب بعرضه، يصغر خطه شوي شوي لين 55%
 // بدل ما يطلع برا الكرت أو ينقص من أوله «…567.892». الأرقام العادية ما تتأثر.
@@ -13760,6 +14098,8 @@ window.HAYATI_CONFIG = {
   // الجديد لكل نسخة (نصوص قصيرة وصادقة: شي يشتغل اليوم بس)
   const NEWS = {
     v26: [
+      ['📎', 'اقرأ أي ملف', 'PDF أو Word أو PowerPoint أو Excel: التطبيق يعرف وش هو ويوديه لمكانه (كشف، جدول، برنامج الفريق، محاضرة)'],
+      ['✨', 'المساعد بدون حساب', '«صرفت 1.5 قهوة»، «ذكّرني بكرة 5 م…»، «وش عندي اليوم؟»: يسويها بجوالك، وكل شي يكتبه يطلب تأكيدك'],
       ['⚡', 'اختصارات بالرئيسية', 'جدولك، المطبخ، حساباتي، وكشف الحساب: ضغطة وحدة من شاشة «اليوم»'],
       ['🎙️', 'تسجيل المحاضرة يكمل', 'اقفل الشاشة أو افتح تطبيق ثاني والتسجيل ما يوقف (آيفون)'],
       ['⚽', 'برنامج الفريق PDF', 'ارفع برنامج الأسبوع من المدرب: التمارين والمباراة تنضاف بتواريخها وأوقاتها، وأيام الراحة تنشال'],

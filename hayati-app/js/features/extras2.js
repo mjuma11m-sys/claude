@@ -572,12 +572,13 @@
   function showBtn() {
     const btn = document.getElementById('assistBtn');
     if (!btn) return;
-    const on = !!sampleFn || viaServer();
-    btn.classList.toggle('hidden', !on);
-    if (on && !btn.onclick) { btn.innerHTML = I('sparkle'); btn.onclick = assistantSheet; }
+    // DW-074: المساعد يطلع دايماً (مهاراته بالجهاز تشتغل بدون حساب)، والذكاء للأسئلة المفتوحة لما يتوفر
+    btn.classList.remove('hidden');
+    if (!btn.onclick) { btn.innerHTML = I('sparkle'); btn.onclick = assistantSheet; }
   }
   (async () => {
     if (window.claude && typeof window.claude.use === 'function') sampleFn = await window.claude.use('sample');
+    window.__hayatiSample = !!sampleFn;
     showBtn();
   })();
   if (S && S.subscribe) S.subscribe(showBtn);
@@ -607,18 +608,31 @@
     'وبالأرقام من البيانات تحت فقط. لا تخترع أرقام أو مواعيد مو موجودة؛ لو المعلومة ناقصة قل كذا. المبالغ بالدينار البحريني بثلاث خانات عشرية. ' +
     'لو طلب خطة (مذاكرة/توفير) اعطه خطة عملية بأيام وأوقات تناسب جدوله.\n\nبيانات المستخدم (JSON):\n' + JSON.stringify(dataSnapshot());
   function assistantSheet() {
-    const QUICK = ['كم صرفت على القهوة والأكل هالشهر؟', 'رتّب لي مذاكرة هالأسبوع حسب جدولي واختباراتي', 'كيف أوفّر أسرع لهدف الزواج؟', 'وش أكثر شي يضيّع فلوسي؟'];
-    const drawMsgs = () => chatTurns.map((t) => '<div class="msg ' + t.role + '">' + h(t.content).replace(/\n/g, '<br>') + '</div>').join('');
+    const ai = !!sampleFn || viaServer();
+    const QUICK = ['وش عندي اليوم؟', 'كم صرفت هالشهر؟', 'كم باقي من الميزانية؟'].concat(ai ? ['رتّب لي مذاكرة هالأسبوع حسب جدولي واختباراتي', 'وش أكثر شي يضيّع فلوسي؟'] : ['وش تقدر تسوي؟']);
+    // DW-074: رد المهارة المحلية فيه زر تأكيد (ما نكتب شي ببياناتك إلا بعد ضغطتك)
+    const acts = new Map();
+    const drawMsgs = () => chatTurns.map((t, i) => '<div class="msg ' + t.role + '">' + h(t.content).replace(/\n/g, '<br>') +
+      (t.act && acts.has(i) ? '<div style="margin-top:8px;display:flex;gap:8px"><button type="button" class="btn primary" data-do="' + i + '">' + h(t.act) + '</button><button type="button" class="btn ghost" data-no="' + i + '">لا</button></div>' : '') + '</div>').join('');
     A.openSheet({
       title: 'المساعد الذكي', cancelLabel: 'تم',
-      body: '<div class="chat" id="chat">' + (chatTurns.length ? drawMsgs() : '<div class="empty"><div class="ico">' + I('sparkle') + '</div><b>اسألني عن يومك</b><p>أجاوبك من بياناتك: صرفك، جدولك، مهامك، وأهدافك</p></div>') + '</div>' +
+      body: '<div class="chat" id="chat">' + (chatTurns.length ? drawMsgs() : '<div class="empty"><div class="ico">' + I('sparkle') + '</div><b>اسألني عن يومك</b><p>' + (ai ? 'أجاوبك من بياناتك: صرفك، جدولك، مهامك، وأهدافك' : 'سجّل مصروف، ذكّرني، المشتريات، وش عندي، كم صرفت… بجوالك وبدون نت') + '</p></div>') + '</div>' +
         '<div class="chips quick" style="margin:10px 0">' + QUICK.map((q) => '<button type="button" class="chip" data-q="' + h(q) + '">' + h(q) + '</button>').join('') + '</div>' +
-        '<form class="chat-form" id="chatForm"><input name="q" placeholder="اكتب سؤالك…" autocomplete="off"><button class="btn primary" type="submit" aria-label="إرسال">' + I('arrowUp') + '</button></form>' +
-        '<p class="small muted" style="margin:8px 4px 0">' + (viaServer() ? 'سؤالك وملخص أرقامك (بدون أسماء الناس) يروحون لـ Claude عشان الجواب، وما ينحفظون. كل سؤال يحسب من محاولات اليوم.' : 'يستخدم حسابك في Claude. أول مرة بيطلب إذنك.') + '</p>',
+        '<form class="chat-form" id="chatForm"><button type="button" class="btn ghost" id="chatFile" aria-label="ارفع ملف">📎</button><input name="q" placeholder="' + (ai ? 'اكتب سؤالك…' : 'مثلاً: صرفت 1.5 قهوة') + '" autocomplete="off"><button class="btn primary" type="submit" aria-label="إرسال">' + I('arrowUp') + '</button></form>' +
+        '<p class="small muted" style="margin:8px 4px 0">' + (!ai ? 'المهارات تشتغل بجوالك وما يطلع شي منه. الأسئلة المفتوحة (Claude ✨) تحتاج حساب.' : viaServer() ? 'سؤالك وملخص أرقامك (بدون أسماء الناس) يروحون لـ Claude عشان الجواب، وما ينحفظون. كل سؤال يحسب من محاولات اليوم.' : 'يستخدم حسابك في Claude. أول مرة بيطلب إذنك.') + '</p>',
       mount(root) {
         const chat = root.querySelector('#chat');
         const ask = async (q) => {
-          if (!q || (!sampleFn && !viaServer())) return;
+          if (!q) return;
+          const loc = E.localSkill && E.localSkill(q);
+          if (loc || (!sampleFn && !viaServer())) {
+            chatTurns.push({ role: 'user', content: q, local: true });
+            const r = loc || { text: 'هذا سؤال مفتوح يحتاج الذكاء (Claude ✨)، ويشتغل لما تسجّل دخول بحسابك.\n\n' + E.skillsHelp() };
+            chatTurns.push({ role: 'assistant', content: r.text, local: true, act: r.run ? r.label : null });
+            if (r.run) acts.set(chatTurns.length - 1, r.run);
+            chat.innerHTML = drawMsgs(); chat.scrollTop = chat.scrollHeight;
+            return;
+          }
           if (chatCtl) chatCtl.abort();
           chatTurns.push({ role: 'user', content: q });
           chat.innerHTML = drawMsgs() + '<div class="msg assistant typing">يفكّر…</div>';
@@ -626,7 +640,7 @@
           const bubble = chat.lastElementChild;
           chatCtl = new AbortController();
           try {
-            const turns = chatTurns.slice(-8);
+            const turns = chatTurns.filter((t) => !t.local).slice(-8).map((t) => ({ role: t.role, content: t.content }));
             if (viaServer()) {
               const r = await S.invokeFn('lecture-ai', { mode: 'ask', messages: turns, data: JSON.stringify(dataSnapshot()) });
               const text = String((r && r.text) || '').trim();
@@ -651,6 +665,16 @@
         };
         root.querySelector('#chatForm').onsubmit = (e) => { e.preventDefault(); const q = e.target.q.value.trim(); e.target.q.value = ''; ask(q); };
         root.querySelector('.quick').onclick = (e) => { const b = e.target.closest('[data-q]'); if (b) ask(b.dataset.q); };
+        root.querySelector('#chatFile').onclick = () => { if (E.chooseAnyFile) E.chooseAnyFile(); };
+        chat.onclick = (e) => {
+          const btn = e.target.closest('[data-do],[data-no]');
+          if (!btn) return;
+          const yes = 'do' in btn.dataset, i = Number(yes ? btn.dataset.do : btn.dataset.no);
+          if (!acts.has(i)) return;
+          const run = acts.get(i); acts.delete(i);
+          chatTurns.push({ role: 'assistant', content: yes ? run() : 'تمام، ما سوّيت شي', local: true });
+          chat.innerHTML = drawMsgs(); chat.scrollTop = chat.scrollHeight;
+        };
         chat.scrollTop = chat.scrollHeight;
       },
     });
@@ -661,7 +685,7 @@
   wrap('todayMid', (prev) => prev() + '<section data-tk="journal">' + journalCard() + '</section>');
   wrap('viewHealth', (prev) => prev() + moodSection());
   // DW-048: اختصار «اسأل حياتي» من أيقونة التطبيق
-  E.openAssistant = () => { if (sampleFn || viaServer()) assistantSheet(); else A.toast('«اسأل حياتي» يشتغل لما تسجّل دخول بحسابك'); };
+  E.openAssistant = () => assistantSheet();
   E.goalsTop = goalsTop;
   E.moneyActions = () => '<button class="btn ghost block" style="margin:10px 0 4px" data-action="year">' + I('chart') + 'ملخص السنة</button>';
   E.courseExtra = courseExtra;

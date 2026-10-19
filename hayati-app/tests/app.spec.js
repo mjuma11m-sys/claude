@@ -2001,7 +2001,7 @@ test('«جديد بحياتي»: an existing user sees what is new once after th
   await store(page, () => localStorage.setItem('hayati-seen-version', 'v25'));   // كان على النسخة اللي قبل
   await open(page);
   await expect(page.locator('#sheetTitle')).toHaveText('جديد بحياتي ✨', { timeout: 5000 });
-  await expect(page.locator('#sheetBody .news-item')).toHaveCount(4);
+  await expect(page.locator('#sheetBody .news-item')).toHaveCount(6);
   await page.click('#sheetCancel');
   expect(await store(page, () => localStorage.getItem('hayati-seen-version'))).toBe(await store(page, () => App.APP_VERSION));
   await open(page);
@@ -2954,7 +2954,7 @@ test('lectures PDF (DW-036): one call fills notes, summary and new questions; to
 
 test('«اسأل حياتي» (DW-037): signed in, the assistant answers through the server from a data snapshot, without people\'s names', async ({ page }) => {
   await open(page);
-  await expect(page.locator('#assistBtn')).toBeHidden();                       // بدون حساب: ما يطلع
+  await expect(page.locator('#assistBtn')).toBeVisible();                      // DW-074: يطلع دايماً (مهاراته بالجهاز)
   await store(page, () => {
     App.S.setSettings({ onboarded: true });
     App.S.upsert('transactions', { id: 'q1', kind: 'expense', amount: 3.5, merchant: 'Costa', category: 'قهوة', occurred_at: new Date().toISOString() });
@@ -2966,24 +2966,93 @@ test('«اسأل حياتي» (DW-037): signed in, the assistant answers through
   await expect(page.locator('#assistBtn')).toBeVisible();
   await page.click('#assistBtn');
   await expect(page.locator('.sheet, #sheet')).toContainText('بدون أسماء الناس');
-  await page.click('.quick [data-q]:first-child');
+  await page.fill('#chatForm [name=q]', 'كيف أوفّر أسرع لهدف الزواج؟'); await page.click('#chatForm [type=submit]');
   await expect(page.locator('#chat .msg.assistant').last()).toContainText('3.500 د.ب');
   const call = await store(page, () => window.__aiCalls[0]);
   expect(call.name).toBe('lecture-ai');
   expect(call.body.mode).toBe('ask');
-  expect(call.body.messages).toEqual([{ role: 'user', content: 'كم صرفت على القهوة والأكل هالشهر؟' }]);
+  expect(call.body.messages).toEqual([{ role: 'user', content: 'كيف أوفّر أسرع لهدف الزواج؟' }]);
   const data = JSON.parse(call.body.data);
   expect(data.this_month.by_category['قهوة']).toBe(3.5);
   expect(data.debts_open).toEqual([{ amount: 20, direction: 'owes me' }]);
   expect(call.body.data).not.toContain('خالد');
   // سؤال ثاني: المحادثة تنرسل كاملة
-  await page.fill('#chatForm [name=q]', 'وكم باقي من الميزانية؟'); await page.click('#chatForm [type=submit]');
+  await page.fill('#chatForm [name=q]', 'وليش؟'); await page.click('#chatForm [type=submit]');
   await expect.poll(() => store(page, () => window.__aiCalls.length)).toBe(2);
   expect(await store(page, () => window.__aiCalls[1].body.messages.map((m) => m.role))).toEqual(['user', 'assistant', 'user']);
   // خلصت المحاولات
   await store(page, () => { App.S.invokeFn = async () => { throw new Error('limit'); }; });
   await page.fill('#chatForm [name=q]', 'سؤال ثالث'); await page.click('#chatForm [type=submit]');
   await expect(page.locator('#chat .msg.assistant').last()).toContainText('خلصت محاولات اليوم');
+});
+
+// ================= DW-074: مهارات المساعد بالجهاز + «اقرأ أي ملف» =================
+test('assistant device skills (DW-074): without an account it logs an expense, a reminder and shopping only after «أضف», and answers from the data', async ({ page }) => {
+  await open(page);
+  await store(page, () => App.S.setSettings({ onboarded: true, budget: 100 }));
+  await page.click('#assistBtn');
+  const say = async (q) => { await page.fill('#chatForm [name=q]', q); await page.click('#chatForm [type=submit]'); };
+  const last = page.locator('#chat .msg.assistant').last();
+  await say('صرفت 2.5 قهوة');
+  await expect(last).toContainText('أسجّل مصروف');
+  expect(await store(page, () => App.st.transactions.length)).toBe(0);           // ما ينكتب شي قبل التأكيد
+  await page.click('#chat [data-do]');
+  await expect(last).toContainText('انسجّل');
+  expect(await store(page, () => App.st.transactions.map((t) => [t.kind, t.amount]))).toEqual([['expense', 2.5]]);
+  await say('ذكّرني بكرة الساعة 5 م أدفع الإيجار');
+  await expect(last).toContainText('«أدفع الإيجار» بكرة');
+  await page.click('#chat [data-do]');
+  const task = await store(page, () => { const t = App.st.tasks[0]; const d = new Date(t.due_at), n = new Date(); n.setDate(n.getDate() + 1); return [t.title, d.getHours(), d.getDate() === n.getDate()]; });
+  expect(task).toEqual(['أدفع الإيجار', 17, true]);
+  await say('ضيف حليب وخبز للمشتريات');
+  await page.click('#chat [data-no]');
+  expect(await store(page, () => App.st.shopping.length)).toBe(0);
+  await say('ضيف حليب وخبز للمشتريات');
+  await page.click('#chat [data-do]');
+  expect(await store(page, () => App.st.shopping.map((x) => x.name))).toEqual(['حليب', 'خبز']);
+  await say('كم صرفت هالشهر؟');
+  await expect(last).toContainText('2.500');
+  await say('كم باقي من الميزانية؟');
+  await expect(last).toContainText('97.500');
+  await say('وش عندي بكرة؟');
+  await expect(last).toContainText('أدفع الإيجار');
+  await say('ليش السما زرقا؟');
+  await expect(last).toContainText('يحتاج الذكاء');
+});
+
+test('«اقرأ أي ملف» (DW-074): each file type goes to its place, and a team program PDF opens the football import', async ({ page }) => {
+  await open(page);
+  await store(page, () => App.S.setSettings({ onboarded: true }));
+  await page.evaluate((src) => { const its = eval(src)(); window.__its = its; HayatiPdfRead.items = async () => window.__its; }, '(' + teamProgram.toString() + ')');
+  const kinds = await page.evaluate(async () => {
+    const f = (name, body, type) => new File([body], name, { type: type || '' });
+    const c = async (file) => (await Extras._classifyFile(file)).to;
+    const out = {
+      pdf: await c(f('program.pdf', '%PDF', 'application/pdf')),
+      docx: await c(f('chapter.docx', 'x')), pptx: await c(f('slides.pptx', 'x')),
+      csv: await c(f('statement.csv', 'a,b')), xlsx: await c(f('bank.xlsx', 'x')),
+      img: await c(f('board.jpg', 'x', 'image/jpeg')),
+      coach: await c(f('coach.txt', 'الأحد 25/10 تمرين الساعة 6 م\nمباراة 28/10 الساعة 7 م ضد الرفاع', 'text/plain')),
+      notes: await c(f('notes.txt', 'Opportunity cost is the value of the next best alternative given up when making a choice. '.repeat(3), 'text/plain')),
+      odd: await c(f('a.bin', 'x')),
+    };
+    window.__its = []; out.scanned = await c(f('scan.pdf', '%PDF', 'application/pdf'));
+    return out;
+  });
+  expect(kinds).toEqual({ pdf: 'football', docx: 'lecture-office', pptx: 'lecture-office', csv: 'bank', xlsx: 'bank', img: 'image', coach: 'football', notes: 'lecture-text', odd: 'ask', scanned: 'ask' });
+  // ملف ما عرفناه ← «وش هالملف؟»
+  await page.evaluate(() => Extras.readAnyFile(new File(['x'], 'a.bin')));
+  await expect(page.locator('#sheetTitle')).toHaveText('وش هالملف؟', { timeout: 5000 });
+  await page.click('#sheetCancel');
+  // برنامج الفريق ← استيراد جدول التمارين ومقروء
+  await page.evaluate((src) => { window.__its = eval(src)(); }, '(' + teamProgram.toString() + ')');
+  await page.evaluate(() => Extras.readAnyFile(new File(['%PDF'], 'program.pdf', { type: 'application/pdf' })));
+  await expect(page.locator('#sheetTitle')).toHaveText('استيراد جدول التمارين', { timeout: 5000 });
+  await expect(page.locator('#impStatus')).toContainText('لقيت 3');
+  // صورة بدون حساب: نقول بصراحة إنها تحتاج حساب
+  await page.click('#sheetCancel');
+  await page.evaluate(() => Extras.readAnyFile(new File(['x'], 'board.jpg', { type: 'image/jpeg' })));
+  await expect(page.locator('#toast')).toContainText('قراءة الصور تحتاج حساب', { timeout: 5000 });
 });
 
 // ================= DW-046: سجل أخطاء على الجهاز =================
@@ -3142,7 +3211,7 @@ test('bill split (DW-048): the message for friends lists each share', async ({ p
 });
 
 // ================= DW-048: اختصارات أيقونة التطبيق =================
-test('app icon shortcuts (DW-048): «اسأل حياتي» from the icon opens the assistant, or says to sign in', async ({ page }) => {
+test('app icon shortcuts (DW-048): «اسأل حياتي» from the icon opens the assistant (its device skills work without an account)', async ({ page }) => {
   await page.addInitScript(() => {
     window.__act = null;
     window.Capacitor = { isNativePlatform: () => true, getPlatform: () => 'android', Plugins: {
@@ -3150,7 +3219,8 @@ test('app icon shortcuts (DW-048): «اسأل حياتي» from the icon opens t
     } };
   });
   await open(page);
-  await expect(page.locator('#toast')).toContainText('«اسأل حياتي» يشتغل لما تسجّل دخول بحسابك', { timeout: 5000 });
+  await expect(page.locator('#sheetTitle')).toHaveText('المساعد الذكي', { timeout: 5000 });
+  await page.click('#sheetCancel');
   // التطبيق مفتوح: نفس الاختصار يوصل كحدث
   await store(page, () => { App.S.status.signedIn = true; App.S.invokeFn = async () => ({ text: 'ok' }); window.__act({ name: 'add-tx' }); });
   await expect(page.locator('#sheet[open] [name="amount"]')).toBeVisible({ timeout: 5000 });
