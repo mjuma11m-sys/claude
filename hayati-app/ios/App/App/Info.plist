@@ -78,6 +78,8 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>«حياتي» ما يكتب أي شي بتطبيق الصحة. يقرا بس نومك ونبضك وخطواتك عشان يعرضها لك بـ«صحتي».</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>«حياتي» يقرا من تطبيق الصحة نومك ومراحله، ونبض الراحة، وHRV، وخطواتك (من Apple Watch أو ساعتك) عشان يعرضها بـ«صحتي». ما نكتب شي بتطبيق الصحة، وما نستخدمها لإعلانات ولا نعطيها لأحد.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
