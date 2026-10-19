@@ -212,6 +212,41 @@ test('PDF position reader: broken-font university table and a PowerPoint workout
   expect(r.day).toEqual([3, 4]);
 });
 
+// DW-073: برنامج الفريق من Google Docs: كل حرف عربي لحاله وبشكله (Presentation Forms) ← سطور ← حصص بتواريخها
+const teamProgram = () => {
+  const R = window.HayatiPdfRead, out = [];
+  // كلمة = حروف من اليمين لليسار، كل حرف 5 عرض بدون فراغ؛ الأرقام قطعة وحدة
+  const word = (w, xr, y) => { const ch = /\d/.test(w) ? [w] : [...w]; let x = xr; for (const c of ch) { const wd = c.length * 5; x -= wd; out.push({ s: R.fix(c), x, y, p: 1, w: 612, wd }); } };
+  const row = (y, ...cells) => cells.forEach(([w, xr]) => word(w, xr, y));
+  row(670, ['برنامج', 540], ['الفريق', 500], ['الأول', 460]);
+  row(560, ['جدول', 540], ['التدريبات', 510], ['(1', 440], ['-', 425], ['7', 415], ['ديسمبر', 400], ['2030)', 340]);
+  row(476, ['الثلاثاء', 550], ['(1/12/2030)', 500], ['راحة', 345], ['-', 200]);
+  row(431, ['الاربعاء', 550], ['(2/12/2030)', 500], ['\ufe97\ufee4\ufeae\ufef3\ufee6', 345], ['5:45', 200]);
+  row(385, ['السبت', 550], ['(5/12/2030)', 500], ['تمرين', 345], ['6:15', 200]);
+  row(251, ['الاحد', 550], ['(6/12/2030)', 500], ['مباراة', 375], ['رسمية', 345], ['5:00', 200]);
+  row(206, ['الاثنني', 550], ['(7/12/2030)', 500], ['راحة', 345], ['_', 200]);
+  return out;
+};
+test('team program PDF (Google Docs letters): rest days skipped, trainings and the match land on their dates', async ({ page }) => {
+  await open(page);
+  const r = await page.evaluate((src) => { const its = eval(src)(); const t = HayatiPdfRead.lines(its); return { t, rows: Extras._parseFootball(t).map((x) => [x.kind, x.date, x.start]) }; }, '(' + teamProgram.toString() + ')');
+  expect(r.t).toContain('تمرين');
+  expect(r.rows).toEqual([['training', '2030-12-02', '17:45'], ['training', '2030-12-05', '18:15'], ['match', '2030-12-06', '17:00']]);
+});
+test('«ارفع جدولك» with a team program PDF hands it to the football import and saves dated sessions', async ({ page }) => {
+  await open(page);
+  await store(page, () => App.S.setSettings({ onboarded: true, roles: ['keeper', 'athlete'] }));
+  await page.evaluate((src) => { const its = eval(src)(); HayatiPdfRead.items = async () => its; }, '(' + teamProgram.toString() + ')');
+  await page.click('#toolsBtn');
+  await page.click('[data-tool="timetable"]');
+  await page.setInputFiles('#ttFile', { name: 'program.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n%%EOF\n') });
+  await page.click('#ttRead');
+  await expect(page.locator('#sheetTitle')).toHaveText('استيراد جدول التمارين', { timeout: 5000 });
+  await expect(page.locator('#impStatus')).toContainText('لقيت 3');
+  await page.click('#sheetSave');
+  await expect.poll(() => store(page, () => App.st.tasks.map((t) => t.title).sort())).toEqual(['⚽ تمرين الفريق', '⚽ تمرين الفريق', '🏟️ مباراة']);
+});
+
 test('timetable image without an account asks to sign in or paste text', async ({ page }) => {
   await open(page);
   await store(page, () => App.S.setSettings({ onboarded: true, roles: ['keeper', 'athlete'] }));   // يطلع حتى لو ملفه مو «طالب»

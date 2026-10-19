@@ -18,7 +18,7 @@
 
   // ---------- القارئ المحلي (نص) ----------
   const DAY_RE = [
-    [0, /(الأحد|الاحد|احد|sunday|\bsun\b)/i], [1, /(الاثنين|الإثنين|اثنين|monday|\bmon\b)/i], [2, /(الثلاثاء|الثلاثا|ثلاثاء|tuesday|\btue\b)/i],
+    [0, /(الأحد|الاحد|احد|sunday|\bsun\b)/i], [1, /(الاثنين|الإثنين|اثنين|اثنني|monday|\bmon\b)/i], [2, /(الثلاثاء|الثلاثا|ثلاثاء|tuesday|\btue\b)/i],
     [3, /(الأربعاء|الاربعاء|اربعاء|wednesday|\bwed\b)/i], [4, /(الخميس|خميس|thursday|\bthu\b)/i], [5, /(الجمعة|الجمعه|جمعة|friday|\bfri\b)/i], [6, /(السبت|سبت|saturday|\bsat\b)/i],
   ];
   const digits = (s) => String(s).replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
@@ -107,18 +107,19 @@
     const images = [], texts = [];
     for (let i = 1; i <= Math.min(doc.numPages, 3); i++) {
       const page = await doc.getPage(i);
-      const tc = await page.getTextContent();
-      texts.push(tc.items.map((x) => x.str).join(' '));
+      if (!window.HayatiPdfRead) texts.push((await page.getTextContent()).items.map((x) => x.str).join(' '));
       const vp = page.getViewport({ scale: 1.6 });
       const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
       await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
       images.push(await new Promise((r) => c.toBlob(r, 'image/png')));
     }
+    // DW-073: Google Docs يطلع الحروف لحالها ← قارئ المواقع يجمعها سطر سطر
+    if (window.HayatiPdfRead) texts.push(HayatiPdfRead.lines(await HayatiPdfRead.items(file, 3)));
     return { images, text: texts.join('\n') };
   }
 
   // ---------- الواجهة ----------
-  function importSheet() {
+  function importSheet(prefill) {
     let rows = [];
     const draw = () => rows.length ? '<div class="card flush"><ul class="list">' + rows.map((r, i) => {
       const k = KINDS[r.kind];
@@ -140,6 +141,8 @@
         const status = (t) => { root.querySelector('#impStatus').textContent = t; };
         const show = () => { root.querySelector('#impRows').innerHTML = draw(); };
         let file = null;
+        // DW-073: جاي من «ارفع جدولك» ومعاه نص برنامج الفريق ← نعبّيه ونقراه على طول
+        if (typeof prefill === 'string' && prefill) { root.querySelector('[name=txt]').value = prefill; setTimeout(() => root.querySelector('#impRead').click(), 0); }
         root.querySelector('#impFile').onchange = (e) => { file = e.target.files[0] || null; status(file ? '📎 ' + file.name : ''); };
         root.querySelector('#impRows').onclick = (e) => { const b = e.target.closest('[data-i]'); if (b) { rows[b.dataset.i].on = !rows[b.dataset.i].on; show(); } };
         root.querySelector('#impRead').onclick = async (ev) => {

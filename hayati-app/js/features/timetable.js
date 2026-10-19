@@ -237,6 +237,11 @@
                 } else {
                   const sc = HayatiPdfRead.schedule(its);
                   if (sc.length) list = sc;
+                  else if (E._parseFootball) {
+                    // DW-073: برنامج الفريق بتواريخ (تمرين/مباراة/راحة + وقت التواجد) ← استيراد جدول الكورة
+                    const txt = HayatiPdfRead.lines(its);
+                    if (/تمرين|مباراة|مباراه|تدريب/.test(txt) && E._parseFootball(txt).length) { A.closeSheet(); setTimeout(() => E.footballImport(txt), 250); return; }
+                  }
                 }
               } catch (e) { /* نكمّل بالطرق الثانية */ }
             }

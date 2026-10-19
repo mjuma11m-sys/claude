@@ -8841,7 +8841,7 @@ window.HAYATI_CONFIG = {
 
   // ---------- القارئ المحلي (نص) ----------
   const DAY_RE = [
-    [0, /(الأحد|الاحد|احد|sunday|\bsun\b)/i], [1, /(الاثنين|الإثنين|اثنين|monday|\bmon\b)/i], [2, /(الثلاثاء|الثلاثا|ثلاثاء|tuesday|\btue\b)/i],
+    [0, /(الأحد|الاحد|احد|sunday|\bsun\b)/i], [1, /(الاثنين|الإثنين|اثنين|اثنني|monday|\bmon\b)/i], [2, /(الثلاثاء|الثلاثا|ثلاثاء|tuesday|\btue\b)/i],
     [3, /(الأربعاء|الاربعاء|اربعاء|wednesday|\bwed\b)/i], [4, /(الخميس|خميس|thursday|\bthu\b)/i], [5, /(الجمعة|الجمعه|جمعة|friday|\bfri\b)/i], [6, /(السبت|سبت|saturday|\bsat\b)/i],
   ];
   const digits = (s) => String(s).replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
@@ -8930,18 +8930,19 @@ window.HAYATI_CONFIG = {
     const images = [], texts = [];
     for (let i = 1; i <= Math.min(doc.numPages, 3); i++) {
       const page = await doc.getPage(i);
-      const tc = await page.getTextContent();
-      texts.push(tc.items.map((x) => x.str).join(' '));
+      if (!window.HayatiPdfRead) texts.push((await page.getTextContent()).items.map((x) => x.str).join(' '));
       const vp = page.getViewport({ scale: 1.6 });
       const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
       await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
       images.push(await new Promise((r) => c.toBlob(r, 'image/png')));
     }
+    // DW-073: Google Docs يطلع الحروف لحالها ← قارئ المواقع يجمعها سطر سطر
+    if (window.HayatiPdfRead) texts.push(HayatiPdfRead.lines(await HayatiPdfRead.items(file, 3)));
     return { images, text: texts.join('\n') };
   }
 
   // ---------- الواجهة ----------
-  function importSheet() {
+  function importSheet(prefill) {
     let rows = [];
     const draw = () => rows.length ? '<div class="card flush"><ul class="list">' + rows.map((r, i) => {
       const k = KINDS[r.kind];
@@ -8963,6 +8964,8 @@ window.HAYATI_CONFIG = {
         const status = (t) => { root.querySelector('#impStatus').textContent = t; };
         const show = () => { root.querySelector('#impRows').innerHTML = draw(); };
         let file = null;
+        // DW-073: جاي من «ارفع جدولك» ومعاه نص برنامج الفريق ← نعبّيه ونقراه على طول
+        if (typeof prefill === 'string' && prefill) { root.querySelector('[name=txt]').value = prefill; setTimeout(() => root.querySelector('#impRead').click(), 0); }
         root.querySelector('#impFile').onchange = (e) => { file = e.target.files[0] || null; status(file ? '📎 ' + file.name : ''); };
         root.querySelector('#impRows').onclick = (e) => { const b = e.target.closest('[data-i]'); if (b) { rows[b.dataset.i].on = !rows[b.dataset.i].on; show(); } };
         root.querySelector('#impRead').onclick = async (ev) => {
@@ -9060,7 +9063,8 @@ window.HAYATI_CONFIG = {
 
   // بعض المواقع تطلع PDF بخط أرقامه مشفّرة: \u0013 = 0، \u0014 = 1، \u0003 = مسافة، \u0010 = «-»
   const BROKEN = /[\u0003\u0010\u0013-\u001c]/;
-  const fix = (s) => String(s).replace(/[\u0013-\u001c]/g, (c) => String(c.charCodeAt(0) - 0x13)).replace(/\u0003/g, ' ').replace(/\u0010/g, '-')
+  // Google Docs يطلع الحروف العربية بأشكالها (Presentation Forms ﺍﻟ…): NFKC يرجعها حروف عادية قبل التنظيف
+  const fix = (s) => String(s).normalize('NFKC').replace(/[\u0013-\u001c]/g, (c) => String(c.charCodeAt(0) - 0x13)).replace(/\u0003/g, ' ').replace(/\u0010/g, '-')
     .replace(/[^ -~ -ÿ؀-ۿ٠-٩‌-‏]/g, '').replace(/\s+/g, ' ').trim();
 
   async function items(file, maxPages) {
@@ -9076,7 +9080,7 @@ window.HAYATI_CONFIG = {
         // بالخط المكسور: النسخة «النظيفة» من الوقت مكررة وغلط بكل صف (08:00 09:00 - ص)، والصح هو المشفّر
         if (broken && !BROKEN.test(it.str) && /\d{1,2}:\d{2}/.test(it.str)) continue;
         const s = fix(it.str);
-        if (s) out.push({ s, x: it.transform[4], y: it.transform[5], p, w, broken });
+        if (s) out.push({ s, x: it.transform[4], y: it.transform[5], p, w, wd: it.width || 0, broken });
       }
     }
     return out;
@@ -9232,7 +9236,24 @@ window.HAYATI_CONFIG = {
     return rows;
   }
 
-  window.HayatiPdfRead = { items, schedule, workout, dayIn, fix };
+  // ---------- النص سطر سطر (للقرّاء اللي يشتغلون على نص) ----------
+  // Google Docs يطلع كل حرف عربي لحاله: نجمع اللي بنفس الارتفاع، من اليمين لليسار، ونحط مسافة لو فيه فراغ بينهم
+  function lines(all) {
+    const out = [];
+    for (const p of [...new Set(all.map((i) => i.p))]) {
+      const rows = [];
+      for (const i of all.filter((x) => x.p === p).sort((a, b) => b.y - a.y)) { const r = rows.find((o) => Math.abs(o.y - i.y) < 4); if (r) r.its.push(i); else rows.push({ y: i.y, its: [i] }); }
+      for (const r of rows) {
+        const its = r.its.sort((a, b) => b.x - a.x);
+        let t = '';
+        its.forEach((i, k) => { const prev = its[k - 1]; t += (prev && prev.x - (i.x + i.wd) > 2.5 ? ' ' : '') + i.s; });
+        out.push(t.replace(/\s+/g, ' ').trim());
+      }
+    }
+    return out.filter(Boolean).join('\n');
+  }
+
+  window.HayatiPdfRead = { items, schedule, workout, dayIn, fix, lines };
 })();
 
 </script>
@@ -9476,6 +9497,11 @@ window.HAYATI_CONFIG = {
                 } else {
                   const sc = HayatiPdfRead.schedule(its);
                   if (sc.length) list = sc;
+                  else if (E._parseFootball) {
+                    // DW-073: برنامج الفريق بتواريخ (تمرين/مباراة/راحة + وقت التواجد) ← استيراد جدول الكورة
+                    const txt = HayatiPdfRead.lines(its);
+                    if (/تمرين|مباراة|مباراه|تدريب/.test(txt) && E._parseFootball(txt).length) { A.closeSheet(); setTimeout(() => E.footballImport(txt), 250); return; }
+                  }
                 }
               } catch (e) { /* نكمّل بالطرق الثانية */ }
             }

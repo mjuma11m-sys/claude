@@ -20,7 +20,8 @@
 
   // بعض المواقع تطلع PDF بخط أرقامه مشفّرة: \u0013 = 0، \u0014 = 1، \u0003 = مسافة، \u0010 = «-»
   const BROKEN = /[\u0003\u0010\u0013-\u001c]/;
-  const fix = (s) => String(s).replace(/[\u0013-\u001c]/g, (c) => String(c.charCodeAt(0) - 0x13)).replace(/\u0003/g, ' ').replace(/\u0010/g, '-')
+  // Google Docs يطلع الحروف العربية بأشكالها (Presentation Forms ﺍﻟ…): NFKC يرجعها حروف عادية قبل التنظيف
+  const fix = (s) => String(s).normalize('NFKC').replace(/[\u0013-\u001c]/g, (c) => String(c.charCodeAt(0) - 0x13)).replace(/\u0003/g, ' ').replace(/\u0010/g, '-')
     .replace(/[^ -~ -ÿ؀-ۿ٠-٩‌-‏]/g, '').replace(/\s+/g, ' ').trim();
 
   async function items(file, maxPages) {
@@ -36,7 +37,7 @@
         // بالخط المكسور: النسخة «النظيفة» من الوقت مكررة وغلط بكل صف (08:00 09:00 - ص)، والصح هو المشفّر
         if (broken && !BROKEN.test(it.str) && /\d{1,2}:\d{2}/.test(it.str)) continue;
         const s = fix(it.str);
-        if (s) out.push({ s, x: it.transform[4], y: it.transform[5], p, w, broken });
+        if (s) out.push({ s, x: it.transform[4], y: it.transform[5], p, w, wd: it.width || 0, broken });
       }
     }
     return out;
@@ -192,5 +193,22 @@
     return rows;
   }
 
-  window.HayatiPdfRead = { items, schedule, workout, dayIn, fix };
+  // ---------- النص سطر سطر (للقرّاء اللي يشتغلون على نص) ----------
+  // Google Docs يطلع كل حرف عربي لحاله: نجمع اللي بنفس الارتفاع، من اليمين لليسار، ونحط مسافة لو فيه فراغ بينهم
+  function lines(all) {
+    const out = [];
+    for (const p of [...new Set(all.map((i) => i.p))]) {
+      const rows = [];
+      for (const i of all.filter((x) => x.p === p).sort((a, b) => b.y - a.y)) { const r = rows.find((o) => Math.abs(o.y - i.y) < 4); if (r) r.its.push(i); else rows.push({ y: i.y, its: [i] }); }
+      for (const r of rows) {
+        const its = r.its.sort((a, b) => b.x - a.x);
+        let t = '';
+        its.forEach((i, k) => { const prev = its[k - 1]; t += (prev && prev.x - (i.x + i.wd) > 2.5 ? ' ' : '') + i.s; });
+        out.push(t.replace(/\s+/g, ' ').trim());
+      }
+    }
+    return out.filter(Boolean).join('\n');
+  }
+
+  window.HayatiPdfRead = { items, schedule, workout, dayIn, fix, lines };
 })();
