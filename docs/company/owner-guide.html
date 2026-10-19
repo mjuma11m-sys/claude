@@ -1,0 +1,223 @@
+<title>دليل خطوات إداراتي</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: عمود واحد للجوال، كل خطوة = رقم + نص + صورة/رسم، وأقسام مرقمة لأن الترتيب مهم */
+:root{
+  --bg:#f5f3ee; --surface:#ffffff; --ink:#1b2433; --muted:#5d6675; --line:#e2ddd2;
+  --navy:#1f3a5f; --mark:#d61f45; --ok:#1f7a4d; --chip:#ece7dc;
+  --body:"IBM Plex Sans Arabic",Tahoma,system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12161d; --surface:#1b212b; --ink:#e8ecf2; --muted:#9aa4b4; --line:#2c3441;
+  --navy:#7fa7d9; --mark:#ff5c7a; --ok:#4cc38a; --chip:#262e3a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161d; --surface:#1b212b; --ink:#e8ecf2; --muted:#9aa4b4; --line:#2c3441;
+  --navy:#7fa7d9; --mark:#ff5c7a; --ok:#4cc38a; --chip:#262e3a; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.75}
+.wrap{max-width:720px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:36px}
+header h1{font-size:1.7rem;margin:0;text-wrap:balance}
+header p{margin:.4rem 0 0;color:var(--muted)}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.toc a{background:var(--chip);color:var(--ink);text-decoration:none;padding:6px 12px;border-radius:999px;font-size:.9rem}
+section{display:grid;gap:18px}
+section>h2{font-size:1.3rem;margin:0;display:flex;gap:10px;align-items:center}
+section>h2 .n{background:var(--navy);color:var(--bg);width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:1rem;flex:none}
+.meta{color:var(--muted);font-size:.9rem;margin:-10px 0 0}
+.step{display:grid;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.step h3{margin:0;font-size:1.05rem;display:flex;gap:8px}
+.step h3 b{color:var(--navy);font-family:var(--mono)}
+.step p{margin:0}
+.shot{width:100%;max-width:330px;justify-self:center;border-radius:18px;border:1px solid var(--line);display:block}
+.copy{display:flex;gap:8px;align-items:stretch;min-width:0}
+.copy code{flex:1;min-width:0;overflow-wrap:anywhere;background:var(--chip);padding:8px 10px;border-radius:8px;font-family:var(--mono);font-size:.82rem;direction:ltr;text-align:left}
+.copy button{background:var(--navy);color:var(--bg);border:0;border-radius:8px;padding:0 14px;font:600 .9rem var(--body);cursor:pointer}
+.copy button:focus-visible{outline:3px solid var(--mark);outline-offset:2px}
+.warn{border-inline-start:4px solid var(--mark);background:var(--surface);padding:10px 14px;border-radius:8px;margin:0}
+.good{color:var(--ok);font-weight:600}
+.note{font-size:.85rem;color:var(--muted);margin:0}
+/* رسومات توضيحية (مو لقطات حقيقية) */
+.mock{border:1px dashed var(--line);border-radius:12px;padding:12px;background:var(--bg);display:grid;gap:8px;direction:ltr;font-family:system-ui,sans-serif;font-size:.85rem}
+.mock .cap{direction:rtl;font-family:var(--body);color:var(--muted);font-size:.78rem}
+.mock .row{display:flex;gap:10px;min-width:0}
+.mock .side{display:grid;gap:4px;width:150px;flex:none}
+.mock .side span{padding:5px 8px;border-radius:6px;color:var(--muted)}
+.mock .main{flex:1;min-width:0;display:grid;gap:8px;align-content:start}
+.mock .field{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:6px 8px;overflow-wrap:anywhere;color:var(--ink)}
+.mock .lbl{font-weight:600;color:var(--ink)}
+.mock .btn{justify-self:start;background:var(--ok);color:var(--bg);padding:5px 12px;border-radius:6px;font-weight:600}
+.hl{outline:3px solid var(--mark);outline-offset:2px;border-radius:6px;color:var(--ink)!important;font-weight:600}
+.phone{width:200px;justify-self:center;border:2px solid var(--muted);border-radius:26px;padding:14px 10px;display:grid;gap:8px;direction:rtl;font-family:var(--body)}
+.phone .sheet{background:var(--surface);border-radius:10px;padding:6px;display:grid;gap:2px}
+.phone .sheet span{padding:5px 8px;font-size:.82rem;border-radius:6px}
+.phone .bar{display:flex;justify-content:space-around;align-items:center;border-top:1px solid var(--line);padding-top:8px;font-size:1.1rem;color:var(--navy)}
+@media (max-width:480px){.mock .side{width:105px}}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>اللي باقي عليك: خطوة خطوة</h1>
+  <p>أربع مهام. الأولى والثانية بس تحتاج تسويها الحين، تاخذ ربع ساعة تقريباً.</p>
+  <nav class="toc" aria-label="الأقسام">
+    <a href="#supabase">١ · رابط الموقع</a><a href="#password">٢ · كلمة السر</a><a href="#phone">٣ · التجربة على الجوال</a><a href="#later">٤ · بعدين</a>
+  </nav>
+</header>
+
+<section id="supabase">
+  <h2><span class="n">١</span>رابط الموقع في Supabase</h2>
+  <p class="meta">٥ دقايق · من الكمبيوتر أسهل. بدون هالخطوة رابط تأكيد الإيميل يوديك لصفحة غلط (localhost).</p>
+
+  <div class="step">
+    <h3><b>1</b> افتح صفحة الإعداد مباشرة</h3>
+    <p>سجّل دخول في Supabase وافتح هالرابط. يوديك لنفس الصفحة بدون ما تدوّر:</p>
+    <div class="copy"><code id="u1">https://supabase.com/dashboard/project/zqnitovbkgvbeuzzglzc/auth/url-configuration</code><button type="button" data-copy="u1">نسخ</button></div>
+    <p class="note">لو ما فتح: من القائمة اليسار ← <b>Authentication</b> ← <b>URL Configuration</b>.</p>
+  </div>
+
+  <div class="step">
+    <h3><b>2</b> حط الرابط بخانة Site URL واضغط Save</h3>
+    <div class="copy"><code id="u2">https://myrent-git-claude-vibrant-mccarthy-56fs79-ads-5ce6.vercel.app/idarati-app/</code><button type="button" data-copy="u2">نسخ</button></div>
+    <div class="mock" role="img" aria-label="رسم توضيحي لصفحة URL Configuration">
+      <div class="cap">رسم توضيحي، مو لقطة حقيقية. الشكل عندك ممكن يختلف شوي.</div>
+      <div class="row">
+        <div class="side"><span>Users</span><span>Providers</span><span class="hl">URL Configuration</span><span>Emails</span></div>
+        <div class="main">
+          <div class="lbl">Site URL</div>
+          <div class="field hl">https://myrent-git-…/idarati-app/</div>
+          <div class="btn">Save</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <h3><b>3</b> نفس الرابط بـ Redirect URLs</h3>
+    <p>تحت بنفس الصفحة: <b>Add URL</b> ← الصق نفس الرابط ← <b>Save URLs</b>.</p>
+    <div class="mock" role="img" aria-label="رسم توضيحي لقسم Redirect URLs">
+      <div class="cap">رسم توضيحي.</div>
+      <div class="main">
+        <div class="lbl">Redirect URLs</div>
+        <div class="btn hl" style="background:var(--navy)">Add URL</div>
+        <div class="field">https://myrent-git-…/idarati-app/</div>
+        <div class="btn">Save URLs</div>
+      </div>
+    </div>
+    <p class="good">✓ خلصت الخطوة الأولى.</p>
+  </div>
+</section>
+
+<section id="password">
+  <h2><span class="n">٢</span>غيّر كلمة سر قاعدة البيانات</h2>
+  <p class="meta">دقيقتين. القديمة انكتبت بالمحادثة، فلازم تتغير. التطبيق ما يستخدمها، يعني تغييرها ما يخرّب شي.</p>
+
+  <div class="step">
+    <h3><b>1</b> افتح إعدادات قاعدة البيانات</h3>
+    <div class="copy"><code id="u3">https://supabase.com/dashboard/project/zqnitovbkgvbeuzzglzc/database/settings</code><button type="button" data-copy="u3">نسخ</button></div>
+    <p class="note">لو ما فتح: الترس ⚙️ (Project Settings) ← <b>Database</b>.</p>
+  </div>
+
+  <div class="step">
+    <h3><b>2</b> اضغط Reset database password</h3>
+    <div class="mock" role="img" aria-label="رسم توضيحي لزر إعادة تعيين كلمة السر">
+      <div class="cap">رسم توضيحي.</div>
+      <div class="main">
+        <div class="lbl">Database password</div>
+        <div class="btn hl" style="background:var(--surface);color:var(--ink);border:1px solid var(--line)">Reset database password</div>
+        <div class="field">Generate a password ↻ &nbsp;·&nbsp; ••••••••••••</div>
+        <div class="btn">Reset password</div>
+      </div>
+    </div>
+    <p>اضغط <b>Generate a password</b>، بعدين <b>Reset password</b>.</p>
+    <p class="warn">لا ترسل كلمة السر الجديدة لي ولا لأحد، ولا تحطها بأي مكان. التطبيق ما يحتاجها. لو تبي تحفظها، حطها بمدير كلمات السر بجوالك.</p>
+  </div>
+</section>
+
+<section id="phone">
+  <h2><span class="n">٣</span>التجربة على جوالك</h2>
+  <p class="meta">١٠ دقايق. الصور الجاية لقطات حقيقية من التطبيق.<br><b>* لقطات ببيانات تجريبية</b></p>
+
+  <div class="step">
+    <h3><b>1</b> افتح التطبيق وحطه على الشاشة الرئيسية</h3>
+    <div class="copy"><code id="u4">https://myrent-git-claude-vibrant-mccarthy-56fs79-ads-5ce6.vercel.app/idarati-app/</code><button type="button" data-copy="u4">نسخ</button></div>
+    <p><b>آيفون (Safari):</b> زر المشاركة ⬆️ تحت ← انزل ← <b>«إضافة إلى الشاشة الرئيسية»</b> ← إضافة.<br>
+       <b>أندرويد (Chrome):</b> الثلاث نقاط ⋮ فوق ← <b>«إضافة إلى الشاشة الرئيسية»</b> أو <b>«تثبيت التطبيق»</b>.</p>
+    <div class="phone" role="img" aria-label="رسم توضيحي لقائمة المشاركة في آيفون">
+      <div class="sheet"><span>نسخ</span><span>إضافة إلى المفضلة</span><span class="hl">إضافة إلى الشاشة الرئيسية ➕</span></div>
+      <div class="bar"><span>‹</span><span>›</span><span class="hl">⬆️</span><span>📖</span></div>
+    </div>
+    <p class="note">رسم توضيحي لقائمة آيفون.</p>
+    <p class="good">المتوقع: أيقونة «إداراتي» على الشاشة، وتفتح بدون شريط المتصفح.</p>
+  </div>
+
+  <div class="step">
+    <h3><b>2</b> الإعدادات ← حسابي والمزامنة ← «حساب جديد»</h3>
+    <p>اكتب إيميلك وكلمة سر (٨ حروف أو أكثر)، وأشّر على مربع الموافقة. بدونه الزر مقفل. بعدين اضغط <b>«سوّ الحساب»</b>.</p>
+    <img class="shot" src="img/03-sync-signup.png" alt="شاشة إنشاء الحساب في الإعدادات، ومربع الموافقة محدد بالأحمر" loading="lazy">
+    <p class="good">المتوقع: يوصلك إيميل تأكيد من Supabase. شوف البريد المزعج بعد.</p>
+  </div>
+
+  <div class="step">
+    <h3><b>3</b> افتح رابط التأكيد من الإيميل</h3>
+    <p>افتحه من نفس الجوال.</p>
+    <p class="good">المتوقع: يرجعك للتطبيق.</p>
+    <p class="warn">لو فتح صفحة فيها «localhost» أو «This site can't be reached»، معناه الخطوة ١ ناقصة. ارجع سوّها وسجّل دخول عادي.</p>
+  </div>
+
+  <div class="step">
+    <h3><b>4</b> سجّل دخول ← «ابدأ وارفع بيانات هالجهاز»</h3>
+    <p>من نفس القسم: <b>«دخول»</b> بالإيميل وكلمة السر، بعدين اختار رفع بيانات الجهاز.</p>
+    <img class="shot" src="img/02-sync-login.png" alt="شاشة الدخول وخانة الإيميل محددة بالأحمر" loading="lazy">
+    <p class="good">المتوقع: تطلع كلمة «متزامن».</p>
+  </div>
+
+  <div class="step">
+    <h3><b>5</b> سجّل دفعة، وشيّك من جهاز ثاني</h3>
+    <p>المستأجرين ← اضغط على أي وحدة ← <b>«سجّل الدفعة»</b>. بعدين افتح التطبيق من جهاز ثاني (آيباد، لابتوب، جوال أهلك) وادخل بنفس الحساب.</p>
+    <img class="shot" src="img/04-unit.png" alt="قائمة الوحدات وإحدى البطاقات محددة بالأحمر" loading="lazy">
+    <p class="good">المتوقع: الدفعة تطلع بالجهاز الثاني.</p>
+  </div>
+
+  <div class="step">
+    <h3><b>6</b> ارفع صورة عقد</h3>
+    <p>افتح الوحدة ← انزل تحت ← <b>«العقد»</b> ← <b>«ارفع العقد الموقّع»</b> ← صوّر أي ورقة للتجربة.</p>
+    <img class="shot" src="img/05-unit-sheet.png" alt="شاشة الوحدة وزر العقد محدد بالأحمر" loading="lazy">
+    <img class="shot" src="img/06-contract-upload.png" alt="قسم العقد الموقّع وزر الرفع محدد بالأحمر" loading="lazy">
+    <p class="good">المتوقع: «انحفظ العقد الموقّع بالسحابة».</p>
+  </div>
+
+  <div class="step">
+    <h3><b>7</b> جرّب بدون نت</h3>
+    <p>شغّل وضع الطيران ✈️ ← سجّل دفعة ← طفّي وضع الطيران.</p>
+    <p class="good">المتوقع: الدفعة تنرفع بروحها خلال ثواني لما يرجع النت.</p>
+  </div>
+
+  <p class="warn">أي خطوة ما زبطت: صوّر الشاشة وأرسلها لي هنا، مع رقم الخطوة.</p>
+</section>
+
+<section id="later">
+  <h2><span class="n">٤</span>بعدين، مو مستعجلة</h2>
+  <div class="step">
+    <h3><b>أ</b> العائلات التجريبية</h3>
+    <p>اختار ٥ إلى ١٠ عائلات تعرفهم ويأجّرون. ملف <code>docs/company/TRIAL-KIT.md</code> فيه الرسالة الجاهزة والأسئلة.</p>
+  </div>
+  <div class="step">
+    <h3><b>ب</b> مراجعة محامي</h3>
+    <p>نص الخصوصية والشروط داخل التطبيق مسودة. لازم محامي مرخّص يراجعه قبل ما يستخدمه أحد من برا العائلة. التكلفة التقديرية من ١٠٠ إلى ٣٠٠ د.ب.</p>
+  </div>
+  <div class="step">
+    <h3><b>ج</b> سؤال واحد</h3>
+    <p>أنت مسجّل في ضريبة القيمة المضافة (VAT)؟ جوابك يحدد إذا نضيف الفاتورة الضريبية ولا لا.</p>
+  </div>
+</section>
+</div>
+
+<script>
+document.querySelectorAll("[data-copy]").forEach(function(b){
+  b.addEventListener("click",function(){
+    var el=document.getElementById(b.dataset.copy), t=el.textContent;
+    var done=function(){b.textContent="انتسخ ✓";setTimeout(function(){b.textContent="نسخ"},1600)};
+    var sel=function(){var r=document.createRange();r.selectNodeContents(el);var s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent="حدّده وانسخ"};
+    try{navigator.clipboard.writeText(t).then(done,sel)}catch(e){sel()}
+  });
+});
+</script>
