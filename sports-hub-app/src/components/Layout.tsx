@@ -1,6 +1,7 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation, useMatches } from 'react-router'
 import { useAuth } from '../auth/AuthProvider'
+import { trackScreen } from '../data/telemetry'
 import { navFor } from '../lib/nav'
 import { ROLE_LABEL } from '../lib/roles'
 import { Icon } from './Icon'
@@ -32,6 +33,7 @@ export function Layout() {
     main.current?.focus({ preventScroll: true })
     scrollTo(0, 0)
   }, [pathname, title])
+  useEffect(() => { if (user) trackScreen(pathname, user.role) }, [pathname, user?.role]) // eslint-disable-line react-hooks/exhaustive-deps
   const items = user ? navFor(user.role) : []
   const overflow = items.length > 5 // the phone tab bar holds five: with more, the fifth is «المزيد» and opens the rest
   const tabs = overflow ? items.slice(0, 4) : items

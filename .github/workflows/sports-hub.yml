@@ -29,7 +29,13 @@ jobs:
         run: npx tsc -b
       - name: Unit tests
         run: npm test
+      - name: Query columns match the migrations (no drift)
+        run: npm run check:columns
+      - name: Build and size budget (first screen 150KB, any chunk 260KB)
+        run: npm run build && node scripts/budget.mjs
       - run: npx playwright install --with-deps chromium
+      - name: Real-mode sign-in form against a fake Supabase
+        run: npm run test:login-real
       - name: Browser tests (phone, iPad, desktop)
         run: npx playwright test
         env:
