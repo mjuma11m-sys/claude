@@ -2001,7 +2001,7 @@ test('«جديد بحياتي»: an existing user sees what is new once after th
   await store(page, () => localStorage.setItem('hayati-seen-version', 'v25'));   // كان على النسخة اللي قبل
   await open(page);
   await expect(page.locator('#sheetTitle')).toHaveText('جديد بحياتي ✨', { timeout: 5000 });
-  await expect(page.locator('#sheetBody .news-item')).toHaveCount(3);
+  await expect(page.locator('#sheetBody .news-item')).toHaveCount(4);
   await page.click('#sheetCancel');
   expect(await store(page, () => localStorage.getItem('hayati-seen-version'))).toBe(await store(page, () => App.APP_VERSION));
   await open(page);

@@ -1943,6 +1943,8 @@ window.HAYATI_EN = {
 "جدولك، المطبخ، حساباتي، وكشف الحساب: ضغطة وحدة من شاشة «اليوم»": "Your schedule, kitchen, accounts and bank statement: one tap from «Today»",
 "تسجيل المحاضرة يكمل": "Lecture recording keeps going",
 "اقفل الشاشة أو افتح تطبيق ثاني والتسجيل ما يوقف (آيفون)": "Lock the screen or open another app and recording doesn't stop (iPhone)",
+"برنامج الفريق PDF": "Team program PDF",
+"ارفع برنامج الأسبوع من المدرب: التمارين والمباراة تنضاف بتواريخها وأوقاتها، وأيام الراحة تنشال": "Upload the coach's weekly program: trainings and the match are added on their dates and times, rest days are skipped",
 "صوت الدكتور أوضح": "Clearer lecturer voice",
 "حط الجوال على الطاولة وظهره للدكتور: المايك يركّز قدّام ويخفّف السوالف اللي جنبك": "Put the phone on the desk, back facing the lecturer: the mic focuses forward and softens side chatter",
 "إيميل أوضح": "Clearer email check",
