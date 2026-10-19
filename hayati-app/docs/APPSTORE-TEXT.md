@@ -1,7 +1,7 @@
 # نصوص App Store (نسخة الآيفون) — انسخ والصق
 
 > بدون كلمة «تجريبي/بيتا» (إرشاد 2.2). كل ميزة مكتوبة هني تشتغل بنسخة 0.25.
-> الروابط: بدّل `<رابطك>` برابط Vercel Production حقك (نفس اللي فيه `privacy.html`).
+> الروابط على Netlify: `hayati-bh.netlify.app` (الدعم = `support.html`، والخصوصية والشروط). لو عدّلت أي صفحة، ارفعها من جديد بنفس المشروع.
 
 ## صفحة النسخة (iOS App Version)
 
@@ -62,7 +62,7 @@
 مصاريف,ميزانية,راتب,البحرين,جدول,دراسة,صلاة,زكاة,خمس,مهام,طلاب,بنك,ادخار,فاتورة,حسابات
 ```
 
-**Support URL:** `https://<رابطك>/`
+**Support URL:** `https://hayati-bh.netlify.app/`
 **Marketing URL:** (فاضي)
 **Version:** `0.25`
 **Copyright:** `2026 <اسمك>`  ← اكتب اسمك القانوني مثل ما تبيه يطلع
@@ -86,7 +86,7 @@ Background audio (UIBackgroundModes: audio): used only while the user records th
 - **Age Rating:** كل الأسئلة **None/No** ← 4+
 
 ## Privacy
-- **Privacy Policy URL:** `https://<رابطك>/privacy.html`
+- **Privacy Policy URL:** `https://hayati-bh.netlify.app/privacy.html`
 - **App Privacy** (الإجابات بالتفصيل في `STORE.md` ← «Apple: App Privacy»):
   Email Address · Other Financial Info · Other User Content — Linked to user · App Functionality · **No tracking**.
 
