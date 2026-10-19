@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 72,
+  "next": 73,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -565,6 +565,14 @@
     },
     "DW-071": {
       "title": "النسخة 0.26: رقم النسخة + «جديد بحياتي»",
+      "owner": "CEO",
+      "priority": "P2",
+      "status": "review",
+      "opened": "2026-10-19",
+      "updated": "2026-10-19"
+    },
+    "DW-072": {
+      "title": "ملف المحامي المرخّص لحياتي",
       "owner": "CEO",
       "priority": "P2",
       "status": "review",
