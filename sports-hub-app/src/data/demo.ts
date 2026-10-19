@@ -29,7 +29,8 @@ export const LEAGUES = [
   },
 ] as const
 
-export const NEXT_MATCH = { home: 'المالكية', away: 'المحرق', venue: 'استاد خليفة الرياضي', kickoff: '2026-10-18T19:30:00+03:00' }
+/* The demo fixture is always five days away, so the countdown and the voting window never go stale as the calendar moves. */
+export const NEXT_MATCH = { home: 'المالكية', away: 'المحرق', venue: 'استاد خليفة الرياضي', kickoff: `${new Date(Date.now() + 5 * 86_400_000).toISOString().slice(0, 10)}T19:30:00+03:00` }
 
 export const MOTM_CANDIDATES = [
   { id: 'p1', name: 'اللاعب 1', pos: 'حارس مرمى', num: 1 },
