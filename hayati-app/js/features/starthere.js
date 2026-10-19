@@ -50,3 +50,28 @@
   });
   E._startHere = { STEPS, card };
 })();
+
+// DW-070: بعد ما يخلص «ابدأ هني»، الميزات الجديدة ما تندفن: صف اختصارات صغير بشاشة اليوم
+(function () {
+  'use strict';
+  const A = window.App, E = window.Extras;
+  if (!A || !E) return;
+  const wrap = (name, fn) => { const prev = E[name]; E[name] = (...a) => fn(prev ? prev : () => '', ...a); };
+  const KEYS = [['timetable', '📅', 'جدولك'], ['kitchen', '🍳', 'المطبخ'], ['acc-add', '💳', 'حساباتي'], ['bankfile', '📥', 'كشف حساب']];
+  function row() {
+    if (!(A.st.settings || {}).onboarded) return '';
+    return '<section data-tk="shortcuts"><div class="chips" id="quickRow" style="flex-wrap:nowrap;overflow-x:auto;margin:0 0 12px">' +
+      KEYS.map(([k, e, t]) => '<button type="button" class="chip" data-action="quick-go" data-k="' + k + '">' + e + ' ' + t + '</button>').join('') + '</div></section>';
+  }
+  function run(action) {
+    const b = document.createElement('button'); b.dataset.action = action; b.hidden = true;
+    document.getElementById('view').appendChild(b); b.click(); b.remove();
+  }
+  wrap('todayTop', (prev) => { const out = prev(); return out.includes('id="startHere"') ? out : row() + out; });
+  wrap('action', (prev, name, el, e) => {
+    if (name !== 'quick-go') return prev(name, el, e);
+    const k = el.dataset.k;
+    if (k === 'acc-add') { A.ui.moneySeg = 'accounts'; A.go('money'); return; }
+    run(k);
+  });
+})();

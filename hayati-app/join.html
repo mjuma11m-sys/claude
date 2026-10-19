@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>قائمة الانتظار — حياتي</title>
+<meta name="theme-color" content="#0E3B43">
+<style>
+  :root { --sea: #0E3B43; --pearl: #E8DCC4; --coral: #FF6B4A; --bg: #F7F4EE; --surface: #fff; --text: #0B2328; --text-2: #33494D; --border: #E4DDD0; --brand: #13636B; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0A1A1E; --surface: #10262B; --text: #EFE8DA; --text-2: #C9C2B4; --border: #1F3D43; --brand: #6EC5C0; color-scheme: dark; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.8 "IBM Plex Sans Arabic", -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 24px 18px calc(48px + env(safe-area-inset-bottom)); }
+  header { background: var(--sea); color: var(--pearl); border-radius: 22px; padding: 22px; display: flex; gap: 16px; align-items: center; }
+  header svg { width: 56px; height: 56px; flex: none; }
+  h1 { margin: 0; font-size: 24px; line-height: 1.3; }
+  header p { margin: 4px 0 0; opacity: .8; font-size: 14px; }
+  h2 { font-size: 19px; margin: 28px 0 8px; color: var(--brand); }
+  section { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 4px 18px 14px; margin-top: 14px; }
+  ul { padding-inline-start: 20px; margin: 6px 0; }
+  li + li { margin-top: 4px; }
+  .muted { color: var(--text-2); font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: start; padding: 8px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--text-2); font-weight: 600; }
+  .en { direction: ltr; text-align: left; }
+  a { color: var(--brand); }
+  hr { border: 0; border-top: 1px solid var(--border); margin: 36px 0 8px; }
+</style>
+<style>
+  form{display:grid;gap:12px;margin:10px 0 6px}
+  label{font-weight:700;font-size:15px}
+  input,select{width:100%;font:inherit;padding:12px 14px;border-radius:14px;border:1px solid var(--border);background:var(--bg);color:var(--text)}
+  button{font:inherit;font-weight:700;padding:14px;border:0;border-radius:14px;background:var(--brand);color:#fff;cursor:pointer}
+  .hp{position:absolute;left:-9999px}
+</style>
+</head>
+<body>
+<main>
+  <header><div><h1>حياتي · قائمة الانتظار</h1><p>قيد التطوير · نسخة تجريبية</p></div></header>
+  <section>
+    <h2>تبي تجربه أول؟</h2>
+    <p>خلّ إيميلك، ونرسل لك رسالة وحدة لما يصير «حياتي» متوفر على الآيفون. بس.</p>
+    <form name="waitlist" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="/thanks.html">
+      <input type="hidden" name="form-name" value="waitlist">
+      <p class="hp"><label>لا تعبّي هذا <input name="bot-field"></label></p>
+      <label for="email">الإيميل</label>
+      <input id="email" name="email" type="email" required autocomplete="email" inputmode="email" placeholder="name@example.com" dir="ltr">
+      <label for="who">أنت؟ (اختياري)</label>
+      <select id="who" name="who"><option value="">—</option><option>طالب جامعة</option><option>طالب مدرسة</option><option>موظف</option><option>غير ذلك</option></select>
+      <button type="submit">سجّلني</button>
+    </form>
+    <p class="muted">ما نرسل إعلانات ولا نعطي إيميلك لأحد. الإيميل ينحفظ عند Netlify (مستضيف الموقع)، وتقدر تطلب حذفه بأي وقت على إنستقرام <a href="https://instagram.com/hayati.bh" rel="noopener">@hayati.bh</a>. التفاصيل بـ<a href="privacy.html">سياسة الخصوصية</a>.</p>
+  </section>
+  <hr>
+  <div class="en">
+    <h2>Hayati · Waitlist</h2>
+    <p>Leave your email and we send you one message when Hayati is available on iPhone. No ads, never shared. Stored with Netlify (our host); ask us on Instagram to delete it anytime.</p>
+  </div>
+</main>
+</body>
+</html>

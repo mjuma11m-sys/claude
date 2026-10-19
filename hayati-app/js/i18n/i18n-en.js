@@ -1511,6 +1511,7 @@ window.HAYATI_EN = {
 "🎙️ فيه تسجيل شغال بمحاضرة ثانية": "🎙️ A recording is running in another lecture",
 "فيه تسجيل شغال بمحاضرة ثانية": "A recording is running in another lecture",
 "ما قدرنا نبدأ التسجيل": "Couldn't start recording",
+"كشف حساب": "Statement",
 "سجّل دخول أول": "Sign in first",
 "ما قدرنا نوصل للخدمة · جرّب بعدين": "Couldn't reach the service · try later",
 "حذف التسجيل": "Delete recording",

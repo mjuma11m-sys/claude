@@ -22,7 +22,7 @@ async function crawl(p, deep) {
     await p.evaluate((t) => App.go(t), tab); await p.waitForTimeout(250); await add(tab);
     const n = await p.evaluate(() => document.querySelectorAll('#view [data-action], #view .seg button, #view [data-seg]').length);
     for (let i = 0; i < n; i++) {
-      const label = await p.evaluate(([t, i]) => { App.go(t); const el = document.querySelectorAll('#view [data-action], #view .seg button, #view [data-seg]')[i]; if (!el) return null; const a = el.dataset.action || el.textContent.trim().slice(0, 20); if (/del|wipe|delete|logout|remove/.test(a)) return null; el.click(); return a; }, [tab, i]);
+      const label = await p.evaluate(([t, i]) => { App.go(t); const el = document.querySelectorAll('#view [data-action], #view .seg button, #view [data-seg]')[i]; if (!el) return null; const a = el.dataset.action || el.textContent.trim().slice(0, 20); if (/del|wipe|delete|logout|remove|quick-go/.test(a)) return null; el.click(); return a; }, [tab, i]);
       if (!label) continue;
       await p.waitForTimeout(350); await add(tab + ' › ' + label);
       await dig(() => p.evaluate(([t, i]) => { App.go(t); const el = document.querySelectorAll('#view [data-action], #view .seg button, #view [data-seg]')[i]; if (el) el.click(); }, [tab, i]), tab + ' › ' + label);

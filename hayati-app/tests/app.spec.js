@@ -406,6 +406,17 @@ test('lecture recording on iPhone uses the native recorder that keeps going in t
   expect(await page.evaluate(() => window._recCalls)).toEqual(['start', 'stop']);
 });
 
+test('home shortcuts: hidden while «ابدأ هني» shows, then open the new features', async ({ page }) => {
+  await open(page);
+  await store(page, () => { App.S.setSettings({ onboarded: true, roles: ['student'] }); App.go('today'); });
+  await expect(page.locator('#startHere')).toHaveCount(1);
+  await expect(page.locator('#quickRow')).toHaveCount(0);
+  await page.click('#startHere [data-action="start-hide"]');
+  await expect(page.locator('#quickRow [data-k]')).toHaveCount(4);
+  await page.click('#quickRow [data-k="kitchen"]');
+  await expect(page.locator('#sheetBody [data-recipe]').first()).toBeVisible();
+});
+
 test('free monthly AI quota: warns when one try is left', async ({ page }) => {
   await open(page);
   await page.evaluate(() => window.dispatchEvent(new CustomEvent('hayati-ai-left', { detail: { feature: 'study', left: 1, limit: 3 } })));
