@@ -119,51 +119,57 @@ export function Home({ onOpenUnit, go, onQuick }: { onOpenUnit: (u: Unit) => voi
         )}
       </section>
 
-      {contracts.length > 0 && (
-        <section className="area-con">
-          <SectionHead title="عقود تنتهي قريب" />
-          <ul className="rows rows-tap card-list">
-            {contracts.map(({ unit: u, left }) => (
-              <li key={u.id}>
-                <button className="row-btn press" onClick={() => onOpenUnit(u)}>
-                  <span><span className="strong">{u.name}</span> <span className="muted small">· {u.tenant?.name}</span></span>
-                  <span className={`pill ${left < 0 ? "pill-late" : "pill-due"}`}>{left < 0 ? "انتهى" : left === 0 ? "اليوم" : <>بعد <span className="num">{left}</span> يوم</>}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {chq.length > 0 && (
-        <section className="area-docs" id="home-cheques">
-          <SectionHead title="شيكات تستحق الإيداع" />
-          <ul className="rows rows-tap card-list">
-            {chq.map(({ cheque: c, left }) => { const u = data.units.find((x) => x.id === c.unitId); return (
-              <li key={c.id}>
-                <button className="row-btn press" onClick={() => u && onOpenUnit(u)}>
-                  <span><span className="strong">{u?.name}</span> <span className="muted small">· شيك <span className="num">{c.number}</span> · <span className="num">{fmt(c.amount)}</span> د.ب</span></span>
-                  <span className={`pill ${left < 0 ? "pill-late" : "pill-due"}`}>{left < 0 ? <>متأخر <span className="num">{-left}</span> يوم</> : left === 0 ? "اليوم" : <>بعد <span className="num">{left}</span> يوم</>}</span>
-                </button>
-              </li>
-            ); })}
-          </ul>
-        </section>
-      )}
-
-      {docs.length > 0 && (
-        <section className="area-docs" id="home-docs">
-          <SectionHead title="وثائق تحتاج تجديد" action={<button className="link press" onClick={() => go("docs")}>كل الوثائق</button>} />
-          <ul className="rows rows-tap card-list">
-            {docs.map(({ doc, state, left }) => (
-              <li key={doc.id}>
-                <button className="row-btn press" onClick={() => go("docs")}>
-                  <span className="strong">{doc.title}</span>
-                  <DocPill state={state} left={left} />
-                </button>
-              </li>
-            ))}
-          </ul>
+      {(contracts.length > 0 || chq.length > 0 || docs.length > 0) && (
+        <section className="area-con follow" id="home-follow" aria-labelledby="follow-h">
+          <SectionHead title="يحتاج متابعة" />
+          {chq.length > 0 && (
+            <div className="follow-group" id="home-cheques">
+              <h3 className="follow-h">شيكات تستحق الإيداع <span className="num muted">{chq.length}</span></h3>
+              <ul className="rows rows-tap card-list">
+                {chq.slice(0, 3).map(({ cheque: c, left }) => { const u = data.units.find((x) => x.id === c.unitId); return (
+                  <li key={c.id}>
+                    <button className="row-btn press" onClick={() => u && onOpenUnit(u)}>
+                      <span><span className="strong">{u?.name}</span> <span className="muted small">· شيك <span className="num">{c.number}</span> · <span className="num">{fmt(c.amount)}</span> د.ب</span></span>
+                      <span className={`pill ${left < 0 ? "pill-late" : "pill-due"}`}>{left < 0 ? <>متأخر <span className="num">{-left}</span> يوم</> : left === 0 ? "اليوم" : <>بعد <span className="num">{left}</span> يوم</>}</span>
+                    </button>
+                  </li>
+                ); })}
+              </ul>
+              {chq.length > 3 && <p className="muted small follow-more">+<span className="num">{chq.length - 3}</span> شيكات ثانية</p>}
+            </div>
+          )}
+          {contracts.length > 0 && (
+            <div className="follow-group" id="home-contracts">
+              <h3 className="follow-h">عقود تنتهي قريب <span className="num muted">{contracts.length}</span></h3>
+              <ul className="rows rows-tap card-list">
+                {contracts.slice(0, 3).map(({ unit: u, left }) => (
+                  <li key={u.id}>
+                    <button className="row-btn press" onClick={() => onOpenUnit(u)}>
+                      <span><span className="strong">{u.name}</span> <span className="muted small">· {u.tenant?.name}</span></span>
+                      <span className={`pill ${left < 0 ? "pill-late" : "pill-due"}`}>{left < 0 ? "انتهى" : left === 0 ? "اليوم" : <>بعد <span className="num">{left}</span> يوم</>}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              {contracts.length > 3 && <p className="muted small follow-more">+<span className="num">{contracts.length - 3}</span> عقود ثانية</p>}
+            </div>
+          )}
+          {docs.length > 0 && (
+            <div className="follow-group" id="home-docs">
+              <h3 className="follow-h">وثائق تحتاج تجديد <span className="num muted">{docs.length}</span></h3>
+              <ul className="rows rows-tap card-list">
+                {docs.slice(0, 3).map(({ doc, state, left }) => (
+                  <li key={doc.id}>
+                    <button className="row-btn press" onClick={() => go("docs")}>
+                      <span className="strong">{doc.title}</span>
+                      <DocPill state={state} left={left} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <button className="link press follow-more" onClick={() => go("docs")}>كل الوثائق</button>
+            </div>
+          )}
         </section>
       )}
 

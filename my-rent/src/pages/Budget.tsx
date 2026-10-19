@@ -50,7 +50,7 @@ export function Budget() {
               return (
                 <li key={c.id} className={`cat-row ${st.className}`} style={st.style}>
                   <div className="cat-top"><span className="strong">{c.name}</span><span className="small"><Money fils={c.spent} /> <span className="muted">/ {fmt(c.limit)}</span></span></div>
-                  <Bar value={c.spent} max={c.limit} />
+                  <Bar value={c.spent} max={c.limit} label={`مصروف ${c.name} من حدّه`} />
                 </li>
               );
             })}

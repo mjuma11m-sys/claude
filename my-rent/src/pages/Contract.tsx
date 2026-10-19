@@ -139,7 +139,7 @@ export function ContractTemplateEditor() {
           <button key={f} type="button" className="chip press" onClick={() => insert(f)}>{`{${f}}`}</button>
         ))}
       </div>
-      <textarea id="ct-text" ref={area} className="input ct-area" value={tpl} onChange={(e) => setTpl(e.target.value)} rows={12} />
+      <textarea id="ct-text" aria-label="نص نموذج العقد" ref={area} className="input ct-area" value={tpl} onChange={(e) => setTpl(e.target.value)} rows={12} />
       {preview && sample && <pre className="contract-text ct-preview">{fillContract(tpl, sample, owner)}</pre>}
       <div className="grid-2">
         <button className="btn press" disabled={!dirty} onClick={() => { setContract(tpl, owner); toast({ text: "انحفظ نموذج العقد" }); }}>احفظ النموذج</button>

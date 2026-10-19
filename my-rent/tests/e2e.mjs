@@ -720,6 +720,59 @@ try {
     await w.close(); await d.close();
   }
 
+  // 25) DW-032: إمكانية الوصول (axe) + أسوأ حالة + إخفاء المستأجرين السابقين + نسخة الموافقة
+  {
+    const axeSrc = fs.readFileSync("node_modules/axe-core/axe.min.js", "utf8");
+    const runAxe = (pg, sel) => pg.evaluate(async (sel) => (await axe.run(sel ? document.querySelector(sel) : document, { resultTypes: ["violations"] })).violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => `${v.id}×${v.nodes.length}`), sel);
+    const bad = [];
+    for (const scheme of ["light", "dark"]) {
+      const a = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: scheme });
+      await a.goto(URL + "#home"); await a.evaluate(() => localStorage.clear()); await a.reload(); await a.waitForTimeout(700);
+      for (const id of ["home", "tenants", "track", "docs", "budget", "bank", "reports", "house", "settings", "privacy"]) {
+        await a.goto(URL + "#" + id); await a.waitForTimeout(500); await a.addScriptTag({ content: axeSrc });
+        const v = await runAxe(a); if (v.length) bad.push(`${scheme}/${id}: ${v.join(",")}`);
+      }
+      await a.goto(URL + "#tenants"); await a.waitForTimeout(400); await a.locator(".unit-card").first().click(); await a.waitForTimeout(500);
+      await a.addScriptTag({ content: axeSrc }); const v = await runAxe(a, ".dlg"); if (v.length) bad.push(`${scheme}/unit: ${v.join(",")}`);
+      await a.close();
+    }
+    ok(bad.length === 0, "إمكانية الوصول: 0 مخالفات خطيرة/حرجة (10 صفحات + الوحدة × فاتح وداكن)", bad.join(" | "));
+    // أسوأ حالة
+    const x = await browser.newPage({ viewport: { width: 360, height: 740 } });
+    const xErr = []; x.on("pageerror", (e) => xErr.push(e.message));
+    await x.goto(URL + "#home"); await x.evaluate(() => localStorage.clear()); await x.reload(); await x.waitForTimeout(600);
+    await x.evaluate(() => {
+      const d = JSON.parse(localStorage.getItem("idarati:v2"));
+      d.units[0].name = "شقة" + "ـ".repeat(60) + "طويلة_بدون_مسافات_" + "x".repeat(40);
+      d.units[0].tenant.name = "عبدالرحمن بن عبدالعزيز بن محمد بن عبدالله آل فلان الطويل جداً 🏠🔑";
+      d.units[0].rent = 999999999; d.units[0].building = "مبنى " + "ب".repeat(80);
+      d.docs[0].title = "وثيقة " + "و".repeat(120);
+      d.vendors[0].name = "😀".repeat(30);
+      localStorage.setItem("idarati:v2", JSON.stringify(d));
+    });
+    await x.reload(); await x.waitForTimeout(700);
+    const over = [];
+    for (const id of ["home", "tenants", "track", "docs", "house", "reports"]) { await x.goto(URL + "#" + id); await x.waitForTimeout(400); if (await x.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) over.push(id); }
+    await x.goto(URL + "#tenants"); await x.waitForTimeout(300); await x.locator(".unit-card").first().click(); await x.waitForTimeout(400);
+    if (await x.evaluate(() => { const d = document.querySelector(".dlg"); return d && d.scrollWidth > d.clientWidth + 1; })) over.push("unit-sheet");
+    ok(over.length === 0 && xErr.length === 0, "أسوأ حالة (أسماء 100+ حرف، 999,999 د.ب، إيموجي) على 360px: ولا شي يطلع برا", over.concat(xErr).join(" | "));
+    await x.keyboard.press("Escape");
+    // صفر وحدات
+    await x.evaluate(() => { const d = JSON.parse(localStorage.getItem("idarati:v2")); localStorage.setItem("idarati:v2", JSON.stringify({ ...d, units: [], payments: [], docs: [], cheques: [], bills: [] })); localStorage.setItem("idarati:welcomed", "1"); });
+    for (const id of ["home", "tenants", "track", "docs", "reports"]) { await x.goto(URL + "#" + id); await x.reload(); await x.waitForTimeout(350); }
+    ok(xErr.length === 0, "صفر وحدات: كل الصفحات تفتح بدون أخطاء", xErr.join(" | "));
+    // إخفاء المستأجرين السابقين
+    await x.evaluate(() => { const d = JSON.parse(localStorage.getItem("idarati:v2")); d.deposits = [{ id: "dl1", unitId: "u9", tenant: "فلان الفلاني", amount: 200000, returned: true, date: "2026-01-01" }]; localStorage.setItem("idarati:v2", JSON.stringify(d)); });
+    await x.goto(URL + "#settings"); await x.reload(); await x.waitForTimeout(600);
+    await x.locator("#anonymize-btn").click(); await x.waitForTimeout(300);
+    let dep = await x.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")).deposits[0]);
+    ok(dep.tenant === "مستأجر سابق" && dep.amount === 200000, "إخفاء المستأجرين السابقين: الاسم انمسح والمبلغ باقي");
+    await x.getByRole("button", { name: "تراجع" }).click(); await x.waitForTimeout(300);
+    dep = await x.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")).deposits[0]);
+    ok(dep.tenant === "فلان الفلاني", "التراجع يرجّع الاسم");
+    await x.close();
+  }
+
   if (process.env.SHOTS) {
     for (const [n, w, h, s] of [["home-phone", 390, 844, "light"], ["home-dark", 390, 844, "dark"], ["home-desk", 1280, 800, "light"], ["tenants-tab", 820, 1180, "light"], ["budget-phone", 390, 844, "light"]]) {
       const q = await browser.newPage({ viewport: { width: w, height: h }, colorScheme: s });

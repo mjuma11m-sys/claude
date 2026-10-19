@@ -147,11 +147,11 @@ export function Chips<T extends string>({ value, options, onChange, label }: { v
 }
 
 /** شريط تقدّم: يكبر من الصفر أول ما يظهر (scaleX)، ويحمر لو تعدّى 100% */
-export function Bar({ value, max, tone }: { value: number; max: number; tone?: "late" | "paid" | "brand" }) {
+export function Bar({ value, max, tone, label = "نسبة المصروف من الميزانية" }: { value: number; max: number; tone?: "late" | "paid" | "brand"; label?: string }) {
   const pct = max > 0 ? Math.min(1, value / max) : 0;
   const over = value > max;
   return (
-    <div className="bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round((value / (max || 1)) * 100)}>
+    <div className="bar" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round((value / (max || 1)) * 100)}>
       <span className={`bar-fill bar-${over ? "late" : tone ?? "brand"}`} style={{ transform: `scaleX(${pct})` }} />
     </div>
   );

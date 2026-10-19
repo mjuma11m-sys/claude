@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { FamilyMembers } from "./Family";
+import { POLICY_VERSION } from "./Privacy";
 import { useStore } from "../data/store";
 import { checkKey, checkUrl, loadSyncConfig, saveSyncConfig, type SyncConfig } from "../data/sync";
 import { Chips, useToast } from "../ui/kit";
@@ -55,7 +56,7 @@ export function SyncPanel() {
     <section className="card stack" aria-labelledby="sync-h">
       <h2 className="set-title" id="sync-h">حسابي والمزامنة</h2>
       {email === null && <p className="muted small" style={{ margin: 0 }}>اختياري: بدون حساب البيانات على هالجهاز بس. مع حساب تنحفظ بالسحابة، وكل حساب بياناته له بروحه.</p>}
-      {email === null ? <SignIn sb={sb} needConsent={!cfg.consentAt} onConsent={(at) => { const c = { ...cfg, consentAt: at }; saveSyncConfig(c); setCfg(c); }} /> : (
+      {email === null ? <SignIn sb={sb} needConsent={!cfg.consentAt} onConsent={(at) => { const c = { ...cfg, consentAt: at, consentVersion: POLICY_VERSION }; saveSyncConfig(c); setCfg(c); }} /> : (
         <>
           <p className="small" style={{ margin: 0 }}>داخل باسم <b className="num">{email}</b></p>
           <Family sb={sb!} cfg={cfg} />
@@ -216,7 +217,7 @@ function Setup({ onSaved }: { onSaved: (c: SyncConfig) => void }) {
   const save = () => {
     const e = checkUrl(url) ?? checkKey(key) ?? (ok ? null : "لازم توافق على حفظ البيانات بالسيرفر قبل");
     if (e) return setError(e);
-    const c = { url: url.trim().replace(/\/$/, ""), key: key.trim(), consentAt: new Date().toISOString() };
+    const c = { url: url.trim().replace(/\/$/, ""), key: key.trim(), consentAt: new Date().toISOString(), consentVersion: POLICY_VERSION };
     saveSyncConfig(c);
     onSaved(c);
   };

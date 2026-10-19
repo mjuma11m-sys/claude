@@ -454,3 +454,14 @@ select.input { appearance: auto; }
 .welcome-card { margin-bottom: 16px; border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--line)); }
 .btn.is-disabled { opacity: .5; pointer-events: none; }
 .unit-tabs .chips { margin: 4px 0 0; }
+
+/* DW-032: «يحتاج متابعة» موحّد */
+.follow { display: grid; gap: 14px; }
+.follow-group { display: grid; gap: 6px; }
+.follow-h { font-size: 13px; font-weight: 600; color: var(--muted); margin: 0; display: flex; gap: 6px; align-items: baseline; }
+.follow-more { margin: 0; justify-self: start; }
+
+/* DW-032: أسماء طويلة بدون مسافات ما تدفع الشاشة (أسوأ حالة) */
+.row-btn > span, .unit-top > span, .unit-card .muted, .dlg-head h2, .kv-row > div, .att-row .row-btn, .strong, .doc-main, .cheque-main, .bill-row > span:first-child { overflow-wrap: anywhere; min-width: 0; }
+.row-btn, .unit-top, .kv-row, .att-row { min-width: 0; }
+.att-row > .row-btn { flex: 1 1 auto; }

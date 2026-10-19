@@ -5,12 +5,14 @@ import { Chips, useToast } from "../ui/kit";
 import { SyncPanel } from "./SyncPanel";
 import { Reminders } from "./Reminders";
 import { Feedback } from "./Feedback";
+import { POLICY_VERSION } from "./Privacy";
+import { loadSyncConfig } from "../data/sync";
 import { ContractTemplateEditor } from "./Contract";
 import { getLastBackup, loadPrefs, savePrefs, setLastBackup, type Prefs, type TextSize, type Theme } from "../data/prefs";
 
 /** نسخة احتياطية، استرجاع، وحذف كل البيانات (حق المحو — PDPL) */
 export function Settings() {
-  const { data, replace, resetDemo, eraseAll, sync } = useStore();
+  const { data, replace, resetDemo, eraseAll, sync, anonymizeFormer } = useStore();
   const toast = useToast();
   const file = useRef<HTMLInputElement>(null);
   const [confirmErase, setConfirmErase] = useState(false);
@@ -103,6 +105,12 @@ export function Settings() {
           بدون حساب، كل شي على هالجهاز بس. مع حساب، تنحفظ كمان بسيرفر Supabase باليابان (برا البحرين)، ويشوفها حسابك واللي تدعيهم بس. ما فيه إعلانات ولا متتبعات، وما نجمع الرقم الشخصي (CPR).
         </p>
         <a className="link press" id="privacy-link" href="#privacy" style={{ justifySelf: "start" }}>سياسة الخصوصية وشروط الاستخدام</a>
+        {(() => { const c = loadSyncConfig(); return c?.consentAt ? <p className="muted small" style={{ margin: 0 }} id="consent-info">وافقت على نسخة <span className="num">{c.consentVersion ?? "قبل 2026-10-16"}</span> بتاريخ <span className="num">{c.consentAt.slice(0, 10)}</span>{c.consentVersion !== POLICY_VERSION ? " · فيه نسخة أحدث، اقرأها" : ""}</p> : null; })()}
+        <div className="sync-box stack">
+          <div className="strong">بيانات المستأجرين السابقين</div>
+          <p className="muted small" style={{ margin: 0 }}>لو مستأجر سابق طلب مسح بياناته: يخفي اسمه من سجل التأمين (يصير «مستأجر سابق»). الدفعات والمبالغ تبقى للسجل المالي.</p>
+          <button className="btn btn-ghost press" id="anonymize-btn" onClick={() => { const r = anonymizeFormer(); toast(r.count ? { text: `انخفت أسماء ${r.count} مستأجرين سابقين`, undo: r.undo } : { text: "ما فيه أسماء مستأجرين سابقين" }); }}>أخفِ أسماء المستأجرين السابقين</button>
+        </div>
       </section>
       <p className="demo-note">إداراتي · قيد التطوير · نسخة تجريبية</p>
     </div>
