@@ -83,7 +83,11 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>«حياتي» يستخدم موقعك بس لما تضغط «استخدم موقعي» بالقبلة، عشان يحسب اتجاهها. الموقع ما ينحفظ ولا يطلع من جوالك.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>«حياتي» يستخدم المايك بس لما تسجّل محاضرة بنفسك، والتسجيل يظل على جوالك.</string>
+	<string>«حياتي» يستخدم المايك بس لما تسجّل محاضرة بنفسك، ويكمل التسجيل لو طلعت من التطبيق أو قفلت الشاشة لين توقفه. التسجيل يظل على جوالك.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 	<key>UIApplicationShortcutItems</key>
 	<array>
 		<dict>

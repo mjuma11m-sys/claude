@@ -379,6 +379,33 @@ test('accounts: messages link by the last two digits, balance follows, statement
 });
 
 // DW-067: إصلاحات التقييم: «ابدأ هني»، Google مخفي لين ينشر، الذكاء يختفي لو الدالة مو منشورة، وتحويل المبالغ مع العملة
+test('lecture recording on iPhone uses the native recorder that keeps going in the background', async ({ page }) => {
+  await open(page);
+  const r = await store(page, async () => {
+    const calls = [];
+    // آيفون وهمي: الإضافة HayatiRecorder
+    window.Capacitor = Object.assign(window.Capacitor || {}, { getPlatform: () => 'ios', isNativePlatform: () => false, Plugins: Object.assign((window.Capacitor || {}).Plugins || {}, {
+      HayatiRecorder: {
+        status: async () => ({ recording: false }),
+        start: async () => { calls.push('start'); return { startedAt: Date.now() }; },
+        stop: async () => { calls.push('stop'); return { data: btoa('fake-m4a'), mime: 'audio/mp4', dur: 5 }; },
+      },
+    }) });
+    window._recCalls = calls;
+    App.ui.studySeg = 'lectures'; App.go('schedule');
+    return true;
+  });
+  expect(r).toBe(true);
+  await page.click('[data-action="lec-new"]');
+  await expect(page.locator('#lcRecTip')).toContainText('ظهره');
+  await page.click('#lcRec');
+  await expect(page.locator('#lcRec')).toContainText('وقّف');
+  await page.click('#lcRec');
+  await expect(page.locator('#lcRec')).toContainText('ابدأ التسجيل');
+  await expect(page.locator('#lcClips [data-play]')).toHaveCount(1);
+  expect(await page.evaluate(() => window._recCalls)).toEqual(['start', 'stop']);
+});
+
 test('free monthly AI quota: warns when one try is left', async ({ page }) => {
   await open(page);
   await page.evaluate(() => window.dispatchEvent(new CustomEvent('hayati-ai-left', { detail: { feature: 'study', left: 1, limit: 3 } })));

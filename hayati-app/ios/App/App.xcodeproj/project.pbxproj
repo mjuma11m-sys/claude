@@ -12,6 +12,7 @@
 		D04900000000000000000006 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D04900000000000000000005 /* PrivacyInfo.xcprivacy */; };
 		D04700000000000000000002 /* SpeechPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04700000000000000000001 /* SpeechPlugin.swift */; };
 		D05300000000000000000002 /* HealthPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05300000000000000000001 /* HealthPlugin.swift */; };
+		D06900000000000000000002 /* RecorderPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06900000000000000000001 /* RecorderPlugin.swift */; };
 		D04600000000000000000002 /* ShareInPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04600000000000000000001 /* ShareInPlugin.swift */; };
 		D04600000000000000000007 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04600000000000000000006 /* ShareViewController.swift */; };
 		D0460000000000000000000B /* HayatiShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D0460000000000000000000A /* HayatiShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -68,6 +69,7 @@
 		D04900000000000000000005 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		D04700000000000000000001 /* SpeechPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechPlugin.swift; sourceTree = "<group>"; };
 		D05300000000000000000001 /* HealthPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthPlugin.swift; sourceTree = "<group>"; };
+		D06900000000000000000001 /* RecorderPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecorderPlugin.swift; sourceTree = "<group>"; };
 		D04600000000000000000001 /* ShareInPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareInPlugin.swift; sourceTree = "<group>"; };
 		D04600000000000000000006 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		D04600000000000000000008 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -149,6 +151,7 @@
 				D04600000000000000000001 /* ShareInPlugin.swift */,
 				D04700000000000000000001 /* SpeechPlugin.swift */,
 				D05300000000000000000001 /* HealthPlugin.swift */,
+				D06900000000000000000001 /* RecorderPlugin.swift */,
 				D04400000000000000000005 /* App.entitlements */,
 				D04900000000000000000001 /* PrivacyInfo.xcprivacy */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
@@ -351,6 +354,7 @@
 				D04600000000000000000002 /* ShareInPlugin.swift in Sources */,
 				D04700000000000000000002 /* SpeechPlugin.swift in Sources */,
 				D05300000000000000000002 /* HealthPlugin.swift in Sources */,
+				D06900000000000000000002 /* RecorderPlugin.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

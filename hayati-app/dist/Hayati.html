@@ -2266,6 +2266,11 @@ window.HAYATI_EN = {
 "خلصت محاولاتك المجانية لهالشهر ✨": "You've used this month's free tries ✨",
 "هذي آخر محاولة مجانية لهالشهر ✨": "That was your last free try this month ✨",
 "باقي لك محاولة مجانية وحدة لهالشهر ✨": "One free try left this month ✨",
+"📱 يكمل لو طلعت من التطبيق أو قفلت الشاشة. حط الجوال على الطاولة وظهره (الكاميرا) باتجاه الدكتور، عشان صوته يكون أوضح من السوالف اللي جنبك.": "📱 Keeps recording if you leave the app or lock the screen. Put the phone on the desk with its back (camera) facing the lecturer so their voice comes through clearer than the chat next to you.",
+"🎙️ يسجّل · يكمل لو طلعت من التطبيق": "🎙️ Recording · keeps going if you leave the app",
+"🎙️ فيه تسجيل شغال بمحاضرة ثانية": "🎙️ A recording is running in another lecture",
+"فيه تسجيل شغال بمحاضرة ثانية": "A recording is running in another lecture",
+"ما قدرنا نبدأ التسجيل": "Couldn't start recording",
 "سجّل دخول أول": "Sign in first",
 "ما قدرنا نوصل للخدمة · جرّب بعدين": "Couldn't reach the service · try later",
 "حذف التسجيل": "Delete recording",
@@ -12610,6 +12615,20 @@ window.HAYATI_CONFIG = {
     if (!C || typeof C.getPlatform !== 'function' || C.getPlatform() !== 'ios') return null;
     return (C.Plugins && C.Plugins.HayatiSpeech) || (typeof C.registerPlugin === 'function' ? C.registerPlugin('HayatiSpeech') : null);
   }
+  // DW-069: بالآيفون نسجّل بالإضافة HayatiRecorder عشان التسجيل يكمل لو طلعت من التطبيق أو قفلت الشاشة
+  function recPlugin() {
+    const C = window.Capacitor;
+    if (!C || typeof C.getPlatform !== 'function' || C.getPlatform() !== 'ios') return null;
+    return (C.Plugins && C.Plugins.HayatiRecorder) || (typeof C.registerPlugin === 'function' ? C.registerPlugin('HayatiRecorder') : null);
+  }
+  const REC_FOR = 'hayati-rec-lecture';   // أي محاضرة التسجيل الشغال لها (لو سكرت الورقة ورجعت)
+  const recFor = (v) => { try { if (v === undefined) return localStorage.getItem(REC_FOR); if (v === null) localStorage.removeItem(REC_FOR); else localStorage.setItem(REC_FOR, v); } catch (e) { return null; } return null; };
+  function b64Blob(b64, type) {
+    const bin = atob(b64), u = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    return new Blob([u], { type });
+  }
+
   async function speechSupport() {
     if (speechLangs) return speechLangs;
     const P = speechPlugin();
@@ -12800,6 +12819,7 @@ window.HAYATI_CONFIG = {
     l.cards = (l.cards || []).map((c) => Object.assign({}, c)); l.audio = (l.audio || []).slice();
     const courses = st.courses || [];
     let rec = null, chunks = [], t0 = 0, timer = null;
+    let nativeStop = null;
     const sttBtns = (i) => (speechLangs || []).map((lg) => '<button type="button" class="btn ghost" data-stt="' + i + '" data-lang="' + lg + '" aria-label="' + (lg === 'ar' ? 'حوّل التسجيل لنص عربي' : 'حوّل التسجيل لنص إنقليزي') + '">📝 ' + (lg === 'ar' ? 'نص' : 'EN') + '</button>').join('');
     const audioList = () => l.audio.length ? l.audio.map((a, i) => '<div class="clip" style="display:flex;align-items:center;gap:8px;margin:6px 0;flex-wrap:wrap"><button type="button" class="btn ghost" data-play="' + i + '">▶︎ تسجيل ' + (i + 1) + ' · ' + mmss(a.dur || 0) + '</button>' + sttBtns(i) + '<button type="button" class="icon-x" data-delclip="' + i + '" aria-label="حذف التسجيل">✕</button></div>').join('') +
       ((speechLangs || []).length ? '<p class="small muted" style="margin:2px 4px 0">📝 يحوّل الصوت لنص على جوالك نفسه (ما يطلع لأي مكان)، والنص مسودة تراجعها.</p>' : '') : '<p class="small muted" style="margin:6px 4px">ما فيه تسجيل.</p>';
@@ -12811,6 +12831,7 @@ window.HAYATI_CONFIG = {
         '<div class="field"><label>التاريخ</label><input name="lc_date" type="date" value="' + h(l.date) + '"></div>' +
         '<div class="group-title">' + I('timer') + 'التسجيل</div>' +
         '<p class="small muted" style="margin:0 4px 8px">سجّل بس بإذن الدكتور. التسجيل يظل على جوالك، ما ينرفع لأي مكان.</p>' +
+        (recPlugin() ? '<p class="small muted" style="margin:0 4px 8px" id="lcRecTip">📱 يكمل لو طلعت من التطبيق أو قفلت الشاشة. حط الجوال على الطاولة وظهره (الكاميرا) باتجاه الدكتور، عشان صوته يكون أوضح من السوالف اللي جنبك.</p>' : '') +
         '<button type="button" class="btn block" id="lcRec">🎙️ ابدأ التسجيل</button><div id="lcClips">' + audioList() + '</div>' +
         '<div class="group-title">' + I('book') + 'ملاحظاتك</div><div class="field"><textarea name="lc_notes" rows="5" maxlength="20000" placeholder="اللي قاله الدكتور، النقاط المهمة…">' + h(l.notes) + '</textarea></div>' + mathBar() +
         '<div class="field"><label>ملخصك بسطور</label><textarea name="lc_summary" rows="3" maxlength="4000" placeholder="لو بتشرحها لربعك بثلاث جمل، شنو بتقول؟">' + h(l.summary) + '</textarea></div>' +
@@ -12825,7 +12846,31 @@ window.HAYATI_CONFIG = {
         const recBtn = root.querySelector('#lcRec');
         const redrawClips = () => { root.querySelector('#lcClips').innerHTML = audioList(); };
         if (!speechLangs) speechSupport().then((ls) => { if (ls.length && root.isConnected) redrawClips(); });
+        const NR = recPlugin();
+        let nOn = false;
+        const tick = () => { clearInterval(timer); timer = setInterval(() => { if (root.isConnected) recBtn.textContent = '⏹ وقّف · ' + mmss((Date.now() - t0) / 1000); }, 500); recBtn.textContent = '⏹ وقّف · ' + mmss((Date.now() - t0) / 1000); };
+        nativeStop = async () => {
+          if (!nOn) return;
+          nOn = false; clearInterval(timer); recBtn.textContent = '🎙️ ابدأ التسجيل';
+          let r;
+          try { r = await NR.stop(); } catch (e) { recFor(null); A.toast('ما قدرنا نحفظ التسجيل'); return; }
+          recFor(null);
+          const clip = { id: S.uuid(), dur: r.dur || Math.round((Date.now() - t0) / 1000), at: new Date(t0).toISOString() };
+          try { await putClip(clip.id, b64Blob(r.data, r.mime || 'audio/mp4')); l.audio.push(clip); if (root.isConnected) redrawClips(); A.toast('انحفظ التسجيل · اضغط «حفظ»'); } catch (e) { A.toast('ما قدرنا نحفظ التسجيل'); }
+        };
+        // التسجيل شغال من قبل (طلعت ورجعت)؟ نرجّع زر الإيقاف
+        if (NR) NR.status().then((st) => {
+          if (!st || !st.recording || !root.isConnected) return;
+          if (recFor() === l.id) { nOn = true; t0 = st.startedAt || Date.now(); tick(); }
+          else recBtn.textContent = '🎙️ فيه تسجيل شغال بمحاضرة ثانية';
+        }).catch(() => {});
         recBtn.onclick = async () => {
+          if (NR) {
+            if (nOn) { nativeStop(); return; }
+            try { const r = await NR.start(); nOn = true; t0 = r.startedAt || Date.now(); recFor(l.id); tick(); A.toast('🎙️ يسجّل · يكمل لو طلعت من التطبيق'); }
+            catch (e) { const m = String(e && e.message || ''); A.toast(m === 'denied' ? 'ما فيه إذن للمايك' : m === 'busy' ? 'فيه تسجيل شغال بمحاضرة ثانية' : 'ما قدرنا نبدأ التسجيل'); }
+            return;
+          }
           if (rec) { rec.stop(); return; }
           if (!navigator.mediaDevices || !window.MediaRecorder) { A.toast('التسجيل ما يشتغل على هالجهاز'); return; }
           let stream;
@@ -12877,6 +12922,8 @@ window.HAYATI_CONFIG = {
       },
       onSave(root) {
         if (rec) rec.stop();
+        // التسجيل الأصلي يوقف بعد الحفظ بلحظة، فنحفظ المحاضرة مرة ثانية لما ينضاف المقطع
+        if (nativeStop) nativeStop().then(() => S.upsert('lectures', l)).catch(() => {});
         const title = A.val(root, 'lc_title');
         if (!title) throw new Error('اكتب عنوان المحاضرة');
         S.upsert('lectures', Object.assign(l, { course_id: root.querySelector('[name=lc_course]').value, title: title.slice(0, 120), date: A.val(root, 'lc_date') || today(), notes: A.val(root, 'lc_notes'), summary: A.val(root, 'lc_summary') }));

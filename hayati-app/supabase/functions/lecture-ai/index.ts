@@ -105,17 +105,20 @@ const MATH =
   " The notes may contain math or formulas. Keep every formula exactly as given. Write math in plain text the app can display: " +
   "² and ³ for squares and cubes, ^ for other powers (x^(n+1)), _ for subscripts (x_1), sqrt() or √, ×, ÷, ≤, ≥, ≠. Do not use LaTeX or Markdown.";
 
+// DW-069: notes are often an automatic transcript of a recorded class, with students' side talk mixed in
+const CHATTER = " The notes may be an automatic transcript of a recorded class that also caught side conversations between students " +
+  "(jokes, plans, chat unrelated to the subject). Ignore anything that is not about the lesson topic; never summarize or ask about it.";
 const TASKS = {
   summary:
     "Summarize the lesson notes below for a student (school or university) revising for an exam. " +
     "Write 5–8 short lines, each one key idea, most important first. Keep technical terms as they appear in the notes. " +
-    "Write in the same language the notes are mostly written in. Use only what is in the notes; do not add outside facts. If a formula is central, put it on its own line." + MATH,
+    "Write in the same language the notes are mostly written in. Use only what is in the notes; do not add outside facts. If a formula is central, put it on its own line." + CHATTER + MATH,
   quiz:
     "Write 5–8 practice questions that check whether the student understood the lecture notes below. " +
     "Mix recall and 'why/how' questions. Each answer is one or two sentences. " +
     "Write in the same language the notes are mostly written in. Base every question and answer only on the notes. " +
     "If the notes contain formulas, include 1–3 short calculation questions with small round numbers; " +
-    "each answer shows the formula, the numbers substituted and the result, checked carefully." + MATH,
+    "each answer shows the formula, the numbers substituted and the result, checked carefully." + CHATTER + MATH,
   photo:
     "This is a photo a student took of a whiteboard, slide or page during a lecture. " +
     "Transcribe the lecture content into clean study notes: keep headings, bullet points and every formula, in reading order. " +
