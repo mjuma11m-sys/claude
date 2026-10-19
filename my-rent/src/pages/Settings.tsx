@@ -4,6 +4,7 @@ import { backupDue, isoDay } from "../data/logic";
 import { Chips, useToast } from "../ui/kit";
 import { SyncPanel } from "./SyncPanel";
 import { Reminders } from "./Reminders";
+import { Feedback } from "./Feedback";
 import { ContractTemplateEditor } from "./Contract";
 import { getLastBackup, loadPrefs, savePrefs, setLastBackup, type Prefs, type TextSize, type Theme } from "../data/prefs";
 
@@ -55,6 +56,8 @@ export function Settings() {
         </div>
         <p className="muted small" style={{ margin: 0 }}>«تلقائي» يمشي على إعداد الجوال.</p>
       </section>
+
+      <Feedback />
 
       <Reminders />
 

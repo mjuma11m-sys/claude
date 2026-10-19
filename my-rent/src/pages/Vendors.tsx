@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useStore } from "../data/store";
 import { DemoNote } from "../ui/kit";
 import { Icon } from "../ui/icons";
@@ -5,10 +6,13 @@ import { Icon } from "../ui/icons";
 const digits = (phone: string) => phone.replace(/\D/g, "");
 
 /** الموردين: اتصال أو واتساب بضغطة. الرقم لازم يكون 8 أرقام بحرينية كاملة */
-export function Vendors() {
+export function Vendors({ focus = false }: { focus?: boolean }) {
   const { data } = useStore();
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => { if (focus) ref.current?.scrollIntoView({ block: "start" }); }, [focus]);
   return (
-    <div className="stack-lg">
+    <section className="stack-lg vendors-sec" ref={ref} aria-labelledby="vendors-h" id="vendors">
+      <h2 className="set-title" id="vendors-h">الموردين</h2>
       <ul className="rows card-list">
         {data.vendors.map((v) => {
           const ok = digits(v.phone).length === 8;
@@ -28,6 +32,6 @@ export function Vendors() {
         })}
       </ul>
       <DemoNote />
-    </div>
+    </section>
   );
 }

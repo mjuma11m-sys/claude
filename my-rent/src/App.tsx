@@ -18,7 +18,6 @@ import { ContractSheet } from "./pages/Contract";
 import { UnitForm } from "./pages/UnitForm";
 import { Reports } from "./pages/Reports";
 import { SearchSheet } from "./pages/Search";
-import { Tracker } from "./pages/Tracker";
 import { Privacy } from "./pages/Privacy";
 import { RenewSheet } from "./pages/Renew";
 import { DocSheet, Docs } from "./pages/Docs";
@@ -27,8 +26,10 @@ import { PaySheet, PickUnitSheet } from "./pages/PaySheet";
 import "./app.css";
 import symbolUrl from "../brand/symbol.svg";
 
-const PAGES = ["home", "tenants", "budget", "bank", "reports", "track", "docs", "house", "vendors", "settings"] as const;
-const HIDDEN = ["privacy"] as const; // صفحات بدون تبويب (DW-028)
+// DW-031: 8 أقسام — «متابعة الإيجار» عرض «جدول» داخل المستأجرين، و«الموردين» داخل الصيانة (الروابط القديمة تشتغل)
+const PAGES = ["home", "tenants", "docs", "budget", "bank", "reports", "house", "settings"] as const;
+const HIDDEN = ["privacy", "track", "vendors"] as const; // صفحات بدون تبويب
+const NAV_OF: Partial<Record<string, string>> = { privacy: "settings", track: "tenants", vendors: "house" };
 type Page = (typeof PAGES)[number] | (typeof HIDDEN)[number];
 const TITLES: Record<Page, string> = {
   privacy: "الخصوصية والشروط",
@@ -84,7 +85,7 @@ function Idarati() {
 
   const onAdd =
     page === "home" ? () => setPicking(true)
-    : page === "tenants" ? () => setEditing({ unit: null })
+    : page === "tenants" || page === "track" ? () => setEditing({ unit: null })
     : page === "budget" ? () => setExpense(true)
     : page === "docs" ? () => setDocEdit({ doc: null })
     : undefined;
@@ -103,7 +104,7 @@ function Idarati() {
   return (
     <AppShell
       items={items}
-      active={page === "privacy" ? "settings" : page}
+      active={NAV_OF[page] ?? page}
       onNavigate={go}
       title={page === "home" ? <span className="brand-title"><img src={symbolUrl} alt="" width={28} height={28} />إداراتي</span> : TITLES[page]}
       onAdd={onAdd}
@@ -118,14 +119,12 @@ function Idarati() {
           else setSearching(true);
         }} />
       )}
-      {page === "tenants" && <Tenants onOpenUnit={setUnit} />}
+      {(page === "tenants" || page === "track") && <Tenants onOpenUnit={setUnit} table={page === "track"} onView={(t) => go(t ? "track" : "tenants")} />}
       {page === "budget" && <Budget />}
       {page === "bank" && <Bank />}
       {page === "reports" && <Reports />}
-      {page === "track" && <Tracker onOpenUnit={setUnit} />}
       {page === "docs" && <Docs onOpen={(doc) => setDocEdit({ doc })} />}
-      {page === "house" && <Maintenance />}
-      {page === "vendors" && <Vendors />}
+      {(page === "house" || page === "vendors") && <><Maintenance /><Vendors focus={page === "vendors"} /></>}
       {page === "settings" && <Settings />}
       {page === "privacy" && <Privacy />}
 

@@ -6,6 +6,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawn } from "node:child_process";
+// DW-031: شاشة الوحدة صارت تبويبات (الدفع · الفواتير والشيكات · السجل)
+const unitTab = async (pg, name) => { const t = pg.locator(".unit-tabs [role=radio]", { hasText: name }); if (await t.count()) { await t.first().click(); await pg.waitForTimeout(150); } };
 
 const PORT = 4179;
 const URL = `http://localhost:${PORT}/`;
@@ -47,19 +49,19 @@ try {
   const name = (await p.locator(".dlg-head h2").innerText()).split(" · ")[0];
   ok(await p.locator(".arrears").isVisible(), "نافذة الوحدة تبين المتأخرات", await p.locator(".arrears .strong").innerText());
   ok((await p.locator(".btn-wa").getAttribute("href")).startsWith("https://wa.me/"), "زر تذكير الواتساب فيه الرسالة");
-  const hist0 = await p.locator(".dlg .rows-tap li").count();
+  await unitTab(p, "السجل"); const hist0 = await p.locator(".dlg .rows-tap li").count(); await unitTab(p, "الدفع");
   await p.fill("#pay-amount", "abc"); await p.getByRole("button", { name: "سجّل الدفعة" }).click();
   ok(await p.locator(".field-error").isVisible(), "مبلغ غلط يطلع رسالة خطأ");
-  const owed0 = await p.locator(".dlg .chips").first().locator(".chip").count();
-  await p.locator(".dlg .chips").first().locator(".chip").first().click();
+  const owed0 = await p.locator(".dlg .pay-form .chips").first().locator(".chip").count();
+  await p.locator(".dlg .pay-form .chips").first().locator(".chip").first().click();
   await p.getByRole("button", { name: "سجّل الدفعة" }).click(); await p.waitForTimeout(400);
   ok(await p.locator(".toast").isVisible(), "تطلع رسالة بعد التسجيل", (await p.locator(".toast").innerText()).split("\n")[0]);
   await p.getByRole("radio", { name: /الكل/ }).click(); await p.waitForTimeout(100);
   await p.locator(".unit-card", { hasText: name + " " }).first().click(); await p.waitForTimeout(350);
-  ok(await p.locator(".dlg .rows-tap li").count() === hist0 + 1, "الدفعة انضافت لسجل الوحدة");
+  await unitTab(p, "السجل"); ok(await p.locator(".dlg .rows-tap li").count() === hist0 + 1, "الدفعة انضافت لسجل الوحدة"); await unitTab(p, "الدفع");
   const owed1 = await p.locator(".dlg .pay-form .chips").first().locator(".chip").count();
   ok(owed1 === owed0 - 1, "أقدم شهر متأخر انسدّ", `${owed0} → ${owed1}`);
-  await p.locator(".dlg .rows-tap li button").first().click(); await p.waitForTimeout(450);
+  await unitTab(p, "السجل"); await p.locator(".dlg .rows-tap li button").first().click(); await p.waitForTimeout(450);
   ok(await p.getByRole("dialog", { name: "إيصال استلام إيجار" }).isVisible(), "الإيصال ينفتح من سجل الدفعات");
   ok(await p.locator("#receipt img[alt='إداراتي']").isVisible(), "الإيصال عليه شعار إداراتي");
   await p.keyboard.press("Escape"); await p.waitForTimeout(400);
@@ -533,7 +535,7 @@ try {
     const eErr = []; e.on("pageerror", (x) => eErr.push(x.message));
     await e.goto(URL + "#tenants"); await e.evaluate(() => localStorage.clear()); await e.reload(); await e.waitForTimeout(800);
     const before = await e.evaluate(() => { const d = JSON.parse(localStorage.getItem("idarati:v2")); return { p: d.payments.length, n: d.bills.length }; });
-    await e.locator(".unit-card", { hasText: "شقة 3" }).first().click(); await e.waitForTimeout(400);
+    await e.locator(".unit-card", { hasText: "شقة 3" }).first().click(); await e.waitForTimeout(400); await unitTab(e, "الفواتير");
     ok((await e.locator("#bills-due").innerText()).includes("67.050"), "شقة 3: فواتير غير مسددة 67.050");
     const wa = await e.locator("#bills-wa").getAttribute("href");
     ok(decodeURIComponent(wa).includes("هيئة الكهرباء والماء") && decodeURIComponent(wa).includes("67.050"), "واتساب تذكير بالفاتورة");
@@ -590,7 +592,7 @@ try {
     const qErr = []; q.on("pageerror", (x) => qErr.push(x.message));
     await q.goto(URL + "#home"); await q.evaluate(() => localStorage.clear()); await q.reload(); await q.waitForTimeout(900);
     ok((await q.locator("#home-cheques").innerText()).includes("000101"), "الرئيسية: شيك يستحق الإيداع");
-    await q.locator("#home-cheques button").first().click(); await q.waitForTimeout(500);
+    await q.locator("#home-cheques button").first().click(); await q.waitForTimeout(500); await unitTab(q, "الفواتير");
     const st0 = await q.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")));
     // إيداع ← دفعة شيك
     await q.locator("#cheques-box .cheque-dep").first().click(); await q.waitForTimeout(400);
@@ -659,6 +661,63 @@ try {
     ok(await v.locator(".unit-card", { hasText: "شقة تجربة" }).count() === 0 && await v.evaluate(() => !Object.keys(localStorage).some((k) => (localStorage.getItem(k) ?? "").includes("شقة تجربة"))), "مشاهدة بس: الوحدة ما انضافت", String(n0));
     await v.evaluate(() => localStorage.clear());
     await v.close();
+  }
+
+  // 24) DW-031: جاهزية التجربة — أول فتحة، 8 أقسام، الروابط القديمة، التبويبات، رأيك، و60 وحدة
+  {
+    const w = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const wErr = []; w.on("pageerror", (x) => wErr.push(x.message));
+    await w.goto(URL + "#home"); await w.evaluate(() => localStorage.clear()); await w.reload(); await w.waitForTimeout(800);
+    ok(await w.locator("#welcome").count() === 1, "أول فتحة: بطاقة الترحيب");
+    await w.locator("#welcome-start").click(); await w.waitForTimeout(600);
+    ok(await w.locator("#u-name").isVisible() && await w.evaluate(() => (JSON.parse(localStorage.getItem("idarati:v2") ?? "{}").units ?? []).length) === 0, "«ابدأ ببياناتي»: فاضي + نموذج أول وحدة");
+    await w.locator("#u-name").fill("شقة 1"); await w.locator("#u-rent").fill("150"); await w.getByRole("button", { name: "أضف الوحدة" }).click(); await w.waitForTimeout(400);
+    await w.reload(); await w.waitForTimeout(600);
+    ok(await w.locator("#welcome").count() === 0 && await w.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")).units.length) === 1, "بعد الاختيار: الترحيب ما يرجع والوحدة محفوظة");
+    // 8 أقسام + الروابط القديمة
+    const d = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    await d.goto(URL + "#home"); await d.evaluate(() => localStorage.clear()); await d.reload(); await d.waitForTimeout(700);
+    ok(await d.locator(".side-item").count() === 8, "8 أقسام بالقائمة", String(await d.locator(".side-item").count()));
+    await d.goto(URL + "#track"); await d.waitForTimeout(600);
+    ok(await d.locator("#track-tbl").count() === 1 && (await d.locator(".side-item[aria-current=page]").innerText()).includes("المستأجرين"), "#track = جدول داخل المستأجرين");
+    await d.goto(URL + "#vendors"); await d.waitForTimeout(600);
+    ok(await d.locator("#vendors").count() === 1 && (await d.locator(".side-item[aria-current=page]").innerText()).includes("الصيانة"), "#vendors = الموردين داخل الصيانة");
+    await d.goto(URL + "#tenants"); await d.waitForTimeout(500);
+    await d.locator(".view-toggle").getByRole("radio", { name: "جدول المتابعة" }).click(); await d.waitForTimeout(400);
+    ok(d.url().endsWith("#track") && await d.locator("#track-tbl").count() === 1, "تبديل «جدول المتابعة» من المستأجرين");
+    // التبويبات
+    await d.goto(URL + "#tenants"); await d.waitForTimeout(400);
+    await d.locator(".unit-card", { hasText: "محل 1" }).first().click(); await d.waitForTimeout(400);
+    ok(await d.locator(".dlg .pay-form").count() >= 1 && await d.locator("#cheques-box").count() === 0, "التبويب «الدفع» أول شي");
+    await unitTab(d, "الفواتير"); ok(await d.locator("#cheques-box").count() === 1 && await d.locator(".dlg .pay-form").count() === 0, "تبويب «الفواتير والشيكات»");
+    ok(await d.locator(".unit-actions").isVisible(), "أزرار الوحدة باينة بكل تبويب");
+    await d.keyboard.press("Escape"); await d.waitForTimeout(300);
+    // رأيك
+    await d.goto(URL + "#settings"); await d.waitForTimeout(500);
+    await d.locator("#feedback").getByRole("radio", { name: "4" }).click(); await d.locator("#fb-bad").fill("شاشة الوحدة طويلة");
+    const fb = decodeURIComponent(await d.locator("#fb-send").getAttribute("href"));
+    ok(fb.startsWith("https://wa.me/") && fb.includes("4 من 5") && fb.includes("شاشة الوحدة طويلة"), "«رأيك»: رسالة واتساب جاهزة");
+    // 60 وحدة × سنتين
+    await d.evaluate(() => {
+      const now = new Date(); const mk = (b) => { const x = new Date(now.getFullYear(), now.getMonth() - b, 1); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}`; };
+      const units = Array.from({ length: 60 }, (_, i) => ({ id: "L" + i, name: (i % 5 ? "شقة " : "محل ") + (i + 1), building: "عمارة " + (1 + (i % 6)), rent: 150000 + i * 1000, dueDay: 1 + (i % 28), tenant: { name: "مستأجر رقم " + (i + 1) + " اسم طويل شوي", phone: "3300" + String(1000 + i), since: mk(24) } }));
+      const payments = []; units.forEach((u, i) => { for (let b = 23; b >= (i % 7 === 0 ? 2 : 0); b--) payments.push({ id: `P${i}-${b}`, unitId: u.id, month: mk(b), amount: u.rent, method: "تحويل", date: mk(b) + "-03" }); });
+      const base = JSON.parse(localStorage.getItem("idarati:v2"));
+      localStorage.setItem("idarati:v2", JSON.stringify({ ...base, trackFrom: mk(24), units, payments }));
+    });
+    await d.reload(); await d.waitForTimeout(900);
+    const timeTo = (hash, sel, n) => d.evaluate(async ([hash, sel, n]) => {
+      const t0 = performance.now(); location.hash = hash;
+      for (let i = 0; i < 200; i++) { await new Promise((r) => requestAnimationFrame(r)); if (document.querySelectorAll(sel).length >= n) break; }
+      return Math.round(performance.now() - t0);
+    }, [hash, sel, n]);
+    const tTrack = await timeTo("track", "#track-tbl tbody tr", 60);
+    const tHome = await timeTo("home", ".hero-card", 1);
+    const tTen = await timeTo("tenants", ".unit-card", 60);
+    ok(tTrack < 400 && tHome < 300 && tTen < 400, "60 وحدة × سنتين: الصفحات سريعة", `جدول ${tTrack}ms · رئيسية ${tHome}ms · مستأجرين ${tTen}ms`);
+    ok(await d.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "60 وحدة وأسماء طويلة: بدون scroll أفقي");
+    ok(wErr.length === 0, "DW-031: بدون أخطاء", wErr.join(" | "));
+    await w.close(); await d.close();
   }
 
   if (process.env.SHOTS) {

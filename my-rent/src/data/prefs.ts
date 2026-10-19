@@ -43,3 +43,8 @@ export function getLastBackup(): string | undefined {
 export function setLastBackup(day: string) {
   try { localStorage.setItem(BACKUP_KEY, day); } catch { /* ignore */ }
 }
+
+// DW-031: بطاقة الترحيب (أول فتحة) — تختفي لما المستخدم يختار
+const WELCOME_KEY = "idarati:welcomed";
+export function welcomed(): boolean { try { return !!localStorage.getItem(WELCOME_KEY); } catch { return true; } }
+export function setWelcomed() { try { localStorage.setItem(WELCOME_KEY, "1"); } catch { /* ignore */ } }

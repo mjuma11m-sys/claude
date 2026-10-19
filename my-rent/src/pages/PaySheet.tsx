@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Method, Payment, Unit } from "../data/types";
 import { useStore } from "../data/store";
-import { arrears, billsDue, contractAlerts, fmt, monthKey, rentAt, upcomingRent, monthLabel, monthName, nextUnpaid, owedMonths, paidThrough, parseBHD, prepaid, unitStatus } from "../data/logic";
+import { arrears, billsDue, chequeHeld, contractAlerts, fmt, monthKey, rentAt, upcomingRent, monthLabel, monthName, nextUnpaid, owedMonths, paidThrough, parseBHD, prepaid, unitStatus } from "../data/logic";
 import { Chips, Sheet, useToast } from "../ui/kit";
 import { Money, StatusPill } from "../theme/AppShell";
 import { Icon } from "../ui/icons";
@@ -30,6 +30,7 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onCont
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
   const [ahead, setAhead] = useState<"0" | "1" | "3" | "6" | "12">("0");
+  const [tab, setTab] = useState<"pay" | "bills" | "log">("pay"); // DW-031: تبويبات بدل شاشة طويلة
 
   const owed = shown ? owedMonths(data, shown) : [];
 
@@ -45,6 +46,7 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onCont
     setDone(false);
     setConfirmVacate(false);
     setAhead("0");
+    setTab("pay");
   }, [unit]);
 
   const u = shown;
@@ -123,6 +125,13 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onCont
             </div>
           )}
 
+{u.tenant && (() => {
+            const nBills = billsDue(data, u).list.length + chequeHeld(data, u.id).length;
+            return <div className="unit-tabs"><Chips<"pay" | "bills" | "log"> label="أقسام الوحدة" value={tab} onChange={setTab} options={[
+              { id: "pay", label: "الدفع" }, { id: "bills", label: "الفواتير والشيكات", ...(nBills ? { count: nBills } : {}) }, { id: "log", label: "السجل", ...(history.length ? { count: history.length } : {}) }]} /></div>;
+          })()}
+
+          {(tab === "pay" || !u.tenant) && <>
           {u.tenant && owed.length > 0 && (
             <form className="pay-form" onSubmit={(e) => { e.preventDefault(); submit(); }}>
               <span className="strong">تسجيل دفعة</span>
@@ -148,10 +157,14 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onCont
               <button type="submit" id="ahead-btn" className="btn btn-ghost btn-block press" disabled={ahead === "0"}>احفظ الدفعة المقدمة</button>
             </form>
           )}
+          </>}
 
+          {u.tenant && tab === "bills" && <>
           {u.tenant && <BillsBox unit={u} />}
           {u.tenant && <ChequesBox unit={u} />}
+          </>}
 
+          {(tab === "log" || !u.tenant) && <>
           {history.length > 0 && (
             <div>
               <div className="muted small" style={{ marginBottom: 6 }}>الدفعات والإيصالات</div>
@@ -167,6 +180,7 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onCont
               </ul>
             </div>
           )}
+          </>}
 
           <div className="unit-actions">
             {u.tenant && <button type="button" className="btn btn-ghost press" onClick={() => onStatement(u)}>كشف حساب</button>}

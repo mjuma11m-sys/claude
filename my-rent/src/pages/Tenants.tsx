@@ -5,10 +5,11 @@ import type { Status, Unit } from "../data/types";
 import { Money, StatusPill } from "../theme/AppShell";
 import { useStagger } from "../theme/motion";
 import { Chips, DemoNote, EmptyState, SkeletonCards } from "../ui/kit";
+import { Tracker } from "./Tracker";
 
 type Filter = "all" | Status | "vacant";
 
-export function Tenants({ onOpenUnit }: { onOpenUnit: (u: Unit) => void }) {
+export function Tenants({ onOpenUnit, table = false, onView }: { onOpenUnit: (u: Unit) => void; table?: boolean; onView?: (table: boolean) => void }) {
   const { data, loading } = useStore();
   const [filter, setFilter] = useState<Filter>("all");
   const stagger = useStagger(loading);
@@ -19,8 +20,15 @@ export function Tenants({ onOpenUnit }: { onOpenUnit: (u: Unit) => void }) {
     .filter(({ u, s }) => (filter === "all" ? true : filter === "vacant" ? !u.tenant : s === filter))
     .sort((a, b) => (order[a.s ?? ""] ?? 3) - (order[b.s ?? ""] ?? 3));
 
+  const viewToggle = (
+    <Chips<"cards" | "table"> label="العرض" value={table ? "table" : "cards"} onChange={(v) => onView?.(v === "table")}
+      options={[{ id: "cards", label: "بطاقات" }, { id: "table", label: "جدول المتابعة" }]} />
+  );
+  if (table) return <div className="stack-lg"><div className="view-toggle">{viewToggle}</div><Tracker onOpenUnit={onOpenUnit} /></div>;
+
   return (
     <div className="stack-lg">
+      <div className="view-toggle">{viewToggle}</div>
       <Chips<Filter>
         label="تصفية"
         value={filter}

@@ -7,7 +7,7 @@ import { Money, StatusPill } from "../theme/AppShell";
 import { useStagger } from "../theme/motion";
 import { Bar, DemoNote, EmptyState, SectionHead, SkeletonCards, useToast } from "../ui/kit";
 import { Icon } from "../ui/icons";
-import { getLastBackup } from "../data/prefs";
+import { getLastBackup, setWelcomed, welcomed } from "../data/prefs";
 
 /** حلقة التحصيل: تنرسم لما تتغيّر النسبة (stroke-dashoffset) */
 function Ring({ value, label }: { value: number; label: string }) {
@@ -26,7 +26,8 @@ function Ring({ value, label }: { value: number; label: string }) {
 export type QuickAction = "pay" | "expense" | "unit" | "search";
 
 export function Home({ onOpenUnit, go, onQuick }: { onOpenUnit: (u: Unit) => void; go: (id: string) => void; onQuick: (a: QuickAction) => void }) {
-  const { data, loading, quickPay, unpay } = useStore();
+  const { data, loading, quickPay, unpay, eraseAll, sync } = useStore();
+  const [welcome, setWelcome] = useState(() => !welcomed()); // DW-031
   const toast = useToast();
   const received = (u: Unit) => {
     const p = quickPay(u.id);
@@ -45,6 +46,18 @@ export function Home({ onOpenUnit, go, onQuick }: { onOpenUnit: (u: Unit) => voi
   const pct = c.expected ? Math.round((c.collected / c.expected) * 100) : 0;
 
   return (
+    <>
+      {welcome && !sync && (
+        <section className="card stack welcome-card" id="welcome" aria-labelledby="wl-h">
+          <h2 className="set-title" id="wl-h">أهلاً بإداراتي 👋</h2>
+          <p className="small" style={{ margin: 0 }}>اللي تشوفه الحين <b>بيانات تجريبية</b> عشان تتعرّف على التطبيق. لما تكون جاهز، ابدأ ببياناتك: التطبيق يفضى وتضيف أول وحدة.</p>
+          <div className="grid-2">
+            <button className="btn press" id="welcome-start" onClick={() => { setWelcomed(); setWelcome(false); eraseAll(); onQuick("unit"); }}>ابدأ ببياناتي</button>
+            <button className="btn btn-ghost press" id="welcome-demo" onClick={() => { setWelcomed(); setWelcome(false); }}>خلّني أجرب أول</button>
+          </div>
+          <p className="muted small" style={{ margin: 0 }}>قيد التطوير · نسخة تجريبية. بدون حساب كل شي على جوالك بس.</p>
+        </section>
+      )}
     <div className="stack-lg home-grid">
       <div className="hero-card area-hero">
         <div className="hero-top">
@@ -171,5 +184,6 @@ export function Home({ onOpenUnit, go, onQuick }: { onOpenUnit: (u: Unit) => voi
       </div>
       <DemoNote />
     </div>
+    </>
   );
 }

@@ -447,3 +447,10 @@ select.input { appearance: auto; }
 .family-box summary { cursor: pointer; padding: 6px 0; }
 .activity ul { margin-top: 8px; }
 .activity .bill-row { align-items: flex-start; }
+
+/* DW-031: عرض المستأجرين + الموردين داخل الصيانة */
+.view-toggle .chips { margin: 0; }
+.vendors-sec { margin-top: 24px; scroll-margin-top: 80px; }
+.welcome-card { margin-bottom: 16px; border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--line)); }
+.btn.is-disabled { opacity: .5; pointer-events: none; }
+.unit-tabs .chips { margin: 4px 0 0; }
