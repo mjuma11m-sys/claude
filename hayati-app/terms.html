@@ -9,6 +9,7 @@
   :root { --sea: #0E3B43; --pearl: #E8DCC4; --coral: #FF6B4A; --bg: #F7F4EE; --surface: #fff; --text: #0B2328; --text-2: #33494D; --border: #E4DDD0; --brand: #13636B; }
   @media (prefers-color-scheme: dark) { :root { --bg: #0A1A1E; --surface: #10262B; --text: #EFE8DA; --text-2: #C9C2B4; --border: #1F3D43; --brand: #6EC5C0; color-scheme: dark; } }
   * { box-sizing: border-box; }
+  html { background: var(--bg); min-height: 100%; }
   body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.8 "IBM Plex Sans Arabic", -apple-system, "Segoe UI", sans-serif; }
   main { max-width: 720px; margin: 0 auto; padding: 24px 18px calc(48px + env(safe-area-inset-bottom)); }
   header { background: var(--sea); color: var(--pearl); border-radius: 22px; padding: 22px; display: flex; gap: 16px; align-items: center; }
