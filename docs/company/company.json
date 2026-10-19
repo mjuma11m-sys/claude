@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 71,
+  "next": 72,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -559,6 +559,14 @@
       "title": "إعادة تقييم «حياتي» بعد الإرسال لـ Apple، والتطوير لين 9 من 10",
       "owner": "CEO",
       "priority": "P1",
+      "status": "review",
+      "opened": "2026-10-19",
+      "updated": "2026-10-19"
+    },
+    "DW-071": {
+      "title": "النسخة 0.26: رقم النسخة + «جديد بحياتي»",
+      "owner": "CEO",
+      "priority": "P2",
       "status": "review",
       "opened": "2026-10-19",
       "updated": "2026-10-19"

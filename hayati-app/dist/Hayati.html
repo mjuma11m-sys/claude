@@ -2698,6 +2698,13 @@ window.HAYATI_EN = {
 "اضغط مطوّل: «+ مصروف» أو «الصق رسالة» أو «اسأل حياتي»": "Long-press: «+ Expense», «Paste message» or «Ask Hayati»",
 "الحساب من أول شاشة": "Account from the first screen",
 "سجّل أو تخطَّ، والتطبيق يشتغل كامل بدون حساب": "Sign in or skip; the app works fully without an account",
+// DW-071: جديد 0.26
+"اختصارات بالرئيسية": "Home shortcuts",
+"جدولك، المطبخ، حساباتي، وكشف الحساب: ضغطة وحدة من شاشة «اليوم»": "Your schedule, kitchen, accounts and bank statement: one tap from «Today»",
+"تسجيل المحاضرة يكمل": "Lecture recording keeps going",
+"اقفل الشاشة أو افتح تطبيق ثاني والتسجيل ما يوقف (آيفون)": "Lock the screen or open another app and recording doesn't stop (iPhone)",
+"صوت الدكتور أوضح": "Clearer lecturer voice",
+"حط الجوال على الطاولة وظهره للدكتور: المايك يركّز قدّام ويخفّف السوالف اللي جنبك": "Put the phone on the desk, back facing the lecturer: the mic focuses forward and softens side chatter",
 "إيميل أوضح": "Clearer email check",
 "لو كتبت .con بدال .com ينبهك قبل لا يضيع إنشاء الحساب": "Typed .con instead of .com? It tells you before sign-up fails",
 "اكتب الإيميل كامل وصحيح (مثل name@gmail.com)": "Enter a full, valid email (like name@gmail.com)",
@@ -4487,7 +4494,7 @@ window.HAYATI_CONFIG = {
   const S = window.Store;
   const st = S.state;
   const I = window.icon;
-  const APP_VERSION = 'v25';   // نفس رقم sw.js (فيه اختبار يتأكد)
+  const APP_VERSION = 'v26';   // نفس رقم sw.js (فيه اختبار يتأكد)
 
   // ---------- ثوابت ----------
   const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
@@ -13724,6 +13731,11 @@ window.HAYATI_CONFIG = {
 
   // الجديد لكل نسخة (نصوص قصيرة وصادقة: شي يشتغل اليوم بس)
   const NEWS = {
+    v26: [
+      ['⚡', 'اختصارات بالرئيسية', 'جدولك، المطبخ، حساباتي، وكشف الحساب: ضغطة وحدة من شاشة «اليوم»'],
+      ['🎙️', 'تسجيل المحاضرة يكمل', 'اقفل الشاشة أو افتح تطبيق ثاني والتسجيل ما يوقف (آيفون)'],
+      ['👂', 'صوت الدكتور أوضح', 'حط الجوال على الطاولة وظهره للدكتور: المايك يركّز قدّام ويخفّف السوالف اللي جنبك'],
+    ],
     v25: [
       ['💳', 'حساباتي', 'رصيد وصرف وميزانية لكل حساب وبطاقة، والرسائل تنربط بالبطاقة لحالها'],
       ['💱', 'عملتك', 'دينار، ريال، درهم أو غيرها: التطبيق كله يشتغل بعملتك'],

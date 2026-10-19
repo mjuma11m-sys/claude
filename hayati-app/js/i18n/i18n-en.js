@@ -1938,6 +1938,13 @@ window.HAYATI_EN = {
 "اضغط مطوّل: «+ مصروف» أو «الصق رسالة» أو «اسأل حياتي»": "Long-press: «+ Expense», «Paste message» or «Ask Hayati»",
 "الحساب من أول شاشة": "Account from the first screen",
 "سجّل أو تخطَّ، والتطبيق يشتغل كامل بدون حساب": "Sign in or skip; the app works fully without an account",
+// DW-071: جديد 0.26
+"اختصارات بالرئيسية": "Home shortcuts",
+"جدولك، المطبخ، حساباتي، وكشف الحساب: ضغطة وحدة من شاشة «اليوم»": "Your schedule, kitchen, accounts and bank statement: one tap from «Today»",
+"تسجيل المحاضرة يكمل": "Lecture recording keeps going",
+"اقفل الشاشة أو افتح تطبيق ثاني والتسجيل ما يوقف (آيفون)": "Lock the screen or open another app and recording doesn't stop (iPhone)",
+"صوت الدكتور أوضح": "Clearer lecturer voice",
+"حط الجوال على الطاولة وظهره للدكتور: المايك يركّز قدّام ويخفّف السوالف اللي جنبك": "Put the phone on the desk, back facing the lecturer: the mic focuses forward and softens side chatter",
 "إيميل أوضح": "Clearer email check",
 "لو كتبت .con بدال .com ينبهك قبل لا يضيع إنشاء الحساب": "Typed .con instead of .com? It tells you before sign-up fails",
 "اكتب الإيميل كامل وصحيح (مثل name@gmail.com)": "Enter a full, valid email (like name@gmail.com)",
