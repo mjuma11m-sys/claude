@@ -192,3 +192,4 @@
 | 2026-10-20 | DW-050 | النشر على Vercel كمشروع جديد بجذر company-brand/site؛ يحتاج المالك (حساب Vercel والدومين) | Owner | اختيار المالك |
 | 2026-10-20 | DW-050 | الموقع منشور على الإنتاج: myrent-sigma.vercel.app (مشروع Vercel wadqa، commit e97e2a1)؛ السبب الأخير كان .vercelignore يستبعد كل شي غير hayati-app | COO | تحقق المالك عبر Claude in Chrome: / = ودقة، /en/ = WADQA |
 | 2026-10-20 | DW-050 | Supabase hayati: Site URL صار https://claude-eosin-seven.vercel.app/hayati-app/ (كان localhost:3000) + نفس الرابط بـ Redirect URLs مع bh.hayati.app://auth | Owner | تسجيل Google و«نسيت كلمة السر» من نسخة الويب كان يرجّع لـ localhost؛ تحقق بصورة الإعدادات بعد الحفظ |
+| 2026-10-20 | DW-050 | حياتي: رابط «نسيت كلمة السر» يفتح شاشة «كلمة مرور جديدة» (نقرا type=recovery قبل createClient)؛ اختبار e2e يمنع الرجوع | QA | Claude in Chrome لقى إن الرابط يصير تسجيل دخول عادي؛ الاختبار يفشل بدون الإصلاح وينجح معه |

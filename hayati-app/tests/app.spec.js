@@ -1108,6 +1108,36 @@ test('accounts: Apple/Google buttons only when enabled, web OAuth returns to the
   expect(await store(page, () => window.__srv.calls.find((c) => c[0] === 'reset')[1])).toBe('mo@x.bh');
 });
 
+// DW-050: رابط «نسيت كلمة السر» من الإيميل (#…&type=recovery) كان يصير تسجيل دخول عادي، لأن المكتبة تطلق PASSWORD_RECOVERY
+//   قبل ما يتسجّل onAuthStateChange وتمسح الرابط. الـ fake يقلّد هالشي: الجلسة جاهزة، وما فيه حدث، والرابط ينمسح وقت createClient
+test('accounts: the password-reset email link opens «new password», a normal sign-in link does not', async ({ page }) => {
+  const asRecovery = async (hash) => {
+    await useFakeSupabase(page);
+    await page.addInitScript(() => {
+      window.__srv.session = { access_token: 't', user: { id: 'u-mo', email: 'mo@x.bh', app_metadata: { provider: 'email' } } };
+      const make = window.supabase.createClient;
+      window.supabase.createClient = (...a) => { history.replaceState(null, '', location.pathname); return make(...a); };
+    });
+    await open(page, '/index.html' + hash);
+  };
+  await asRecovery('#access_token=t&expires_in=3600&refresh_token=r&token_type=bearer&type=recovery');
+  await expect(page.locator('#sheetTitle')).toHaveText('كلمة مرور جديدة');
+  await page.fill('#sheetBody [name=newpw]', '123');
+  await page.click('#sheetSave');
+  await expect(page.locator('.toast')).toContainText('٦ أحرف');                         // قصيرة: ما تنحفظ
+  await expect(page.locator('#sheetTitle')).toHaveText('كلمة مرور جديدة');
+  await page.fill('#sheetBody [name=newpw]', 'NewPass123');
+  await page.click('#sheetSave');
+  await expect(page.locator('.toast')).toContainText('تغيّرت كلمة المرور');
+  expect(await store(page, () => App.S.status.recovery)).toBe(false);
+
+  const page2 = await page.context().newPage();
+  page = page2;
+  await asRecovery('#access_token=t&expires_in=3600&refresh_token=r&token_type=bearer&type=magiclink');
+  await page.waitForTimeout(600);
+  await expect(page.locator('#sheetTitle')).not.toHaveText('كلمة مرور جديدة');
+});
+
 test('accounts on iPhone: Apple opens the system browser, the bh.hayati.app://auth link signs in @webkit', async ({ page }) => {
   await useFakeSupabase(page);
   await page.addInitScript(() => {
