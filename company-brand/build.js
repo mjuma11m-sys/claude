@@ -6,8 +6,8 @@ const C = { ink: '#0B1514', bone: '#F2EBDD', gold: '#C8A04A', deep: '#7A5A12', s
 const bold64 = fs.readFileSync(path.join(__dirname, 'fonts/IBMPlexSansArabic-Bold.ttf')).toString('base64');
 const FONT_EMBED = `@font-face{font-family:'IBM Plex Sans Arabic';font-weight:700;src:url(data:font/ttf;base64,${bold64})}`;
 
-// الفكرة: دلمون = بوابة (قوس) تحمل لؤلؤة البحرين
-const goal = (c, p, w = 34) => `<path d="M150 384V256A106 106 0 0 1 362 256V384" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/><circle cx="256" cy="288" r="46" fill="${p}"/>`;
+// الفكرة: ودقة = قطرة مطر صافية (شفافية) وبداخلها نقطة ذهبية (الأمانة اللي نحفظها)
+const goal = (c, p, w = 34) => `<path d="M256 104C256 104 160 228 160 310A96 96 0 0 0 352 310C352 228 256 104 256 104Z" fill="none" stroke="${c}" stroke-width="${w}" stroke-linejoin="round"/><circle cx="256" cy="316" r="38" fill="${p}"/>`;
 const svg = (inner, vb = '0 0 512 512') => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}">${inner}</svg>\n`;
 const icon = svg(`<rect width="512" height="512" rx="116" fill="${C.ink}"/>${goal(C.bone, C.gold)}`);
 const files = {
@@ -25,23 +25,23 @@ ${bg ? `<circle cx="256" cy="256" r="256" fill="${bg}"/>` : ''}
 <circle cx="256" cy="256" r="228" fill="none" stroke="${c}" stroke-width="2"/>
 <circle cx="256" cy="256" r="156" fill="none" stroke="${c}" stroke-width="2"/>
 <defs><path id="t" d="M80 256A176 176 0 0 1 432 256"/><path id="b" d="M44 256A212 212 0 0 0 468 256"/></defs>
-<text font-size="46"><textPath href="#t" startOffset="50%" text-anchor="middle">دلمون للبرمجيات</textPath></text>
-<text font-size="30" letter-spacing="7"><textPath href="#b" startOffset="50%" text-anchor="middle">DILMUN · BAHRAIN</textPath></text>
+<text font-size="46"><textPath href="#t" startOffset="50%" text-anchor="middle">ودقة للبرمجيات</textPath></text>
+<text font-size="30" letter-spacing="7"><textPath href="#b" startOffset="50%" text-anchor="middle">WADQA · BAHRAIN</textPath></text>
 <circle cx="62" cy="262" r="6" fill="${c}"/><circle cx="450" cy="262" r="6" fill="${c}"/>
 ${g}
-<text x="256" y="368" font-size="40" text-anchor="middle" direction="rtl">دلمون</text>`);
+<text x="256" y="368" font-size="40" text-anchor="middle" direction="rtl">ودقة</text>`);
 };
 files['stamp-ink.svg'] = stamp(C.ink);
 files['stamp-gold-on-dark.svg'] = stamp(C.gold, C.ink);
 files['stamp-bone-on-dark.svg'] = stamp(C.bone);
 for (const [n, s] of Object.entries(files)) fs.writeFileSync(path.join(OUT, n), s);
 
-const tokens = `/* company-brand/tokens.css — دلمون (DILMUN)، نفس الأرقام بالـ BRAND.md */
+const tokens = `/* company-brand/tokens.css — ودقة (WADQA)، نفس الأرقام بالـ BRAND.md */
 :root{
-  --dilmun-ink:${C.ink}; --dilmun-bone:${C.bone}; --dilmun-gold:${C.gold};
-  --dilmun-gold-deep:${C.deep}; /* نص ذهبي على فاتح (5.4:1) */
-  --dilmun-slate:${C.slate}; --dilmun-mist:${C.mist};
-  --dilmun-font:'IBM Plex Sans Arabic',system-ui,sans-serif;
+  --wadqa-ink:${C.ink}; --wadqa-bone:${C.bone}; --wadqa-gold:${C.gold};
+  --wadqa-gold-deep:${C.deep}; /* نص ذهبي على فاتح (5.4:1) */
+  --wadqa-slate:${C.slate}; --wadqa-mist:${C.mist};
+  --wadqa-font:'IBM Plex Sans Arabic',system-ui,sans-serif;
 }\n`;
 fs.writeFileSync(path.join(OUT, 'tokens.css'), tokens);
 
@@ -55,24 +55,24 @@ const lockup = (dark, stacked) => {
   return `<style>${css}</style><body style="background:${dark ? C.ink : C.bone};width:${stacked ? 700 : 1100}px;height:${stacked ? 700 : 420}px;display:flex;align-items:center;justify-content:center">
 <div style="display:flex;${stacked ? 'flex-direction:column;' : 'direction:ltr;'}align-items:center;gap:${stacked ? 28 : 44}px">
 <div style="width:${stacked ? 220 : 210}px;height:${stacked ? 220 : 210}px">${m}</div>
-<div style="text-align:${stacked ? 'center' : 'right'};color:${fg}"><div style="font-weight:700;font-size:${stacked ? 120 : 130}px;line-height:1.1">دلمون</div>
-<div style="font-weight:700;font-size:34px;letter-spacing:.14em;color:${sub};direction:ltr">DILMUN STUDIO</div></div></div></body>`;
+<div style="text-align:${stacked ? 'center' : 'right'};color:${fg}"><div style="font-weight:700;font-size:${stacked ? 120 : 130}px;line-height:1.1">ودقة</div>
+<div style="font-weight:700;font-size:34px;letter-spacing:.14em;color:${sub};direction:ltr">WADQA STUDIO</div></div></div></body>`;
 };
 const card = (back) => `<style>${css}</style><body style="width:1050px;height:600px;background:${back ? C.bone : C.ink};color:${back ? C.ink : C.bone};position:relative;overflow:hidden">
 ${back ? `<div style="position:absolute;right:70px;top:70px;font-size:54px;font-weight:700">محمد <span style="color:${C.deep}">(أبو جعفر)</span></div>
-<div style="position:absolute;right:70px;top:150px;font-size:30px;color:#5B6B67">المؤسس · دلمون للبرمجيات</div>
+<div style="position:absolute;right:70px;top:150px;font-size:30px;color:#5B6B67">المؤسس · ودقة للبرمجيات</div>
 <div style="position:absolute;right:70px;bottom:70px;font-size:26px;line-height:1.9;direction:ltr;text-align:right;color:#5B6B67">[ بريدك الإلكتروني ]<br>[ رقم الجوال ]<br>مملكة البحرين</div>
 <div style="position:absolute;left:70px;bottom:62px;width:150px;height:150px">${inl(stamp(C.ink))}</div>`
 : `<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px"><div style="width:190px;height:190px">${inl(svg(goal(C.bone, C.gold)))}</div>
-<div style="font-weight:700;font-size:96px;line-height:1">دلمون</div><div style="font-weight:700;font-size:26px;letter-spacing:.2em;color:${C.gold};direction:ltr">DILMUN STUDIO</div></div>`}</body>`;
+<div style="font-weight:700;font-size:96px;line-height:1">ودقة</div><div style="font-weight:700;font-size:26px;letter-spacing:.2em;color:${C.gold};direction:ltr">WADQA STUDIO</div></div>`}</body>`;
 const letter = `<style>${css}@page{size:A4;margin:0}</style><body style="width:210mm;height:297mm;background:#fff;color:${C.ink};position:relative">
 <div style="height:34mm;background:${C.ink};display:flex;align-items:center;justify-content:space-between;padding:0 18mm;color:${C.bone}">
-<div style="display:flex;align-items:center;gap:7mm"><div style="width:18mm;height:18mm">${inl(svg(goal(C.bone, C.gold)))}</div><div><div style="font-weight:700;font-size:26pt;line-height:1">دلمون</div><div style="font-weight:700;font-size:8.5pt;letter-spacing:.2em;color:${C.gold};direction:ltr;margin-top:1.5mm">DILMUN STUDIO</div></div></div>
+<div style="display:flex;align-items:center;gap:7mm"><div style="width:18mm;height:18mm">${inl(svg(goal(C.bone, C.gold)))}</div><div><div style="font-weight:700;font-size:26pt;line-height:1">ودقة</div><div style="font-weight:700;font-size:8.5pt;letter-spacing:.2em;color:${C.gold};direction:ltr;margin-top:1.5mm">WADQA STUDIO</div></div></div>
 <div style="font-size:9pt;color:${C.mist};text-align:left;direction:ltr;line-height:1.7">[ البريد ]<br>[ الجوال ]<br>Kingdom of Bahrain</div></div>
 <div style="height:1.2mm;background:${C.gold}"></div>
 <div style="padding:22mm 22mm;font-size:11pt;line-height:2;color:#33494D">التاريخ: ____ / ____ / ______<br><br>إلى: ______________________<br><br>الموضوع: ______________________</div>
 <div style="position:absolute;bottom:14mm;left:22mm;width:30mm;height:30mm;opacity:.9">${inl(stamp(C.ink))}</div>
-<div style="position:absolute;bottom:18mm;right:22mm;font-size:8pt;color:#5B6B67">دلمون للبرمجيات · أدوات تبني يومك</div></body>`;
+<div style="position:absolute;bottom:18mm;right:22mm;font-size:8pt;color:#5B6B67">ودقة للبرمجيات · صافية مثل المطر</div></body>`;
 const board = fs.readFileSync(path.join(__dirname, 'brand-board.html'), 'utf8')
   .replace('/*FONT*/', FONT_EMBED)
   .replace(/<!--(\w[\w-]*\.svg)-->/g, (_, f) => inl(files[f]));

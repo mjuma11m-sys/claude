@@ -1,7 +1,7 @@
-/* company-brand/tokens.css — دلمون (DILMUN)، نفس الأرقام بالـ BRAND.md */
+/* company-brand/tokens.css — ودقة (WADQA)، نفس الأرقام بالـ BRAND.md */
 :root{
-  --dilmun-ink:#0B1514; --dilmun-bone:#F2EBDD; --dilmun-gold:#C8A04A;
-  --dilmun-gold-deep:#7A5A12; /* نص ذهبي على فاتح (5.4:1) */
-  --dilmun-slate:#1C2B2A; --dilmun-mist:#8FA09C;
-  --dilmun-font:'IBM Plex Sans Arabic',system-ui,sans-serif;
+  --wadqa-ink:#0B1514; --wadqa-bone:#F2EBDD; --wadqa-gold:#C8A04A;
+  --wadqa-gold-deep:#7A5A12; /* نص ذهبي على فاتح (5.4:1) */
+  --wadqa-slate:#1C2B2A; --wadqa-mist:#8FA09C;
+  --wadqa-font:'IBM Plex Sans Arabic',system-ui,sans-serif;
 }
