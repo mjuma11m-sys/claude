@@ -1,0 +1,126 @@
+<title>شعار إداراتي الجديد</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;700&family=IBM+Plex+Sans:wght@500;700&display=swap">
+<style>
+/* Layout: ثلاث بطاقات أفكار، كل وحدة: أيقونة كبيرة + أحجام صغيرة + شعار كامل مع «من WADQA» */
+:root{
+  --navy:#14213A; --gold:#C9963A; --cream:#F5F2EB;
+  --bg:#F5F2EB; --surface:#ffffff; --ink:#14213A; --muted:#5e6676; --line:#e2dacb;
+  --ar:"IBM Plex Sans Arabic",Tahoma,sans-serif; --en:"IBM Plex Sans",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1626;--surface:#16213a;--ink:#F5F2EB;--muted:#a3abba;--line:#26314a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1626;--surface:#16213a;--ink:#F5F2EB;--muted:#a3abba;--line:#26314a;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--ar);line-height:1.7}
+.wrap{max-width:1080px;margin:0 auto;padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:24px}
+header h1{margin:0;font-size:1.7rem;text-wrap:balance}
+header p{margin:.3rem 0 0;color:var(--muted);max-width:62ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;display:grid;gap:14px;min-width:0}
+.card h2{margin:0;font-size:1.15rem;display:flex;gap:8px;align-items:baseline}
+.card h2 b{font-family:var(--en);color:var(--gold)}
+.card p{margin:0;color:var(--muted);font-size:.92rem}
+.hero{display:grid;place-items:center;background:var(--cream);border-radius:14px;padding:22px}
+.hero svg{width:150px;height:150px;border-radius:34px;box-shadow:0 10px 30px rgba(20,33,58,.25)}
+.sizes{display:flex;align-items:flex-end;gap:14px;justify-content:center}
+.sizes svg{border-radius:22%}
+.sizes span{display:block;text-align:center;font-size:.7rem;color:var(--muted);font-family:var(--en)}
+.lock{display:flex;align-items:center;gap:12px;justify-content:center;background:var(--navy);border-radius:14px;padding:16px}
+.lock svg{width:52px;height:52px;border-radius:12px}
+.lock .t{display:grid;line-height:1.2}
+.lock .t b{color:#fff;font-size:1.6rem}
+.lock .t small{color:var(--gold);font-family:var(--en);letter-spacing:.12em;font-size:.72rem}
+.why{display:grid;gap:4px;margin:0;padding:0;list-style:none;font-size:.88rem}
+.why li::before{content:"◆ ";color:var(--gold);font-size:.7em}
+.current{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px dashed var(--line);border-radius:14px;padding:12px 14px;font-size:.9rem;color:var(--muted)}
+.current svg{width:44px;height:44px;border-radius:10px;flex:none}
+.note{font-size:.85rem;color:var(--muted)}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- A: باب بعقد خليجي وفيه ثقب مفتاح -->
+    <symbol id="A" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="#14213A"/>
+      <path d="M160 408 V236 Q160 150 256 104 Q352 150 352 236 V408 Z" fill="#C9963A"/>
+      <circle cx="256" cy="250" r="30" fill="#14213A"/>
+      <path d="M240 262 L226 336 H286 L272 262 Z" fill="#14213A"/>
+      <rect x="128" y="404" width="256" height="18" rx="9" fill="#C9963A"/>
+    </symbol>
+    <!-- B: نافذة مشربية بعقد -->
+    <symbol id="B" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="#14213A"/>
+      <clipPath id="bclip"><path d="M150 410 V240 Q150 148 256 100 Q362 148 362 240 V410 Z"/></clipPath>
+      <g clip-path="url(#bclip)" stroke="#C9963A" stroke-width="10" fill="none">
+        <path d="M100 160 L420 480 M100 240 L420 560 M100 80 L420 400 M100 0 L420 320 M100 320 L420 640"/>
+        <path d="M420 160 L100 480 M420 240 L100 560 M420 80 L100 400 M420 0 L100 320 M420 320 L100 640"/>
+      </g>
+      <path d="M150 410 V240 Q150 148 256 100 Q362 148 362 240 V410 Z" fill="none" stroke="#C9963A" stroke-width="22" stroke-linejoin="round"/>
+      <circle cx="256" cy="262" r="34" fill="#C9963A"/>
+    </symbol>
+    <!-- C: ثلاث عمارات سطحها يرسم حرف W (WADQA) -->
+    <symbol id="C" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="#14213A"/>
+      <path d="M120 400 V132 H196 L226 236 L256 172 L286 236 L316 132 H392 V400 Z" fill="#C9963A"/>
+      <g fill="#14213A">
+        <rect x="142" y="190" width="22" height="22" rx="3"/><rect x="142" y="240" width="22" height="22" rx="3"/><rect x="142" y="290" width="22" height="22" rx="3"/>
+        <rect x="348" y="190" width="22" height="22" rx="3"/><rect x="348" y="240" width="22" height="22" rx="3"/><rect x="348" y="290" width="22" height="22" rx="3"/>
+        <rect x="236" y="272" width="40" height="128" rx="20"/>
+      </g>
+    </symbol>
+    <!-- الحالي -->
+    <symbol id="OLD" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="#14213A"/>
+      <path d="M256.0 83.5 L306.5 134.0 L378.0 134.0 L378.0 205.5 L428.5 256.0 L378.0 306.5 L378.0 378.0 L306.5 378.0 L256.0 428.5 L205.5 378.0 L134.0 378.0 L134.0 306.5 L83.5 256.0 L134.0 205.5 L134.0 134.0 L205.5 134.0Z" fill="#C9963A" stroke="#C9963A" stroke-width="22" stroke-linejoin="round"/>
+      <text x="256" y="292" text-anchor="middle" font-family="IBM Plex Sans Arabic, sans-serif" font-weight="700" font-size="110" fill="#14213A">دار</text>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <header>
+    <h1>شعار إداراتي الجديد: ثلاث أفكار</h1>
+    <p>كل فكرة تحافظ على ألوان التطبيق (الكحلي والذهبي)، وتحت اسم التطبيق تطلع «من WADQA» عشان كل تطبيق تسويه الشركة الأم يحمل نفس التوقيع. اختار فكرة، وأنا أطبقها على أيقونة التطبيق وملف المحامي.</p>
+  </header>
+
+  <div class="current"><svg viewBox="0 0 512 512"><use href="#OLD"/></svg><span>الشعار الحالي: نجمة ثمانية فيها «دار». قوي بالأحجام الكبيرة، بس كلمة «دار» تصعب قراءتها بالأحجام الصغيرة، وما فيه رابط بـ WADQA.</span></div>
+
+  <div class="grid">
+    <article class="card">
+      <h2><b>A</b> الباب</h2>
+      <div class="hero"><svg viewBox="0 0 512 512" role="img" aria-label="فكرة الباب"><use href="#A"/></svg></div>
+      <div class="sizes">
+        <div><svg width="64" height="64" viewBox="0 0 512 512"><use href="#A"/></svg><span>64</span></div>
+        <div><svg width="40" height="40" viewBox="0 0 512 512"><use href="#A"/></svg><span>40</span></div>
+        <div><svg width="24" height="24" viewBox="0 0 512 512"><use href="#A"/></svg><span>24</span></div>
+      </div>
+      <div class="lock"><svg viewBox="0 0 512 512"><use href="#A"/></svg><div class="t"><b>إداراتي</b><small>BY WADQA</small></div></div>
+      <ul class="why"><li>باب بعقد خليجي، وفيه ثقب مفتاح: البيت والإيجار</li><li>أوضح فكرة بالحجم الصغير</li><li>ما فيه نص، فيشتغل بكل اللغات</li></ul>
+    </article>
+
+    <article class="card">
+      <h2><b>B</b> المشربية</h2>
+      <div class="hero"><svg viewBox="0 0 512 512" role="img" aria-label="فكرة المشربية"><use href="#B"/></svg></div>
+      <div class="sizes">
+        <div><svg width="64" height="64" viewBox="0 0 512 512"><use href="#B"/></svg><span>64</span></div>
+        <div><svg width="40" height="40" viewBox="0 0 512 512"><use href="#B"/></svg><span>40</span></div>
+        <div><svg width="24" height="24" viewBox="0 0 512 512"><use href="#B"/></svg><span>24</span></div>
+      </div>
+      <div class="lock"><svg viewBox="0 0 512 512"><use href="#B"/></svg><div class="t"><b>إداراتي</b><small>BY WADQA</small></div></div>
+      <ul class="why"><li>نافذة مشربية من بيوت المحرق القديمة</li><li>أكثر فكرة فيها طابع بحريني</li><li>التفاصيل تضيع شوي بحجم 24</li></ul>
+    </article>
+
+    <article class="card">
+      <h2><b>C</b> عمارات W</h2>
+      <div class="hero"><svg viewBox="0 0 512 512" role="img" aria-label="فكرة عمارات على شكل W"><use href="#C"/></svg></div>
+      <div class="sizes">
+        <div><svg width="64" height="64" viewBox="0 0 512 512"><use href="#C"/></svg><span>64</span></div>
+        <div><svg width="40" height="40" viewBox="0 0 512 512"><use href="#C"/></svg><span>40</span></div>
+        <div><svg width="24" height="24" viewBox="0 0 512 512"><use href="#C"/></svg><span>24</span></div>
+      </div>
+      <div class="lock"><svg viewBox="0 0 512 512"><use href="#C"/></svg><div class="t"><b>إداراتي</b><small>BY WADQA</small></div></div>
+      <ul class="why"><li>ثلاث عمارات، وسطحها يرسم حرف W حق WADQA</li><li>أقوى رابط بالشركة الأم</li><li>لو سويتوا تطبيقات ثانية، تقدر كل وحدة تاخذ نفس الـ W بشكل ثاني</li></ul>
+    </article>
+  </div>
+
+  <p class="note">ترشيحي: <b>C</b> لأنها تربط التطبيق بـ WADQA مباشرة وتبقى واضحة بالحجم الصغير. هذي مسودات أولى، وبعد ما تختار أنعّم التفاصيل وأطلع كل الأحجام (أيقونة الجوال 512 و192 و180، وأيقونة المتصفح 32).</p>
+</div>
