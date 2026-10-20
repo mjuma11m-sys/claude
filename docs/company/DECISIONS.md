@@ -191,3 +191,4 @@
 | 2026-10-20 | DW-050 | قائمة انتظار إجاراتي = قياس الطلب (DW-003)، وقائمة حياتي = مختبرين أندرويد (DW-005) | CPO | النموذج يخدم تذاكر مفتوحة بدل ما يكون زينة |
 | 2026-10-20 | DW-050 | النشر على Vercel كمشروع جديد بجذر company-brand/site؛ يحتاج المالك (حساب Vercel والدومين) | Owner | اختيار المالك |
 | 2026-10-20 | DW-050 | الموقع منشور على الإنتاج: myrent-sigma.vercel.app (مشروع Vercel wadqa، commit e97e2a1)؛ السبب الأخير كان .vercelignore يستبعد كل شي غير hayati-app | COO | تحقق المالك عبر Claude in Chrome: / = ودقة، /en/ = WADQA |
+| 2026-10-20 | DW-050 | Supabase hayati: Site URL صار https://claude-eosin-seven.vercel.app/hayati-app/ (كان localhost:3000) + نفس الرابط بـ Redirect URLs مع bh.hayati.app://auth | Owner | تسجيل Google و«نسيت كلمة السر» من نسخة الويب كان يرجّع لـ localhost؛ تحقق بصورة الإعدادات بعد الحفظ |
