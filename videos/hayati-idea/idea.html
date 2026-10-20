@@ -1,0 +1,63 @@
+<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><style>
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Bold.ttf);font-weight:700}
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Regular.ttf);font-weight:400}
+*{margin:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#0A1A1E;font-family:P;color:#E8DCC4}
+#bg{position:absolute;inset:0;background:radial-gradient(70% 45% at 50% 45%,#13474f 0%,#0E3B43 38%,#0A1A1E 100%)}
+.layer{position:absolute;inset:0;opacity:0}
+#mark{position:absolute;left:50%;width:460px;height:460px;margin-left:-230px;top:560px}
+.big{position:absolute;left:70px;right:70px;text-align:center;font-weight:700;line-height:1.3}
+.chips{position:absolute;left:0;right:0;top:980px;display:flex;flex-direction:column;align-items:center;gap:26px}
+.chip{background:#10262B;border:2px solid #1F3D43;border-radius:999px;padding:18px 44px;font-size:48px}
+.phone{position:absolute;left:50%;top:620px;width:530px;height:1148px;margin-left:-265px;border-radius:74px;background:#000;padding:16px;box-shadow:0 60px 120px -30px #000,0 0 0 3px #2a4a50}
+.phone img{width:100%;height:100%;border-radius:60px;object-fit:cover;object-position:top}
+.ft{position:absolute;left:60px;right:60px;top:250px;text-align:center}
+.ft .e{font-size:96px;line-height:1}
+.ft h2{font-size:78px;margin-top:18px;line-height:1.25}
+.ft p{font-size:44px;color:#6EC5C0;margin-top:14px;font-weight:400}
+#demo{position:absolute;left:0;right:0;bottom:58px;text-align:center;font-size:30px;opacity:.55}
+#endw{position:absolute;left:0;right:0;top:1060px;text-align:center;font-size:150px;font-weight:700}
+#endt{position:absolute;left:0;right:0;top:1270px;text-align:center;font-size:46px;color:#6EC5C0}
+#endb{position:absolute;left:50%;top:1400px;transform:translateX(-50%);background:#FF6B4A;color:#fff;border-radius:999px;padding:16px 46px;font-size:42px;font-weight:700;white-space:nowrap}
+</style></head><body>
+<div id="bg"></div>
+<svg id="mark" viewBox="0 0 512 512">
+ <path id="ring" d="M 383.3 172.7 A 160 160 0 1 1 300 102.2" fill="none" stroke="#E8DCC4" stroke-opacity=".28" stroke-width="22" stroke-linecap="round"/>
+ <path id="ain" d="M 304 166 L 196 166 L 264 222 C 204 222 168 254 168 292 C 168 336 206 360 256 360 C 292 360 318 348 338 332" fill="none" stroke="#E8DCC4" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/>
+ <circle id="dot" cx="352" cy="128" r="30" fill="#FF6B4A"/>
+</svg>
+<div class="layer" id="L1"><div class="big" style="top:300px;font-size:82px">مصاريفك بتطبيق،<br>جدولك بتطبيق،<br>ومحاضراتك بمكان ثالث؟</div>
+ <div class="chips"><span class="chip">💳 فلوسك</span><span class="chip">📅 جدولك</span><span class="chip">🎓 دراستك</span><span class="chip">✅ مهامك</span></div></div>
+<div class="layer" id="L2"><div class="big" style="top:1150px;font-size:96px">«حياتي» يجمعهم<br>بمكان واحد</div></div>
+<div class="layer" id="F1"><div class="ft"><div class="e">💬</div><h2>الصق رسالة البنك</h2><p>يقرا المبلغ والمحل، وأنت تأكّد</p></div><div class="phone"><img src="shots/02_sms.png"></div></div>
+<div class="layer" id="F2"><div class="ft"><div class="e">📅</div><h2>جدولك بأيامه ووقته</h2><p>دراسة، دوام، أو تمارين</p></div><div class="phone"><img src="shots/03_week.png"></div></div>
+<div class="layer" id="F3"><div class="ft"><div class="e">⚽</div><h2>برنامج المدرب PDF</h2><p>التمارين والمباراة بتواريخها</p></div><div class="phone"><img src="shots/04_team.png"></div></div>
+<div class="layer" id="F4"><div class="ft"><div class="e">✨</div><h2>اسأله وسجّل بكلمة</h2><p>«صرفت 1.5 قهوة» · «كم صرفت؟»</p></div><div class="phone"><img src="shots/05_assistant.png"></div></div>
+<div class="layer" id="END"><div id="endw">حياتي</div><div id="endt">بياناتك على جوالك · الحساب اختياري</div><div id="endb">قيد التطوير · نسخة تجريبية</div></div>
+<div id="demo">* لقطات ببيانات تجريبية</div>
+<script>
+const $=(i)=>document.getElementById(i);
+const ring=$('ring'),ain=$('ain'),dot=$('dot'),mark=$('mark');
+const LR=ring.getTotalLength(),LA=ain.getTotalLength();
+ring.style.strokeDasharray=LR;ain.style.strokeDasharray=LA;
+const cl=(x)=>Math.max(0,Math.min(1,x)),seg=(t,a,b)=>cl((t-a)/(b-a));
+const out=(x)=>1-Math.pow(1-x,3),io=(x)=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const back=(x)=>{const c=1.9;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)};
+// [id, in, out]
+const L=[['L1',0.2,4.3],['L2',6.6,8.6],['F1',8.6,12.1],['F2',12.1,15.6],['F3',15.6,19.1],['F4',19.1,22.6],['END',23.2,99]];
+function drawMark(t,t0){ring.style.opacity=t>t0?1:0;ain.style.opacity=t>t0+.5?1:0;
+ ring.style.strokeDashoffset=LR*(1-io(seg(t,t0,t0+1)));ain.style.strokeDashoffset=LA*(1-io(seg(t,t0+.5,t0+1.8)));
+ const d=seg(t,t0+1.7,t0+2.2);dot.setAttribute('r',30*(d?back(d):0));}
+function setT(t){
+ for(const [id,a,b] of L){const e=$(id),i=out(seg(t,a,a+.5)),o=seg(t,b-.4,b);e.style.opacity=i*(1-o);
+  e.style.transform='translateY('+(50*(1-i)-50*o)+'px)';
+  const ph=e.querySelector('.phone');if(ph)ph.style.transform='translateY('+(160*(1-out(seg(t,a,a+.7))))+'px) rotate('+(-2*(1-out(seg(t,a,a+.7))))+'deg)';}
+ // الشعار: يتكوّن (4.4–6.6) ويطلع فوق «يجمعهم»، يختفي مع المزايا، ويرجع بالنهاية
+ if(t<8.7){drawMark(t,4.4);mark.style.opacity=1-seg(t,8.2,8.7);mark.style.top=(560-180*io(seg(t,6.4,7.0)))+'px';mark.style.transform='scale('+(1-.2*io(seg(t,6.4,7.0)))+')';}
+ else if(t<23){mark.style.opacity=0;}
+ else{drawMark(t,23.0);mark.style.opacity=1;mark.style.top='520px';mark.style.transform='scale(1)';}
+ $('demo').style.opacity=.55*(seg(t,8.6,9.0))*(1-seg(t,22.2,22.6));
+ document.body.style.opacity=1-seg(t,27.4,28);
+}
+document.fonts.ready.then(()=>Promise.all([...document.images].map(i=>i.decode()))).then(()=>{setT(0);window.READY=true});
+</script></body></html>
