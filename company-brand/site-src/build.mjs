@@ -34,8 +34,10 @@ const T = {
   back_home: ['← الرئيسية', '← Home'],
 };
 
+// stores: روابط المتاجر. null = «قريباً» (زر باهت بدون رابط)، ورابط = زر يشتغل. التطبيق بدون stores ما تطلع له أزرار أبداً
+//   (ما نعد بمتجر ما فيه خطة له). الشعارات الرسمية للمتاجر ممنوعة قبل ما يكون التطبيق متاح، فالأزرار نص بس (DW-050).
 const apps = {
-  hayati: { ic: '<img src="IMG/hayati-icon.png" alt="">', cls: 'ic-hayati', name: ['حياتي', 'Hayati'], pill: ['نسخة تجريبية · قيد التطوير', 'Beta · In development'], beta: true, short: ['يومك بمكان واحد: الميزانية، المواعيد، العبادة، والمحاضرات.', 'Your day in one place: budget, reminders, worship and lectures.'] },
+  hayati: { stores: { ios: null, android: null }, ic: '<img src="IMG/hayati-icon.png" alt="">', cls: 'ic-hayati', name: ['حياتي', 'Hayati'], pill: ['نسخة تجريبية · قيد التطوير', 'Beta · In development'], beta: true, short: ['يومك بمكان واحد: الميزانية، المواعيد، العبادة، والمحاضرات.', 'Your day in one place: budget, reminders, worship and lectures.'] },
   'sports-hub': { ic: '⚽', cls: 'ic-sports', name: ['Sports Hub', 'Sports Hub'], pill: ['قيد التطوير', 'In development'], short: ['إدارة الفرق واللاعبين والأندية.', 'Running teams, players and clubs.'] },
   ijarati: { ic: '🏠', cls: 'ic-ijarati', name: ['إجاراتي', 'Ijarati'], pill: ['فكرة · نقيس الطلب', 'Idea · Testing demand'], short: ['متابعة العقارات والإيجارات للملّاك.', 'Tracking properties and rent for landlords.'] },
 };
@@ -95,11 +97,20 @@ const form = (L, kind, product, { btn, msgLabel, msg = true }) => `<form class="
   <p class="status" role="status" aria-live="polite"></p>
 </form>`;
 
-const appCard = (L, slug) => { const a = apps[slug]; return `<a class="card" href="${slug}.html">
+const STORES = [['ios', 'App Store'], ['android', 'Google Play']];
+const storeRow = (L, slug) => {
+  const st = apps[slug].stores;
+  if (!st) return '';
+  return `<div class="stores" aria-label="${L === 0 ? 'التحميل' : 'Download'}">${STORES.map(([k, label]) => st[k]
+    ? `<a class="store" href="${st[k]}" target="_blank" rel="noopener"><small>${L === 0 ? 'حمّله من' : 'Get it on'}</small><b dir="ltr">${label}</b></a>`
+    : `<span class="store soon" aria-disabled="true"><small>${L === 0 ? 'قريباً على' : 'Coming soon to'}</small><b dir="ltr">${label}</b></span>`).join('')}</div>`;
+};
+const appCard = (L, slug) => { const a = apps[slug]; return `<div class="card app-card">
   <div class="app-ic ${a.cls}">${a.ic}</div>
-  <h3${slug === 'sports-hub' ? ' dir="ltr"' : ''}>${a.name[L]}</h3><p>${a.short[L]}</p>
+  <h3${slug === 'sports-hub' ? ' dir="ltr"' : ''}><a class="stretch" href="${slug}.html">${a.name[L]}</a></h3><p>${a.short[L]}</p>
   <span class="pill${a.beta ? ' beta' : ''}">${a.pill[L]}</span>
-  <span class="more">${L === 0 ? 'التفاصيل ←' : 'Details →'}</span></a>`; };
+  ${storeRow(L, slug)}
+  <a class="more" href="${slug}.html">${L === 0 ? 'التفاصيل ←' : 'Details →'}</a></div>`; };
 
 // ———— الصفحات ————
 const P = {};
@@ -157,6 +168,7 @@ P.hayati = (L) => ({
     <h1 class="sm reveal r2">${apps.hayati.name[L]}</h1>
     <p class="lead reveal r3">${L === 0 ? 'يومك بمكان واحد، بدال ستة تطبيقات: فلوسك، مواعيدك، عبادتك، ومحاضراتك. بالعربي أولاً، لأندرويد وآيفون.' : 'Your day in one place instead of six apps: money, reminders, worship and lectures. Arabic first, for Android and iPhone.'}</p>
     <div class="cta reveal r4"><span class="pill beta">${apps.hayati.pill[L]}</span></div>
+    <div class="reveal r4">${storeRow(L, 'hayati')}</div>
   </div>
 </div>
 <section><div class="wrap">

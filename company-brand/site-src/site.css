@@ -68,9 +68,18 @@ h2 + .h-sub { font-size: clamp(26px, 4vw, 36px); line-height: 1.3; margin-bottom
 .card h3 { font-size: 26px; line-height: 1.3; }
 .card p { color: var(--text-2); font-size: 16px; }
 .v h3 { color: var(--gold); }
-a.card { color: inherit; text-decoration: none; transition: background .2s; }
-a.card:hover { background: var(--slate-2); }
-a.card .more { margin-top: auto; padding-top: 10px; color: var(--gold); font-weight: 700; font-size: 15px; }
+/* بطاقة التطبيق: العنوان رابط يغطي البطاقة، وأزرار المتاجر فوقه (روابط ما تتداخل) */
+.app-card { position: relative; transition: background .2s; }
+.app-card:hover { background: var(--slate-2); }
+.app-card h3 a { color: inherit; text-decoration: none; }
+.app-card .stretch::after { content: ""; position: absolute; inset: 0; border-radius: 18px; }
+.app-card .more { margin-top: auto; padding-top: 10px; color: var(--gold); font-weight: 700; font-size: 15px; text-decoration: none; }
+.stores { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; position: relative; z-index: 1; }
+.store { display: inline-flex; flex-direction: column; line-height: 1.25; padding: 6px 14px; border-radius: 10px; border: 1px solid var(--line); background: #000; color: var(--bone); text-decoration: none; min-width: 128px; }
+.store small { font-size: 11px; color: var(--mist); }
+.store b { font-size: 15px; text-align: start; }
+a.store:hover { border-color: var(--gold); }
+.store.soon { opacity: .55; cursor: default; }
 .app-ic { width: 56px; height: 56px; border-radius: 14px; display: grid; place-items: center; font-size: 28px; margin-bottom: 6px; }
 .app-ic img { width: 56px; height: 56px; border-radius: 14px; }
 .ic-hayati { background: #0E3B43; } .ic-sports { background: #1d3b2a; } .ic-ijarati { background: #3a3020; }
