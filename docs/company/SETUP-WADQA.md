@@ -34,7 +34,8 @@
 
 ## 6) الموقع (DW-050)
 - **المصدر:** `company-brand/site-src/` ← `node company-brand/site-src/build.mjs` يولّد `company-brand/site/` (10 صفحات: عربي `/` وإنقليزي `/en/`).
-- **النشر على Vercel (مشروع جديد، مو مشروع حياتي):**
+- **المشروع الفعلي (20 أكتوبر 2026):** مشروع Vercel `myrent` تحوّل لـ **`wadqa`** (كان نسخة مكررة من مشروع `claude` على نفس المستودع). الرابط: `myrent-sigma.vercel.app`، وفرع الإنتاج `claude/admiring-knuth-tge99k`. Site URL بـ Supabase hayati كان `localhost:3000`، فحياتي ما تعتمد على myrent.
+- **النشر على Vercel (لو تبي مشروع جديد بدل التحويل):**
   1. Vercel ← Add New ← Project ← استورد المستودع `mjuma11m-sys/claude`.
   2. **Root Directory:** `company-brand/site` · **Framework:** Other · **Build Command:** فاضي (الملفات مبنية جاهزة).
   3. Deploy. الإعدادات (`cleanUrls` + CSP + الهيدرات الأمنية) من `company-brand/site/vercel.json`.
