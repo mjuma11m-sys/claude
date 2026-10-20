@@ -1,4 +1,4 @@
-/* WADQA Hub mark: a hub. The centre circle of a pitch, four club nodes on it, the ball in the middle.
+/* Sports Hub mark: a hub. The centre circle of a pitch, four club nodes on it, the ball in the middle.
    Source of truth: brand/build.py. Colors follow the theme tokens so it stays on-brand in every context. */
 export function Logo({ className = 'size-8' }: { className?: string }) {
   return (
@@ -14,5 +14,5 @@ export function Logo({ className = 'size-8' }: { className?: string }) {
 }
 
 export function Wordmark({ className = '' }: { className?: string }) {
-  return <span dir="ltr" className={`font-display uppercase tracking-[0.08em] ${className}`}>WADQA Hub</span>
+  return <span dir="ltr" className={`font-display uppercase tracking-[0.08em] ${className}`}>Sports Hub</span>
 }

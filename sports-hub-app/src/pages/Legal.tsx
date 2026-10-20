@@ -10,7 +10,7 @@ function Doc({ title, children }: { title: string; children: ReactNode }) {
         <Logo className="size-11 shrink-0" />
         <div>
           <h1 className="text-xl font-bold md:text-2xl">{title}</h1>
-          <p className="text-sm text-mute">WADQA Hub · قيد التطوير · نسخة تجريبية · آخر تحديث: {POLICY_DATE}</p>
+          <p className="text-sm text-mute">Sports Hub · قيد التطوير · نسخة تجريبية · آخر تحديث: {POLICY_DATE}</p>
         </div>
       </header>
       <div className="space-y-4 [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-pulse [&_li]:mt-1 [&_ul]:list-inside [&_ul]:list-disc [&_ul]:text-ink/90">
@@ -113,7 +113,7 @@ export function Terms() {
       </section>
       <section className="glass p-5">
         <h2>الجهات</h2>
-        <p>WADQA Hub مشروع مستقل. ما هو تابع للاتحاد البحريني لكرة القدم ولا لأي نادٍ، وأسماء الأندية والدوريات تنذكر للعرض بس.</p>
+        <p>Sports Hub مشروع مستقل. ما هو تابع للاتحاد البحريني لكرة القدم ولا لأي نادٍ، وأسماء الأندية والدوريات تنذكر للعرض بس.</p>
       </section>
       <section className="glass p-5">
         <h2>القانون</h2>

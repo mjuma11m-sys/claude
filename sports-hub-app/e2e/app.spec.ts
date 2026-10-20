@@ -16,7 +16,7 @@ test.describe('every screen', () => {
     await enter(page, 'الطاقم الطبي')
     for (const [path, title] of pages) {
       await page.goto(path)
-      await expect(page).toHaveTitle(`${title} · WADQA Hub`)
+      await expect(page).toHaveTitle(`${title} · Sports Hub`)
       expect(await noHorizontalScroll(page), `${path} overflows`).toBe(true)
     }
     for (const path of ['/privacy', '/terms']) {

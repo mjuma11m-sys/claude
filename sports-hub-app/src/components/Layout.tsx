@@ -28,7 +28,7 @@ export function Layout() {
   // but not on first load: there the skip link and the nav must stay the first Tab stops.
   const firstRender = useRef(true)
   useEffect(() => {
-    document.title = title ? `${title} · WADQA Hub` : 'WADQA Hub'
+    document.title = title ? `${title} · Sports Hub` : 'Sports Hub'
     if (firstRender.current) { firstRender.current = false; return }
     main.current?.focus({ preventScroll: true })
     scrollTo(0, 0)

@@ -24,7 +24,7 @@ export function matchToIcs(m: CalMatch, lengthMin = 120): string {
   const start = new Date(m.kickoff)
   const end = new Date(start.getTime() + lengthMin * 60_000)
   return [
-    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//WADQA Hub//AR', 'CALSCALE:GREGORIAN',
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Sports Hub//AR', 'CALSCALE:GREGORIAN',
     'BEGIN:VEVENT',
     `UID:${m.id}@sportshub`,
     `DTSTAMP:${stamp(new Date())}`,
