@@ -227,7 +227,8 @@ P.idarati = (L) => ({
     <div class="app-ic ic-idarati reveal">${apps.idarati.ic}</div>
     <h1 class="sm reveal r2">${apps.idarati.name[L]}</h1>
     <p class="lead reveal r3">${L === 0 ? 'أملاك العائلة وميزانيتها بمكان واحد: مين دفع، مين متأخر، وش عليك هالشهر.' : 'Your family’s properties and budget in one place: who paid, who is late, and what is due this month.'}</p>
-    <div class="cta reveal r4"><span class="pill beta">${apps.idarati.pill[L]}</span></div>
+    <div class="cta reveal r4"><a class="btn solid" href="https://idarati-gamma.vercel.app" target="_blank" rel="noopener">${L === 0 ? 'جرّب النسخة التجريبية' : 'Try the beta'}</a><span class="pill beta">${apps.idarati.pill[L]}</span></div>
+    <p class="note reveal r4">${L === 0 ? 'تشتغل ببيانات تجريبية على جهازك، وتقدر تمسحها وتبدأ ببياناتك.' : 'It runs on sample data on your device; you can clear it and start with your own.'}</p>
   </div>
 </div>
 <section><div class="wrap">
