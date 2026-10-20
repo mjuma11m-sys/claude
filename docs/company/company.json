@@ -1,7 +1,7 @@
 {
   "name": "ودقة · WADQA",
   "founded": "2026-10-13",
-  "next": 51,
+  "next": 52,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -400,6 +400,14 @@
       "owner": "CEO",
       "priority": "P1",
       "status": "review",
+      "opened": "2026-10-20",
+      "updated": "2026-10-20"
+    },
+    "DW-051": {
+      "title": "فصل المستودعات: حياتي، Sports Hub، ودقة — كل واحد بمستودعه مع تاريخه",
+      "owner": "CEO",
+      "priority": "P1",
+      "status": "blocked",
       "opened": "2026-10-20",
       "updated": "2026-10-20"
     }
