@@ -1,0 +1,254 @@
+<title>ديوانية فيديو الشعار</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Reem+Kufi:wght@500;700&display=swap">
+<style>
+/* Layout: مجلس — صف المقاعد فوق، النقاش يجري تحته كأنك قاعد بالديوانية، والتحكم تحت. */
+:root {
+  --bg: #F4EFE6; --surface: #FFFDF9; --surface-2: #EBE3D5; --line: #DDD3C2;
+  --text: #0B2328; --text-2: #3C4F52; --muted: #6E7C7D;
+  --sea: #0E3B43; --pearl: #E8DCC4; --coral: #FF6B4A; --on-coral: #2A0E07;
+  --ok: #23845F; --warn: #A15C07; --bad: #C2372E;
+  --host: #13636B; --designer: #A8467F; --programmer: #2862A8; --solver: #23845F;
+  --critic: #C2452B; --auditor: #8A6A12; --final: #6247C4;
+  --display: "Reem Kufi", "IBM Plex Sans Arabic", "Geeza Pro", sans-serif;
+  --body: "IBM Plex Sans Arabic", "Geeza Pro", "Segoe UI", sans-serif;
+  --ease: cubic-bezier(0.23, 1, 0.32, 1);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #08171B; --surface: #0F242A; --surface-2: #153239; --line: #1F3D44;
+  --text: #EFE8DA; --text-2: #C9C2B4; --muted: #8A9A9B;
+  --sea: #0E3B43; --pearl: #E8DCC4; --coral: #FF7A5C; --on-coral: #2A0E07;
+  --ok: #4FC79E; --warn: #F2B84B; --bad: #FF7A6B;
+  --host: #6EC5C0; --designer: #E58CC0; --programmer: #7DB0F0; --solver: #5FD3A6;
+  --critic: #FF8E72; --auditor: #E3C25A; --final: #AE9BFF; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #08171B; --surface: #0F242A; --surface-2: #153239; --line: #1F3D44;
+  --text: #EFE8DA; --text-2: #C9C2B4; --muted: #8A9A9B;
+  --sea: #0E3B43; --pearl: #E8DCC4; --coral: #FF7A5C; --on-coral: #2A0E07;
+  --ok: #4FC79E; --warn: #F2B84B; --bad: #FF7A6B;
+  --host: #6EC5C0; --designer: #E58CC0; --programmer: #7DB0F0; --solver: #5FD3A6;
+  --critic: #FF8E72; --auditor: #E3C25A; --final: #AE9BFF; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font: 15px/1.75 var(--body); }
+.wrap { max-width: 760px; margin: 0 auto; padding-inline: 16px; padding-block: 18px 120px; }
+h1 { font: 700 2rem/1.2 var(--display); margin: 0; letter-spacing: 0; text-wrap: balance; }
+.eyebrow { font-size: .78rem; color: var(--muted); letter-spacing: .02em; }
+.req { margin: 6px 0 0; color: var(--text-2); font-size: 1rem; text-wrap: balance; }
+
+/* المقاعد */
+.seats { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); margin-inline: -16px; padding: 12px 16px 10px; border-bottom: 1px solid var(--line); }
+.row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.seat { display: grid; justify-items: center; gap: 4px; text-align: center; transition: transform .35s var(--ease), opacity .35s var(--ease); opacity: .55; }
+.seat .av { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; background: var(--surface); border: 2px solid var(--line); transition: border-color .3s, box-shadow .3s; }
+.seat small { font-size: .68rem; line-height: 1.3; color: var(--text-2); }
+.seat.on { opacity: 1; transform: translateY(-4px); }
+.seat.on .av { border-color: var(--c); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 22%, transparent); }
+.seat.heard { opacity: .9; }
+.rounds { display: flex; gap: 6px; overflow-x: auto; margin-top: 10px; scrollbar-width: none; }
+.rounds span { flex: none; font-size: .72rem; padding: 2px 10px; border-radius: 99px; background: var(--surface-2); color: var(--muted); transition: background .3s, color .3s; }
+.rounds span.on { background: var(--sea); color: var(--pearl); }
+.rounds span.done { color: var(--text-2); }
+
+/* النقاش */
+.feed { display: grid; gap: 12px; margin-top: 18px; }
+.divider { display: flex; align-items: center; gap: 10px; margin-top: 10px; font: 500 .95rem var(--display); color: var(--text-2); }
+.divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.msg { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: start; }
+.msg.reply { margin-inline-start: 26px; }
+.msg .mini { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 17px; background: var(--surface); border: 2px solid var(--c); }
+.who { font-weight: 700; color: var(--c); font-size: .88rem; }
+.who .to { color: var(--muted); font-weight: 500; }
+.bubble { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; border-start-start-radius: 4px; padding: 10px 14px; min-width: 0; }
+.msg.reply .bubble { background: color-mix(in srgb, var(--c) 7%, var(--surface)); }
+.bubble p { margin: 0; }
+.bubble ul { margin: 4px 0 0; padding-inline-start: 18px; }
+.bubble li + li { margin-top: 3px; }
+.bubble code { font: .85em ui-monospace, "SF Mono", Menlo, monospace; background: var(--surface-2); padding: 1px 5px; border-radius: 5px; direction: ltr; unicode-bidi: isolate; }
+.tbl { overflow-x: auto; margin-top: 6px; }
+table { border-collapse: collapse; width: 100%; font-size: .86rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: start; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: .78rem; }
+.verdict { justify-self: start; margin-inline-start: 70px; font-weight: 700; font-size: .85rem; padding: 3px 12px; border-radius: 8px; border: 1.5px solid currentColor; transform: rotate(-1.5deg); }
+.verdict.ok { color: var(--ok); } .verdict.bad { color: var(--bad); } .verdict.mid { color: var(--warn); }
+.summary { margin-top: 18px; background: var(--sea); color: var(--pearl); border-radius: 22px; padding: 18px 20px; }
+.summary h2 { font: 700 1.3rem var(--display); margin: 0 0 8px; color: #fff; }
+.summary ul { margin: 0; padding-inline-start: 20px; }
+.summary li + li { margin-top: 6px; }
+.summary b { color: #fff; }
+.typing { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: .85rem; }
+.dots { display: inline-flex; gap: 3px; }
+.dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--c); animation: blink 1s infinite; }
+.dots i:nth-child(2) { animation-delay: .15s; } .dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+.enter { animation: rise .45s var(--ease) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(10px) scale(.98); } }
+.verdict.enter { animation: stamp .4s var(--ease) both; }
+@keyframes stamp { from { opacity: 0; transform: rotate(-8deg) scale(1.4); } }
+
+/* التحكم */
+.bar { position: fixed; inset-inline: 0; bottom: 0; z-index: 6; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-top: 1px solid var(--line); }
+.bar .in { max-width: 760px; margin: 0 auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+@media (max-width: 420px) { .bar button { padding: 8px 10px; } button.play { min-width: 80px; } .speed button { padding: 8px 8px; } }
+.progress { flex-basis: 100%; height: 3px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+.progress i { display: block; height: 100%; width: 0; background: var(--coral); transition: width .3s var(--ease); }
+button { font: 600 .9rem var(--body); white-space: nowrap; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 8px 14px; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+button.play { background: var(--coral); color: var(--on-coral); border-color: transparent; min-width: 92px; }
+.speed { display: flex; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.speed button { border: 0; border-radius: 0; padding: 8px 10px; background: transparent; }
+.speed button.on { background: var(--surface-2); }
+.spacer { flex: 1; }
+@media (max-width: 420px) { .seat .av { width: 40px; height: 40px; font-size: 19px; } .seat small { font-size: .62rem; } h1 { font-size: 1.7rem; } }
+@media (prefers-reduced-motion: reduce) { .enter, .verdict.enter { animation: none; } .seat { transition: none; } }
+</style>
+
+<div class="wrap" dir="rtl">
+  <header>
+    <div class="eyebrow" id="date"></div>
+    <h1>🏛️ الديوانية</h1>
+    <p class="req" id="req"></p>
+  </header>
+  <div class="seats">
+    <div class="row" id="seats"></div>
+    <div class="rounds" id="rounds"></div>
+  </div>
+  <div class="feed" id="feed" aria-live="polite"></div>
+</div>
+<div class="bar" dir="rtl">
+  <div class="in">
+    <div class="progress"><i id="prog"></i></div>
+    <button class="play" id="play" type="button">⏸ إيقاف</button>
+    <div class="speed" id="speed" role="group" aria-label="السرعة">
+      <button type="button" data-s="1" class="on">1×</button><button type="button" data-s="2">2×</button><button type="button" data-s="4">4×</button>
+    </div>
+    <span class="spacer"></span>
+    <button type="button" id="all">اعرض الكل</button>
+    <button type="button" id="again" aria-label="من البداية" title="من البداية">↺</button>
+  </div>
+</div>
+
+<!-- الجلسة: عبّ هذا الـ JSON بس. who = host|designer|programmer|solver|critic|auditor|final -->
+<script id="session" type="application/json">{"date": "2026-10-20", "request": "فيديو يعرض الشعار الجديد", "rounds": ["الافتتاح", "الآراء", "الهجوم", "الفحص", "القرار", "التسليم", "الملخص"], "steps": [{"r": 0, "who": "host", "text": "**الطلب:** «فيديو يعرض الشعار الجديد» (رمز المركز لـSports Hub).", "points": ["فيديو كشف شعار قصير عمودي 9:16، صامت، يصلح ستوري/ريل.", "القيود: بدون يوم إطلاق، «قيد التطوير · نسخة تجريبية» ظاهر، بدون اسم أو شعار الاتحاد، بدون ادعاءات."]}, {"r": 1, "who": "designer", "text": "**🎨 المصمم:**", "points": ["الشعار يُبنى أمام العين بنفس منطق معناه: الحلقة تُرسم، العقد تظهر وحدة وحدة (الأندية)، الكرة تنزل بالمنتصف.", "بعدها الاسم SPORTS HUB، ثم بطاقة الأيقونة على خلفية الجوال، ونسخة فاتحة وأحادية بشكل سريع.", "خلفية ليلية بتوهج سماوي خفيف، بدون موسيقى ولا كلام."]}, {"r": 1, "who": "programmer", "text": "**💻 المبرمج:**", "points": ["صفحة HTML واحدة بدالة `render(t)` حتمية بالزمن، التقاط 30fps بـPlaywright ثم ffmpeg (نفس مسار الفيديوهات السابقة).", "الشعار من `brand/*.svg` نفسها لضمان تطابق الهوية، والخط Tajawal محلي.", "المدة ≈ 14 ث، 1080×1920."]}, {"r": 1, "who": "solver", "text": "**🔧 حلّال المشاكل:**", "points": ["رسم الحلقة بحركة `stroke-dashoffset` والعقد بنبضة scale مع حافة الخلفية كما بالشعار.", "احترام reduced-motion غير مطلوب بفيديو، لكن نتجنب الوميض السريع (لا أكثر من 3 وميضات/ث).", "كابشنات عربية قصيرة بسطر واحد لأن الشاشة ضيقة."]}, {"r": 2, "who": "critic", "text": "**🔥 الناقد:**", "points": ["كشف شعار بلا سياق ممل. نربطه بمعنى واحد بسطر: «مركز واحد.. أندية كثيرة» وبدون وعد بميزة.", "«أندية كثيرة» ما تعني أن عندنا أندية؛ نكتبها كفكرة الرمز: «الحلقة مركز، والعقد أندية».", "لا نطلق تاريخاً ولا نقول «الأول»."], "to": "designer"}, {"r": 3, "who": "auditor", "text": "**🔍 المدقق:**", "head": ["البند", "الحالة", "الإصلاح"], "rows": [["الصدق", "⚠️", "كابشن يشرح الرمز فقط؛ شريط «قيد التطوير · نسخة تجريبية» بآخر لقطة"], ["الهوية", "✅", "نفس SVG والألوان؛ لا اسم ولا شعار الاتحاد"], ["الوميض", "✅", "حركات ناعمة، بدون وميض"], ["الخصوصية", "✅", "لا بيانات لأحد"]]}, {"r": 4, "who": "host", "text": "**القرار:**", "head": ["النقطة", "القرار", "ليش", "مين اعترض"], "rows": [["الشكل", "9:16 صامت ≈ 14 ث", "ستوري/ريل", "—"], ["التسلسل", "حلقة ← عقد ← كرة ← الاسم ← الأيقونة ← فاتح/أحادي", "يبني المعنى", "—"], ["الكابشن", "«الحلقة مركز، والعقد أندية» + قيد التطوير", "صدق", "الناقد"], ["المرفوض", "تاريخ إطلاق، أرقام، اسم اتحاد", "CLAUDE.md", "—"]]}, {"r": 5, "who": "final", "text": "**✨ التسليم:** `videos/sports-hub-logo/sports-hub-logo.mp4` + `cover.png`.", "points": ["اتحقق منه: إطارات من كل مشهد، المدة، الحجم.", "يحتاج عينك: سرعة الحركة والكابشن."]}, {"r": 6, "who": "host", "summary": ["**اكتشفنا:** كشف شعار بلا معنى ممل؛ نشرح الرمز بسطر.", "**انبنى:** فيديو ≈14 ث يبني الشعار خطوة بخطوة.", "**انرفض:** تاريخ، أرقام، ادعاءات، اسم اتحاد."]}]}</script>
+<script>
+(function () {
+  'use strict';
+  const MEMBERS = {
+    host: ['🎙️', 'المضيف'], designer: ['🎨', 'المصمم'], programmer: ['💻', 'المبرمج'], solver: ['🔧', 'حلّال المشاكل'],
+    critic: ['🔥', 'الناقد'], auditor: ['🔍', 'المدقق'], final: ['✨', 'اللمسة الأخيرة'],
+  };
+  const S = JSON.parse(document.getElementById('session').textContent);
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const md = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`([^`]+)`/g, '<code>$1</code>');
+  const color = (w) => 'var(--' + w + ')';
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  $('date').textContent = S.date || '';
+  $('req').innerHTML = md(S.request || '');
+  $('seats').innerHTML = Object.entries(MEMBERS).map(([k, [e, n]]) =>
+    '<div class="seat" data-w="' + k + '" style="--c:' + color(k) + '"><div class="av">' + e + '</div><small>' + n + '</small></div>').join('');
+  $('rounds').innerHTML = S.rounds.map((r, i) => '<span data-r="' + i + '">' + (i + 1) + ' · ' + esc(r) + '</span>').join('');
+
+  // كل خطوة بالجلسة = عنصر واحد بالنقاش (والجولة الجديدة تبدأ بفاصل)
+  const items = [];
+  let lastR = -1;
+  for (const st of S.steps) {
+    if (st.r !== lastR) { items.push({ divider: st.r }); lastR = st.r; }
+    items.push(st);
+  }
+
+  function node(st) {
+    const el = document.createElement('div');
+    if (st.divider != null) { el.className = 'divider'; el.textContent = 'الجولة ' + (st.divider + 1) + ' — ' + S.rounds[st.divider]; return el; }
+    if (st.verdict) { el.className = 'verdict ' + st.verdict; el.textContent = st.text; return el; }
+    if (st.summary) {
+      el.className = 'summary';
+      el.innerHTML = '<h2>📋 الملخص</h2><ul>' + st.summary.map((x) => '<li>' + md(x) + '</li>').join('') + '</ul>';
+      return el;
+    }
+    const [emo, name] = MEMBERS[st.who] || ['💬', st.who];
+    el.className = 'msg' + (st.to || st.reply ? ' reply' : '');
+    el.style.setProperty('--c', color(st.who));
+    let body = st.text ? '<p>' + md(st.text) + '</p>' : '';
+    if (st.points) body += '<ul>' + st.points.map((x) => '<li>' + md(x) + '</li>').join('') + '</ul>';
+    if (st.alt) body += '<p style="margin-top:4px">← <b>البديل:</b> ' + md(st.alt) + '</p>';
+    if (st.rows) body += '<div class="tbl"><table><thead><tr>' + st.head.map((x) => '<th>' + esc(x) + '</th>').join('') + '</tr></thead><tbody>' +
+      st.rows.map((r) => '<tr>' + r.map((x) => '<td>' + md(x) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>';
+    const to = st.to && MEMBERS[st.to] ? ' <span class="to">← ' + MEMBERS[st.to][0] + ' ' + MEMBERS[st.to][1] + '</span>' : '';
+    el.innerHTML = '<div class="mini">' + emo + '</div><div style="min-width:0"><div class="who">' + name + to + '</div><div class="bubble">' + body + '</div></div>';
+    return el;
+  }
+  const textLen = (st) => (st.text || '').length + (st.points || []).join('').length + (st.alt || '').length + (st.rows ? st.rows.flat().join('').length / 2 : 0) + (st.summary || []).join('').length;
+
+  let i = 0, speed = 1, paused = false, run = 0, wake = null;
+  const sleep = (ms, id) => new Promise((res) => { const t = setTimeout(res, ms / speed); wake = () => { clearTimeout(t); res(); }; });
+  const waitPlay = () => new Promise((res) => { if (!paused) return res(); const chk = setInterval(() => { if (!paused) { clearInterval(chk); res(); } }, 100); });
+
+  function setSpeaker(w) { document.querySelectorAll('.seat').forEach((s) => { if (s.classList.contains('on')) s.classList.add('heard'); s.classList.toggle('on', s.dataset.w === w); }); }
+  function setRound(r) { document.querySelectorAll('#rounds span').forEach((s) => { const k = +s.dataset.r; s.classList.toggle('on', k === r); s.classList.toggle('done', k < r); if (k === r) s.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduced ? 'auto' : 'smooth' }); }); }
+  let follow = true;
+  addEventListener('scroll', () => { follow = innerHeight + scrollY >= document.body.scrollHeight - 160; }, { passive: true });
+  function add(st, animate) {
+    const el = node(st);
+    if (animate && !reduced) el.classList.add('enter');
+    $('feed').appendChild(el);
+    if (st.divider != null) setRound(st.divider);
+    else if (st.who) setSpeaker(st.who);
+    $('prog').style.width = (100 * (i + 1) / items.length) + '%';
+    if (animate && follow) el.scrollIntoView({ block: 'end', behavior: reduced ? 'auto' : 'smooth' });
+  }
+
+  async function play(id) {
+    while (i < items.length && id === run) {
+      await waitPlay();
+      if (id !== run) return;
+      const st = items[i];
+      if (st.who && !reduced) {
+        setSpeaker(st.who);
+        const ty = document.createElement('div');
+        ty.className = 'typing'; ty.style.setProperty('--c', color(st.who));
+        ty.innerHTML = '<span class="dots"><i></i><i></i><i></i></span>' + MEMBERS[st.who][1] + ' يتكلم…';
+        $('feed').appendChild(ty);
+        if (follow) ty.scrollIntoView({ block: 'end', behavior: 'smooth' });
+        await sleep(Math.min(2600, 600 + textLen(st) * 9), id);
+        ty.remove();
+        if (id !== run) return;
+      }
+      add(st, true);
+      i++;
+      await sleep(st.divider != null ? 700 : st.verdict ? 1100 : Math.min(4200, 900 + textLen(st) * 22), id);
+    }
+    if (i >= items.length) { setSpeaker(null); $('play').textContent = '▶ شغّل'; paused = true; }
+  }
+  function restart() {
+    run++; if (wake) wake();
+    $('feed').innerHTML = ''; i = 0; paused = false; follow = true;
+    document.querySelectorAll('.seat').forEach((s) => s.classList.remove('on', 'heard'));
+    $('play').textContent = '⏸ إيقاف'; scrollTo(0, 0);
+    play(run);
+  }
+  function showAll() {
+    run++; if (wake) wake();
+    document.querySelectorAll('.typing').forEach((t) => t.remove());
+    while (i < items.length) { add(items[i], false); i++; }
+    setSpeaker(null); paused = true; $('play').textContent = '▶ شغّل';
+  }
+
+  $('play').onclick = () => {
+    if (i >= items.length) return restart();
+    paused = !paused;
+    $('play').textContent = paused ? '▶ كمّل' : '⏸ إيقاف';
+  };
+  $('speed').onclick = (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    speed = +b.dataset.s;
+    $('speed').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
+    if (wake) wake();
+  };
+  $('all').onclick = showAll;
+  $('again').onclick = restart;
+
+  if (reduced) showAll(); else play(++run);
+})();
+</script>
