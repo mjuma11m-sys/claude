@@ -2,105 +2,94 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ودقة · WADQA Studio</title>
-<meta name="description" content="ودقة استوديو برمجيات من البحرين. تطبيقات شفافة وصادقة وأمينة: بياناتك مو للبيع، وبدون متتبعات.">
-<meta property="og:title" content="ودقة · WADQA Studio">
-<meta property="og:description" content="صافية مثل المطر. استوديو برمجيات من البحرين.">
-<meta property="og:image" content="/og-logo.png">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<style>
-/* الخطوط مستضافة على نفس الدومين: ما نرسل IP الزائر لأي جهة (قرار Legal، DW-049) */
-@font-face{font-family:Plex;src:url(fonts/IBMPlexSansArabic-Bold.ttf);font-weight:700;font-display:swap}
-@font-face{font-family:Plex;src:url(fonts/IBMPlexSansArabic-Regular.ttf);font-weight:400;font-display:swap}
-:root{--ink:#0B1514;--bone:#F2EBDD;--gold:#C8A04A;--slate:#1C2B2A;--mist:#8FA09C;--line:#2c403e;color-scheme:dark}
-*{box-sizing:border-box;margin:0}
-body{font-family:Plex,system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;background:var(--ink);color:var(--bone);line-height:1.8}
-.wrap{max-width:1040px;margin:auto;padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right))}
-header{padding-block:22px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-.brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:22px;color:inherit;text-decoration:none}
-.brand img{width:34px;height:34px}
-nav a{color:var(--mist);text-decoration:none;margin-inline-start:18px;font-size:15px}
-nav a:hover,nav a:focus-visible{color:var(--bone)}
-.hero{padding-block:72px 64px;display:grid;grid-template-columns:1fr auto;gap:40px;align-items:center}
-.eyebrow{font-size:13px;letter-spacing:.2em;color:var(--mist);direction:ltr;text-align:right}
-h1{font-size:clamp(56px,11vw,112px);line-height:1.05;text-wrap:balance}
-.lead{font-size:clamp(18px,2.4vw,22px);max-width:34ch;color:#D9D2C2;margin-top:16px}
-.tag{color:var(--gold);font-weight:700;margin-top:18px;font-size:20px}
-.hero img{width:clamp(120px,22vw,220px)}
-section{padding-block:56px;border-top:1px solid var(--line)}
-h2{font-size:15px;letter-spacing:.06em;color:var(--gold);margin-bottom:22px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
-.card{background:var(--slate);border-radius:18px;padding:24px;min-width:0}
-.card h3{font-size:26px;margin-bottom:6px}
-.card p{color:#D9D2C2;font-size:16px}
-.v h3{color:var(--gold)}
-.pill{display:inline-block;font-size:13px;color:var(--ink);background:var(--mist);border-radius:99px;padding:2px 12px;margin-top:12px}
-.pill.beta{background:var(--gold)}
-ul.promise{list-style:none;padding:0;display:grid;gap:12px;max-width:62ch}
-ul.promise li{padding-inline-start:28px;position:relative;font-size:17px}
-ul.promise li::before{content:"";position:absolute;inset-inline-start:0;top:.7em;width:10px;height:10px;border-radius:50%;background:var(--gold)}
-.contact{font-size:20px}
-.contact b{direction:ltr;display:inline-block;user-select:all}
-footer{padding-block:32px;color:var(--mist);font-size:14px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
-footer a{color:var(--mist)}
-@media(max-width:640px){.hero{grid-template-columns:1fr}.hero img{order:-1}nav{display:none}}
-</style>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ودقة · WADQA Studio — استوديو برمجيات من البحرين</title>
+<meta name="description" content="ودقة استوديو برمجيات من البحرين. تطبيقات شفافة وصادقة وأمينة: بياناتك مو للبيع، وبدون متتبعات إعلانية.">
+<link rel="canonical" href="https://wadqa.com/">
+<link rel="alternate" hreflang="ar" href="https://wadqa.com/"><link rel="alternate" hreflang="en" href="https://wadqa.com/en/">
+<meta property="og:title" content="ودقة · WADQA Studio — استوديو برمجيات من البحرين"><meta property="og:description" content="ودقة استوديو برمجيات من البحرين. تطبيقات شفافة وصادقة وأمينة: بياناتك مو للبيع، وبدون متتبعات إعلانية.">
+<meta property="og:image" content="https://wadqa.com/og-logo.png"><meta property="og:type" content="website">
+<meta name="theme-color" content="#0B1514">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="site.css">
 </head>
 <body>
-<div class="wrap">
-<header>
-  <a class="brand" href="/"><img src="logo.svg" alt="">ودقة</a>
-  <nav><a href="#values">قيمنا</a><a href="#apps">تطبيقاتنا</a><a href="#contact">تواصل</a></nav>
-</header>
-
-<div class="hero">
+<a class="skip" href="#main">تخطَّ للمحتوى</a>
+<header class="site"><div class="wrap">
+  <a class="brand" href="./"><svg class="" viewBox="0 0 512 512" aria-hidden="true"><path class="d-line" pathLength="1" d="M256 104C256 104 160 228 160 310A96 96 0 0 0 352 310C352 228 256 104 256 104Z" fill="none" stroke="#F2EBDD" stroke-width="34" stroke-linejoin="round"/><circle class="d-dot" cx="256" cy="316" r="38" fill="#C8A04A"/></svg>ودقة</a>
+  <nav class="main" aria-label="التنقل">
+    <a href="#values">قيمنا</a>
+    <a href="#apps">تطبيقاتنا</a>
+    <a href="#contact">تواصل</a>
+    <a class="lang" href="en/./" hreflang="en" lang="en">English</a>
+  </nav>
+</div></header>
+<main id="main">
+<div class="wrap hero">
   <div>
-    <div class="eyebrow">WADQA STUDIO · BAHRAIN</div>
-    <h1>ودقة</h1>
-    <p class="lead">استوديو برمجيات من البحرين. نبني تطبيقات تخفّف يومك، وتحترمك وتحترم بياناتك.</p>
-    <p class="tag">صافية مثل المطر.</p>
+    <div class="eyebrow latin reveal">WADQA STUDIO · BAHRAIN</div>
+    <h1 class="reveal r2">ودقة</h1>
+    <p class="lead reveal r3">استوديو برمجيات من البحرين. نبني تطبيقات تخفّف يومك، وتحترمك وتحترم بياناتك.</p>
+    <p class="tag reveal r3">صافية مثل المطر.</p>
+    <div class="cta reveal r4"><a class="btn solid" href="#apps">تطبيقاتنا</a><a class="btn ghost" href="#contact">تواصل معنا</a></div>
   </div>
-  <img src="logo.svg" alt="شعار ودقة: قطرة مطر بداخلها نقطة ذهبية">
+  <svg class="drop" viewBox="0 0 512 512" role="img" aria-label="ودقة · WADQA"><ellipse class="d-ring" cx="256" cy="330" rx="150" ry="40" fill="none" stroke="#C8A04A" stroke-width="3" opacity="0"/><path class="d-line" pathLength="1" d="M256 104C256 104 160 228 160 310A96 96 0 0 0 352 310C352 228 256 104 256 104Z" fill="none" stroke="#F2EBDD" stroke-width="34" stroke-linejoin="round"/><circle class="d-dot" cx="256" cy="316" r="38" fill="#C8A04A"/></svg>
 </div>
-
-<section id="values">
+<section id="values"><div class="wrap">
   <h2>قيمنا</h2>
+  <p class="h-sub">الوَدْق هو المطر، والودقة قطرته. صافي تشوف من خلاله، ينزل للكل، وما ياخذ منك شي.</p>
   <div class="grid">
-    <div class="card v"><h3>شفافة</h3><p>واضح وش يسوي التطبيق ووش ما يسوي، ووش يجمع من بياناتك وليش.</p></div>
+    <div class="card v"><h3>شفافة</h3><p>واضح وش يسوي التطبيق ووش ما يسوي، ووش يجمع من بياناتك وليش ووين.</p></div>
     <div class="card v"><h3>صادقة</h3><p>ما نعدك بميزة ما تشتغل اليوم. اللي قيد التطوير نقول عنه قيد التطوير.</p></div>
     <div class="card v"><h3>أمينة</h3><p>بياناتك مو للبيع، وتطبيقاتنا بدون متتبعات إعلانية.</p></div>
   </div>
-</section>
-
-<section id="apps">
+</div></section>
+<section id="apps"><div class="wrap">
   <h2>تطبيقاتنا</h2>
-  <div class="grid">
-    <div class="card"><h3>حياتي</h3><p>يومك بمكان واحد: الميزانية، المواعيد، العبادة، والمحاضرات.</p><span class="pill beta">نسخة تجريبية · قيد التطوير</span></div>
-    <div class="card"><h3 dir="ltr" style="text-align:right">Sports Hub</h3><p>إدارة الفرق واللاعبين والأندية.</p><span class="pill">قيد التطوير</span></div>
-    <div class="card"><h3>إجاراتي</h3><p>متابعة العقارات والإيجارات للملّاك.</p><span class="pill">فكرة · نقيس الطلب</span></div>
-  </div>
-</section>
-
-<section>
+  <p class="h-sub">ثلاث تطبيقات، كل واحد بحالته الحقيقية.</p>
+  <div class="grid"><a class="card" href="hayati.html">
+  <div class="app-ic ic-hayati"><img src="img/hayati-icon.png" alt=""></div>
+  <h3>حياتي</h3><p>يومك بمكان واحد: الميزانية، المواعيد، العبادة، والمحاضرات.</p>
+  <span class="pill beta">نسخة تجريبية · قيد التطوير</span>
+  <span class="more">التفاصيل ←</span></a><a class="card" href="sports-hub.html">
+  <div class="app-ic ic-sports">⚽</div>
+  <h3 dir="ltr">Sports Hub</h3><p>إدارة الفرق واللاعبين والأندية.</p>
+  <span class="pill">قيد التطوير</span>
+  <span class="more">التفاصيل ←</span></a><a class="card" href="ijarati.html">
+  <div class="app-ic ic-ijarati">🏠</div>
+  <h3>إجاراتي</h3><p>متابعة العقارات والإيجارات للملّاك.</p>
+  <span class="pill">فكرة · نقيس الطلب</span>
+  <span class="more">التفاصيل ←</span></a></div>
+</div></section>
+<section><div class="wrap">
   <h2>وعدنا لك</h2>
   <ul class="promise">
     <li>ما نبيع بياناتك ولا نشاركها للإعلانات.</li>
     <li>ما نحط متتبعات إعلانية بتطبيقاتنا ولا بهالموقع.</li>
     <li>بحياتي تقدر تحذف حسابك وبياناتك من داخل التطبيق، وهذا شرط لأي تطبيق ننزله.</li>
-    <li>أي جهة خارجية نستخدمها (استضافة، ذكاء اصطناعي) نذكرها بسياسة الخصوصية.</li>
+    <li>أي جهة خارجية نستخدمها (استضافة، ذكاء اصطناعي) نذكرها بالاسم بسياسة الخصوصية.</li>
   </ul>
-</section>
-
-<section id="contact">
+</div></section>
+<section id="contact"><div class="wrap">
   <h2>تواصل</h2>
-  <p class="contact">ملاحظة، فكرة، أو شغل مشترك: <b>hello@wadqa.com</b></p>
-</section>
-
-<footer>
+  <p class="h-sub">ملاحظة، فكرة، أو شغل مشترك؟</p>
+  <form class="lead-form" data-kind="contact" data-product="general" novalidate>
+  <div class="field"><label for="general-name">الاسم (اختياري)</label><input id="general-name" name="name" type="text" maxlength="80" autocomplete="name"></div>
+  <div class="field"><label for="general-email">الإيميل</label><input id="general-email" name="email" type="email" maxlength="254" autocomplete="email" required dir="ltr"></div>
+  <div class="field"><label for="general-msg">رسالتك</label><textarea id="general-msg" name="message" maxlength="2000"></textarea></div>
+  <div class="hp" aria-hidden="true"><label for="general-web">Website</label><input id="general-web" name="website" type="text" tabindex="-1" autocomplete="off"></div>
+  <label class="consent"><input type="checkbox" name="consent" required><span>أوافق إن ودقة تحفظ اسمي وإيميلي ورسالتي على خوادم Supabase بألمانيا عشان ترد علي، حسب <a href="privacy.html">سياسة الخصوصية</a>.</span></label>
+  <div><button class="btn solid" type="submit">أرسل</button></div>
+  <p class="status" role="status" aria-live="polite"></p>
+</form>
+  <p class="note">أو راسلنا مباشرة: <span dir="ltr">hello@wadqa.com</span></p>
+</div></section>
+</main>
+<footer class="site"><div class="wrap">
   <span>© 2026 ودقة · WADQA Studio · مملكة البحرين</span>
   <span><a href="privacy.html">سياسة الخصوصية</a> · قيد التطوير</span>
-</footer>
-</div>
+</div></footer>
+<script src="config.js"></script>
+<script src="app.js" defer></script>
 </body>
 </html>

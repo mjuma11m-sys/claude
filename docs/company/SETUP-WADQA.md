@@ -32,10 +32,18 @@
 - حساب **منظمة** بـ Google Play وApple Developer باسم ودقة يحتاج رقم **D-U-N-S** (مجاني من Dun & Bradstreet، ياخذ أيام إلى أسابيع).
 - انقل «حياتي» من الحساب الشخصي لحساب المنظمة بعد ما يجهز (الاثنين يدعمون نقل التطبيق).
 
-## 6) الموقع
-- الملفات: `company-brand/site/` (ثابت، بدون متتبعات، الخطوط على نفس الدومين).
-- النشر: Vercel أو Cloudflare Pages ← اربط `wadqa.com`.
-- قبل النشر: عبّي [اسم المزوّد] و[رقم السجل] بـ `privacy.html`.
+## 6) الموقع (DW-050)
+- **المصدر:** `company-brand/site-src/` ← `node company-brand/site-src/build.mjs` يولّد `company-brand/site/` (10 صفحات: عربي `/` وإنقليزي `/en/`).
+- **النشر على Vercel (مشروع جديد، مو مشروع حياتي):**
+  1. Vercel ← Add New ← Project ← استورد المستودع `mjuma11m-sys/claude`.
+  2. **Root Directory:** `company-brand/site` · **Framework:** Other · **Build Command:** فاضي (الملفات مبنية جاهزة).
+  3. Deploy. الإعدادات (`cleanUrls` + CSP + الهيدرات الأمنية) من `company-brand/site/vercel.json`.
+  4. Settings ← Domains ← أضف `wadqa.com` و`www.wadqa.com`، وحط سجلات DNS اللي يعطيك إياها Vercel عند مسجّل الدومين.
+  5. الفرع: Vercel ينشر `main` كإنتاج. ادمج فرع العمل بـ `main` أو غيّر Production Branch.
+- **النماذج:** تحفظ بجدول `wadqa.leads` بمشروع Supabase «hayati» (فرانكفورت). ما ينقرا من المتصفح أبداً.
+  - **قراءة الرسائل:** Supabase ← SQL Editor ← `select created_at, kind, product, name, email, message from wadqa.leads order by created_at desc;`
+  - **الحذف الشهري (وعد السياسة: 24 شهر):** `delete from wadqa.leads where created_at < now() - interval '24 months';`
+- قبل النشر: فعّل `hello@wadqa.com` (الموقع يعرضه).
 
 ## الجاهز بالمستودع
 | الملف | الاستخدام |
