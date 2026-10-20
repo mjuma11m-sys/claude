@@ -2572,3 +2572,62 @@ test('lecture recording to text (DW-047): no button on Android or the web', asyn
   await page.waitForTimeout(500);
   await expect(page.locator('[data-stt]')).toHaveCount(0);
 });
+
+test('schedule import (DW-048): lecture timetable lines read day, time, room and course', async ({ page }) => {
+  await open(page);
+  const rows = await page.evaluate(() => Extras._parseSchedule([
+    'الأحد والثلاثاء 10-11:15 ACCT101 قاعة 2041',
+    'الاثنين 1:30-3 م إدارة مالية room S40-2041',
+    'الخميس 8 ص محاضرة تسويق',
+  ].join('\n')));
+  const get = (wd, st) => rows.find((r) => r.weekday === wd && r.start === st);
+  expect(rows.length).toBe(4);
+  expect(get(0, '10:00')).toMatchObject({ kind: 'lecture', end: '11:15', title: 'ACCT101', place: 'قاعة 2041' });
+  expect(get(2, '10:00')).toMatchObject({ kind: 'lecture', title: 'ACCT101' });
+  expect(get(1, '13:30')).toMatchObject({ kind: 'lecture', end: '15:00', place: 'room S40-2041' });
+  expect(get(1, '13:30').title).toContain('إدارة مالية');
+  expect(get(4, '08:00')).toMatchObject({ kind: 'lecture', title: 'تسويق' });
+});
+
+test('schedule import (DW-048): gym program becomes a workout with sets, reps and rest', async ({ page }) => {
+  await open(page);
+  const rows = await page.evaluate(() => Extras._parseSchedule([
+    'الأحد والثلاثاء 6 م: صدر',
+    'بنش 4×10 راحة 90',
+    'تفتيح 3x12، ضغط 3 جولات 15 تكرار',
+    'الخميس: رجل',
+    'سكوات 5×5',
+  ].join('\n')));
+  expect(rows.length).toBe(3);
+  const sun = rows.find((r) => r.weekday === 0);
+  expect(sun).toMatchObject({ kind: 'gym', start: '18:00', guess: false });
+  expect(sun.workout.focus).toBe('صدر');
+  expect(sun.workout.exercises.map((x) => x.name)).toEqual(['بنش', 'تفتيح', 'ضغط']);
+  expect(sun.workout.exercises[0]).toMatchObject({ sets: ['10', '10', '10', '10'], rest: 90 });
+  expect(sun.workout.exercises[2].sets).toEqual(['15', '15', '15']);
+  const thu = rows.find((r) => r.weekday === 4);
+  expect(thu).toMatchObject({ start: '17:00', guess: true });
+  expect(thu.workout.exercises[0]).toMatchObject({ name: 'سكوات', sets: ['5', '5', '5', '5', '5'] });
+});
+
+test('schedule import (DW-048): football messages still read as before', async ({ page }) => {
+  await open(page);
+  const rows = await page.evaluate(() => Extras._parseSchedule('الأحد والثلاثاء 6-8 م ملعب نادي المحرق\nمباراة 24/10 الساعة 7 م ضد الرفاع'));
+  expect(rows.filter((r) => r.kind === 'training').map((r) => [r.weekday, r.start, r.end])).toEqual([[0, '18:00', '20:00'], [2, '18:00', '20:00']]);
+  expect(rows.find((r) => r.kind === 'match')).toMatchObject({ start: '19:00', date: expect.stringMatching(/-10-24$/) });
+});
+
+test('schedule import (DW-048): saving a lecture and a gym program adds real courses the app understands', async ({ page }) => {
+  await open(page);
+  await page.evaluate(() => {
+    const wk = { focus: 'صدر', exercises: [{ name: 'بنش', sets: ['10', '10'], rest: 60 }] };
+    window.__before = App.st.courses.length;
+    Extras.footballImport();
+  });
+  await page.fill('textarea[name="txt"]', 'الأحد 10-11:15 ACCT101 قاعة 2041\nالاثنين 6 م: صدر\nبنش 2×10');
+  await page.click('#impRead');
+  await expect(page.locator('#impRows li.row')).toHaveCount(2);
+  await page.click('button:has-text("أضف للجدول")');
+  const added = await page.evaluate(() => App.st.courses.slice(window.__before).map((c) => ({ type: c.type, days: c.days, room: c.room, wk: c.workout ? c.workout.exercises.length : null })));
+  expect(added.sort((a, b) => a.type.localeCompare(b.type))).toEqual([{ type: 'gym', days: [1], room: '', wk: 1 }, { type: 'lecture', days: [0], room: 'قاعة 2041', wk: null }]);
+});
