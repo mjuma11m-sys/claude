@@ -16,8 +16,8 @@ Hayati ("My Life") is a free personal organizer for students and young employees
 
 3. HOW TO ACCESS THE MAIN FEATURES
 The account is optional: every main feature works on the device without signing in.
-- Expenses: Money tab → "Paste message" → paste: Purchase of BHD 3.200 at COSTA SEEF using card XXXX4821
-- Timetable: Tools → "Upload your schedule" → paste: MATH 101 MW 1:00 - 2:15 S1A-105
+- Expenses: Money tab → "Paste SMS" → paste: Purchase of BHD 3.200 at COSTA SEEF using card XXXX4821
+- Timetable: Tools → "Upload timetable" → paste: MATH 101 MW 1:00 - 2:15 S1A-105
 - Lectures: Study → Lectures → New lecture → Start recording
 - Apple Health (optional): Study → My Health → "Connect Apple Health"
 - Account (optional, for backup and sync): Settings → Account → Sign up
