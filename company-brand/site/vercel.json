@@ -1,5 +1,17 @@
 {
   "cleanUrls": true,
+  "redirects": [
+    {
+      "source": "/ijarati",
+      "destination": "/idarati",
+      "permanent": true
+    },
+    {
+      "source": "/en/ijarati",
+      "destination": "/en/idarati",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

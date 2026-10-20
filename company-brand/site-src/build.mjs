@@ -39,7 +39,7 @@ const T = {
 const apps = {
   hayati: { stores: { ios: null, android: null }, ic: '<img src="IMG/hayati-icon.png" alt="">', cls: 'ic-hayati', name: ['حياتي', 'Hayati'], pill: ['نسخة تجريبية · قيد التطوير', 'Beta · In development'], beta: true, short: ['يومك بمكان واحد: الميزانية، المواعيد، العبادة، والمحاضرات.', 'Your day in one place: budget, reminders, worship and lectures.'] },
   'sports-hub': { ic: '⚽', cls: 'ic-sports', name: ['Sports Hub', 'Sports Hub'], pill: ['قيد التطوير', 'In development'], short: ['إدارة الفرق واللاعبين والأندية.', 'Running teams, players and clubs.'] },
-  ijarati: { ic: '🏠', cls: 'ic-ijarati', name: ['إجاراتي', 'Ijarati'], pill: ['فكرة · نقيس الطلب', 'Idea · Testing demand'], short: ['متابعة العقارات والإيجارات للملّاك.', 'Tracking properties and rent for landlords.'] },
+  idarati: { ic: '<img src="IMG/idarati-icon.png" alt="">', cls: 'ic-idarati', name: ['إداراتي', 'Idarati'], pill: ['نسخة تجريبية · قيد التطوير', 'Beta · In development'], beta: true, short: ['إدارة أملاك وميزانية العائلة: الإيجارات، الفواتير، والشيكات.', 'Family property and budget management: rent, bills and cheques.'] },
 };
 
 function page(L, slug, { title, desc, body, navOn }) {
@@ -139,7 +139,7 @@ P.index = (L) => ({
 <section id="apps"><div class="wrap">
   <h2>${L === 0 ? 'تطبيقاتنا' : 'Our apps'}</h2>
   <p class="h-sub">${L === 0 ? 'ثلاث تطبيقات، كل واحد بحالته الحقيقية.' : 'Three apps, each shown as it really is today.'}</p>
-  <div class="grid">${['hayati', 'sports-hub', 'ijarati'].map((s) => appCard(L, s)).join('')}</div>
+  <div class="grid">${['hayati', 'idarati', 'sports-hub'].map((s) => appCard(L, s)).join('')}</div>
 </div></section>
 <section><div class="wrap">
   <h2>${L === 0 ? 'وعدنا لك' : 'Our promise'}</h2>
@@ -218,26 +218,30 @@ P['sports-hub'] = (L) => ({
 </div></section>`,
 });
 
-P.ijarati = (L) => ({
+P.idarati = (L) => ({
   navOn: 'apps',
-  title: (L === 0 ? 'إجاراتي · من ودقة' : 'Ijarati · by WADQA'),
-  desc: L === 0 ? 'إجاراتي: متابعة العقارات والإيجارات للملّاك. فكرة، ونقيس الطلب قبل ما نبني.' : 'Ijarati: tracking properties and rent for landlords. An idea; we are testing demand before building.',
+  title: (L === 0 ? 'إداراتي · من ودقة' : 'Idarati · by WADQA'),
+  desc: L === 0 ? 'إداراتي: إدارة أملاك وميزانية العائلة. نسخة تجريبية، قيد التطوير.' : 'Idarati: family property and budget management. Beta, in development.',
   body: `<div class="wrap hero">
   <div>
-    <div class="app-ic ic-ijarati reveal">🏠</div>
-    <h1 class="sm reveal r2">${apps.ijarati.name[L]}</h1>
-    <p class="lead reveal r3">${L === 0 ? 'متابعة عقاراتك وإيجاراتك: مين دفع، مين متأخر، ومتى ينتهي العقد.' : 'Keep track of your properties and rent: who paid, who is late, and when each lease ends.'}</p>
-    <div class="cta reveal r4"><span class="pill">${apps.ijarati.pill[L]}</span></div>
+    <div class="app-ic ic-idarati reveal">${apps.idarati.ic}</div>
+    <h1 class="sm reveal r2">${apps.idarati.name[L]}</h1>
+    <p class="lead reveal r3">${L === 0 ? 'أملاك العائلة وميزانيتها بمكان واحد: مين دفع، مين متأخر، وش عليك هالشهر.' : 'Your family’s properties and budget in one place: who paid, who is late, and what is due this month.'}</p>
+    <div class="cta reveal r4"><span class="pill beta">${apps.idarati.pill[L]}</span></div>
   </div>
 </div>
-<section><div class="wrap prose">
-  <h2>${L === 0 ? 'ليش ما بنيناه للحين' : 'Why we have not built it yet'}</h2>
-  <p>${L === 0 ? 'قبل ما نبني، نبي نتأكد إن الملّاك يحتاجونه فعلاً. لو أنت مالك عقار، تسجيلك هنا هو اللي يقرر.' : 'Before we build, we want to be sure landlords actually need it. If you own property, signing up here is what decides it.'}</p>
+<section><div class="wrap">
+  <h2>${L === 0 ? 'الميزات' : 'Features'}</h2>
+  <p class="h-sub">${L === 0 ? 'مبنية بالنسخة التجريبية.' : 'Built in the beta.'}</p>
+  <div class="feat">
+    ${(L === 0 ? [['الإيجارات', 'الوحدات والمستأجرين والعقود، والدفعات والإيصالات'], ['الشيكات المؤجلة', 'كل شيك وتاريخ استحقاقه'], ['الميزانية والفواتير', 'مصروف البيت، والفواتير، والصيانة'], ['التذكيرات', 'قبل ما يستحق إيجار أو فاتورة أو ينتهي عقد'], ['تقرير الشهر', 'دخل ومصروف الشهر بصفحة وحدة'], ['العائلة', 'صلاحيات لكل فرد، وسجل نشاط، وبحث وملاحظات']] : [['Rent', 'Units, tenants and leases, with payments and receipts'], ['Post-dated cheques', 'Every cheque and its due date'], ['Budget and bills', 'Household spending, bills and maintenance'], ['Reminders', 'Before rent or a bill is due, or a lease ends'], ['Monthly report', 'The month’s income and spending on one page'], ['Family', 'Per-member permissions, an activity log, search and notes']]).map(([b, d]) => `<div><b>${b}</b>${d}</div>`).join('\n    ')}
+  </div>
+  <p class="note">${L === 0 ? 'النسخة التجريبية تشتغل ببيانات تجريبية، وبعض الميزات ما انجربت للحين مع عائلات حقيقية.' : 'The beta runs on sample data, and some features have not yet been tried with real families.'}</p>
 </div></section>
 <section id="contact"><div class="wrap">
-  <h2>${L === 0 ? 'سجّل اهتمامك' : 'Register your interest'}</h2>
-  <p class="h-sub">${L === 0 ? 'بنراسلك مرة وحدة لما نقرر نبنيه.' : 'We will email you once, when we decide to build it.'}</p>
-  ${form(L, 'waitlist', 'ijarati', { btn: T.join[L], msgLabel: L === 0 ? 'اختياري: كم وحدة عندك، وشلون تتابعها اليوم؟' : 'Optional: how many units you have, and how you track them today' })}
+  <h2>${L === 0 ? 'بلّغني لما يجهز' : 'Tell me when it is ready'}</h2>
+  <p class="h-sub">${L === 0 ? 'عندك أملاك أو تدير ميزانية البيت؟ سجّل وبنراسلك.' : 'Own property or run the household budget? Sign up and we will email you.'}</p>
+  ${form(L, 'waitlist', 'idarati', { btn: T.join[L], msgLabel: L === 0 ? 'اختياري: كم وحدة عندك، وشلون تتابعها اليوم؟' : 'Optional: how many units you have, and how you track them today' })}
 </div></section>`,
 });
 
@@ -281,6 +285,11 @@ fs.copyFileSync(path.join(ROOT, 'hayati-app/brand/out/mark-app-icon-1024.png'), 
 const CSP = `default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self'; connect-src 'self' ${SUPA_URL}; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`;
 fs.writeFileSync(path.join(OUT, 'vercel.json'), JSON.stringify({
   cleanUrls: true,
+  // «إجاراتي» صارت «إداراتي» (DW-051): الرابط القديم يتحوّل
+  redirects: [
+    { source: '/ijarati', destination: '/idarati', permanent: true },
+    { source: '/en/ijarati', destination: '/en/idarati', permanent: true },
+  ],
   headers: [{ source: '/(.*)', headers: [
     { key: 'Content-Security-Policy', value: CSP },
     { key: 'X-Content-Type-Options', value: 'nosniff' },

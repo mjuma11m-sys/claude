@@ -8,7 +8,7 @@ create table wadqa.leads (
   id bigint generated always as identity primary key,
   created_at timestamptz not null default now(),
   kind text not null check (kind in ('contact', 'waitlist')),
-  product text not null default 'general' check (product in ('general', 'hayati', 'sports-hub', 'ijarati')),
+  product text not null default 'general' check (product in ('general', 'hayati', 'sports-hub', 'idarati')),
   name text check (char_length(name) <= 80),
   email text not null check (char_length(email) <= 254 and email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$'),
   message text check (char_length(message) <= 2000),

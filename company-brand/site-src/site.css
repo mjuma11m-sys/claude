@@ -82,7 +82,7 @@ a.store:hover { border-color: var(--gold); }
 .store.soon { opacity: .55; cursor: default; }
 .app-ic { width: 56px; height: 56px; border-radius: 14px; display: grid; place-items: center; font-size: 28px; margin-bottom: 6px; }
 .app-ic img { width: 56px; height: 56px; border-radius: 14px; }
-.ic-hayati { background: #0E3B43; } .ic-sports { background: #1d3b2a; } .ic-ijarati { background: #3a3020; }
+.ic-hayati { background: #0E3B43; } .ic-sports { background: #1d3b2a; } .ic-idarati { background: #14213A; }
 .pill { align-self: flex-start; font-size: 13px; color: var(--ink); background: var(--mist); border-radius: 99px; padding: 2px 12px; font-weight: 700; }
 .pill.beta { background: var(--gold); }
 ul.promise { list-style: none; padding: 0; display: grid; gap: 14px; max-width: 64ch; }
