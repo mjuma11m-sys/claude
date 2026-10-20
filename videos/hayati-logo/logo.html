@@ -1,0 +1,41 @@
+<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><style>
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Bold.ttf);font-weight:700}
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Regular.ttf);font-weight:400}
+*{margin:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#0A1A1E;font-family:P}
+#bg{position:absolute;inset:0;background:radial-gradient(60% 40% at 50% 44%,#13474f 0%,#0E3B43 35%,#0A1A1E 100%)}
+#glow{position:absolute;left:50%;top:44%;width:900px;height:900px;margin:-450px 0 0 -450px;border-radius:50%;background:radial-gradient(circle,rgba(255,107,74,.22),rgba(255,107,74,0) 60%);opacity:0}
+#mark{position:absolute;left:50%;top:44%;width:620px;height:620px;margin:-310px 0 0 -310px}
+#word{position:absolute;left:0;right:0;top:1230px;text-align:center;color:#E8DCC4;font-weight:700;font-size:150px;line-height:1}
+#en{position:absolute;left:0;right:0;top:1420px;text-align:center;color:#E8DCC4;opacity:.6;font-size:46px;letter-spacing:18px;direction:ltr}
+#tag{position:absolute;left:0;right:0;top:1530px;text-align:center;color:#6EC5C0;font-size:40px}
+</style></head><body>
+<div id="bg"></div><div id="glow"></div>
+<svg id="mark" viewBox="0 0 512 512">
+ <path id="ring" d="M 383.3 172.7 A 160 160 0 1 1 300 102.2" fill="none" stroke="#E8DCC4" stroke-opacity=".28" stroke-width="22" stroke-linecap="round"/>
+ <path id="ain" d="M 304 166 L 196 166 L 264 222 C 204 222 168 254 168 292 C 168 336 206 360 256 360 C 292 360 318 348 338 332" fill="none" stroke="#E8DCC4" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/>
+ <circle id="dot" cx="352" cy="128" r="30" fill="#FF6B4A"/>
+</svg>
+<div id="word">حياتي</div><div id="en">HAYATI</div><div id="tag">يومك، فلوسك، ودراستك · بمكان واحد</div>
+<script>
+const $=(i)=>document.getElementById(i);
+const ring=$('ring'),ain=$('ain'),dot=$('dot');
+const LR=ring.getTotalLength(),LA=ain.getTotalLength();
+ring.style.strokeDasharray=LR;ain.style.strokeDasharray=LA;
+const cl=(x)=>Math.max(0,Math.min(1,x)), seg=(t,a,b)=>cl((t-a)/(b-a));
+const out=(x)=>1-Math.pow(1-x,3), inout=(x)=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const back=(x)=>{const c=1.9;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)};
+function setT(t){
+  ring.style.strokeDashoffset=LR*(1-inout(seg(t,.3,1.5))); ring.style.opacity=t>.3?1:0;
+  ain.style.strokeDashoffset=LA*(1-inout(seg(t,.9,2.5))); ain.style.opacity=t>.9?1:0;
+  const d=seg(t,2.4,3.0); dot.setAttribute('r',30*(d?back(d):0));
+  $('glow').style.opacity=.9*out(seg(t,2.5,3.3))*(1-.35*seg(t,3.3,5.5));
+  const s=1+.04*out(seg(t,2.4,3.2))-.04*inout(seg(t,3.2,4.2));
+  $('mark').style.transform='translateY('+(-60*inout(seg(t,3.0,3.9)))+'px) scale('+s+')';
+  const w=out(seg(t,3.3,4.1)); $('word').style.opacity=w; $('word').style.transform='translateY('+(40*(1-w))+'px)';
+  const e=out(seg(t,3.7,4.4)); $('en').style.opacity=.6*e; $('en').style.letterSpacing=(30-12*e)+'px';
+  const g=out(seg(t,4.2,4.9)); $('tag').style.opacity=g; $('tag').style.transform='translateY('+(20*(1-g))+'px)';
+  const f=seg(t,6.6,7.0); document.body.style.opacity=1-f;
+}
+document.fonts.ready.then(()=>{setT(0);window.READY=true});
+</script></body></html>
