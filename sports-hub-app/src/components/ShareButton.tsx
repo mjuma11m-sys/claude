@@ -8,7 +8,7 @@ export function ShareButton({ text, path, label = 'شارك', className = '' }: 
   async function share() {
     const url = location.origin + path
     try {
-      if (navigator.share) await navigator.share({ title: 'Sports Hub', text, url })
+      if (navigator.share) await navigator.share({ title: 'WADQA Hub', text, url })
       else {
         await navigator.clipboard.writeText(`${text} ${url}`)
         setCopied(true)

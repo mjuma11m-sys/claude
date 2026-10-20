@@ -1,4 +1,4 @@
-/* Offline shell for Sports Hub.
+/* Offline shell for WADQA Hub.
    - Hashed build files (/assets/*, fonts): cache-first, they never change under the same name.
    - Page navigations: network-first, falling back to the cached app shell when offline.
    - Everything else (the Supabase API, auth, any cross-origin request) is NOT touched and NOT cached,

@@ -9,7 +9,7 @@ export function ClubsOnly() {
       <PageTitle>التطبيق للأندية والاتحاد حالياً</PageTitle>
       <p className="glass flex items-start gap-3 p-4 text-sm">
         <Icon name="hub" className="mt-0.5 size-5 shrink-0 text-pulse" />
-        <span>Sports Hub حالياً غرف عمل لإدارات الأندية والاتحاد. زاوية الجمهور قريباً 👀 وما عندها موعد. حسابك محفوظ، وتقدر تشوف ترتيب الدوريات.</span>
+        <span>WADQA Hub حالياً غرف عمل لإدارات الأندية والاتحاد. زاوية الجمهور قريباً 👀 وما عندها موعد. حسابك محفوظ، وتقدر تشوف ترتيب الدوريات.</span>
       </p>
       <Link to="/standings" className="btn-skew grid min-h-11 place-items-center px-6 font-bold text-pulse-ink">ترتيب الدوريات</Link>
     </section>

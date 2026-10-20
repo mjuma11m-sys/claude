@@ -42,7 +42,7 @@ def text_path(text, size, tracking_em, x0=0, base=0):
         x += gs[g].width * s + tracking_em * size
     return " ".join(out), x - tracking_em * size - x0
 
-def svg(w, h, body, label="Sports Hub", bg=None):
+def svg(w, h, body, label="WADQA Hub", bg=None):
     r = f'<rect width="{w}" height="{h}" fill="{bg}"/>' if bg else ""
     return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" role="img" aria-label="{label}">{r}{body}</svg>\n'
 
@@ -58,9 +58,9 @@ mono = ('<defs><mask id="m"><rect width="64" height="64" fill="#fff"/>' + cuts +
         + f'<path fill="currentColor" fill-rule="evenodd" d="M32 24.8a7.2 7.2 0 1 0 0 14.4 7.2 7.2 0 0 0 0-14.4z{pentagon(32, 32, 3.3)}"/>')
 write("mark-mono.svg", svg(64, 64, mono))
 
-# --- horizontal lockup: mark + SPORTS HUB (outlined, Tajawal ExtraBold, +10% tracking)
+# --- horizontal lockup: mark + WADQA HUB (outlined, Tajawal ExtraBold, +10% tracking)
 def lockup(posts, bar, ball, patch, word, bg=None):
-    d, tw = text_path("SPORTS HUB", 30, 0.10, base=0)
+    d, tw = text_path("WADQA HUB", 30, 0.10, base=0)
     h, gap = 64, 18
     body = (mark(posts, bar, ball, patch) +
             f'<path transform="translate({64 + gap} 42)" d="{d}" fill="{word}"/>')

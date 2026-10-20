@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Sports Hub"><defs>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="WADQA Hub"><defs>
   <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#10213A"/><stop offset=".55" stop-color="#08111F"/><stop offset="1" stop-color="#03060C"/></linearGradient>
   <radialGradient id="glow" cx=".5" cy=".5" r=".55"><stop offset="0" stop-color="#00E5FF" stop-opacity=".28"/><stop offset=".6" stop-color="#00E5FF" stop-opacity=".05"/><stop offset="1" stop-color="#00E5FF" stop-opacity="0"/></radialGradient>
   <linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#A9CDE3"/></linearGradient>

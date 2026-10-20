@@ -30,7 +30,7 @@ export function InstallPrompt() {
     <aside className="glass flex items-start gap-3 p-4" aria-label="تثبيت التطبيق">
       <Icon name="pass" className="mt-0.5 size-5 shrink-0 text-pulse" />
       <div className="min-w-0 flex-1 text-sm">
-        <p className="font-bold">ثبّت Sports Hub على جهازك</p>
+        <p className="font-bold">ثبّت WADQA Hub على جهازك</p>
         {ev ? (
           <p className="text-mute">يفتح مثل التطبيق، وبدون إنترنت بعد.</p>
         ) : (
