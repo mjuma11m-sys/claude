@@ -1,13 +1,14 @@
-/* Sports Hub mark: an H built from a goal (two posts, crossbar) with the ball in the mouth.
+/* Sports Hub mark: a hub. The centre circle of a pitch, four club nodes on it, the ball in the middle.
    Source of truth: brand/build.py. Colors follow the theme tokens so it stays on-brand in every context. */
 export function Logo({ className = 'size-8' }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" aria-hidden className={className}>
-      <rect x="12" y="10" width="10" height="44" rx="3" fill="var(--color-ink)" />
-      <rect x="42" y="10" width="10" height="44" rx="3" fill="var(--color-ink)" />
-      <rect x="22" y="22" width="20" height="7" fill="var(--color-pulse)" />
-      <circle cx="32" cy="43" r="7.5" fill="var(--color-crimson)" />
-      <path d="M32 39.6 L35.2 41.9 L34 45.7 L30 45.7 L28.8 41.9Z" fill="var(--color-night)" />
+      <circle cx="32" cy="32" r="19" fill="none" stroke="var(--color-ink)" strokeWidth="4.5" />
+      {[[45.43, 18.57], [45.43, 45.43], [18.57, 45.43], [18.57, 18.57]].map(([x, y]) => (
+        <circle key={`${x}-${y}`} cx={x} cy={y} r="5.4" fill="var(--color-pulse)" stroke="var(--color-night)" strokeWidth="2.6" />
+      ))}
+      <circle cx="32" cy="32" r="7.2" fill="var(--color-crimson)" />
+      <path d="M32 28.7 L35.1 30.95 L33.9 34.6 L30.1 34.6 L28.9 30.95Z" fill="var(--color-night)" />
     </svg>
   )
 }
