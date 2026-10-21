@@ -3853,7 +3853,11 @@ window.HAYATI_CONFIG = {
     const p = (global.HAYATI_CONFIG || {}).PROVIDERS;
     const list = detected.concat(Array.isArray(p) ? p : []);
     const hide = (global.HAYATI_CONFIG || {}).HIDE_PROVIDERS || [];
-    return sb ? ['apple', 'google'].filter((x) => list.includes(x) && !hide.includes(x)) : [];
+    let out = sb ? ['apple', 'google'].filter((x) => list.includes(x) && !hide.includes(x)) : [];
+    // Apple (إرشاد 4.8): بالآيفون Google ما يطلع إلا ومعاه Sign in with Apple
+    const C = global.Capacitor;
+    if (C && C.getPlatform && C.getPlatform() === 'ios' && !out.includes('apple')) out = out.filter((x) => x !== 'google');
+    return out;
   }
 
   function arabicAuthError(msg) {

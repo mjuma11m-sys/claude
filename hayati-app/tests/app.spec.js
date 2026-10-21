@@ -2877,6 +2877,15 @@ test('lectures photo (DW-034): a board photo is shrunk on the device, sent once,
   await expect(page.locator('[name=lc_notes]')).toHaveValue(/CM ratio = CM \/ Sales$/);
 });
 
+test('iPhone (guideline 4.8): Google sign-in only shows together with Sign in with Apple', async ({ page }) => {
+  await page.addInitScript(() => { window.Capacitor = { isNativePlatform: () => true, getPlatform: () => 'ios', Plugins: {} }; });
+  await useFakeSupabase(page);
+  await open(page);
+  const list = (cfg) => page.evaluate((c) => { window.HAYATI_CONFIG.HIDE_PROVIDERS = []; window.HAYATI_CONFIG.PROVIDERS = c; return App.S.providers(); }, cfg);
+  expect(await list(['google'])).toEqual([]);
+  expect(await list(['apple', 'google'])).toEqual(['apple', 'google']);
+});
+
 test('account page (DW-035): Google shows up once Supabase enables it, trips follow the account to another device, Umrah stays on the device', async ({ page }) => {
   await useFakeSupabase(page);
   let asked = 0;
