@@ -123,11 +123,15 @@
       '<div class="field"><label for="pw">كلمة السر</label><input id="pw" name="password" type="password" autocomplete="current-password" dir="ltr" required></div>' +
       '<p class="err" id="loginErr">' + h(msg || '') + '</p>' +
       '<button class="btn solid block" type="submit">دخول</button>' +
+      // حساب المالك انسوّى بـ Google (بدون كلمة سر)، فالدخول بـ Google لازم يكون هني
+      '<div class="or"><span>أو</span></div><button class="btn block" type="button" data-act="google">الدخول بـ Google</button>' +
       '<p class="note">نسيت كلمة السر؟ غيّرها من «حياتي» ← حسابك. <a href="?demo=1">جرّب ببيانات تجريبية</a></p></form>';
   }
   async function afterLogin() {
     const { data } = await S.sb.auth.getSession();
     if (!data.session) return loginView();
+    // رجعنا من Google بـ ?code=…: الجلسة انحفظت، فننظف الرابط
+    if (/[?&]code=/.test(location.search)) history.replaceState(null, '', location.pathname + location.hash);
     S.email = data.session.user.email || '';
     $('#whoEmail').textContent = S.email; $('#who').hidden = false;
     const { data: ok, error } = await S.sb.rpc('wadqa_is_admin');
@@ -325,6 +329,12 @@
   async function act(btn) {
     const a = btn.dataset.act, id = btn.dataset.id;
     try {
+      if (a === 'google') {
+        btn.disabled = true;
+        const { error } = await S.sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname } });
+        if (error) { btn.disabled = false; toast(errText(error)); }
+        return;
+      }
       if (a === 'month') { S.month = L.shiftYm(S.month, Number(btn.dataset.by)); return render(); }
       if (a === 'new-entry') { S.form = 'entry'; S.edit = null; S.kind = 'expense'; render(); return $('#f_amount').focus(); }
       if (a === 'edit-entry') { S.form = 'entry'; S.edit = id; S.kind = S.entries.find((x) => x.id === id).kind; render(); return $('#f_amount').focus(); }
@@ -411,7 +421,7 @@
   async function start() {
     if (S.demo) { $('#demoBar').hidden = false; demoData(); return render(); }
     if (!window.supabase || !window.WADQA) { app.innerHTML = '<p class="err center">ما قدرنا نحمّل الإعدادات.</p>'; return; }
-    S.sb = window.supabase.createClient(window.WADQA.url, window.WADQA.key, { auth: { persistSession: true, storageKey: 'wadqa-admin', autoRefreshToken: true } });
+    S.sb = window.supabase.createClient(window.WADQA.url, window.WADQA.key, { auth: { persistSession: true, storageKey: 'wadqa-admin', autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' } });
     $('#signOut').onclick = async () => { await S.sb.auth.signOut(); S.email = ''; S.entries = S.budgets = S.recurring = S.leads = []; loginView(); };
     S.sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT') { S.email = ''; loginView(); } });
     afterLogin();

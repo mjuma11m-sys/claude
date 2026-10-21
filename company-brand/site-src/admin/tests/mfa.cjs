@@ -20,6 +20,7 @@ const ok = (c, m) => { if (c) { pass++; console.log('✅', m); } else { fail++; 
   await login('owner@test', 'غلط');
   await p.waitForFunction(() => document.querySelector('#loginErr').textContent.length > 0);
   ok((await p.textContent('#loginErr')).includes('غلط'), 'كلمة سر غلط ← رسالة');
+  ok(await p.isVisible('[data-act=google]'), 'زر «الدخول بـ Google» موجود (حساب المالك انسوّى بـ Google)');
   await login('owner@test', 'pw');
   await p.waitForSelector('#mfaForm');
   ok(await p.isVisible('img.qr') && (await p.textContent('code.secret')) === 'JBSWY3DPEHPK3PXP', 'أول دخول: QR + المفتاح اليدوي');

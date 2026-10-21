@@ -1,7 +1,7 @@
 # حياتي · Hayati
 
 **وش هو:** يومك بمكان واحد: المصاريف والميزانية (مع قراءة رسايل البنك)، المواعيد والجدول الدراسي، المعدل، المهام، العبادة، المحاضرات، السفر، والصحة.
-**الحالة:** نسخة تجريبية · قيد التطوير. موجود على الويب، ومو منشور بأي متجر للحين (حساب Google Play محظور لين يثبتون الهوية، وApp Store ما انفحص).
+**الحالة:** نسخة تجريبية · قيد التطوير. موجود على الويب، ومو منشور بأي متجر للحين: حساب Google Play محظور لين يثبتون الهوية، وآبل رفضت 0.26 (Sign in with Apple، زر الحساب الجديد، HealthKit، والحساب التجريبي) والتصليح بنسخة 0.27.
 **المستودع:** `mjuma11m-sys/hayati` (خاص) · **الويب:** `claude-eosin-seven.vercel.app`
 
 ![شاشة «اليوم»](docs-img/hayati-today.jpg)
@@ -16,7 +16,7 @@
 | الواجهة | JavaScript عادي (بدون React وبدون build للويب) | يشتغل من ملفات ثابتة، ويفتح بسرعة على أي جوال |
 | الويب | PWA: `manifest.webmanifest` + `sw.js` | يتثبّت على الشاشة ويشتغل بدون نت |
 | الجوال | Capacitor 8 (آيفون وأندرويد) | نفس الكود يصير تطبيق، وفوقه plugins أصلية |
-| الأصلي (iOS) | Swift: `HealthPlugin` · `RecorderPlugin` · `SpeechPlugin` · `WidgetPlugin` · `ShareInPlugin` | الصحة، تسجيل المحاضرة، تحويلها لنص بالجهاز، الودجت، المشاركة |
+| الأصلي (iOS) | Swift: `RecorderPlugin` · `SpeechPlugin` · `WidgetPlugin` · `ShareInPlugin` | تسجيل المحاضرة، تحويلها لنص بالجهاز، الودجت، المشاركة (HealthKit انشال بطلب آبل 2.5.1) |
 | الأصلي (Android) | Java: `HayatiWidget` · `WidgetPlugin` · `ShareInPlugin` | الودجت ومشاركة رسالة البنك للتطبيق |
 | البيانات | `localStorage` أول، وSupabase اختياري (فرانكفورت) | يشتغل بدون حساب؛ الحساب للمزامنة بين الأجهزة |
 | الذكاء الاصطناعي | Supabase Edge Function `lecture-ai` ← Claude (Opus 5.5 للملخصات، Sonnet 5.5 لـ «اسأل حياتي») | المفتاح بأسرار السيرفر، ما يوصل للجوال أبداً |
@@ -85,4 +85,5 @@ npm run cap:sync:android    # يجهّز www/ ويحدّث مشروع أندرو
 ```
 - **CI (GitHub Actions):** `hayati-tests` · `hayati-android` (يبني APK ويفتحه بمحاكي ويتأكد من الشاشة والمشاركة والودجت) · `hayati-ios` (سميوليتر) · `hayati-release`.
 - **الويب:** Vercel مشروع `claude` ← فرع `main`. الرابط القديم `/hayati-app/` يتحوّل للجذر.
+- **الدخول:** إيميل وكلمة مرور بس (Apple وGoogle مخفيين بـ `HIDE_PROVIDERS` لين يكمل إعداد Services ID). بعد «حساب جديد» يظل صندوق «باقي خطوة وحدة» لين يأكد الإيميل.
 - **انتبه:** المستودع خاص، فـ iOS على GitHub ياخذ دقائق Mac (×10). وتشغيل Android يحتاج تفريغ مساحة قبل المحاكي (موجود بالـ workflow).
