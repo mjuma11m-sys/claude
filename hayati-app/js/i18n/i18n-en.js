@@ -1983,6 +1983,10 @@ window.HAYATI_EN = {
 "ما قدرنا نشيّك الحين · جرّب بعدين": "Couldn't check right now · try later",
 "صوّر الباركود، أو انسخ المفتاح تحت.": "Scan the QR code, or copy the key below.",
 "اكتب الرمز اللي يطلع (6 أرقام).": "Enter the 6-digit code it shows.",
+// جديد 0.27
+"ادخل بـ Google أو Apple": "Sign in with Google or Apple",
+"من «حسابك» بضغطة، والإيميل وكلمة السر يظلون موجودين": "One tap from «Your account»; email and password still work",
+"رمز من جوالك مع كلمة السر: لو أحد عرفها ما يقدر يدخل حسابك": "A code from your phone with your password: someone who knows it still can't get in",
 // DW-071: جديد 0.26
 "PDF أو Word أو PowerPoint أو Excel: التطبيق يعرف وش هو ويوديه لمكانه (كشف، جدول، برنامج الفريق، محاضرة)": "PDF, Word, PowerPoint or Excel: the app recognizes it and files it (statement, schedule, team program, lecture)",
 "المساعد بدون حساب": "Assistant without an account",
