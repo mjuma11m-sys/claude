@@ -6,14 +6,13 @@ import { fileURLToPath } from 'node:url';
 
 const SRC = path.dirname(fileURLToPath(import.meta.url));
 const OUT = path.join(SRC, '../site');
-const ROOT = path.join(SRC, '../..');
+const ROOT = path.join(SRC, '..');
 const DOMAIN = 'https://wadqa.com';
-const EMAIL = 'hello@wadqa.com';
+// الإيميل يطلع بالموقع بس لما يكون فيه صندوق حقيقي على دومين نملكه (DW-056). قبلها: نموذج التواصل
+const EMAIL = null;
 
-// المفتاح العام (anon) من نفس مشروع حياتي — الجدول محمي، والكتابة بس عبر wadqa_submit
-const cfg = fs.readFileSync(path.join(ROOT, 'hayati-app/js/core/config.js'), 'utf8');
-const SUPA_URL = cfg.match(/SUPABASE_URL:\s*'([^']+)'/)[1];
-const SUPA_KEY = cfg.match(/SUPABASE_ANON_KEY:\s*'([^']+)'/)[1];
+// المفتاح العام (anon) لمشروع Supabase «hayati» — الجدول محمي، والكتابة بس عبر wadqa_submit
+const { url: SUPA_URL, key: SUPA_KEY } = JSON.parse(fs.readFileSync(path.join(SRC, 'supabase/config.json'), 'utf8'));
 
 const DROP = 'M256 104C256 104 160 228 160 310A96 96 0 0 0 352 310C352 228 256 104 256 104Z';
 const mark = (cls = '') => `<svg class="${cls}" viewBox="0 0 512 512" aria-hidden="true"><path class="d-line" pathLength="1" d="${DROP}" fill="none" stroke="#F2EBDD" stroke-width="34" stroke-linejoin="round"/><circle class="d-dot" cx="256" cy="316" r="38" fill="#C8A04A"/></svg>`;
@@ -25,7 +24,7 @@ const T = {
   lang_other: ['English', 'عربي'],
   skip: ['تخطَّ للمحتوى', 'Skip to content'],
   footer_rights: ['© 2026 ودقة · WADQA Studio · مملكة البحرين', '© 2026 WADQA Studio · Kingdom of Bahrain'],
-  footer_privacy: ['سياسة الخصوصية', 'Privacy policy'],
+  footer_privacy: ['سياسة الخصوصية', 'Privacy policy'], footer_support: ['الدعم', 'Support'],
   footer_status: ['قيد التطوير', 'In development'],
   name_l: ['الاسم (اختياري)', 'Name (optional)'], email_l: ['الإيميل', 'Email'],
   consent: [`أوافق إن ودقة تحفظ اسمي وإيميلي ورسالتي على خوادم Supabase بألمانيا عشان ترد علي، حسب <a href="PRIV">سياسة الخصوصية</a>.`, `I agree that WADQA stores my name, email and message on Supabase servers in Germany to reply to me, as described in the <a href="PRIV">privacy policy</a>.`],
@@ -78,7 +77,7 @@ ${body.replaceAll('IMG/', pre + 'img/').replaceAll('PRIV', 'privacy.html')}
 </main>
 <footer class="site"><div class="wrap">
   <span>${t('footer_rights')}</span>
-  <span><a href="privacy.html">${t('footer_privacy')}</a> · ${t('footer_status')}</span>
+  <span><a href="support.html">${t('footer_support')}</a> · <a href="privacy.html">${t('footer_privacy')}</a> · ${t('footer_status')}</span>
 </div></footer>
 <script src="${pre}config.js"></script>
 <script src="${pre}app.js" defer></script>
@@ -154,7 +153,7 @@ P.index = (L) => ({
   <h2>${L === 0 ? 'تواصل' : 'Contact'}</h2>
   <p class="h-sub">${L === 0 ? 'ملاحظة، فكرة، أو شغل مشترك؟' : 'A note, an idea, or work together?'}</p>
   ${form(L, 'contact', 'general', { btn: T.send[L], msgLabel: L === 0 ? 'رسالتك' : 'Your message' })}
-  <p class="note">${L === 0 ? 'أو راسلنا مباشرة:' : 'Or email us directly:'} <span dir="ltr">${EMAIL}</span></p>
+  ${EMAIL ? `<p class="note">${L === 0 ? 'أو راسلنا مباشرة:' : 'Or email us directly:'} <span dir="ltr">${EMAIL}</span></p>` : ''}
 </div></section>`,
 });
 
@@ -246,15 +245,31 @@ P.idarati = (L) => ({
 </div></section>`,
 });
 
+P.support = (L) => ({
+  title: L === 0 ? 'الدعم · ودقة' : 'Support · WADQA',
+  desc: L === 0 ? 'أسئلة شائعة عن تطبيقات ودقة، وشلون توصلنا.' : 'Common questions about WADQA apps, and how to reach us.',
+  body: `<section><div class="wrap prose">
+  <h1 class="sm">${L === 0 ? 'الدعم' : 'Support'}</h1>
+  <p>${L === 0 ? 'أسئلة شائعة عن تطبيقاتنا. ما لقيت جوابك؟ <a href="./#contact">راسلنا</a>.' : 'Common questions about our apps. Not answered here? <a href="./#contact">Write to us</a>.'}</p>
+  <details class="faq"><summary>${L === 0 ? 'هل «حياتي» موجود على App Store أو Google Play؟' : 'Is Hayati on the App Store or Google Play?'}</summary><p>${L === 0 ? 'مو للحين. «حياتي» قيد التطوير · نسخة تجريبية. سجّل بقائمة الانتظار بـ <a href="hayati.html">صفحة حياتي</a> ونراسلك مرة وحدة لما ينزل.' : 'Not yet. Hayati is in development (beta). Join the waitlist on the <a href="hayati.html">Hayati page</a> and we will email you once when it is out.'}</p></details>
+  <details class="faq"><summary>${L === 0 ? 'هل أحتاج حساب؟' : 'Do I need an account?'}</summary><p>${L === 0 ? 'لا. كل الميزات الأساسية تشتغل على جهازك بدون حساب. الحساب اختياري، للنسخ الاحتياطي والمزامنة بين أجهزتك.' : 'No. The main features work on your device without an account. An account is optional, for backup and sync between your devices.'}</p></details>
+  <details class="faq"><summary>${L === 0 ? 'وين تنحفظ بياناتي؟' : 'Where is my data stored?'}</summary><p>${L === 0 ? 'بجهازك أول. لو سوّيت حساب، نسخة من بياناتك تنحفظ بـ Supabase بمنطقة فرانكفورت (ألمانيا)، وكل حساب يشوف بياناته بس.' : 'On your device first. If you create an account, a copy is stored on Supabase in the Frankfurt region (Germany), and each account can only see its own data.'}</p></details>
+  <details class="faq"><summary>${L === 0 ? 'شلون أحذف بياناتي؟' : 'How do I delete my data?'}</summary><p>${L === 0 ? 'داخل «حياتي»: الإعدادات ← «احذف كل بياناتي». يمسح اللي بالجهاز، ولو عندك حساب يمسح نسخته بعد. لبيانات نماذج هالموقع: راسلنا من نموذج التواصل.' : 'In Hayati: Settings → “Delete all my data”. It erases the device copy and, if you have an account, the account copy too. For data from this website’s forms, contact us through the form.'}</p></details>
+  <details class="faq"><summary>${L === 0 ? '«إداراتي» شنو وضعه؟' : 'What is the status of Idarati?'}</summary><p>${L === 0 ? 'نسخة تجريبية · قيد التطوير، تنجرّب على الويب من <a href="idarati.html">صفحة إداراتي</a>.' : 'Beta, in development. You can try it on the web from the <a href="idarati.html">Idarati page</a>.'}</p></details>
+  <details class="faq"><summary>${L === 0 ? 'لقيت مشكلة أو عندي اقتراح' : 'I found a problem or have an idea'}</summary><p>${L === 0 ? 'اكتب لنا من <a href="./#contact">نموذج التواصل</a>: اسم التطبيق، نوع جهازك، ووش صار بالضبط. نحاول نرد خلال 3 أيام عمل.' : 'Write to us through the <a href="./#contact">contact form</a>: the app name, your device, and exactly what happened. We aim to reply within 3 working days.'}</p></details>
+  <p><a href="./">${T.back_home[L]}</a></p>
+</div></section>`,
+});
+
 P.privacy = (L) => ({
   title: L === 0 ? 'سياسة الخصوصية · ودقة' : 'Privacy policy · WADQA',
   desc: L === 0 ? 'سياسة خصوصية موقع ودقة.' : 'Privacy policy for the WADQA website.',
   body: `<section><div class="wrap prose">
-  <p class="note">${L === 0 ? 'مسودة للمراجعة — مو استشارة قانونية ملزمة. آخر تحديث: 20 أكتوبر 2026' : 'Draft for review, not binding legal advice. Last updated: 20 October 2026'}</p>
+  <p class="note">${L === 0 ? 'مسودة للمراجعة — مو استشارة قانونية ملزمة. آخر تحديث: 21 أكتوبر 2026' : 'Draft for review, not binding legal advice. Last updated: 21 October 2026'}</p>
   <h1 class="sm">${L === 0 ? 'سياسة الخصوصية' : 'Privacy policy'}</h1>
   <p>${L === 0 ? `هذي السياسة لموقع <span dir="ltr">wadqa.com</span> بس. كل تطبيق من تطبيقاتنا (مثل «حياتي») له سياسة خاصة داخل التطبيق.` : 'This policy covers the wadqa.com website only. Each of our apps (such as Hayati) has its own policy inside the app.'}</p>
   <h3>${L === 0 ? 'لما تتصفح' : 'When you browse'}</h3>
-  <p>${L === 0 ? 'ما فيه ملفات تعريف ارتباط (cookies) ولا تحليلات ولا إعلانات. الخطوط والصور على نفس الدومين. مزوّد الاستضافة (Vercel) يسجّل بيانات تقنية عادية لكل زيارة (عنوان IP، المتصفح، الوقت) لتشغيل الموقع وحمايته، حسب سياسته.' : 'There are no cookies, analytics or ads. Fonts and images are served from this domain. Our host (Vercel) logs standard technical data for each visit (IP address, browser, time) to run and protect the site, under its own policy.'}</p>
+  <p>${L === 0 ? 'ما فيه ملفات تعريف ارتباط (cookies) ولا إعلانات ولا أدوات تحليل خارجية. الخطوط والصور على نفس الدومين. نعدّ فتح كل صفحة (المسار ولغة الصفحة واليوم بس، بدون IP ولا أي معرّف) عشان نعرف أي صفحة تنقرا، وما نعدّ لو متصفحك مفعّل «عدم التتبع». مزوّد الاستضافة (Vercel) يسجّل بيانات تقنية عادية لكل زيارة (عنوان IP، المتصفح، الوقت) لتشغيل الموقع وحمايته، حسب سياسته.' : 'There are no cookies, ads or third-party analytics. Fonts and images are served from this domain. We count page opens (only the path, page language and day, with no IP address or identifier) to learn which pages are read, and we do not count you if your browser sends Do Not Track. Our host (Vercel) logs standard technical data for each visit (IP address, browser, time) to run and protect the site, under its own policy.'}</p>
   <h3>${L === 0 ? 'لما تعبّي نموذج' : 'When you fill in a form'}</h3>
   <ul>
     <li>${L === 0 ? '<b>وش نحفظ:</b> إيميلك، واسمك ورسالتك لو كتبتها، والتطبيق اللي سجّلت عليه، ولغة الصفحة، ووقت الإرسال.' : '<b>What we store:</b> your email, your name and message if you wrote them, which app you signed up for, the page language, and the time.'}</li>
@@ -264,9 +279,9 @@ P.privacy = (L) => ({
     <li>${L === 0 ? '<b>كم نحتفظ:</b> بحد أقصى 24 شهر، وبعدها تنحذف.' : '<b>How long:</b> 24 months at most, then it is deleted.'}</li>
   </ul>
   <h3>${L === 0 ? 'حقوقك' : 'Your rights'}</h3>
-  <p>${L === 0 ? `حسب قانون حماية البيانات الشخصية البحريني (قانون رقم 30 لسنة 2018)، تقدر تطلب نسخة من بياناتك أو تصحيحها أو حذفها، وتسحب موافقتك، بإيميل على <span dir="ltr">${EMAIL}</span>.` : `Under Bahrain’s Personal Data Protection Law (Law No. 30 of 2018), you can ask for a copy of your data, correct it, delete it, or withdraw your consent by emailing ${EMAIL}.`}</p>
+  <p>${L === 0 ? `حسب قانون حماية البيانات الشخصية البحريني (قانون رقم 30 لسنة 2018)، تقدر تطلب نسخة من بياناتك أو تصحيحها أو حذفها، وتسحب موافقتك، ${EMAIL ? `بإيميل على <span dir="ltr">${EMAIL}</span>` : `من <a href="./#contact">نموذج التواصل</a> (اكتب نفس الإيميل اللي سجّلت فيه)`}.` : `Under Bahrain’s Personal Data Protection Law (Law No. 30 of 2018), you can ask for a copy of your data, correct it, delete it, or withdraw your consent ${EMAIL ? 'by emailing ' + EMAIL : 'through the <a href="./#contact">contact form</a> (use the same email you signed up with)'}.`}</p>
   <h3>${L === 0 ? 'التواصل' : 'Contact'}</h3>
-  <p>${L === 0 ? `ودقة · WADQA Studio — مملكة البحرين · السجل التجاري: [بعد التسجيل] · <span dir="ltr">${EMAIL}</span>` : `WADQA Studio — Kingdom of Bahrain · Commercial registration: [pending] · ${EMAIL}`}</p>
+  <p>${L === 0 ? `ودقة · WADQA Studio — مملكة البحرين · السجل التجاري: [بعد التسجيل]${EMAIL ? ` · <span dir="ltr">${EMAIL}</span>` : ''}` : `WADQA Studio — Kingdom of Bahrain · Commercial registration: [pending]${EMAIL ? ' · ' + EMAIL : ''}`}</p>
   <p><a href="./">${T.back_home[L]}</a></p>
 </div></section>`,
 });
@@ -290,7 +305,6 @@ for (const f of fs.readdirSync(path.join(SRC, 'admin/docs-src/img'))) fs.copyFil
 fs.copyFileSync(path.join(SRC, 'admin/vendor/supabase.min.js'), path.join(OUT, 'admin/supabase.min.js'));
 fs.copyFileSync(path.join(SRC, 'admin/vendor/LICENSE'), path.join(OUT, 'admin/supabase-LICENSE.txt'));
 fs.writeFileSync(path.join(OUT, 'config.js'), `window.WADQA = ${JSON.stringify({ url: SUPA_URL, key: SUPA_KEY })};\n`);
-fs.copyFileSync(path.join(ROOT, 'hayati-app/brand/out/mark-app-icon-1024.png'), path.join(OUT, 'img/hayati-icon.png'));
 const CSP = `default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self'; connect-src 'self' ${SUPA_URL}; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`;
 fs.writeFileSync(path.join(OUT, 'vercel.json'), JSON.stringify({
   cleanUrls: true,

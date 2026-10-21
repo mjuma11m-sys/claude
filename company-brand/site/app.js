@@ -1,6 +1,16 @@
 // نماذج موقع ودقة → Supabase (public.wadqa_submit). المفتاح عام (anon)، والجدول ما ينقرا من المتصفح.
 (() => {
   const C = window.WADQA;
+  // عدّ الزيارات (DW-058): المسار واللغة بس، بدون كوكيز ولا تخزين ولا IP. ما نعدّ اللي مفعّل «عدم التتبع»
+  if (C && navigator.doNotTrack !== '1' && navigator.globalPrivacyControl !== true && /^https:/.test(location.protocol)) {
+    try {
+      fetch(C.url + '/rest/v1/rpc/wadqa_hit', {
+        method: 'POST', keepalive: true,
+        headers: { 'Content-Type': 'application/json', apikey: C.key, Authorization: 'Bearer ' + C.key },
+        body: JSON.stringify({ p_path: location.pathname.slice(0, 60), p_lang: document.documentElement.lang === 'en' ? 'en' : 'ar' }),
+      }).catch(() => {});
+    } catch (_) { /* العدّ ما يوقف الصفحة أبداً */ }
+  }
   const MSG = {
     ar: { ok: 'وصلت، شكراً. بنرد عليك على إيميلك.', okw: 'سجّلناك. بنراسلك لما يجهز، ومرة وحدة بس.', consent_required: 'لازم توافق على حفظ بياناتك عشان نقدر نرد.', invalid: 'تأكد من الإيميل، والرسالة أقل من 2000 حرف.', too_many: 'أرسلت أكثر من مرة. جرّب بعد ساعة.', busy: 'فيه ضغط حالياً. جرّب بعد دقائق.', net: 'ما قدرنا نوصل. تأكد من الإنترنت وجرّب مرة ثانية.', sending: 'جاري الإرسال…' },
     en: { ok: 'Received, thank you. We will reply to your email.', okw: 'You are on the list. We will email you once, when it is ready.', consent_required: 'Please agree to us storing your details so we can reply.', invalid: 'Check your email address, and keep the message under 2,000 characters.', too_many: 'You have sent this several times. Please try again in an hour.', busy: 'We are busy right now. Please try again in a few minutes.', net: 'We could not connect. Check your internet and try again.', sending: 'Sending…' },

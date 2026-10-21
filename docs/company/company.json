@@ -1,7 +1,7 @@
 {
   "name": "ودقة · WADQA",
   "founded": "2026-10-13",
-  "next": 58,
+  "next": 59,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -55,17 +55,17 @@
       "title": "Sports Hub: أساس التطبيق — واجهة لكل الأجهزة + هوية وألوان موحدة + Fan Zone",
       "owner": "CEO",
       "priority": "P2",
-      "status": "review",
+      "status": "blocked",
       "opened": "2026-10-13",
-      "updated": "2026-10-13"
+      "updated": "2026-10-21"
     },
     "DW-008": {
       "title": "حياتي: نسخة أندرويد أصلية (Capacitor) بدال PWABuilder، عشان مختبرين Google Play توصلهم التذكيرات",
       "owner": "CEO",
       "priority": "P1",
-      "status": "review",
+      "status": "done",
       "opened": "2026-10-13",
-      "updated": "2026-10-13"
+      "updated": "2026-10-21"
     },
     "DW-009": {
       "title": "حياتي: «شارك لحياتي» — رسالة البنك من تطبيق الرسائل لحياتي مباشرة (أندرويد + نسخة الويب المثبّتة)",
@@ -79,57 +79,57 @@
       "title": "حياتي: برنامج تطوير مستمر — جولة تلقائية كل يومين (تذكرة ← بناء ← اختبارات ← PR)",
       "owner": "CEO",
       "priority": "P1",
-      "status": "review",
+      "status": "rejected",
       "opened": "2026-10-13",
-      "updated": "2026-10-14"
+      "updated": "2026-10-21"
     },
     "DW-011": {
       "title": "حياتي: جاهزية النشر على Google Play — نسخة المتجر بدون أي اتصال خارجي + رقم إصدار مربوط + قائمة المالك",
       "owner": "CEO",
       "priority": "P1",
-      "status": "review",
+      "status": "blocked",
       "opened": "2026-10-14",
-      "updated": "2026-10-14"
+      "updated": "2026-10-21"
     },
     "DW-012": {
       "title": "حياتي: شهر الراتب + ملخص «راتبك وين راح؟» + حاسبة الزكاة والخُمس (BACKLOG 3–5)",
       "owner": "CEO",
       "priority": "P1",
-      "status": "review",
+      "status": "done",
       "opened": "2026-10-14",
-      "updated": "2026-10-14"
+      "updated": "2026-10-21"
     },
     "DW-013": {
       "title": "حياتي: الحلقة اليومية — المستخدم يرجع كل يوم ويستغني عن تطبيقات ثانية (بدون أنماط خبيثة)",
       "owner": "CEO",
       "priority": "P1",
-      "status": "review",
+      "status": "done",
       "opened": "2026-10-14",
-      "updated": "2026-10-14"
+      "updated": "2026-10-21"
     },
     "DW-014": {
       "title": "حياتي: ورد القرآن + زر «اقرأ» + تذكير الأذكار (BACKLOG 3–5)",
       "owner": "CEO",
       "priority": "P1",
-      "status": "review",
+      "status": "done",
       "opened": "2026-10-14",
-      "updated": "2026-10-14"
+      "updated": "2026-10-21"
     },
     "DW-015": {
       "title": "حياتي: صفحة «عبادتي» + المسبحة (تسبيحة الزهراء ع) + التقويم الهجري + مناسبات البحرين والخليج",
       "owner": "CEO",
       "priority": "P1",
-      "status": "review",
+      "status": "done",
       "opened": "2026-10-14",
-      "updated": "2026-10-14"
+      "updated": "2026-10-21"
     },
     "DW-016": {
       "title": "حياتي: «كل شي بحياتي» (كل الأدوات بمكان واحد) + «رتّب اليوم» (إخفاء البطاقات)",
       "owner": "CEO",
       "priority": "P1",
-      "status": "review",
+      "status": "done",
       "opened": "2026-10-14",
-      "updated": "2026-10-14"
+      "updated": "2026-10-21"
     },
     "DW-017": {
       "title": "تسريع فتح حياتي: رسمة وحدة وقت الإقلاع + preload للخط",
@@ -151,25 +151,25 @@
       "title": "«جديد بحياتي»: نافذة مرة وحدة بعد كل تحديث (BACKLOG 1)",
       "owner": "CEO",
       "priority": "P1",
-      "status": "review",
+      "status": "done",
       "opened": "2026-10-15",
-      "updated": "2026-10-15"
+      "updated": "2026-10-21"
     },
     "DW-020": {
       "title": "ربط Supabase مباشرة: حسابات اختيارية، كل حساب لحاله",
       "owner": "CEO",
       "priority": "P1",
-      "status": "review",
+      "status": "done",
       "opened": "2026-10-15",
-      "updated": "2026-10-15"
+      "updated": "2026-10-21"
     },
     "DW-021": {
       "title": "«المحاضرات»: ملف لكل محاضرة + تسجيل + ملخص + اختبار تجريبي (مثل Acad AI)",
       "owner": "CEO",
       "priority": "P1",
-      "status": "review",
+      "status": "done",
       "opened": "2026-10-15",
-      "updated": "2026-10-15"
+      "updated": "2026-10-21"
     },
     "DW-022": {
       "title": "المحاضرات: فهم المعادلات الرياضية (عرض + إدخال + الذكاء الاصطناعي)",
@@ -367,41 +367,41 @@
       "title": "خطة المرحلة الجاية: من نسخة جاهزة لاختبار مغلق حقيقي",
       "owner": "CEO",
       "priority": "P1",
-      "status": "review",
+      "status": "done",
       "opened": "2026-10-16",
-      "updated": "2026-10-16"
+      "updated": "2026-10-21"
     },
     "DW-047": {
       "title": "الخطة الثانية: تحميل كسول للأدوات + تحويل تسجيل المحاضرة لنص بالجهاز",
       "owner": "CEO",
       "priority": "P2",
-      "status": "review",
+      "status": "done",
       "opened": "2026-10-16",
-      "updated": "2026-10-16"
+      "updated": "2026-10-21"
     },
     "DW-048": {
       "title": "هوية الشركة: الاسم، الشعار، الختم، الألوان، ملفات الهوية",
       "owner": "CEO",
       "priority": "P2",
-      "status": "review",
+      "status": "done",
       "opened": "2026-10-20",
-      "updated": "2026-10-20"
+      "updated": "2026-10-21"
     },
     "DW-049": {
       "title": "ودقة: تجهيز الشركة — موقع، حسابات، فاتورة، خطوات التسجيل، ملف تعريفي",
       "owner": "CEO",
       "priority": "P1",
-      "status": "review",
+      "status": "in_progress",
       "opened": "2026-10-20",
-      "updated": "2026-10-20"
+      "updated": "2026-10-21"
     },
     "DW-050": {
       "title": "موقع ودقة الكامل: صفحات التطبيقات، عربي/إنقليزي، نموذج تواصل وقائمة انتظار (Supabase)، حركة الشعار، نشر Vercel",
       "owner": "CEO",
       "priority": "P1",
-      "status": "review",
+      "status": "done",
       "opened": "2026-10-20",
-      "updated": "2026-10-20"
+      "updated": "2026-10-21"
     },
     "DW-051": {
       "title": "فصل المستودعات: حياتي، Sports Hub، ودقة — كل واحد بمستودعه مع تاريخه",
@@ -415,7 +415,7 @@
       "title": "لوحة إدارة ودقة: الحسابات، المصاريف، الميزانية، الاشتراكات، والطلبات",
       "owner": "CEO",
       "priority": "P1",
-      "status": "review",
+      "status": "done",
       "opened": "2026-10-21",
       "updated": "2026-10-21"
     },
@@ -423,7 +423,7 @@
       "title": "تبويب «الملفات» بلوحة الإدارة: ملف تقني لكل تطبيق (البنية، صور، كود)",
       "owner": "CEO",
       "priority": "P2",
-      "status": "review",
+      "status": "done",
       "opened": "2026-10-21",
       "updated": "2026-10-21"
     },
@@ -447,7 +447,7 @@
       "title": "سجل الحسابات والصلاحيات (بدون أسرار) + 2FA لكل حساب + حماية كلمات المرور المسرّبة",
       "owner": "IT",
       "priority": "P1",
-      "status": "new",
+      "status": "in_progress",
       "opened": "2026-10-21",
       "updated": "2026-10-21"
     },
@@ -455,7 +455,15 @@
       "title": "سقف الشغل: حياتي + إداراتي نشطين، Sports Hub متوقف مؤقتاً، وفرز الـ 19 تذكرة بالمراجعة لـ ≤ 5",
       "owner": "HR",
       "priority": "P1",
-      "status": "new",
+      "status": "done",
+      "opened": "2026-10-21",
+      "updated": "2026-10-21"
+    },
+    "DW-058": {
+      "title": "خطة الوصول لتقييم 9: كل قسم وش يحتاج، والمنفّذ الحين",
+      "owner": "CEO",
+      "priority": "P1",
+      "status": "done",
       "opened": "2026-10-21",
       "updated": "2026-10-21"
     }

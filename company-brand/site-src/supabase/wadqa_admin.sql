@@ -107,3 +107,36 @@ alter table public.wadqa_docs enable row level security;
 revoke all on public.wadqa_docs from public, anon;
 grant select, insert, update on public.wadqa_docs to authenticated;
 create policy admin_all on public.wadqa_docs for all to authenticated using ((select public.wadqa_admin_ok())) with check ((select public.wadqa_admin_ok()));
+
+-- DW-058: عدّ زيارات الموقع بدون كوكيز ولا IP: (اليوم، المسار، اللغة، العدد) بس. الكتابة عبر wadqa_hit (anon)، والقراءة للأدمن aal2.
+-- (انجرّب بمعاملة rollback: anon يزيد العدد بس، ما يقرا الجدول ولا دالة الأدمن، والمسارات الغلط تنرفض بصمت)
+create table if not exists wadqa.page_views (
+  day date not null default ((now() at time zone 'Asia/Bahrain')::date),
+  path text not null check (path ~ '^/[A-Za-z0-9/._-]{0,59}$'),
+  lang text not null check (lang in ('ar', 'en')),
+  n integer not null default 1 check (n >= 0),
+  primary key (day, path, lang)
+);
+alter table wadqa.page_views enable row level security;
+revoke all on wadqa.page_views from public, anon, authenticated;
+
+create or replace function public.wadqa_hit(p_path text, p_lang text) returns void
+language plpgsql volatile security definer set search_path = '' as $$
+begin
+  if p_path is null or p_path !~ '^/[A-Za-z0-9/._-]{0,59}$' or p_lang not in ('ar', 'en') then return; end if;
+  insert into wadqa.page_views as v (path, lang) values (p_path, p_lang)
+  on conflict (day, path, lang) do update set n = v.n + 1 where v.n < 100000;
+end $$;
+revoke all on function public.wadqa_hit(text, text) from public;
+grant execute on function public.wadqa_hit(text, text) to anon, authenticated;
+
+create or replace function public.wadqa_admin_views()
+returns table (day date, path text, lang text, n integer)
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not public.wadqa_admin_ok() then raise exception 'not allowed' using errcode = '42501'; end if;
+  return query select v.day, v.path, v.lang, v.n from wadqa.page_views v
+    where v.day >= ((now() at time zone 'Asia/Bahrain')::date - 90) order by v.day desc, v.n desc limit 5000;
+end $$;
+revoke all on function public.wadqa_admin_views() from public, anon;
+grant execute on function public.wadqa_admin_views() to authenticated;

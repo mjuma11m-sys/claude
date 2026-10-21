@@ -13,7 +13,7 @@
   const prodName = (k) => (L.PRODUCTS.find((p) => p[0] === k) || [k, k])[1];
   const periodName = (k) => (L.PERIODS.find((p) => p[0] === k) || [k, k])[1];
   const money = (f, cls = '') => '<span class="num ' + cls + '">' + L.fmt(f) + '</span>';
-  const TABS = [['summary', 'الملخص'], ['ledger', 'الدفتر'], ['budget', 'الميزانية'], ['recurring', 'الاشتراكات'], ['leads', 'الطلبات'], ['files', 'الملفات']];
+  const TABS = [['summary', 'الملخص'], ['ledger', 'الدفتر'], ['budget', 'الميزانية'], ['recurring', 'الاشتراكات'], ['leads', 'الطلبات'], ['visits', 'الزيارات'], ['files', 'الملفات']];
   // أسعار تقديرية تعبّي النموذج بس — المالك يتأكد من السعر قبل الحفظ
   const PRESETS = [
     ['Apple Developer Program', 9900, 'USD', 'year', 'رسوم المتاجر', 'hayati'],
@@ -23,7 +23,7 @@
     ['دومين wadqa', 1500, 'USD', 'year', 'دومين وإيميل', 'wadqa-site'],
   ];
 
-  const S = { demo: /[?&]demo=1\b/.test(location.search), sb: null, email: '', entries: [], budgets: [], recurring: [], leads: [], docs: [], docBody: {}, month: L.ymOf(today()), edit: null, form: null, kind: 'expense', q: '', leadProduct: '' };
+  const S = { demo: /[?&]demo=1\b/.test(location.search), sb: null, email: '', entries: [], budgets: [], recurring: [], leads: [], visits: [], docs: [], docBody: {}, month: L.ymOf(today()), edit: null, form: null, kind: 'expense', q: '', leadProduct: '' };
 
   // ———— البيانات ————
   function demoData() {
@@ -46,6 +46,7 @@
       { id: id(), name: 'Apple Developer Program', amount_minor: 9900, currency: 'USD', period: 'year', category: 'رسوم المتاجر', product: 'hayati', active: true, next_due: L.shiftYm(m, 11) + '-05' },
       { id: id(), name: 'Supabase Pro', amount_minor: 2500, currency: 'USD', period: 'month', category: 'استضافة وسحابة', product: 'general', active: true, next_due: L.shiftYm(m, 1) + '-08' },
     ];
+    S.visits = [['/', 14], ['/hayati.html', 9], ['/idarati.html', 4], ['/en/', 3]].flatMap(([path, n], k) => [0, 3, 12].map((ago) => ({ day: new Date(Date.now() - ago * 864e5).toISOString().slice(0, 10), path, n: Math.max(1, n - ago - k) })));
     S.leads = [
       { id: 1, created_at: new Date().toISOString(), kind: 'waitlist', product: 'hayati', name: 'مختبر تجريبي', email: 'tester@example.com', message: 'أندرويد · Samsung', lang: 'ar' },
       { id: 2, created_at: new Date(Date.now() - 864e5).toISOString(), kind: 'contact', product: 'general', name: null, email: 'hello@example.com', message: 'أبي تطبيق لمحلي', lang: 'ar' },
@@ -56,14 +57,15 @@
   const store = {
     async load() {
       if (S.demo) return;
-      const [e, b, r, l, d] = await Promise.all([
+      const [e, b, r, l, d, v] = await Promise.all([
         q(S.sb.from('wadqa_entries').select('*').order('occurred_on', { ascending: false }).order('created_at', { ascending: false }).limit(5000)),
         q(S.sb.from('wadqa_budgets').select('*')),
         q(S.sb.from('wadqa_recurring').select('*').order('created_at')),
         q(S.sb.rpc('wadqa_admin_leads')),
         q(S.sb.from('wadqa_docs').select('slug,title,updated_at').order('sort')),
+        q(S.sb.rpc('wadqa_admin_views')).catch(() => []),
       ]);
-      S.entries = e; S.budgets = b; S.recurring = r; S.leads = l || []; S.docs = d || [];
+      S.entries = e; S.budgets = b; S.recurring = r; S.leads = l || []; S.docs = d || []; S.visits = v || [];
     },
     async saveEntry(row) {
       if (S.demo) { if (row.id) Object.assign(S.entries.find((x) => x.id === row.id), row); else S.entries.unshift({ ...row, id: Math.random().toString(36).slice(2) }); return; }
@@ -300,6 +302,16 @@
         : '<div class="empty">ما وصلت طلبات للحين.</div>');
   }
 
+  // «الزيارات» (DW-058): عدّ بدون كوكيز ولا IP، لكل صفحة باليوم
+  function visitsView() {
+    const w = L.views(S.visits, today(), 7), m = L.views(S.visits, today(), 30);
+    const num = (label, n, sub) => '<div class="card stat"><small>' + label + '</small><b class="num">' + n.toLocaleString('en') + '</b>' + (sub ? '<em>' + sub + '</em>' : '') + '</div>';
+    return '<div class="grid">' + num('آخر 7 أيام', w.total, 'زيارة صفحة') + num('آخر 30 يوم', m.total, m.pages.length + ' صفحة') + '</div>' +
+      '<p class="note">نعدّ فتح الصفحة بس: بدون كوكيز ولا IP ولا هوية، وما نعدّ اللي مفعّل «عدم التتبع». الرقم تقريبي (أي أحد يقدر يزيده)، فهو مؤشر مو حقيقة.</p>' +
+      (m.pages.length ? '<ul class="list">' + m.pages.map((p) => '<li><div class="main"><b dir="ltr">' + h(p.path) + '</b><small>آخر 30 يوم</small></div><span class="amt num">' + p.n.toLocaleString('en') + '</span></li>').join('') + '</ul>'
+        : '<div class="empty">ما فيه زيارات مسجلة للحين.</div>');
+  }
+
   // «الملفات»: شرح تقني لكل تطبيق (DW-053). النص من القاعدة بنفس قفل aal2، والعرض بعارض آمن (docs.js)
   function filesView() {
     const slug = docSlug();
@@ -316,7 +328,7 @@
   }
 
   function render() {
-    const t = tab(), views = { summary: summaryView, ledger: ledgerView, budget: budgetView, recurring: recurringView, leads: leadsView, files: filesView };
+    const t = tab(), views = { summary: summaryView, ledger: ledgerView, budget: budgetView, recurring: recurringView, leads: leadsView, visits: visitsView, files: filesView };
     const slug = t === 'files' && docSlug();
     if (slug && !S.demo && S.docBody[slug] == null) store.doc(slug).then(() => { if (docSlug() === slug) render(); }).catch((e) => toast(errText(e)));
     app.innerHTML = nav() + '<div id="view">' + views[t]() + '</div>';
@@ -422,7 +434,7 @@
     if (S.demo) { $('#demoBar').hidden = false; demoData(); return render(); }
     if (!window.supabase || !window.WADQA) { app.innerHTML = '<p class="err center">ما قدرنا نحمّل الإعدادات.</p>'; return; }
     S.sb = window.supabase.createClient(window.WADQA.url, window.WADQA.key, { auth: { persistSession: true, storageKey: 'wadqa-admin', autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' } });
-    $('#signOut').onclick = async () => { await S.sb.auth.signOut(); S.email = ''; S.entries = S.budgets = S.recurring = S.leads = []; loginView(); };
+    $('#signOut').onclick = async () => { await S.sb.auth.signOut(); S.email = ''; S.entries = S.budgets = S.recurring = S.leads = S.visits = []; loginView(); };
     S.sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT') { S.email = ''; loginView(); } });
     afterLogin();
   }

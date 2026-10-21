@@ -111,8 +111,21 @@
     return '﻿' + [cols.map((c) => cell(c[1])).join(',')].concat(rows.map((r) => cols.map((c) => cell(typeof c[0] === 'function' ? c[0](r) : r[c[0]])).join(','))).join('\r\n');
   }
 
+  // الزيارات (DW-058): صفوف [{day,path,n}] ← مجموع آخر N يوم + لكل صفحة (الأكثر أول)
+  function views(rows, now, days) {
+    const from = new Date(now.getFullYear(), now.getMonth(), now.getDate() - days + 1);
+    const cut = from.getFullYear() + '-' + String(from.getMonth() + 1).padStart(2, '0') + '-' + String(from.getDate()).padStart(2, '0');
+    const by = {}; let total = 0;
+    for (const r of rows || []) {
+      if (String(r.day) < cut) continue;
+      const n = Number(r.n) || 0; total += n;
+      by[r.path] = (by[r.path] || 0) + n;
+    }
+    return { total, pages: Object.entries(by).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([path, n]) => ({ path, n })) };
+  }
+
   const api = { USD_TO_BHD, VAT_MANDATORY, VAT_VOLUNTARY, OWNER_CAPITAL, EXPENSE_CATS, INCOME_CATS, PRODUCTS, PERIODS,
-    parseFils, fmt, recFils, recMonthly, ym, ymOf, shiftYm, monthSummary, budgetStatus, balance, vatStatus, lastMonths, csv };
+    parseFils, fmt, recFils, recMonthly, ym, ymOf, shiftYm, monthSummary, budgetStatus, balance, vatStatus, lastMonths, csv, views };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.AdminLogic = api;
 })(typeof window !== 'undefined' ? window : globalThis);

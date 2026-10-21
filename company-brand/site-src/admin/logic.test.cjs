@@ -80,3 +80,11 @@ test('CSV: BOM للعربي، اقتباس الفواصل، وحماية من ح
   assert.ok(out.includes(`"'=HYPERLINK(""x"")"`));
   assert.ok(out.includes('"نص, فيه فاصلة"'));
 });
+
+test('الزيارات: آخر 7 و30 يوم، والصفحات بالترتيب', () => {
+  const rows = [{ day: '2026-10-21', path: '/', n: 5 }, { day: '2026-10-15', path: '/hayati.html', n: 3 }, { day: '2026-10-14', path: '/', n: 2 }, { day: '2026-09-01', path: '/', n: 99 }];
+  const now = new Date(2026, 9, 21);
+  assert.deepEqual(L.views(rows, now, 7), { total: 8, pages: [{ path: '/', n: 5 }, { path: '/hayati.html', n: 3 }] });
+  assert.equal(L.views(rows, now, 30).total, 10);
+  assert.equal(L.views([], now, 7).total, 0);
+});
