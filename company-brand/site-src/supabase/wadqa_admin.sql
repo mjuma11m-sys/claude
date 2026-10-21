@@ -75,3 +75,22 @@ grant execute on function public.wadqa_admin_leads() to authenticated;
 
 -- المالك هو الأدمن الوحيد
 insert into wadqa.admins (user_id) select id from auth.users where lower(email) = 'mjuma11.m@gmail.com' on conflict do nothing;
+
+-- DW-052 (2): التحقق بخطوتين إلزامي. القاعدة ما تعطي ولا صف إلا لجلسة أدمن كملت الرمز (aal2)،
+-- فلو كلمة السر تسرّبت، الـ API نفسه ما يرجع شي. (انجرّب: أدمن aal1 ← 0 صف وكتابة مرفوضة وطلبات مرفوضة؛ aal2 ← كامل؛ غير أدمن aal2 ← 0)
+create or replace function public.wadqa_admin_ok() returns boolean
+language sql stable security definer set search_path = '' as $$
+  select public.wadqa_is_admin() and coalesce((select auth.jwt() ->> 'aal'), '') = 'aal2';
+$$;
+revoke all on function public.wadqa_admin_ok() from public, anon;
+grant execute on function public.wadqa_admin_ok() to authenticated;
+alter policy admin_all on public.wadqa_entries using ((select public.wadqa_admin_ok())) with check ((select public.wadqa_admin_ok()));
+alter policy admin_all on public.wadqa_budgets using ((select public.wadqa_admin_ok())) with check ((select public.wadqa_admin_ok()));
+alter policy admin_all on public.wadqa_recurring using ((select public.wadqa_admin_ok())) with check ((select public.wadqa_admin_ok()));
+create or replace function public.wadqa_admin_leads()
+returns table (id bigint, created_at timestamptz, kind text, product text, name text, email text, message text, lang text)
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not public.wadqa_admin_ok() then raise exception 'not allowed' using errcode = '42501'; end if;
+  return query select l.id, l.created_at, l.kind, l.product, l.name, l.email, l.message, l.lang from wadqa.leads l order by l.created_at desc limit 500;
+end $$;

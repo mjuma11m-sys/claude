@@ -90,6 +90,7 @@
     if (/Email not confirmed/i.test(m)) return 'الإيميل ما تأكد للحين';
     if (/row-level security|not allowed|permission denied/i.test(m)) return 'هالحساب ما عنده صلاحية';
     if (/Failed to fetch|NetworkError|network/i.test(m)) return 'ما قدرنا نوصل. تأكد من الإنترنت';
+    if (/mfa.*(disabled|not enabled)|enroll.*disabled/i.test(m)) return 'التحقق بخطوتين مقفل بالمشروع: Supabase ← Authentication ← Multi-Factor ← فعّل TOTP';
     return m;
   };
   function download(name, text) {
@@ -123,9 +124,41 @@
     $('#whoEmail').textContent = S.email; $('#who').hidden = false;
     const { data: ok, error } = await S.sb.rpc('wadqa_is_admin');
     if (error || !ok) { app.innerHTML = '<div class="card login"><h1>ما عندك صلاحية</h1><p class="muted">الحساب <b dir="ltr">' + h(S.email) + '</b> مو مسجّل كإدارة لودقة.</p><p class="note">لو هذا حسابك، تأكد إنك دخلت بالإيميل الصح.</p></div>'; return; }
+    try { if (!(await mfaGate())) return; } catch (e) { app.innerHTML = '<div class="card login"><h1>التحقق بخطوتين</h1><p class="err">' + h(errText(e)) + '</p></div>'; return; }
     app.innerHTML = '<p class="muted center">يحمّل البيانات…</p>';
     try { await store.load(); } catch (e) { app.innerHTML = '<div class="card login"><h1>صار خطأ</h1><p class="err">' + h(errText(e)) + '</p></div>'; return; }
     render();
+  }
+
+  // ———— التحقق بخطوتين (TOTP) ————
+  // القاعدة ما تعطي ولا صف بدون aal2 (wadqa_admin_ok)، فهذي البوابة مو بس شكل: بدونها اللوحة فاضية.
+  async function mfaGate() {
+    const { data: aal, error: aErr } = await S.sb.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aErr) throw aErr;
+    if (aal && aal.currentLevel === 'aal2') return true;
+    const { data: f, error } = await S.sb.auth.mfa.listFactors();
+    if (error) throw error;
+    const verified = (f.totp || []).filter((x) => x.status === 'verified');
+    if (verified.length) { mfaView(verified[0].id); return false; }
+    // محاولة ربط سابقة ما كملت (سكّر الصفحة قبل الرمز): نشيلها ونبدأ من جديد
+    for (const x of (f.all || []).filter((x) => x.factor_type === 'totp' && x.status !== 'verified')) await S.sb.auth.mfa.unenroll({ factorId: x.id });
+    const { data: en, error: eErr } = await S.sb.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'إدارة ودقة' });
+    if (eErr) throw eErr;
+    mfaView(en.id, en.totp);
+    return false;
+  }
+  function mfaView(factorId, totp) {
+    app.innerHTML = '<form class="card login" id="mfaForm" data-factor="' + h(factorId) + '" novalidate>' +
+      '<h1>التحقق بخطوتين</h1>' +
+      (totp
+        ? '<p class="muted">أول مرة: امسح الرمز بتطبيق المصادقة بجوالك (Google Authenticator أو Microsoft Authenticator أو 1Password)، واكتب الرقم اللي يطلع.</p>' +
+          '<img class="qr" src="' + h(totp.qr_code) + '" alt="رمز QR للتحقق بخطوتين" width="200" height="200">' +
+          '<p class="note">ما تقدر تمسح؟ أضف الحساب يدوياً بهالمفتاح:</p><code class="secret" dir="ltr">' + h(totp.secret) + '</code>'
+        : '<p class="muted">اكتب الرقم من تطبيق المصادقة بجوالك (6 أرقام).</p>') +
+      '<div class="field"><label for="otp">الرمز</label><input id="otp" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" dir="ltr" required></div>' +
+      '<p class="err" id="mfaErr"></p><button class="btn solid block" type="submit">تحقق</button>' +
+      '<p class="note">ضيّعت الجوال؟ Supabase ← Authentication ← Users ← حسابك ← احذف عامل MFA، وبعدها اربط من جديد.</p></form>';
+    $('#otp').focus();
   }
 
   // ———— الشاشات ————
@@ -298,6 +331,16 @@
         const { error } = await S.sb.auth.signInWithPassword({ email: form.email.value.trim(), password: form.password.value });
         btn.disabled = false;
         if (error) { err.textContent = errText(error); return; }
+        return afterLogin();
+      }
+      if (form.id === 'mfaForm') {
+        const code = String(form.code.value || '').replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace(/\D/g, '');
+        const err = $('#mfaErr'), btn = form.querySelector('button[type=submit]');
+        if (code.length !== 6) { err.textContent = 'الرمز 6 أرقام'; return; }
+        err.textContent = ''; btn.disabled = true;
+        const { error } = await S.sb.auth.mfa.challengeAndVerify({ factorId: form.dataset.factor, code });
+        btn.disabled = false;
+        if (error) { err.textContent = /invalid|expired/i.test(error.message || '') ? 'الرمز غلط أو انتهى. جرّب الرقم الجديد' : errText(error); form.code.value = ''; form.code.focus(); return; }
         return afterLogin();
       }
       if (form.id === 'entryForm') {

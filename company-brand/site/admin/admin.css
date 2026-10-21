@@ -114,6 +114,10 @@ form.card { display: grid; gap: 12px; }
 /* الدخول */
 .login { max-width: 380px; margin: 48px auto; }
 .login h1 { font-size: 26px; margin-bottom: 4px; }
+.login { display: grid; gap: 12px; }
+.qr { display: block; margin: 4px auto; background: #fff; border-radius: 12px; padding: 8px; width: 200px; height: 200px; }
+.secret { display: block; text-align: center; font-size: 13px; letter-spacing: .08em; background: var(--ink); border: 1px dashed var(--line); border-radius: 10px; padding: 8px; word-break: break-all; user-select: all; }
+#otp { font-size: 24px; letter-spacing: .4em; text-align: center; }
 
 .toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--bone); color: var(--ink); padding: 8px 18px; border-radius: 99px; font-weight: 700; z-index: 20; box-shadow: 0 6px 24px rgba(0, 0, 0, .35); }
 
