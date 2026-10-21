@@ -19,7 +19,7 @@ from pathlib import Path
 
 STATUSES = ("new", "in_progress", "blocked", "review", "done", "rejected")
 PRIORITIES = ("P0", "P1", "P2", "P3")
-DEPARTMENTS = ("CEO", "CPO", "CTO", "Design", "QA", "CMO", "CFO", "Legal", "COO")
+DEPARTMENTS = ("CEO", "CPO", "CTO", "Design", "QA", "CMO", "CFO", "Legal", "COO", "IT", "Support", "HR")
 
 
 def today():

@@ -10,6 +10,7 @@
   --ok: #23845F; --warn: #A15C07; --bad: #C2372E;
   --ceo: #13636B; --cpo: #8A5A12; --design: #A8467F; --cto: #2862A8; --qa: #5B6B12;
   --cmo: #C2452B; --cfo: #23845F; --legal: #6247C4; --coo: #3C5A73; --owner: #B07A10;
+  --it: #2F6F8F; --support: #B0571F; --hr: #7A4E9C;
   --wood: #C9A877;
   --display: "Reem Kufi", "IBM Plex Sans Arabic", "Geeza Pro", sans-serif;
   --body: "IBM Plex Sans Arabic", "Geeza Pro", "Segoe UI", sans-serif;
@@ -22,6 +23,7 @@
   --ok: #4FC79E; --warn: #F2B84B; --bad: #FF7A6B;
   --ceo: #6EC5C0; --cpo: #E8B86A; --design: #E58CC0; --cto: #7DB0F0; --qa: #C3D46A;
   --cmo: #FF8E72; --cfo: #5FD3A6; --legal: #AE9BFF; --coo: #9DBAD3; --owner: #F2C14B;
+  --it: #79C2E6; --support: #F5A66E; --hr: #C9A3EC;
   --wood: #5A4630; color-scheme: dark; } }
 :root[data-theme="dark"] {
   --bg: #08171B; --surface: #0F242A; --surface-2: #153239; --line: #1F3D44;
@@ -30,6 +32,7 @@
   --ok: #4FC79E; --warn: #F2B84B; --bad: #FF7A6B;
   --ceo: #6EC5C0; --cpo: #E8B86A; --design: #E58CC0; --cto: #7DB0F0; --qa: #C3D46A;
   --cmo: #FF8E72; --cfo: #5FD3A6; --legal: #AE9BFF; --coo: #9DBAD3; --owner: #F2C14B;
+  --it: #79C2E6; --support: #F5A66E; --hr: #C9A3EC;
   --wood: #5A4630; color-scheme: dark; }
 
 * { box-sizing: border-box; }
@@ -84,6 +87,12 @@ th { color: var(--muted); font-weight: 600; font-size: .78rem; }
 .summary ul { margin: 0; padding-inline-start: 20px; }
 .summary li + li { margin-top: 6px; }
 .summary b { color: #fff; }
+.score { display: grid; gap: 6px; margin-top: 6px; }
+.score .sr { display: grid; grid-template-columns: minmax(0, 7.5em) minmax(0, 1fr) 2.6em; gap: 8px; align-items: center; font-size: .85rem; }
+.score .meter { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.score .meter i { display: block; height: 100%; border-radius: 4px; background: var(--c); }
+.score .n { font-weight: 700; text-align: end; }
+.score .nt { grid-column: 1 / -1; color: var(--text-2); font-size: .78rem; margin-top: -3px; }
 .typing { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: .85rem; }
 .dots { display: inline-flex; gap: 3px; }
 .dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--c); animation: blink 1s infinite; }
@@ -138,7 +147,7 @@ button.play { background: var(--coral); color: var(--on-coral); border-color: tr
   </div>
 </div>
 
-<!-- الاجتماع: عبّ هذا الـ JSON بس. who = ceo|cpo|design|cto|qa|cmo|cfo|legal|coo|owner · verdict = approved|rejected|owner (أو ok|bad|mid) -->
+<!-- الاجتماع: عبّ هذا الـ JSON بس. who = ceo|cpo|design|cto|qa|cmo|cfo|legal|coo|it|support|hr|owner · verdict = approved|rejected|owner (أو ok|bad|mid) -->
 <script id="session" type="application/json">
 {
  "company": "شركة الديوانية",
@@ -260,7 +269,8 @@ button.play { background: var(--coral); color: var(--on-coral); border-color: tr
   const ALL = {
     ceo: ['🧭', 'الرئيس التنفيذي'], cpo: ['📦', 'المنتج'], design: ['🎨', 'التصميم'], cto: ['💻', 'الهندسة'],
     qa: ['🔍', 'الجودة والأمن'], cmo: ['📣', 'التسويق'], cfo: ['💰', 'المالية'], legal: ['⚖️', 'المحامي'],
-    coo: ['⚙️', 'العمليات'], owner: ['👑', 'المالك'],
+    coo: ['⚙️', 'العمليات'], it: ['🖥️', 'تقنية المعلومات'], support: ['🎧', 'الدعم الفني'],
+    hr: ['👥', 'الموارد البشرية'], owner: ['👑', 'المالك'],
   };
   const S = JSON.parse(document.getElementById('session').textContent);
   // المقاعد = الأقسام اللي تكلمت بالاجتماع بس (الرئيس التنفيذي دايماً)، بترتيب الهيكل
@@ -307,13 +317,15 @@ button.play { background: var(--coral); color: var(--on-coral); border-color: tr
     if (st.points) body += '<ul>' + st.points.map((x) => '<li>' + md(x) + '</li>').join('') + '</ul>';
     if (st.alt) body += '<p style="margin-top:4px">← <b>البديل:</b> ' + md(st.alt) + '</p>';
     if (st.effort || st.risk) body += '<p style="margin-top:4px;color:var(--text-2)">' + (st.effort ? '<b>الجهد:</b> ' + esc(st.effort) : '') + (st.effort && st.risk ? ' · ' : '') + (st.risk ? '<b>المخاطرة:</b> ' + md(st.risk) : '') + '</p>';
+    // تقييم المجلس: score = [[who, درجة من 10, ملاحظة]]
+    if (st.score) body += '<div class="score">' + st.score.map(([w, n, nt]) => '<div class="sr" style="--c:' + color(w) + '"><span>' + ((ALL[w] || ['💬', w])[0] + ' ' + (ALL[w] || ['', w])[1]) + '</span><span class="meter"><i style="width:' + Math.max(0, Math.min(10, +n)) * 10 + '%"></i></span><span class="n">' + esc(n) + '/10</span>' + (nt ? '<span class="nt">' + md(nt) + '</span>' : '') + '</div>').join('') + '</div>';
     if (st.rows) body += '<div class="tbl"><table><thead><tr>' + st.head.map((x) => '<th>' + esc(x) + '</th>').join('') + '</tr></thead><tbody>' +
       st.rows.map((r) => '<tr>' + r.map((x) => '<td>' + md(x) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>';
     const to = st.to && MEMBERS[st.to] ? ' <span class="to">← ' + MEMBERS[st.to][0] + ' ' + MEMBERS[st.to][1] + '</span>' : '';
     el.innerHTML = '<div class="mini">' + emo + '</div><div style="min-width:0"><div class="who">' + name + to + '</div><div class="bubble">' + body + '</div></div>';
     return el;
   }
-  const textLen = (st) => (st.text || '').length + (st.points || []).join('').length + (st.alt || '').length + (st.rows ? st.rows.flat().join('').length / 2 : 0) + (st.summary || []).join('').length;
+  const textLen = (st) => (st.text || '').length + (st.points || []).join('').length + (st.alt || '').length + (st.rows ? st.rows.flat().join('').length / 2 : 0) + (st.summary || []).join('').length + (st.score ? st.score.length * 40 : 0);
 
   let i = 0, speed = 1, paused = false, run = 0, wake = null;
   const sleep = (ms, id) => new Promise((res) => { const t = setTimeout(res, ms / speed); wake = () => { clearTimeout(t); res(); }; });
