@@ -7,6 +7,9 @@
   const A = window.App, E = window.Extras;
   if (!A || !E) return;
   const { S, st, I, h, tint } = A;
+  // DW-081: Apple (إرشاد 2.5.1) طلبت نشيل HealthKit من نسخة الآيفون، فربط الساعة ما يطلع فيها (يظل بالمتصفح والأندرويد)
+  const C0 = window.Capacitor;
+  if (C0 && typeof C0.isNativePlatform === 'function' && C0.isNativePlatform() && typeof C0.getPlatform === 'function' && C0.getPlatform() === 'ios') return;
   const wrap = (name, fn) => { const prev = E[name]; E[name] = (...a) => fn(prev ? prev : () => '', ...a); };
   const pad = (n) => String(n).padStart(2, '0');
   const dateKey = (d) => { d = d || new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };

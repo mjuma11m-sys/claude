@@ -2747,6 +2747,12 @@ window.HAYATI_EN = {
 "ادخل بـ Google أو Apple": "Sign in with Google or Apple",
 "من «حسابك» بضغطة، والإيميل وكلمة السر يظلون موجودين": "One tap from «Your account»; email and password still work",
 "رمز من جوالك مع كلمة السر: لو أحد عرفها ما يقدر يدخل حسابك": "A code from your phone with your password: someone who knows it still can't get in",
+// DW-081
+"اكتب الإيميل وكلمة المرور فوق": "Enter your email and password above",
+"كلمة المرور 6 حروف أو أكثر": "Password must be 6 characters or more",
+"ندخلك…": "Signing you in…",
+"نسوي حسابك…": "Creating your account…",
+"أرسلنا لك إيميل تأكيد": "We sent you a confirmation email",
 // DW-071: جديد 0.26
 "PDF أو Word أو PowerPoint أو Excel: التطبيق يعرف وش هو ويوديه لمكانه (كشف، جدول، برنامج الفريق، محاضرة)": "PDF, Word, PowerPoint or Excel: the app recognizes it and files it (statement, schedule, team program, lecture)",
 "المساعد بدون حساب": "Assistant without an account",
@@ -6573,6 +6579,8 @@ window.HAYATI_CONFIG = {
         '<div class="field"><label>الإيميل</label><input name="email" type="email" class="ltr" autocomplete="username" autocapitalize="off"></div>' +
         '<div class="field"><label>كلمة المرور</label><input name="password" type="password" class="ltr" autocomplete="current-password"></div>' +
         '<div class="btn-row"><button class="btn primary" data-set="signin">دخول</button><button class="btn" data-set="signup">حساب جديد</button></div>' +
+        // DW-081: رد واضح يظل بالصفحة (التوست يختفي، ومراجع Apple حسب الزر ما يشتغل)
+        '<p id="accMsg" class="small" role="status" aria-live="polite" style="margin:10px 2px 0;min-height:1em"></p>' +
         '<button class="btn ghost block" style="margin-top:6px" data-set="forgot">نسيت كلمة المرور؟</button>' +
         '<p class="small muted" style="margin:10px 2px 0">بدون حساب؟ التطبيق يشتغل عادي، وبياناتك على جهازك بس.</p>' +
         (cfg && !cfg.fromFile ? '<button class="btn ghost block" style="margin-top:10px" data-set="disconnect">تغيير بيانات Supabase</button>' : '');
@@ -6719,13 +6727,25 @@ window.HAYATI_CONFIG = {
         back();
       } else if (act === 'signin' || act === 'signup') {
         const email = val(root, 'email'), pw = root.querySelector('[name=password]').value;
-        if (!email || !pw) throw new Error('اكتب الإيميل وكلمة المرور');
+        const msg = root.querySelector('#accMsg');
+        const say = (t, bad) => { if (msg) { msg.textContent = t; msg.style.color = bad ? 'var(--expense)' : 'var(--brand)'; } };
+        if (!email || !pw) { say('اكتب الإيميل وكلمة المرور فوق', true); throw new Error('اكتب الإيميل وكلمة المرور'); }
+        if (act === 'signup' && pw.length < 6) { say('كلمة المرور 6 حروف أو أكثر', true); throw new Error('كلمة المرور 6 حروف أو أكثر'); }
         b.disabled = true;
-        if (act === 'signin') { await S.signIn(email, pw); toast('أهلاً 👋'); }
-        else {
-          const confirmNeeded = await S.signUp(email, pw);
-          toast(confirmNeeded ? 'أرسلنا لك إيميل تأكيد. افتح الرابط من هالجهاز، ويدخلك على طول' : 'تم إنشاء الحساب ✓');
-        }
+        say(act === 'signin' ? 'ندخلك…' : 'نسوي حسابك…');
+        try {
+          if (act === 'signin') { await S.signIn(email, pw); toast('أهلاً 👋'); }
+          else {
+            const confirmNeeded = await S.signUp(email, pw);
+            if (confirmNeeded) {
+              // ما نرجع للصفحة: الرسالة تظل قدامه لين يفتح الإيميل
+              say('✉️ أرسلنا إيميل تأكيد لـ ' + email + '. افتح الرابط اللي فيه من هالجهاز، ويدخلك على طول.');
+              toast('أرسلنا لك إيميل تأكيد');
+              return;
+            }
+            toast('تم إنشاء الحساب ✓');
+          }
+        } catch (er) { say(er.message || 'صار خطأ', true); throw er; }
         setTimeout(back, 300);
       } else if (act === 'sso') {
         b.disabled = true;
@@ -8740,6 +8760,9 @@ window.HAYATI_CONFIG = {
   const A = window.App, E = window.Extras;
   if (!A || !E) return;
   const { S, st, I, h, tint } = A;
+  // DW-081: Apple (إرشاد 2.5.1) طلبت نشيل HealthKit من نسخة الآيفون، فربط الساعة ما يطلع فيها (يظل بالمتصفح والأندرويد)
+  const C0 = window.Capacitor;
+  if (C0 && typeof C0.isNativePlatform === 'function' && C0.isNativePlatform() && typeof C0.getPlatform === 'function' && C0.getPlatform() === 'ios') return;
   const wrap = (name, fn) => { const prev = E[name]; E[name] = (...a) => fn(prev ? prev : () => '', ...a); };
   const pad = (n) => String(n).padStart(2, '0');
   const dateKey = (d) => { d = d || new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
@@ -14286,7 +14309,6 @@ window.HAYATI_CONFIG = {
       ['📅', 'جدولك على الشاشة الرئيسية', 'ودجت «جدول اليوم» وعلى شاشة القفل: الحين والجاي بدون ما تفتح التطبيق'],
       ['🏫', 'الدراسة لكل المراحل', 'مدرسة أو ثانوي أو جامعة: حصص ومعدل بالنسبة المئوية للمدرسة'],
       ['📑', 'ارفع البوربوينت أو الوورد', 'نص الشرائح لملاحظاتك، ومراجعة مختصرة وأسئلة لأصحاب الحسابات'],
-      ['⌚', 'اربط ساعتك', 'Apple Watch وأي ساعة تشارك مع تطبيق الصحة: نومك ونبضك وخطواتك تلقائياً'],
       ['🍳', 'المطبخ', 'وصفات خليجية بمقادير تتغيّر حسب عدد الأشخاص، والناقص يروح للمشتريات'],
       ['🎓', 'ارفع جدولك', 'دراسة أو دوام أو تمارين: PDF أو سكرين شوت أو نص. برنامج المدرب PDF ينضاف بتمارينه وجولاته'],
       ['🧾', 'قسّم الفاتورة', 'بالتساوي أو كل واحد حصته، وأرسل لربعك حصصهم'],

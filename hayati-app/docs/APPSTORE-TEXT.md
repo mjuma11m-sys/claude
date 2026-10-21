@@ -42,7 +42,6 @@
 • وصفات خليجية بمقادير تتغيّر حسب عدد الأشخاص، وخطوات سهلة للمبتدي، والناقص يروح لقائمة المشتريات.
 
 صحتي
-• اربط Apple Watch أو أي ساعة تشارك مع تطبيق الصحة: نومك ومراحله ونبضك وخطواتك (قراءة بس، وتظل على جوالك).
 
 على الآيفون
 • ودجت للشاشة الرئيسية: الجاي اليوم وكم باقي من ميزانيتك.
@@ -74,7 +73,6 @@
 The account is optional. Every feature works on the device without signing in.
 To try the bank-message parser: Money tab → "Paste message" → paste: Purchase of BHD 3.200 at COSTA SEEF using card XXXX4821
 AI features ("Ask Hayati", lecture summaries, reading a timetable photo) appear only for signed-in users and are not required to review the app.
-HealthKit: read-only (sleep analysis, resting heart rate, HRV, steps), requested only when the user taps "Connect Apple Health" in Study → My Health. Nothing is written to HealthKit. HealthKit data stays on the device: it is not synced to the account, not sent to any server or AI service, and not used for advertising.
 Background audio (UIBackgroundModes: audio): used only while the user records their own lecture (Study → Lectures → Start recording) so the recording continues when they switch apps or lock the screen. It stops when they tap Stop (or after 3 hours). Nothing plays in the background, and the recording stays on the device.
 ```
 - **Contact:** اسمك، إيميلك، رقمك (لـ Apple بس).

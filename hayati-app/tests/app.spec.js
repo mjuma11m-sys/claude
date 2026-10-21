@@ -902,33 +902,14 @@ test('iPhone (Capacitor): schedules «الحين وقت…» notifications, hapt
 });
 
 // DW-053: تطبيق الصحة بنسخة الآيفون ← النوم والنبض والخطوات بـ«صحتي»
-test('iPhone: connects Apple Health and fills «صحتي» from the watch', async ({ page }) => {
-  await page.addInitScript(() => {
-    const log = window.__hk = { auth: 0, reads: 0 };
-    const k = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-    window.Capacitor = {
-      isNativePlatform: () => true, getPlatform: () => 'ios',
-      Plugins: {
-        HayatiHealth: {
-          authorize: async () => { log.auth++; return { ok: true }; },
-          read: async () => { log.reads++; return { days: [{ date: k(1), steps: 9120.6 }, { date: k(0), sleep: 7.26, deep: 0.94, rem: 1.61, core: 4.4, rhr: 55.4, hrv: 47.8, steps: 3201 }] }; },
-        },
-      },
-    };
-  });
+test('iPhone (guideline 2.5.1): no HealthKit and no watch linking, so «صحتي» never mentions Apple Health', async ({ page }) => {
+  await page.addInitScript(() => { window.Capacitor = { isNativePlatform: () => true, getPlatform: () => 'ios', Plugins: {} }; });
   await open(page);
   await store(page, () => { App.ui.studySeg = 'health'; App.go('schedule'); });
-  await page.click('.cta[data-action="watch-setup"]');
-  await page.click('#hkConnect');
-  await expect.poll(() => store(page, () => App.st.daily.length)).toBe(2);
-  const d = await store(page, () => App.st.daily.slice().sort((a, b) => (a.date < b.date ? 1 : -1)).map((x) => [x.sleep, x.sleep_deep, x.rhr, x.hrv, x.steps, x.watch]));
-  expect(d).toEqual([[7.3, 0.9, 55, 48, 3201, true], [null, undefined, undefined, undefined, 9121, true]]);
-  await expect(page.locator('#view')).toContainText('الساعة الذكية');
-  await expect(page.locator('#view [data-action="health-sync"]')).toHaveCount(1);
-  expect(await store(page, () => window.__hk.auth)).toBe(1);
-  // ما يرتفع للحساب: النوم والنبض والخطوات من الساعة تظل بالجهاز
-  const up = await store(page, () => App.S._stripLocal('daily', App.st.daily.find((x) => x.sleep != null)));
-  expect([up.sleep, up.rhr, up.hrv, up.steps, up.sleep_deep, up.date != null]).toEqual([undefined, undefined, undefined, undefined, undefined, true]);
+  await expect(page.locator('#view [data-action="watch-setup"]')).toHaveCount(0);
+  await expect(page.locator('#view')).not.toContainText('تطبيق الصحة');
+  await page.click('#settingsBtn');
+  await expect(page.locator('#sheetBody [data-set="watch-setup"]')).toHaveCount(0);
 });
 
 // DW-062: «شارك ← حياتي» لملف: كشف الحساب يفتح «استيراد الحساب كامل» معبّى
@@ -2921,6 +2902,25 @@ test('two-step verification (DW-078): turn it on with a code, then a new sign-in
   await page.click('#sheetCancel');
   await expect.poll(() => store(page, () => window.__srv.calls.some((c) => c[0] === 'signOut'))).toBe(true);
   expect(await store(page, () => App.S.status.signedIn)).toBe(false);
+});
+
+test('new account on iPad (DW-081): the button always answers on the page itself; email confirmation message stays', async ({ page }) => {
+  await page.setViewportSize({ width: 820, height: 1180 });   // iPad Air 11"
+  await useFakeSupabase(page);
+  await open(page);
+  await store(page, () => App.accountSheet());
+  await page.click('[data-set="signup"]');
+  await expect(page.locator('#accMsg')).toContainText('اكتب الإيميل وكلمة المرور');
+  await page.fill('#sheetBody [name=email]', 'new@example.com'); await page.fill('#sheetBody [name=password]', '123');
+  await page.click('[data-set="signup"]');
+  await expect(page.locator('#accMsg')).toContainText('6 حروف');
+  await store(page, () => { window.__fakeSignUpNoSession = true; });
+  await page.evaluate(() => { const c = App.S; const orig = c.signUp; c.signUp = async () => true; });
+  await page.fill('#sheetBody [name=password]', 'secret123');
+  await page.click('[data-set="signup"]');
+  await expect(page.locator('#accMsg')).toContainText('أرسلنا إيميل تأكيد لـ new@example.com');
+  await page.waitForTimeout(800);
+  await expect(page.locator('#accMsg')).toContainText('أرسلنا إيميل تأكيد');   // ما تختفي
 });
 
 test('account page (DW-035): Google shows up once Supabase enables it, trips follow the account to another device, Umrah stays on the device', async ({ page }) => {

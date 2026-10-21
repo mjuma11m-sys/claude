@@ -1977,6 +1977,8 @@
         '<div class="field"><label>الإيميل</label><input name="email" type="email" class="ltr" autocomplete="username" autocapitalize="off"></div>' +
         '<div class="field"><label>كلمة المرور</label><input name="password" type="password" class="ltr" autocomplete="current-password"></div>' +
         '<div class="btn-row"><button class="btn primary" data-set="signin">دخول</button><button class="btn" data-set="signup">حساب جديد</button></div>' +
+        // DW-081: رد واضح يظل بالصفحة (التوست يختفي، ومراجع Apple حسب الزر ما يشتغل)
+        '<p id="accMsg" class="small" role="status" aria-live="polite" style="margin:10px 2px 0;min-height:1em"></p>' +
         '<button class="btn ghost block" style="margin-top:6px" data-set="forgot">نسيت كلمة المرور؟</button>' +
         '<p class="small muted" style="margin:10px 2px 0">بدون حساب؟ التطبيق يشتغل عادي، وبياناتك على جهازك بس.</p>' +
         (cfg && !cfg.fromFile ? '<button class="btn ghost block" style="margin-top:10px" data-set="disconnect">تغيير بيانات Supabase</button>' : '');
@@ -2123,13 +2125,25 @@
         back();
       } else if (act === 'signin' || act === 'signup') {
         const email = val(root, 'email'), pw = root.querySelector('[name=password]').value;
-        if (!email || !pw) throw new Error('اكتب الإيميل وكلمة المرور');
+        const msg = root.querySelector('#accMsg');
+        const say = (t, bad) => { if (msg) { msg.textContent = t; msg.style.color = bad ? 'var(--expense)' : 'var(--brand)'; } };
+        if (!email || !pw) { say('اكتب الإيميل وكلمة المرور فوق', true); throw new Error('اكتب الإيميل وكلمة المرور'); }
+        if (act === 'signup' && pw.length < 6) { say('كلمة المرور 6 حروف أو أكثر', true); throw new Error('كلمة المرور 6 حروف أو أكثر'); }
         b.disabled = true;
-        if (act === 'signin') { await S.signIn(email, pw); toast('أهلاً 👋'); }
-        else {
-          const confirmNeeded = await S.signUp(email, pw);
-          toast(confirmNeeded ? 'أرسلنا لك إيميل تأكيد. افتح الرابط من هالجهاز، ويدخلك على طول' : 'تم إنشاء الحساب ✓');
-        }
+        say(act === 'signin' ? 'ندخلك…' : 'نسوي حسابك…');
+        try {
+          if (act === 'signin') { await S.signIn(email, pw); toast('أهلاً 👋'); }
+          else {
+            const confirmNeeded = await S.signUp(email, pw);
+            if (confirmNeeded) {
+              // ما نرجع للصفحة: الرسالة تظل قدامه لين يفتح الإيميل
+              say('✉️ أرسلنا إيميل تأكيد لـ ' + email + '. افتح الرابط اللي فيه من هالجهاز، ويدخلك على طول.');
+              toast('أرسلنا لك إيميل تأكيد');
+              return;
+            }
+            toast('تم إنشاء الحساب ✓');
+          }
+        } catch (er) { say(er.message || 'صار خطأ', true); throw er; }
         setTimeout(back, 300);
       } else if (act === 'sso') {
         b.disabled = true;
