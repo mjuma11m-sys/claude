@@ -281,6 +281,11 @@ for (const slug of Object.keys(P)) {
 }
 fs.copyFileSync(path.join(SRC, 'site.css'), path.join(OUT, 'site.css'));
 fs.copyFileSync(path.join(SRC, 'app.js'), path.join(OUT, 'app.js'));
+// لوحة الإدارة (DW-052): ملفات ثابتة + supabase-js محلي (MIT) عشان CSP «script-src 'self'»
+fs.mkdirSync(path.join(OUT, 'admin'), { recursive: true });
+for (const f of ['index.html', 'admin.css', 'admin.js', 'logic.js']) fs.copyFileSync(path.join(SRC, 'admin', f), path.join(OUT, 'admin', f));
+fs.copyFileSync(path.join(SRC, 'admin/vendor/supabase.min.js'), path.join(OUT, 'admin/supabase.min.js'));
+fs.copyFileSync(path.join(SRC, 'admin/vendor/LICENSE'), path.join(OUT, 'admin/supabase-LICENSE.txt'));
 fs.writeFileSync(path.join(OUT, 'config.js'), `window.WADQA = ${JSON.stringify({ url: SUPA_URL, key: SUPA_KEY })};\n`);
 fs.copyFileSync(path.join(ROOT, 'hayati-app/brand/out/mark-app-icon-1024.png'), path.join(OUT, 'img/hayati-icon.png'));
 const CSP = `default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self'; connect-src 'self' ${SUPA_URL}; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`;
@@ -291,7 +296,7 @@ fs.writeFileSync(path.join(OUT, 'vercel.json'), JSON.stringify({
     { source: '/ijarati', destination: '/idarati', permanent: true },
     { source: '/en/ijarati', destination: '/en/idarati', permanent: true },
   ],
-  headers: [{ source: '/(.*)', headers: [
+  headers: [{ source: '/admin/(.*)', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }, { key: 'Cache-Control', value: 'no-store' }] }, { source: '/(.*)', headers: [
     { key: 'Content-Security-Policy', value: CSP },
     { key: 'X-Content-Type-Options', value: 'nosniff' },
     { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },

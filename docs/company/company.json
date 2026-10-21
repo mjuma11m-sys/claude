@@ -1,7 +1,7 @@
 {
   "name": "ودقة · WADQA",
   "founded": "2026-10-13",
-  "next": 52,
+  "next": 53,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -410,6 +410,14 @@
       "status": "in_progress",
       "opened": "2026-10-20",
       "updated": "2026-10-20"
+    },
+    "DW-052": {
+      "title": "لوحة إدارة ودقة: الحسابات، المصاريف، الميزانية، الاشتراكات، والطلبات",
+      "owner": "CEO",
+      "priority": "P1",
+      "status": "in_progress",
+      "opened": "2026-10-21",
+      "updated": "2026-10-21"
     }
   }
 }

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>إدارة ودقة</title>
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="admin.css">
+<script src="../config.js" defer></script>
+<script src="supabase.min.js" defer></script>
+<script src="logic.js" defer></script>
+<script src="admin.js" defer></script>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M256 104C256 104 160 228 160 310A96 96 0 0 0 352 310C352 228 256 104 256 104Z" fill="none" stroke="currentColor" stroke-width="28"/><circle cx="256" cy="316" r="38" fill="#C8A04A"/></svg><span>إدارة ودقة</span></a>
+    <div class="who" id="who" hidden><span id="whoEmail"></span><button class="link" type="button" id="signOut">خروج</button></div>
+  </div>
+</header>
+<div class="demo-bar" id="demoBar" hidden>بيانات تجريبية · ما تنحفظ ولا تتصل بأي قاعدة · <a href="./">رجوع للدخول</a></div>
+<main class="wrap" id="app" aria-live="polite">
+  <p class="muted center">يحمّل…</p>
+</main>
+<div class="toast" id="toast" role="status" hidden></div>
+</body>
+</html>
