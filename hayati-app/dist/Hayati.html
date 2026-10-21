@@ -2721,6 +2721,28 @@ window.HAYATI_EN = {
 "كم باقي من الميزانية؟": "How much budget is left?",
 "وش تقدر تسوي؟": "What can you do?",
 "تمام، ما سوّيت شي": "OK, I didn't do anything",
+// DW-078: التحقق بخطوتين
+"التحقق بخطوتين": "Two-step verification",
+"مفعّل ✓": "On ✓",
+"أي دخول جديد لحسابك يطلب الرمز من تطبيق التحقق.": "Every new sign-in to your account asks for the code from your authenticator app.",
+"وقّف التحقق بخطوتين": "Turn off two-step verification",
+"لو أحد عرف كلمة سرك، ما يقدر يدخل بدون رمز من جوالك.": "If someone learns your password, they still can't sign in without a code from your phone.",
+"فعّله": "Turn on",
+"فعّل التحقق بخطوتين": "Turn on two-step verification",
+"الرمز": "Code",
+"رمز التحقق": "Verification code",
+"حسابك عليه تحقق بخطوتين. اكتب الرمز من تطبيق التحقق.": "Your account has two-step verification. Enter the code from your authenticator app.",
+"اكتب الرمز (6 أرقام)": "Enter the 6-digit code",
+"انفعّل ✓ الدخول الجاي يطلب الرمز": "Turned on ✓ Your next sign-in will ask for the code",
+"توقف التحقق بخطوتين؟ الدخول يصير بكلمة السر بس.": "Turn off two-step verification? Sign-in will only need your password.",
+"وقّفه": "Turn off",
+"توقّف": "Turned off",
+"الرمز غلط أو انتهى · جرّب الرمز الجديد": "Wrong or expired code · try the new one",
+"ما قدرنا نتحقق · جرّب مرة ثانية": "Couldn't verify · try again",
+"ما فيه تطبيق تحقق مربوط": "No authenticator app is linked",
+"ما قدرنا نشيّك الحين · جرّب بعدين": "Couldn't check right now · try later",
+"صوّر الباركود، أو انسخ المفتاح تحت.": "Scan the QR code, or copy the key below.",
+"اكتب الرمز اللي يطلع (6 أرقام).": "Enter the 6-digit code it shows.",
 // DW-071: جديد 0.26
 "PDF أو Word أو PowerPoint أو Excel: التطبيق يعرف وش هو ويوديه لمكانه (كشف، جدول، برنامج الفريق، محاضرة)": "PDF, Word, PowerPoint or Excel: the app recognizes it and files it (statement, schedule, team program, lecture)",
 "المساعد بدون حساب": "Assistant without an account",
@@ -3697,10 +3719,10 @@ window.HAYATI_CONFIG = {
     }
     status.configured = true;
     const { data } = await sb.auth.getSession();
-    onSession(data.session);
+    await gate(data.session);
     sb.auth.onAuthStateChange((evt, s) => {
       if (evt === 'PASSWORD_RECOVERY') { status.recovery = true; }
-      onSession(s);
+      gate(s);
     });
   }
 
@@ -3713,6 +3735,55 @@ window.HAYATI_CONFIG = {
     for (const k of Object.keys(fresh)) state[k] = fresh[k];
     state.owner = owner;
     save();
+  }
+
+  // 🔐 التحقق بخطوتين (DW-078): الحساب اللي فعّله، ما يدخل ولا يتزامن لين يكتب الرمز من تطبيق التحقق
+  //   (والسيرفر نفسه يرفض بياناته بدون الرمز: سياسة «mfa when enrolled» بـ schema.sql)
+  async function aalNeeded() {
+    try {
+      const { data } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+      return !!(data && data.nextLevel === 'aal2' && data.currentLevel !== 'aal2');
+    } catch (e) { return false; }
+  }
+  async function gate(s) {
+    if (s && sb && sb.auth.mfa && await aalNeeded()) {
+      status.mfaNeeded = true; status.signedIn = false; status.email = s.user.email || '';
+      emit();
+      return;
+    }
+    if (status.mfaNeeded) { status.mfaNeeded = false; }
+    onSession(s);
+  }
+  const mfaError = (e) => new Error(/invalid|code|challenge/i.test((e && e.message) || '') ? 'الرمز غلط أو انتهى · جرّب الرمز الجديد' : 'ما قدرنا نتحقق · جرّب مرة ثانية');
+  async function mfaFactors() {
+    const { data, error } = await sb.auth.mfa.listFactors();
+    if (error) throw mfaError(error);
+    return ((data && data.totp) || []).filter((f) => f.status === 'verified');
+  }
+  async function mfaEnroll() {
+    const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Hayati ' + Date.now().toString(36) });
+    if (error) throw mfaError(error);
+    return { id: data.id, qr: data.totp.qr_code, secret: data.totp.secret };
+  }
+  async function mfaVerify(factorId, code) {
+    const { error } = await sb.auth.mfa.challengeAndVerify({ factorId, code: String(code).replace(/\D/g, '') });
+    if (error) throw mfaError(error);
+    const { data } = await sb.auth.getSession();
+    await gate(data.session);
+  }
+  async function mfaLogin(code) {
+    const f = (await mfaFactors())[0];
+    if (!f) throw new Error('ما فيه تطبيق تحقق مربوط');
+    await mfaVerify(f.id, code);
+  }
+  async function mfaDisable(factorId) {
+    const { error } = await sb.auth.mfa.unenroll({ factorId });
+    if (error) throw mfaError(error);
+  }
+  async function mfaCancel() {
+    status.mfaNeeded = false;
+    try { await sb.auth.signOut(); } catch (e) { /* تجاهل */ }
+    emit();
   }
 
   // 🔐 كل جهاز يعرف صاحب بياناته: بيانات حساب ما تطلع لحساب ثاني، ولا تعديلاته تنرفع لغيره
@@ -4154,7 +4225,7 @@ window.HAYATI_CONFIG = {
     subscribe: (fn) => { listeners.add(fn); return () => listeners.delete(fn); },
     upsert, remove, setSettings,
     init, getConfig, saveConfig, clearConfig,
-    signIn, signUp, signOut, sync, resolveMerge, signInWithProvider, exchangeCode, resetPassword, updatePassword, providers, checkProviders, localCount, getSeed, processInbox, smsToTransaction,
+    signIn, signUp, signOut, mfaFactors, mfaEnroll, mfaVerify, mfaLogin, mfaDisable, mfaCancel, sync, resolveMerge, signInWithProvider, exchangeCode, resetPassword, updatePassword, providers, checkProviders, localCount, getSeed, processInbox, smsToTransaction,
     ensureIngestToken, rotateIngestToken, exportJSON, importJSON, wipeAll,
   };
 })(window);
@@ -6535,7 +6606,7 @@ window.HAYATI_CONFIG = {
     openSheet({
       title: 'حسابك',
       cancelLabel: 'تم',
-      body: '<div class="account-page">' + hero + accountCard() + syncInfo() + '</div>',
+      body: '<div class="account-page">' + hero + accountCard() + X('accountExtra') + syncInfo() + '</div>',
       mount(root) {
         root.onclick = onSettingsClick;
         // Google/Apple: لو انفعّلوا بلوحة Supabase، الأزرار تطلع (نعيد رسم الصفحة لو تغيّر شي)
@@ -13479,6 +13550,96 @@ window.HAYATI_CONFIG = {
 
   E.localSkill = localSkill;
   E.skillsHelp = helpText;
+})();
+
+</script>
+  <script>/* js/features/twofa.js */
+// DW-078: التحقق بخطوتين للحساب (رمز من 6 أرقام من تطبيق تحقق: «كلمات السر» بالآيفون، Google Authenticator…)
+// التفعيل من صفحة «حسابك»، وبعدها أي دخول يطلب الرمز قبل ما تنفتح البيانات أو تتزامن
+(function () {
+  'use strict';
+
+  const A = window.App, E = window.Extras;
+  if (!A || !E) return;
+  const { S, I, h } = A;
+  const on = () => !!(S.status && S.status.signedIn && S.mfaFactors);
+
+  // ---------- بصفحة «حسابك» ----------
+  const box = () => '<div class="group-title">' + I('key') + 'التحقق بخطوتين</div><div class="card" id="mfaBox"><p class="small muted" style="margin:0">…</p></div>';
+  async function fill() {
+    const el = document.getElementById('mfaBox');
+    if (!el) return;
+    let list;
+    try { list = await S.mfaFactors(); } catch (e) { el.innerHTML = '<p class="small muted" style="margin:0">ما قدرنا نشيّك الحين · جرّب بعدين</p>'; return; }
+    el.innerHTML = list.length
+      ? '<p style="margin:0 0 10px"><b>مفعّل ✓</b></p><p class="small muted" style="margin:0 0 12px">أي دخول جديد لحسابك يطلب الرمز من تطبيق التحقق.</p>' +
+        '<button class="btn ghost block" data-set="mfa-off" data-id="' + h(list[0].id) + '">وقّف التحقق بخطوتين</button>'
+      : '<p class="small muted" style="margin:0 0 12px">لو أحد عرف كلمة سرك، ما يقدر يدخل بدون رمز من جوالك.</p>' +
+        '<button class="btn primary block" data-set="mfa-on">' + I('key') + 'فعّله</button>';
+  }
+  const prevExtra = E.accountExtra;
+  E.accountExtra = (...a) => (prevExtra ? prevExtra(...a) : '') + (on() ? (setTimeout(fill, 0), box()) : '');
+
+  const prevAct = E.settingsAction;
+  E.settingsAction = async (act, root, b) => {
+    if (act === 'mfa-on') { enroll(); return true; }
+    if (act === 'mfa-off') {
+      if (!(await A.ask('توقف التحقق بخطوتين؟ الدخول يصير بكلمة السر بس.', 'وقّفه'))) return true;
+      try { await S.mfaDisable(b.dataset.id); A.toast('توقّف'); fill(); } catch (e) { A.toast(e.message); }
+      return true;
+    }
+    return prevAct ? prevAct(act, root, b) : false;
+  };
+
+  // ---------- التفعيل: باركود ← رمز ← تأكيد ----------
+  async function enroll() {
+    let f;
+    try { f = await S.mfaEnroll(); } catch (e) { A.toast(e.message); return; }
+    A.closeSheet();
+    setTimeout(() => A.openSheet({
+      title: 'فعّل التحقق بخطوتين', saveLabel: 'تأكيد',
+      body: '<ol class="steps"><li>افتح تطبيق تحقق: <b>كلمات السر</b> بالآيفون (رموز التحقق)، أو <b>Google Authenticator</b>.</li>' +
+        '<li>صوّر الباركود، أو انسخ المفتاح تحت.</li><li>اكتب الرمز اللي يطلع (6 أرقام).</li></ol>' +
+        '<div style="background:#fff;border-radius:16px;padding:12px;width:220px;margin:10px auto"><img id="mfaQr" alt="باركود التحقق" style="width:196px;height:196px;display:block"></div>' +
+        '<div class="copy-box"><code style="direction:ltr;word-break:break-all">' + h(f.secret) + '</code><button type="button" data-copy="' + h(f.secret) + '">' + I('copy') + 'نسخ</button></div>' +
+        '<div class="field" style="margin-top:12px"><label>الرمز</label><input name="mfa_code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" style="direction:ltr;text-align:center;font-size:22px;letter-spacing:6px"></div>',
+      mount(root) {
+        root.querySelector('#mfaQr').src = f.qr;
+        root.querySelector('[data-copy]').onclick = (e) => { try { navigator.clipboard.writeText(e.currentTarget.dataset.copy); A.toast('انتسخ ✓'); } catch (x) { /* تجاهل */ } };
+      },
+      async onSave(root) {
+        const code = A.val(root, 'mfa_code');
+        if (!/^\d{6}$/.test(code)) throw new Error('اكتب الرمز (6 أرقام)');
+        await S.mfaVerify(f.id, code);
+        A.toast('انفعّل ✓ الدخول الجاي يطلب الرمز');
+      },
+    }), 280);
+  }
+
+  // ---------- الدخول: الرمز قبل البيانات ----------
+  let asking = false;
+  function askCode() {
+    if (asking) return;
+    asking = true;
+    let done = false;
+    A.openSheet({
+      title: 'رمز التحقق', saveLabel: 'دخول',
+      body: '<p class="small muted" style="margin:0 4px 12px">حسابك عليه تحقق بخطوتين. اكتب الرمز من تطبيق التحقق.</p>' +
+        '<div class="field"><input name="mfa_code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" style="direction:ltr;text-align:center;font-size:24px;letter-spacing:8px"></div>',
+      async onSave(root) {
+        const code = A.val(root, 'mfa_code');
+        if (!/^\d{6}$/.test(code)) throw new Error('اكتب الرمز (6 أرقام)');
+        await S.mfaLogin(code);
+        done = true; asking = false;
+        A.toast('أهلاً 👋');
+      },
+    });
+    // سكّر النافذة بدون رمز ← نطلع من الحساب (ما يبقى نص دخول)
+    document.getElementById('sheet').addEventListener('close', () => { asking = false; if (!done && S.status.mfaNeeded) S.mfaCancel(); }, { once: true });
+  }
+  S.subscribe(() => { if (S.status.mfaNeeded) setTimeout(askCode, 300); });
+  if (S.status && S.status.mfaNeeded) setTimeout(askCode, 300);
+  E._askMfa = askCode; // للاختبار
 })();
 
 </script>

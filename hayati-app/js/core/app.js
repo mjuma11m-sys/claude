@@ -2014,7 +2014,7 @@
     openSheet({
       title: 'حسابك',
       cancelLabel: 'تم',
-      body: '<div class="account-page">' + hero + accountCard() + syncInfo() + '</div>',
+      body: '<div class="account-page">' + hero + accountCard() + X('accountExtra') + syncInfo() + '</div>',
       mount(root) {
         root.onclick = onSettingsClick;
         // Google/Apple: لو انفعّلوا بلوحة Supabase، الأزرار تطلع (نعيد رسم الصفحة لو تغيّر شي)

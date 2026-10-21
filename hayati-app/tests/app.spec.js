@@ -1445,6 +1445,14 @@ const fakeSupabase = () => {
         exchangeCodeForSession: async (code) => { srv.calls.push(['exchange', code]); window.__signInAs('u-apple', 'a@privaterelay.appleid.com', 'apple'); return { error: null }; },
         resetPasswordForEmail: async (email, o) => { srv.calls.push(['reset', email, o.redirectTo]); return { error: null }; },
         updateUser: async () => ({ error: null }),
+        // DW-078: تحقق بخطوتين وهمي: الرمز الصح 123456
+        mfa: {
+          getAuthenticatorAssuranceLevel: async () => ({ data: { currentLevel: srv.aal || 'aal1', nextLevel: (srv.factors || []).some((f) => f.status === 'verified') ? 'aal2' : 'aal1' }, error: null }),
+          listFactors: async () => ({ data: { totp: (srv.factors || []).slice() }, error: null }),
+          enroll: async () => { srv.factors = (srv.factors || []).concat([{ id: 'f1', status: 'unverified' }]); return { data: { id: 'f1', totp: { qr_code: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"/>', secret: 'JBSWY3DPEHPK3PXP' } }, error: null }; },
+          challengeAndVerify: async ({ factorId, code }) => { if (code !== '123456') return { error: { message: 'Invalid TOTP code entered' } }; srv.factors.find((f) => f.id === factorId).status = 'verified'; srv.aal = 'aal2'; srv.calls.push(['mfa-ok']); srv.cb && srv.cb('MFA_CHALLENGE_VERIFIED', srv.session); return { error: null }; },
+          unenroll: async ({ factorId }) => { srv.factors = srv.factors.filter((f) => f.id !== factorId); srv.aal = 'aal1'; return { error: null }; },
+        },
       },
       from: q, rpc: async () => ({ error: null }),
       channel: () => ({ on() { return this; }, subscribe() { return this; } }), removeChannel() {},
@@ -2884,6 +2892,35 @@ test('iPhone (guideline 4.8): Google sign-in only shows together with Sign in wi
   const list = (cfg) => page.evaluate((c) => { window.HAYATI_CONFIG.HIDE_PROVIDERS = []; window.HAYATI_CONFIG.PROVIDERS = c; return App.S.providers(); }, cfg);
   expect(await list(['google'])).toEqual([]);
   expect(await list(['apple', 'google'])).toEqual(['apple', 'google']);
+});
+
+test('two-step verification (DW-078): turn it on with a code, then a new sign-in waits for the code before any sync; closing signs out', async ({ page }) => {
+  await useFakeSupabase(page);
+  await open(page);
+  await store(page, () => { App.S.setSettings({ onboarded: true }); window.__srv.aal = 'aal1'; window.__signInAs('u-sara', 'sara@example.com'); });
+  await expect.poll(() => store(page, () => App.S.status.signedIn)).toBe(true);
+  await store(page, () => App.accountSheet());
+  await page.click('[data-set="mfa-on"]');
+  await expect(page.locator('#sheetTitle')).toHaveText('فعّل التحقق بخطوتين');
+  await expect(page.locator('#sheetBody code')).toContainText('JBSWY3DPEHPK3PXP');
+  await page.fill('[name=mfa_code]', '000000'); await page.click('#sheetSave');
+  await expect(page.locator('#toast')).toContainText('الرمز غلط');
+  await page.fill('[name=mfa_code]', '123456'); await page.click('#sheetSave');
+  await expect(page.locator('#toast')).toContainText('انفعّل');
+  // دخول جديد (aal1): يطلب الرمز، والحساب مو داخل ولا يتزامن
+  await store(page, () => { window.__signInAs(null); window.__srv.aal = 'aal1'; window.__srv.calls = []; window.__signInAs('u-sara', 'sara@example.com'); });
+  await expect(page.locator('#sheetTitle')).toHaveText('رمز التحقق', { timeout: 5000 });
+  expect(await store(page, () => [App.S.status.signedIn, App.S.status.mfaNeeded])).toEqual([false, true]);
+  expect(await store(page, () => window.__srv.calls.filter((c) => c[0] === 'upsert').length)).toBe(0);
+  await page.fill('[name=mfa_code]', '123456'); await page.click('#sheetSave');
+  await expect.poll(() => store(page, () => App.S.status.signedIn)).toBe(true);
+  expect(await store(page, () => App.S.status.mfaNeeded)).toBe(false);
+  // مرة ثانية، ويسكّر بدون رمز ← يطلع
+  await store(page, () => { window.__signInAs(null); window.__srv.aal = 'aal1'; window.__signInAs('u-sara', 'sara@example.com'); });
+  await expect(page.locator('#sheetTitle')).toHaveText('رمز التحقق', { timeout: 5000 });
+  await page.click('#sheetCancel');
+  await expect.poll(() => store(page, () => window.__srv.calls.some((c) => c[0] === 'signOut'))).toBe(true);
+  expect(await store(page, () => App.S.status.signedIn)).toBe(false);
 });
 
 test('account page (DW-035): Google shows up once Supabase enables it, trips follow the account to another device, Umrah stays on the device', async ({ page }) => {

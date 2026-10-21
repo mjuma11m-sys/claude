@@ -349,3 +349,16 @@ begin
 end $$;
 revoke all on function public.delete_my_account() from public, anon;
 grant execute on function public.delete_my_account() to authenticated;
+
+-- 🔐 التحقق بخطوتين (DW-078): اللي فعّله، بياناته ما تنقرا ولا تنكتب إلا بجلسة aal2 (بعد رمز تطبيق التحقق)
+--   (نفس طريقة توثيق Supabase: سياسة restrictive فوق «own rows»؛ اللي ما فعّله ما يتأثر)
+do $$
+declare t text;
+begin
+  foreach t in array array['transactions','courses','tasks','subscriptions','goals','grades','study_sessions','debts','habits','daily','lifts','body','cards','events','shopping','journal','matches','lectures','trips','settings','sms_inbox'] loop
+    execute format('drop policy if exists "mfa when enrolled" on public.%I', t);
+    execute format($p$create policy "mfa when enrolled" on public.%I as restrictive for all to authenticated
+      using (array[(select auth.jwt()->>'aal')] <@ (select case when count(id) > 0 then array['aal2'] else array['aal1','aal2'] end from auth.mfa_factors where user_id = (select auth.uid()) and status = 'verified'))
+      with check (array[(select auth.jwt()->>'aal')] <@ (select case when count(id) > 0 then array['aal2'] else array['aal1','aal2'] end from auth.mfa_factors where user_id = (select auth.uid()) and status = 'verified'))$p$, t);
+  end loop;
+end $$;

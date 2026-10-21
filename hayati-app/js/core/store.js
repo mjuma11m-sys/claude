@@ -249,10 +249,10 @@
     }
     status.configured = true;
     const { data } = await sb.auth.getSession();
-    onSession(data.session);
+    await gate(data.session);
     sb.auth.onAuthStateChange((evt, s) => {
       if (evt === 'PASSWORD_RECOVERY') { status.recovery = true; }
-      onSession(s);
+      gate(s);
     });
   }
 
@@ -265,6 +265,55 @@
     for (const k of Object.keys(fresh)) state[k] = fresh[k];
     state.owner = owner;
     save();
+  }
+
+  // 🔐 التحقق بخطوتين (DW-078): الحساب اللي فعّله، ما يدخل ولا يتزامن لين يكتب الرمز من تطبيق التحقق
+  //   (والسيرفر نفسه يرفض بياناته بدون الرمز: سياسة «mfa when enrolled» بـ schema.sql)
+  async function aalNeeded() {
+    try {
+      const { data } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+      return !!(data && data.nextLevel === 'aal2' && data.currentLevel !== 'aal2');
+    } catch (e) { return false; }
+  }
+  async function gate(s) {
+    if (s && sb && sb.auth.mfa && await aalNeeded()) {
+      status.mfaNeeded = true; status.signedIn = false; status.email = s.user.email || '';
+      emit();
+      return;
+    }
+    if (status.mfaNeeded) { status.mfaNeeded = false; }
+    onSession(s);
+  }
+  const mfaError = (e) => new Error(/invalid|code|challenge/i.test((e && e.message) || '') ? 'الرمز غلط أو انتهى · جرّب الرمز الجديد' : 'ما قدرنا نتحقق · جرّب مرة ثانية');
+  async function mfaFactors() {
+    const { data, error } = await sb.auth.mfa.listFactors();
+    if (error) throw mfaError(error);
+    return ((data && data.totp) || []).filter((f) => f.status === 'verified');
+  }
+  async function mfaEnroll() {
+    const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Hayati ' + Date.now().toString(36) });
+    if (error) throw mfaError(error);
+    return { id: data.id, qr: data.totp.qr_code, secret: data.totp.secret };
+  }
+  async function mfaVerify(factorId, code) {
+    const { error } = await sb.auth.mfa.challengeAndVerify({ factorId, code: String(code).replace(/\D/g, '') });
+    if (error) throw mfaError(error);
+    const { data } = await sb.auth.getSession();
+    await gate(data.session);
+  }
+  async function mfaLogin(code) {
+    const f = (await mfaFactors())[0];
+    if (!f) throw new Error('ما فيه تطبيق تحقق مربوط');
+    await mfaVerify(f.id, code);
+  }
+  async function mfaDisable(factorId) {
+    const { error } = await sb.auth.mfa.unenroll({ factorId });
+    if (error) throw mfaError(error);
+  }
+  async function mfaCancel() {
+    status.mfaNeeded = false;
+    try { await sb.auth.signOut(); } catch (e) { /* تجاهل */ }
+    emit();
   }
 
   // 🔐 كل جهاز يعرف صاحب بياناته: بيانات حساب ما تطلع لحساب ثاني، ولا تعديلاته تنرفع لغيره
@@ -706,7 +755,7 @@
     subscribe: (fn) => { listeners.add(fn); return () => listeners.delete(fn); },
     upsert, remove, setSettings,
     init, getConfig, saveConfig, clearConfig,
-    signIn, signUp, signOut, sync, resolveMerge, signInWithProvider, exchangeCode, resetPassword, updatePassword, providers, checkProviders, localCount, getSeed, processInbox, smsToTransaction,
+    signIn, signUp, signOut, mfaFactors, mfaEnroll, mfaVerify, mfaLogin, mfaDisable, mfaCancel, sync, resolveMerge, signInWithProvider, exchangeCode, resetPassword, updatePassword, providers, checkProviders, localCount, getSeed, processInbox, smsToTransaction,
     ensureIngestToken, rotateIngestToken, exportJSON, importJSON, wipeAll,
   };
 })(window);
