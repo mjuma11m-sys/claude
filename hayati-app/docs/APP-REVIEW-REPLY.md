@@ -58,3 +58,13 @@ Thank you,
 | 9 | وقّف التسجيل |
 
 **بعدها:** سوّ الحساب التجريبي مرة ثانية (لأنك حذفته بالخطوة 8) وحط بياناته بـ **Sign-In Information**.
+
+---
+
+## 0.26 — الحالة الحالية (Waiting for Review)
+- ما فيه رد ولا Resubmit: المعلومات تنحط بـ **App Review Information** حق 0.26 وتنحفظ بـ **Save** بس.
+- **Sign-In:** Sign-in required ✅ · `mjuma11.m+review@gmail.com` · كلمة السر يكتبها المالك.
+- **Notes:** نفس الرد فوق بدون «Attached»، ومعاه سطر رابط فيديو (Google Drive، Anyone with the link)، وسطرين زيادة لـ 0.26:
+  - `Any file: Tools -> "Read any file" (PDF, Word, PowerPoint, Excel)`
+  - `Assistant: the sparkle button at the top -> type: coffee 1.5 (it asks before saving anything)`
+- **ممنوع:** Remove from Review (يرجّع الطابور من الصفر).
