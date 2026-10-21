@@ -6,7 +6,7 @@ import path from "node:path";
 
 const OUT = path.resolve(process.argv[2] ?? "renders");
 const HERE = path.dirname(new URL(import.meta.url).pathname);
-const FPS = 30, LEN = 13;
+const FPS = 30, LEN = 11;
 
 const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
 const p = await b.newPage({ viewport: { width: 540, height: 960 }, deviceScaleFactor: 2 });

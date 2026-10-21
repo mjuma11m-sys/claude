@@ -15,17 +15,19 @@ body{font-family:Plex,sans-serif;color:var(--cream);position:relative}
 #word{top:530px;text-align:center;font-weight:700;font-size:64px;line-height:1.2}
 #latin{top:620px;text-align:center;font-size:17px;color:var(--gold);direction:ltr;font-weight:400}
 #latin b{font-weight:700}
-#by{top:652px;text-align:center;font-size:12px;color:rgba(245,242,235,.6);direction:ltr;letter-spacing:3px}
+#tagline{top:652px;text-align:center;font-size:26px;font-weight:400;color:rgba(245,242,235,.92)}
+#by{top:700px;text-align:center;font-size:18px;color:rgba(245,242,235,.7);direction:ltr;letter-spacing:4px}
 #phone{position:absolute;left:50%;top:470px;width:280px;height:560px;margin:-280px 0 0 -140px;border-radius:44px;background:#0A1120;padding:12px;box-sizing:border-box}
 #screen{width:100%;height:100%;border-radius:34px;background:linear-gradient(170deg,#EFE8DA,#E2D7C2);position:relative;overflow:hidden}
-.tile{position:absolute;width:52px;height:52px;border-radius:14px;background:rgba(20,33,58,.12)}
-.lbl{position:absolute;width:70px;text-align:center;font-size:9px;color:#14213A;font-weight:700}
+.tile{position:absolute;width:52px;height:52px;border-radius:14px}
+.lbl{position:absolute;width:76px;text-align:center;font-size:12px;color:#14213A;font-weight:700}
 #cap{top:120px;text-align:center;font-size:30px;font-weight:700}
 #end{position:absolute;inset:0;display:grid;place-items:center}
 #endIn{display:grid;justify-items:center;gap:10px;margin-top:-40px}
 #endIn svg{width:150px;height:150px}
 #endIn .n{font-size:58px;font-weight:700;line-height:1.1}
-#endIn .w{font-size:15px;color:var(--gold);letter-spacing:4px;direction:ltr}
+#endIn .d{font-size:24px;font-weight:400;opacity:.92}
+#endIn .w{font-size:18px;color:var(--gold);letter-spacing:4px;direction:ltr}
 #endIn .tag{margin-top:26px;border:1.5px solid var(--gold);color:var(--gold);border-radius:999px;padding:6px 18px;font-size:15px}
 </style></head>
 <body>
@@ -48,11 +50,13 @@ body{font-family:Plex,sans-serif;color:var(--cream);position:relative}
 
 <div id="word" class="abs">إداراتي</div>
 <div id="latin" class="abs"><b>IDARATI</b></div>
+<div id="tagline" class="abs">يرتّب إيجاراتك وعقاراتك</div>
 <div id="by" class="abs">BY WADQA</div>
 
 <div id="end"><div id="endIn">
   <svg viewBox="140 100 232 330"><rect x="178" y="112" width="156" height="30" rx="6" fill="#C9963A"/><rect x="194" y="142" width="124" height="256" fill="#C9963A"/><rect x="212" y="164" width="18" height="96" rx="5" fill="#14213A"/><rect x="247" y="164" width="18" height="96" rx="5" fill="#14213A"/><rect x="282" y="164" width="18" height="96" rx="5" fill="#14213A"/><path d="M234 398 V344 Q234 316 256 308 Q278 316 278 344 V398 Z" fill="#14213A"/><rect x="146" y="394" width="220" height="24" rx="10" fill="#C9963A"/></svg>
   <div class="n">إداراتي</div>
+  <div class="d">يرتّب إيجاراتك وعقاراتك</div>
   <div class="w">IDARATI · BY WADQA</div>
   <div class="tag">قيد التطوير · نسخة تجريبية</div>
 </div></div>
@@ -66,15 +70,16 @@ const inout = (x) => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
 const back = (x) => { const c = 1.7; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
 
 // شاشة الجوال: 4×5 مربعات فاضية، والخانة (1،1) لإداراتي
+const TINTS = ["#D7C6A6", "#BFCBD0", "#D3BBAE", "#BACCBE", "#CBC3D6", "#DCCB9F", "#C9D2C1"];
 const SCR = $("#screen"), cols = 4, rows = 5, gx = 62, gy = 84, x0 = 18, y0 = 70;
 const SLOT = { c: 1, r: 1 };
 for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
   if (r === SLOT.r && c === SLOT.c) continue;
-  const d = document.createElement("div"); d.className = "tile";
+  const d = document.createElement("div"); d.className = "tile"; d.style.background = TINTS[(r * cols + c) % TINTS.length];
   d.style.right = (x0 + c * gx) + "px"; d.style.top = (y0 + r * gy) + "px"; SCR.appendChild(d);
 }
 const lbl = document.createElement("div"); lbl.className = "lbl"; lbl.textContent = "إداراتي";
-lbl.style.right = (x0 + SLOT.c * gx - 9) + "px"; lbl.style.top = (y0 + SLOT.r * gy + 56) + "px"; SCR.appendChild(lbl);
+lbl.style.right = (x0 + SLOT.c * gx - 12) + "px"; lbl.style.top = (y0 + SLOT.r * gy + 56) + "px"; SCR.appendChild(lbl);
 const tileBg = document.createElement("div"); tileBg.className = "tile";
 tileBg.style.background = "#14213A"; tileBg.style.right = (x0 + SLOT.c * gx) + "px"; tileBg.style.top = (y0 + SLOT.r * gy) + "px"; SCR.appendChild(tileBg);
 
@@ -83,50 +88,52 @@ const slotCX = 540 / 2 + 140 - 12 - (x0 + SLOT.c * gx + 26);
 const slotCY = 470 - 280 + 12 + (y0 + SLOT.r * gy + 26);
 
 window.render = (t) => {
-  $("#pattern").style.opacity = .07 * seg(t, 0, 1.2) * (1 - seg(t, 8.2, 8.8)) + .07 * seg(t, 10.9, 11.6);
-  // البناء
-  const base = out(seg(t, .15, 1.1));
+  // الهوك: البرج يطلع من أول فريم (DW-034 v2)
+  $("#pattern").style.opacity = .07 * (1 - seg(t, 5.6, 6.2)) + .07 * seg(t, 8.8, 9.4);
+  const base = .55 + .45 * out(seg(t, 0, .4));
   $("#base").setAttribute("transform", `translate(256 406) scale(${base} 1) translate(-256 -406)`);
-  const rise = out(seg(t, .9, 2.4));
+  const rise = .25 + .75 * out(seg(t, 0, 1.15));
   $("#riseR").setAttribute("y", 398 - 256 * rise); $("#riseR").setAttribute("height", 256 * rise + 1);
-  const cp = seg(t, 2.3, 2.95);
+  const cp = seg(t, 1.05, 1.6);
   $("#cap0").setAttribute("transform", `translate(0 ${-70 * (1 - back(cp))})`); $("#cap0").style.opacity = cp > 0 ? 1 : 0;
   document.querySelectorAll(".vent").forEach((v, i) => {
-    const k = out(seg(t, 2.75 + i * .14, 3.1 + i * .14));
+    const k = out(seg(t, 1.45 + i * .13, 1.75 + i * .13));
     v.setAttribute("transform", `translate(0 164) scale(1 ${k}) translate(0 -164)`);
   });
-  const dr = out(seg(t, 3.25, 3.8));
+  const dr = out(seg(t, 1.9, 2.3));
   $("#door").setAttribute("transform", `translate(0 398) scale(1 ${dr}) translate(0 -398)`);
-  $("#glow").style.opacity = .9 * seg(t, 3.6, 4.1) * (1 - seg(t, 4.4, 6)) + .25 * seg(t, 6, 7) * (1 - seg(t, 8, 8.6));
+  $("#glow").style.opacity = .9 * seg(t, 2.1, 2.5) * (1 - seg(t, 2.8, 4.2)) + .25 * seg(t, 4.2, 5) * (1 - seg(t, 5.6, 6.1));
 
-  // الاسم
-  const w = out(seg(t, 4.2, 4.9)), wl = out(seg(t, 4.6, 5.3)), wb = out(seg(t, 5.5, 6.1)), wo = 1 - seg(t, 7.6, 8.2);
+  // الاسم + سطر يشرح التطبيق
+  const w = out(seg(t, 2.5, 3.1)), wl = out(seg(t, 2.8, 3.4)), wt = out(seg(t, 3.25, 3.85)), wb = out(seg(t, 3.7, 4.2)), wo = 1 - seg(t, 5.5, 6);
   $("#word").style.opacity = w * wo; $("#word").style.transform = `translateY(${24 * (1 - w)}px)`;
   $("#latin").style.opacity = wl * wo; $("#latin").style.letterSpacing = (16 - 10 * wl) + "px";
+  $("#tagline").style.opacity = wt * wo; $("#tagline").style.transform = `translateY(${14 * (1 - wt)}px)`;
   $("#by").style.opacity = wb * wo;
 
-  // الشعار يطلع لفوق شوي لما يجي الاسم، وبعدين يطير للجوال
-  const lift = inout(seg(t, 4.0, 4.8)) * (1 - seg(t, 8.3, 8.31));
-  const fly = inout(seg(t, 8.6, 9.7));
-  const bx = 270, by = 360 - 40 * lift;
-  const sc0 = 1 - .12 * lift;
-  const scFly = 44 / 308; // ارتفاع البرجيل داخل الأيقونة
+  // الشعار يرتفع للاسم، يصغر أول، بعدين يطير للخانة
+  const lift = inout(seg(t, 2.3, 3.0));
+  const shrink = inout(seg(t, 5.7, 6.5));
+  const fly = inout(seg(t, 6.5, 7.4));
+  const bx = 270, by = 360 - 60 * lift;
+  const sc0 = (1 - .14 * lift) * (1 - .55 * shrink);
+  const scFly = 44 / 308;
   const x = bx + (slotCX - bx) * fly, y = by + (slotCY - by) * fly, sc = sc0 + (scFly - sc0) * fly;
   const lg = $("#logo");
   lg.style.transform = `translate(${x - 270}px, ${y - 360}px) scale(${sc})`;
-  lg.style.opacity = t < 10.8 ? 1 : 1 - seg(t, 10.8, 11.2);
+  lg.style.opacity = 1 - seg(t, 8.6, 9.0);
 
   // الجوال
-  const ph = out(seg(t, 8.2, 8.9)), phOut = seg(t, 10.7, 11.2);
+  const ph = out(seg(t, 6.0, 6.7)), phOut = seg(t, 8.5, 9.0);
   $("#phone").style.opacity = ph * (1 - phOut);
   $("#phone").style.transform = `translateY(${40 * (1 - ph)}px) scale(${1 - .06 * phOut})`;
-  tileBg.style.opacity = seg(t, 9.4, 9.8); lbl.style.opacity = seg(t, 9.6, 10);
-  const cap = out(seg(t, 9.6, 10.1));
+  tileBg.style.opacity = seg(t, 7.15, 7.5); lbl.style.opacity = seg(t, 7.3, 7.7);
+  const cap = out(seg(t, 7.3, 7.8));
   $("#cap").style.opacity = cap * (1 - phOut); $("#cap").style.transform = `translateY(${16 * (1 - cap)}px)`;
 
   // الختام
-  const e = out(seg(t, 11.1, 11.8));
-  $("#end").style.opacity = e * (1 - seg(t, 12.6, 13));
+  const e = out(seg(t, 8.9, 9.5));
+  $("#end").style.opacity = e * (1 - seg(t, 10.7, 11));
   $("#endIn").style.transform = `scale(${.94 + .06 * e})`;
 };
 render(0);
