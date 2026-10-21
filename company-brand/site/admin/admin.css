@@ -130,3 +130,23 @@ form.card { display: grid; gap: 12px; }
 @media (prefers-reduced-motion: no-preference) {
   .bar i, .chart .in, .chart .out { transition: width .5s ease, height .5s ease; }
 }
+
+/* «الملفات» (DW-053) */
+.doc { line-height: 1.85; overflow-wrap: anywhere; }
+.doc h2 { font-size: 22px; margin: 0 0 10px; color: var(--bone); }
+.doc h3 { font-size: 17px; margin: 22px 0 8px; color: var(--gold); }
+.doc h4 { font-size: 15px; margin: 16px 0 6px; }
+.doc p, .doc ul, .doc ol, .doc blockquote { margin: 0 0 10px; }
+.doc ul, .doc ol { padding-inline-start: 22px; }
+.doc code { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 12.5px; background: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 0 5px; unicode-bidi: isolate; }
+.doc pre { background: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; overflow-x: auto; margin: 0 0 12px; text-align: left; }
+.doc pre code { border: 0; padding: 0; background: none; font-size: 12.5px; line-height: 1.6; white-space: pre; }
+.doc blockquote { border-inline-start: 3px solid var(--gold); padding: 4px 12px; color: var(--mist); font-size: 13px; }
+.doc .tbl { overflow-x: auto; margin: 0 0 12px; }
+.doc table { border-collapse: collapse; width: 100%; font-size: 13.5px; min-width: 420px; }
+.doc th, .doc td { border: 1px solid var(--line); padding: 6px 10px; text-align: start; vertical-align: top; }
+.doc th { background: var(--slate-2); color: var(--gold); }
+.doc .shots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 6px 0 12px; max-width: 600px; }
+.doc figure { margin: 0; }
+.doc figure img { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); display: block; }
+.doc figcaption { font-size: 12px; color: var(--mist); text-align: center; margin-top: 4px; }

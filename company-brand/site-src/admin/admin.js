@@ -13,7 +13,7 @@
   const prodName = (k) => (L.PRODUCTS.find((p) => p[0] === k) || [k, k])[1];
   const periodName = (k) => (L.PERIODS.find((p) => p[0] === k) || [k, k])[1];
   const money = (f, cls = '') => '<span class="num ' + cls + '">' + L.fmt(f) + '</span>';
-  const TABS = [['summary', 'الملخص'], ['ledger', 'الدفتر'], ['budget', 'الميزانية'], ['recurring', 'الاشتراكات'], ['leads', 'الطلبات']];
+  const TABS = [['summary', 'الملخص'], ['ledger', 'الدفتر'], ['budget', 'الميزانية'], ['recurring', 'الاشتراكات'], ['leads', 'الطلبات'], ['files', 'الملفات']];
   // أسعار تقديرية تعبّي النموذج بس — المالك يتأكد من السعر قبل الحفظ
   const PRESETS = [
     ['Apple Developer Program', 9900, 'USD', 'year', 'رسوم المتاجر', 'hayati'],
@@ -23,7 +23,7 @@
     ['دومين wadqa', 1500, 'USD', 'year', 'دومين وإيميل', 'wadqa-site'],
   ];
 
-  const S = { demo: /[?&]demo=1\b/.test(location.search), sb: null, email: '', entries: [], budgets: [], recurring: [], leads: [], month: L.ymOf(today()), edit: null, form: null, kind: 'expense', q: '', leadProduct: '' };
+  const S = { demo: /[?&]demo=1\b/.test(location.search), sb: null, email: '', entries: [], budgets: [], recurring: [], leads: [], docs: [], docBody: {}, month: L.ymOf(today()), edit: null, form: null, kind: 'expense', q: '', leadProduct: '' };
 
   // ———— البيانات ————
   function demoData() {
@@ -56,17 +56,25 @@
   const store = {
     async load() {
       if (S.demo) return;
-      const [e, b, r, l] = await Promise.all([
+      const [e, b, r, l, d] = await Promise.all([
         q(S.sb.from('wadqa_entries').select('*').order('occurred_on', { ascending: false }).order('created_at', { ascending: false }).limit(5000)),
         q(S.sb.from('wadqa_budgets').select('*')),
         q(S.sb.from('wadqa_recurring').select('*').order('created_at')),
         q(S.sb.rpc('wadqa_admin_leads')),
+        q(S.sb.from('wadqa_docs').select('slug,title,updated_at').order('sort')),
       ]);
-      S.entries = e; S.budgets = b; S.recurring = r; S.leads = l || [];
+      S.entries = e; S.budgets = b; S.recurring = r; S.leads = l || []; S.docs = d || [];
     },
     async saveEntry(row) {
       if (S.demo) { if (row.id) Object.assign(S.entries.find((x) => x.id === row.id), row); else S.entries.unshift({ ...row, id: Math.random().toString(36).slice(2) }); return; }
       if (row.id) { const { id, ...rest } = row; await q(S.sb.from('wadqa_entries').update(rest).eq('id', id)); } else await q(S.sb.from('wadqa_entries').insert(row));
+    },
+    // نص الملف ينحمّل لما ينفتح بس (القائمة خفيفة)
+    async doc(slug) {
+      if (S.docBody[slug] != null) return S.docBody[slug];
+      if (S.demo) return '';
+      const row = await q(S.sb.from('wadqa_docs').select('body').eq('slug', slug).single());
+      return (S.docBody[slug] = row.body);
     },
     async removeEntry(id) { if (S.demo) { S.entries = S.entries.filter((x) => x.id !== id); return; } await q(S.sb.from('wadqa_entries').delete().eq('id', id)); },
     async saveBudget(category, monthly_fils) {
@@ -162,7 +170,8 @@
   }
 
   // ———— الشاشات ————
-  const tab = () => { const t = location.hash.slice(1); return TABS.some((x) => x[0] === t) ? t : 'summary'; };
+  const tab = () => { const t = location.hash.slice(1).split('/')[0]; return TABS.some((x) => x[0] === t) ? t : 'summary'; };
+  const docSlug = () => decodeURIComponent(location.hash.slice(1).split('/')[1] || '');
   function nav() {
     const t = tab();
     return '<nav class="tabs" aria-label="أقسام اللوحة">' + TABS.map(([k, n]) => '<a href="#' + k + '"' + (k === t ? ' aria-current="page"' : '') + '>' + n + (k === 'leads' && S.leads.length ? '<span class="count num">' + S.leads.length + '</span>' : '') + '</a>').join('') + '</nav>';
@@ -287,8 +296,25 @@
         : '<div class="empty">ما وصلت طلبات للحين.</div>');
   }
 
+  // «الملفات»: شرح تقني لكل تطبيق (DW-053). النص من القاعدة بنفس قفل aal2، والعرض بعارض آمن (docs.js)
+  function filesView() {
+    const slug = docSlug();
+    if (S.demo) return '<div class="empty">الملفات التقنية تنقرا من القاعدة بعد الدخول بكلمة السر ورمز الجوال، فما تطلع بالوضع التجريبي.</div>';
+    if (slug) {
+      const d = S.docs.find((x) => x.slug === slug);
+      const body = S.docBody[slug];
+      return '<div class="toolbar"><a class="btn" href="#files">→ كل الملفات</a>' + (d ? '<span class="note">آخر تحديث <span class="num">' + h(String(d.updated_at).slice(0, 10)) + '</span></span>' : '') + '</div>' +
+        (body == null ? '<p class="muted center">يحمّل…</p>' : '<article class="card doc">' + window.AdminDocs.render(body) + '</article>');
+    }
+    return '<p class="note">ملف لكل تطبيق: الفكرة، التقنيات، الهيكل، البيانات والأمان، أمثلة من الكود، والتشغيل والنشر.</p>' +
+      (S.docs.length ? '<ul class="list">' + S.docs.map((d) => '<li><div class="main"><b>' + h(d.title) + '</b><small>آخر تحديث <span class="num">' + h(String(d.updated_at).slice(0, 10)) + '</span></small></div><a class="btn" href="#files/' + encodeURIComponent(d.slug) + '">افتح</a></li>').join('') + '</ul>'
+        : '<div class="empty">ما فيه ملفات للحين.</div>');
+  }
+
   function render() {
-    const t = tab(), views = { summary: summaryView, ledger: ledgerView, budget: budgetView, recurring: recurringView, leads: leadsView };
+    const t = tab(), views = { summary: summaryView, ledger: ledgerView, budget: budgetView, recurring: recurringView, leads: leadsView, files: filesView };
+    const slug = t === 'files' && docSlug();
+    if (slug && !S.demo && S.docBody[slug] == null) store.doc(slug).then(() => { if (docSlug() === slug) render(); }).catch((e) => toast(errText(e)));
     app.innerHTML = nav() + '<div id="view">' + views[t]() + '</div>';
     paintBars();
     const sr = $('#search'); if (sr) sr.oninput = () => { S.q = sr.value; const pos = sr.selectionStart; render(); const n = $('#search'); n.focus(); n.setSelectionRange(pos, pos); };

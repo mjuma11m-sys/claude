@@ -283,7 +283,10 @@ fs.copyFileSync(path.join(SRC, 'site.css'), path.join(OUT, 'site.css'));
 fs.copyFileSync(path.join(SRC, 'app.js'), path.join(OUT, 'app.js'));
 // لوحة الإدارة (DW-052): ملفات ثابتة + supabase-js محلي (MIT) عشان CSP «script-src 'self'»
 fs.mkdirSync(path.join(OUT, 'admin'), { recursive: true });
-for (const f of ['index.html', 'admin.css', 'admin.js', 'logic.js']) fs.copyFileSync(path.join(SRC, 'admin', f), path.join(OUT, 'admin', f));
+for (const f of ['index.html', 'admin.css', 'admin.js', 'logic.js', 'docs.js']) fs.copyFileSync(path.join(SRC, 'admin', f), path.join(OUT, 'admin', f));
+// لقطات «الملفات» (بيانات تجريبية). نص الملفات نفسه بالقاعدة بس، وما ينبني للموقع
+fs.mkdirSync(path.join(OUT, 'admin/docs-img'), { recursive: true });
+for (const f of fs.readdirSync(path.join(SRC, 'admin/docs-src/img'))) fs.copyFileSync(path.join(SRC, 'admin/docs-src/img', f), path.join(OUT, 'admin/docs-img', f));
 fs.copyFileSync(path.join(SRC, 'admin/vendor/supabase.min.js'), path.join(OUT, 'admin/supabase.min.js'));
 fs.copyFileSync(path.join(SRC, 'admin/vendor/LICENSE'), path.join(OUT, 'admin/supabase-LICENSE.txt'));
 fs.writeFileSync(path.join(OUT, 'config.js'), `window.WADQA = ${JSON.stringify({ url: SUPA_URL, key: SUPA_KEY })};\n`);

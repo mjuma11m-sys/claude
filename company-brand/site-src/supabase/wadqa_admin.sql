@@ -94,3 +94,16 @@ begin
   if not public.wadqa_admin_ok() then raise exception 'not allowed' using errcode = '42501'; end if;
   return query select l.id, l.created_at, l.kind, l.product, l.name, l.email, l.message, l.lang from wadqa.leads l order by l.created_at desc limit 500;
 end $$;
+
+-- DW-053: «الملفات» — شرح تقني لكل تطبيق، بنفس قفل aal2. المحتوى من site-src/admin/docs-src/*.md عبر build-sql.mjs.
+create table if not exists public.wadqa_docs (
+  slug text primary key check (slug ~ '^[a-z0-9-]{1,40}$'),
+  title text not null check (char_length(title) between 1 and 80),
+  sort int not null default 0,
+  body text not null default '' check (char_length(body) < 3000000),
+  updated_at timestamptz not null default now()
+);
+alter table public.wadqa_docs enable row level security;
+revoke all on public.wadqa_docs from public, anon;
+grant select, insert, update on public.wadqa_docs to authenticated;
+create policy admin_all on public.wadqa_docs for all to authenticated using ((select public.wadqa_admin_ok())) with check ((select public.wadqa_admin_ok()));

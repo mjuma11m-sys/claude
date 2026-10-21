@@ -90,6 +90,10 @@ const ok = (c, m) => { if (c) { pass++; console.log('✅', m); } else { fail++; 
   ok(await p.getAttribute('ul.list li a.mini', 'href') === 'mailto:tester%40example.com', 'الطلبات: زر رد بالإيميل');
   await p.screenshot({ path: OUT + '/adm_leads.png', fullPage: true });
 
+  // «الملفات» بالوضع التجريبي: رسالة بس، ولا ملف
+  await go('files');
+  ok((await p.textContent('#view')).includes('رمز الجوال') && await p.locator('article.doc').count() === 0, 'الملفات بالتجريبي: ما تطلع بدون دخول');
+
   // جوال 320: ولا تبويب يطلع برا
   await p.setViewportSize({ width: 320, height: 700 });
   for (const t of ['summary', 'ledger', 'budget', 'recurring', 'leads']) {

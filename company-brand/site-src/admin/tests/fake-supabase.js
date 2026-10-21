@@ -1,13 +1,15 @@
 // supabase-js وهمي للاختبار: نفس واجهة auth/mfa/from/rpc، وbيتصرف مثل RLS الحقيقي: ما يرجع بيانات بدون aal2.
 (function () {
   const ADMIN = 'owner@test', PASS = 'pw', CODE = '123456';
-  const db = { wadqa_entries: [{ id: 'e1', kind: 'expense', occurred_on: new Date().toISOString().slice(0, 10), amount_fils: 9400, category: 'استضافة وسحابة', product: 'general', method: 'بطاقة', note: 'Supabase' }], wadqa_budgets: [], wadqa_recurring: [] };
+  const db = { wadqa_entries: [{ id: 'e1', kind: 'expense', occurred_on: new Date().toISOString().slice(0, 10), amount_fils: 9400, category: 'استضافة وسحابة', product: 'general', method: 'بطاقة', note: 'Supabase' }], wadqa_budgets: [], wadqa_recurring: [], wadqa_docs: [{ slug: 'hayati', title: 'حياتي · Hayati', sort: 0, updated_at: '2026-10-21T08:00:00Z', body: window.__DOC_BODY__ || '# حياتي' }] };
   const st = JSON.parse(sessionStorage.getItem('fake-sb') || '{"session":null,"aal":"aal1","factors":[]}');
   const save = () => sessionStorage.setItem('fake-sb', JSON.stringify(st));
   const ok2 = () => st.session && st.session.user.email === ADMIN && st.aal === 'aal2';
   function query(table) {
-    const rows = () => (ok2() ? db[table] : []);
-    const b = { select() { return b; }, order() { return b; }, limit() { return b; }, eq() { return b; },
+    let filt = null;
+    const rows = () => (ok2() ? db[table].filter((r) => !filt || r[filt[0]] === filt[1]) : []);
+    const b = { select() { return b; }, order() { return b; }, limit() { return b; }, eq(k, v) { filt = [k, v]; return b; },
+      single() { const r = rows()[0]; return Promise.resolve(r ? { data: r, error: null } : { data: null, error: { message: 'no rows' } }); },
       then(res) { return Promise.resolve({ data: rows(), error: null }).then(res); },
       insert(r) { if (!ok2()) return Promise.resolve({ error: { message: 'new row violates row-level security policy' } }); db[table].push(Object.assign({ id: String(Math.random()) }, r)); return Promise.resolve({ error: null }); },
       update() { return { eq: () => Promise.resolve({ error: ok2() ? null : { message: 'row-level security' } }) }; },
