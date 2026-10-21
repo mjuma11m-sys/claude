@@ -1,7 +1,7 @@
 {
   "name": "ودقة · WADQA",
   "founded": "2026-10-13",
-  "next": 60,
+  "next": 61,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -472,6 +472,14 @@
       "owner": "CEO",
       "priority": "P1",
       "status": "done",
+      "opened": "2026-10-21",
+      "updated": "2026-10-21"
+    },
+    "DW-060": {
+      "title": "حياتي بعد رفع 0.27: رسالة عربية لكلمة مرور مسرّبة + الحد الأدنى 8 بالتطبيق وSupabase سوا",
+      "owner": "CTO",
+      "priority": "P2",
+      "status": "new",
       "opened": "2026-10-21",
       "updated": "2026-10-21"
     }
