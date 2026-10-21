@@ -258,3 +258,4 @@
 | 2026-10-21 | DW-076 | 0.26 صارت بالطابور: المعلومات (Sign-In + Notes + رابط الفيديو) بـ App Review Information حقها، بدون سحب | COO | ما فيه thread ولا Resubmit وهي Waiting for Review |
 | 2026-10-21 | DW-077 | Google يظل مخفي لين المالك ينشر شاشة الموافقة ويفعّل Sign in with Apple؛ بالآيفون Google ما يطلع بدون Apple (4.8)؛ يطلع بنسخة بعد قبول 0.26 | CTO | Testing mode يفشّل الدخول، و4.8 يرفض التطبيق |
 | 2026-10-21 | DW-078 | تحقق بخطوتين TOTP اختياري من «حسابك»؛ الدخول ما يتزامن لين الرمز؛ والسيرفر يرفض بيانات الحساب المفعّل بدون aal2 (سياسة restrictive)؛ يطلع بالنسخة بعد 0.26 | CTO | حماية لو انسرقت كلمة السر؛ مجاني بـ Supabase |
+| 2026-10-21 | DW-078 | انطبق على Supabase: ai_quota + user_has_mfa() (security definer) + 21 سياسة «mfa when enrolled»؛ تأكدنا إن اللي بدون تحقق يشوف بياناته عادي | CTO | authenticated ما يقرا auth.mfa_factors؛ السياسة المباشرة كانت بتكسر كل الاستعلامات |

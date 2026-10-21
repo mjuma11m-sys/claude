@@ -351,14 +351,22 @@ revoke all on function public.delete_my_account() from public, anon;
 grant execute on function public.delete_my_account() to authenticated;
 
 -- 🔐 التحقق بخطوتين (DW-078): اللي فعّله، بياناته ما تنقرا ولا تنكتب إلا بجلسة aal2 (بعد رمز تطبيق التحقق)
---   (نفس طريقة توثيق Supabase: سياسة restrictive فوق «own rows»؛ اللي ما فعّله ما يتأثر)
+--   سياسة restrictive فوق «own rows»؛ اللي ما فعّله ما يتأثر.
+--   authenticated ما يقدر يقرا auth.mfa_factors، فالفحص بدالة security definer ترجع نعم/لا للمستخدم نفسه بس.
+create or replace function public.user_has_mfa() returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from auth.mfa_factors where user_id = auth.uid() and status = 'verified');
+$$;
+revoke all on function public.user_has_mfa() from public, anon;
+grant execute on function public.user_has_mfa() to authenticated;
 do $$
 declare t text;
 begin
   foreach t in array array['transactions','courses','tasks','subscriptions','goals','grades','study_sessions','debts','habits','daily','lifts','body','cards','events','shopping','journal','matches','lectures','trips','settings','sms_inbox'] loop
+    if to_regclass('public.' || t) is null then continue; end if;
     execute format('drop policy if exists "mfa when enrolled" on public.%I', t);
     execute format($p$create policy "mfa when enrolled" on public.%I as restrictive for all to authenticated
-      using (array[(select auth.jwt()->>'aal')] <@ (select case when count(id) > 0 then array['aal2'] else array['aal1','aal2'] end from auth.mfa_factors where user_id = (select auth.uid()) and status = 'verified'))
-      with check (array[(select auth.jwt()->>'aal')] <@ (select case when count(id) > 0 then array['aal2'] else array['aal1','aal2'] end from auth.mfa_factors where user_id = (select auth.uid()) and status = 'verified'))$p$, t);
+      using ((select auth.jwt()->>'aal') = 'aal2' or not (select public.user_has_mfa()))
+      with check ((select auth.jwt()->>'aal') = 'aal2' or not (select public.user_has_mfa()))$p$, t);
   end loop;
 end $$;
