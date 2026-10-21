@@ -432,7 +432,7 @@
   async function oauth(provider) {
     if (!Browser) throw new Error('الدخول السريع يحتاج آخر نسخة من التطبيق');
     const url = await S.signInWithProvider(provider, { redirectTo: AUTH_URL, skipBrowserRedirect: true });
-    await Browser.open({ url, presentationStyle: 'popover' });
+    await Browser.open({ url, presentationStyle: 'fullscreen' });   // DW-081: popover بالآيباد يطلع صغير بالنص وكأن الزر ما سوّى شي
   }
   // أزرار ودجت الآيفون (DW-044): bh.hayati.app://widget/add-tx | paste-sms | open
   function onWidgetUrl(url) {

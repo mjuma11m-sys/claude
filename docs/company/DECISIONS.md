@@ -261,3 +261,4 @@
 | 2026-10-21 | DW-078 | انطبق على Supabase: ai_quota + user_has_mfa() (security definer) + 21 سياسة «mfa when enrolled»؛ تأكدنا إن اللي بدون تحقق يشوف بياناته عادي | CTO | authenticated ما يقرا auth.mfa_factors؛ السياسة المباشرة كانت بتكسر كل الاستعلامات |
 | 2026-10-21 | DW-079 | Google ما عاد مخفي (شاشة الموافقة انتشرت وApple انفعّل)؛ بالآيفون يطلع مع Apple بس؛ JWT حق Apple ينتهي تقريباً منتصف أبريل 2027 | CTO | المالك خلّص الإعداد بلوحات Google وApple وSupabase |
 | 2026-10-21 | DW-080 | 0.27 (27) جاهزة: Google/Apple + التحقق بخطوتين؛ ما تنرفع إلا بعد قبول 0.26 | CEO | نسخة وحدة بالطابور |
+| 2026-10-21 | DW-081 | Services ID انحفظ؛ نافذة الدخول fullscreen (popover بالآيباد يبين كأنه ما اشتغل)؛ الحساب التجريبي mjuma11.m+raview@gmail.com تأكد؛ HealthKit ينتظر نص Apple | CTO | 3 نقاط برسالة Apple |
