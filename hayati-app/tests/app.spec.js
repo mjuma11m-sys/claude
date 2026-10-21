@@ -472,8 +472,8 @@ test('review fixes: start-here card, hidden Google, AI hides when the function i
   await page.click('#sheetCancel'); await page.waitForTimeout(350);
   await page.click('#startHere [data-action="start-hide"]');
   await expect(page.locator('#startHere')).toHaveCount(0);
-  // Google ما يطلع حتى لو مفعّل
-  expect(await page.evaluate(() => { window.HAYATI_CONFIG.PROVIDERS = ['apple', 'google']; return App.S.providers(); })).not.toContain('google');
+  // DW-079: Google وApple يطلعون لما ينفعّلون (بالويب)
+  expect(await page.evaluate(() => { window.HAYATI_CONFIG.PROVIDERS = ['apple', 'google']; return App.S.providers(); })).toEqual(['apple', 'google']);
   // دالة الذكاء مو منشورة ← تختفي الأزرار
   const off = await store(page, async () => {
     App.S.status.signedIn = true;
