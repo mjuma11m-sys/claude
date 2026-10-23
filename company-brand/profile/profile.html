@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>ودقة — الملف التعريفي</title>
+<!-- الملف التعريفي A4 (6 صفحات). يُطبع بـ profile.js → out/wadqa-profile.pdf. كل جملة هنا صحيحة اليوم (DW-050). -->
+<style>
+@font-face{font-family:P;src:url(../fonts/IBMPlexSansArabic-Bold.ttf);font-weight:700}
+@font-face{font-family:P;src:url(../fonts/IBMPlexSansArabic-Regular.ttf);font-weight:400}
+@page{size:A4;margin:0}
+:root{--ink:#0B1514;--bone:#F2EBDD;--gold:#C8A04A;--deep:#7A5A12;--slate:#1C2B2A;--mist:#8FA09C;--paper:#F7F4EE;--text2:#33494D}
+*{box-sizing:border-box;margin:0}
+body{font-family:P,sans-serif;color:var(--ink)}
+.pg{width:210mm;height:297mm;position:relative;overflow:hidden;page-break-after:always;padding:24mm 22mm}
+.pg:last-child{page-break-after:auto}
+.dark{background:var(--ink);color:var(--bone)}
+.light{background:var(--paper)}
+.num{position:absolute;bottom:12mm;right:22mm;font-size:8.5pt;color:var(--mist);letter-spacing:.15em;direction:ltr}
+.run{position:absolute;bottom:12mm;left:22mm;font-size:8.5pt;color:var(--mist)}
+.eyebrow{font-size:9pt;letter-spacing:.22em;color:var(--deep);direction:ltr;text-align:right;font-weight:700}
+.dark .eyebrow{color:var(--gold)}
+h2{font-size:34pt;line-height:1.15;margin:4mm 0 8mm}
+p{font-size:12pt;line-height:2;color:var(--text2);max-width:150mm}
+.dark p{color:#D9D2C2}
+.mark{width:100%;height:100%;display:block}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:6mm}
+.card{background:#fff;border-radius:5mm;padding:8mm 7mm;box-shadow:0 1px 0 #e3ddd0}
+.card h3{font-size:20pt;color:var(--deep);margin-bottom:3mm}
+.card p{font-size:10.5pt;line-height:1.9}
+.app{display:grid;grid-template-columns:22mm 1fr;gap:7mm;padding:8mm 0;border-bottom:1px solid #e3ddd0}
+.app .ic{width:22mm;height:22mm;border-radius:6mm;display:grid;place-items:center;font-size:24pt}
+.app h3{font-size:20pt}.app p{font-size:10.5pt;line-height:1.85}
+.pill{display:inline-block;font-size:8.5pt;border-radius:99px;padding:.5mm 4mm;margin-inline-start:3mm;vertical-align:middle;background:#e3ddd0;color:var(--ink)}
+.pill.b{background:var(--gold)}
+ul{padding:0;list-style:none;display:grid;gap:4mm;margin-top:4mm}
+li{font-size:12pt;line-height:1.8;padding-inline-start:8mm;position:relative;color:var(--text2)}
+li::before{content:"";position:absolute;inset-inline-start:0;top:3.2mm;width:2.6mm;height:2.6mm;border-radius:50%;background:var(--gold)}
+.dark li{color:#D9D2C2}
+.feat{display:grid;grid-template-columns:1fr 1fr;gap:3mm 8mm;margin-top:2mm}
+.feat div{font-size:10pt;color:var(--text2);padding-inline-start:5mm;position:relative}
+.feat div::before{content:"·";position:absolute;inset-inline-start:0;color:var(--gold);font-weight:700}
+.big{font-size:44pt;font-weight:700;color:var(--deep);line-height:1;font-variant-numeric:tabular-nums}
+.stat{display:flex;flex-direction:column;gap:2mm}
+.stat span{font-size:10pt;color:var(--text2)}
+.note{font-size:8.5pt;color:var(--mist);margin-top:6mm}
+</style>
+</head>
+<body>
+
+<!-- 1 الغلاف -->
+<section class="pg dark" style="display:flex;flex-direction:column;justify-content:space-between">
+  <div class="eyebrow">WADQA STUDIO · BAHRAIN</div>
+  <div>
+    <div style="width:46mm;height:46mm;margin-bottom:12mm">MARK_DARK</div>
+    <div style="font-size:88pt;font-weight:700;line-height:1">ودقة</div>
+    <div style="font-size:13pt;letter-spacing:.22em;color:var(--gold);direction:ltr;text-align:right;font-weight:700;margin-top:4mm">WADQA STUDIO</div>
+    <div style="font-size:18pt;margin-top:14mm">صافية مثل المطر.</div>
+  </div>
+  <div style="display:flex;justify-content:space-between;font-size:10pt;color:var(--mist)"><span>الملف التعريفي · 2026</span><span>مملكة البحرين</span></div>
+</section>
+
+<!-- 2 من نحن -->
+<section class="pg light">
+  <div class="eyebrow">ABOUT · من نحن</div>
+  <h2>استوديو برمجيات<br>من البحرين.</h2>
+  <p>بدأنا من مشكلة عشناها بنفسنا: ما لقينا أداة تحترم المستخدم وتجمع يومه بمكان واحد، فبنيناها. ودقة هي الشركة اللي تجمع تطبيقاتنا تحت قاعدة وحدة: شفافية، صدق، وأمانة.</p>
+  <p style="margin-top:6mm">هدفنا نبني من البحرين تطبيقات تنافس عالمياً، تبدأ من احتياج حقيقي عندنا بالخليج: طلبة، عوائل، رياضيين، وملّاك عقار.</p>
+  <div style="margin-top:16mm;background:#fff;border-radius:5mm;padding:10mm;display:grid;grid-template-columns:30mm 1fr;gap:8mm;align-items:center">
+    <div style="width:30mm;height:30mm">MARK_LIGHT</div>
+    <div>
+      <div class="eyebrow" style="text-align:right">ليش «ودقة»؟</div>
+      <p style="margin-top:3mm">«الوَدْق» هو المطر بالفصحى، والودقة قطرته. المطر صافي تشوف من خلاله، ينزل للكل، وما ياخذ منك شي. هذا اللي نبيه بتطبيقاتنا.</p>
+    </div>
+  </div>
+  <div style="margin-top:16mm;display:grid;grid-template-columns:repeat(3,1fr);gap:6mm">
+    <div class="stat"><div class="big">3</div><span>تطبيقات تحت ودقة</span></div>
+    <div class="stat"><div class="big">2</div><span>منصات لحياتي: أندرويد وآيفون</span></div>
+    <div class="stat"><div class="big">49</div><span>مهمة مسجّلة بقراراتها منذ أكتوبر 2026</span></div>
+  </div>
+  <span class="num">02</span><span class="run">ودقة · الملف التعريفي</span>
+</section>
+
+<!-- 3 القيم -->
+<section class="pg light">
+  <div class="eyebrow">VALUES · قيمنا</div>
+  <h2>ثلاث قيم،<br>وكل وحدة لها دليل.</h2>
+  <div class="cols">
+    <div class="card"><h3>شفافة</h3><p>كل تطبيق يقول وش يجمع وليش ووين، بسياسة خصوصية واضحة بالعربي. أي جهة خارجية نستخدمها نذكرها بالاسم.</p></div>
+    <div class="card"><h3>صادقة</h3><p>ما نعلن عن ميزة ما تشتغل اليوم، وما نحط تاريخ إطلاق قبل ما يخلص الشغل. اللي قيد التطوير نقول عنه قيد التطوير.</p></div>
+    <div class="card"><h3>أمينة</h3><p>بياناتك مو للبيع، وبدون متتبعات إعلانية. بحياتي تقدر تحذف حسابك وبياناتك من داخل التطبيق.</p></div>
+  </div>
+  <div style="margin-top:16mm">
+    <div class="eyebrow">HOW WE WORK · شلون نشتغل</div>
+    <ul>
+      <li>كل قرار منتج أو تقني ينسجّل مع سببه، وكل مهمة لها تذكرة (DW) فيها القرار وليش ومين اعترض.</li>
+      <li>قبل كل تحديث لحياتي: اختبارات آلية (27 اختبار وحدة و115 اختبار واجهة بآخر تشغيل).</li>
+      <li>فحص قانوني للخصوصية قبل أي إطلاق، حسب قانون حماية البيانات الشخصية البحريني (30 لسنة 2018).</li>
+      <li>العربي أولاً، وكل واجهة تنبني من اليمين لليسار، وتنفحص على مقاسات الجوال.</li>
+    </ul>
+  </div>
+  <span class="num">03</span><span class="run">ودقة · الملف التعريفي</span>
+</section>
+
+<!-- 4 التطبيقات -->
+<section class="pg light">
+  <div class="eyebrow">PRODUCTS · تطبيقاتنا</div>
+  <h2>ثلاث تطبيقات،<br>كل واحد بحالته الحقيقية.</h2>
+  <div class="app">
+    <div class="ic" style="background:#0E3B43"><img src="../../hayati-app/brand/out/mark-app-icon-1024.png" style="width:22mm;height:22mm;border-radius:6mm"></div>
+    <div><h3>حياتي <span class="pill b">نسخة تجريبية · قيد التطوير</span></h3>
+      <p>يومك بمكان واحد، بأندرويد وآيفون:</p>
+      <div class="feat"><div>ميزانية وتصنيف رسائل البنك</div><div>المواعيد والتذكيرات والودجت</div><div>ورد القرآن، المسبحة، التقويم الهجري</div><div>المحاضرات: تسجيل وملخص وأسئلة</div><div>تخطيط السفر وتحويل العملات</div><div>حساب اختياري ونسخة احتياطية مشفّرة</div></div>
+    </div>
+  </div>
+  <div class="app">
+    <div class="ic" style="background:#1d3b2a">⚽</div>
+    <div><h3 style="direction:ltr;text-align:right">Sports Hub <span class="pill">قيد التطوير</span></h3><p>إدارة الفرق واللاعبين والأندية: الأساس والهوية جاهزين، والميزات قيد البناء.</p></div>
+  </div>
+  <div class="app" style="border:0">
+    <div class="ic" style="background:#3a3020">🏠</div>
+    <div><h3>إداراتي <span class="pill">نسخة تجريبية · قيد التطوير</span></h3><p>إدارة أملاك وميزانية العائلة: الإيجارات، الفواتير، والشيكات.</p></div>
+  </div>
+  <p class="note">الميزات المذكورة لحياتي مبنية بالنسخة التجريبية، وبعضها ينتظر تجربة على أجهزة حقيقية قبل الإطلاق.</p>
+  <span class="num">04</span><span class="run">ودقة · الملف التعريفي</span>
+</section>
+
+<!-- 5 الوعد -->
+<section class="pg dark">
+  <div class="eyebrow">OUR PROMISE · وعدنا</div>
+  <h2>صافية مثل المطر.</h2>
+  <ul style="margin-top:10mm">
+    <li>ما نبيع بياناتك ولا نشاركها للإعلانات.</li>
+    <li>ما نحط متتبعات إعلانية بتطبيقاتنا ولا بموقعنا.</li>
+    <li>أي جهة خارجية (استضافة، ذكاء اصطناعي) نذكرها بالاسم بسياسة الخصوصية.</li>
+    <li>حذف الحساب من داخل التطبيق شرط لأي تطبيق ننزله.</li>
+    <li>ما نعلن تاريخ إطلاق قبل ما يخلص الشغل.</li>
+  </ul>
+  <div style="position:absolute;bottom:40mm;inset-inline-end:22mm;width:60mm;height:60mm;opacity:.9">MARK_DARK</div>
+  <span class="num">05</span><span class="run">ودقة · الملف التعريفي</span>
+</section>
+
+<!-- 6 التواصل -->
+<section class="pg light" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center">
+  <div style="width:34mm;height:34mm;margin-bottom:10mm">MARK_LIGHT</div>
+  <div style="font-size:48pt;font-weight:700;line-height:1">ودقة</div>
+  <div style="font-size:11pt;letter-spacing:.22em;color:var(--deep);direction:ltr;font-weight:700;margin-top:3mm">WADQA STUDIO</div>
+  <p style="text-align:center;margin-top:12mm">ملاحظة، فكرة، أو شغل مشترك:</p>
+  <div style="font-size:16pt;font-weight:700;direction:ltr;margin-top:2mm">hello@wadqa.com · wadqa.com</div>
+  <div style="margin-top:4mm;font-size:11pt;color:var(--text2)">مملكة البحرين · السجل التجاري: [بعد التسجيل]</div>
+  <div style="position:absolute;bottom:14mm;font-size:9pt;color:var(--mist)">قيد التطوير · نسخة تجريبية</div>
+</section>
+</body>
+</html>

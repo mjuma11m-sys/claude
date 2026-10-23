@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>فاتورة · ودقة</title>
+<!-- قالب فاتورة ودقة (A4). عدّل أي نص بالضغط عليه، والمجاميع تنحسب بروحها (3 خانات للدينار).
+     «فاتورة ضريبية» + سطر VAT 10% يطلعون بس لو حطيت رقم التسجيل الضريبي (التسجيل إلزامي فوق 37,500 BHD سنوياً — تأكد من NBR).
+     اطبع: Ctrl+P ← Save as PDF، الهوامش None، والخلفيات مفعّلة. -->
+<style>
+@font-face{font-family:Plex;src:url(../site/fonts/IBMPlexSansArabic-Bold.ttf);font-weight:700}
+@font-face{font-family:Plex;src:url(../site/fonts/IBMPlexSansArabic-Regular.ttf);font-weight:400}
+@page{size:A4;margin:0}
+*{box-sizing:border-box;margin:0}
+body{font-family:Plex,sans-serif;color:#0B1514;background:#e9e5dc}
+.page{width:210mm;min-height:297mm;margin:auto;background:#fff;position:relative}
+.top{background:#0B1514;color:#F2EBDD;padding:12mm 16mm;display:flex;justify-content:space-between;align-items:center}
+.top img{width:16mm}.brand{display:flex;gap:5mm;align-items:center}.brand b{font-size:24pt;line-height:1}.brand small{display:block;color:#C8A04A;letter-spacing:.2em;font-size:8pt;direction:ltr}
+.doc{text-align:left;direction:ltr}.doc h1{font-size:20pt;color:#C8A04A}.doc div{font-size:9pt;color:#8FA09C}
+.bar{height:1.2mm;background:#C8A04A}
+.body{padding:12mm 16mm}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:8mm;font-size:10pt;margin-bottom:10mm}
+.meta h3{font-size:9pt;color:#7A5A12;margin-bottom:2mm}
+table{width:100%;border-collapse:collapse;font-size:10pt}
+th{background:#F2EBDD;text-align:right;padding:3mm;font-size:9pt}
+td{padding:3mm;border-bottom:1px solid #e3ddd0;vertical-align:top}
+td.n,th.n{text-align:left;direction:ltr;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tot{margin-top:6mm;margin-inline-start:auto;width:80mm;font-size:10.5pt}
+.tot div{display:flex;justify-content:space-between;padding:2mm 0}
+.tot .grand{border-top:2px solid #0B1514;font-weight:700;font-size:13pt}
+.pay{margin-top:10mm;font-size:9.5pt;line-height:1.9;background:#F7F4EE;padding:5mm;border-radius:3mm}
+.foot{position:absolute;bottom:10mm;inset-inline:16mm;font-size:8pt;color:#5B6B67;display:flex;justify-content:space-between}
+[contenteditable]:hover{outline:1px dashed #C8A04A}
+.add{margin-top:3mm;font:inherit;font-size:9pt;background:none;border:1px dashed #C8A04A;border-radius:2mm;padding:1mm 4mm;cursor:pointer}
+[hidden]{display:none!important}
+@media print{body{background:#fff}.add{display:none}[contenteditable]:hover{outline:none}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="top">
+    <div class="brand"><img src="../site/logo.svg" alt=""><div><b>ودقة</b><small>WADQA STUDIO</small></div></div>
+    <div class="doc"><h1 id="title">INVOICE · فاتورة</h1><div>No. <span contenteditable id="no">WQ-2026-001</span> · <span contenteditable id="date">2026-10-20</span></div></div>
+  </div>
+  <div class="bar"></div>
+  <div class="body">
+    <div class="meta">
+      <div><h3>من</h3><div contenteditable>ودقة · WADQA Studio<br>مملكة البحرين<br>السجل التجاري: [رقم السجل]<br>hello@wadqa.com</div>
+        <div>الرقم الضريبي (VAT): <span contenteditable id="vatno"></span></div></div>
+      <div><h3>إلى</h3><div contenteditable>[اسم العميل]<br>[العنوان: مبنى / طريق / مجمع / المنطقة]<br>[الرقم الضريبي للعميل لو مسجّل]</div></div>
+    </div>
+    <table>
+      <thead><tr><th>الوصف</th><th class="n">الكمية</th><th class="n">سعر الوحدة (BHD)</th><th class="n">المجموع (BHD)</th></tr></thead>
+      <tbody id="rows">
+        <tr><td contenteditable>[وصف الخدمة: مثلاً تطوير صفحة هبوط]</td><td class="n q" contenteditable>1</td><td class="n p" contenteditable>0.000</td><td class="n s"></td></tr>
+      </tbody>
+    </table>
+    <button class="add" onclick="addRow()">+ سطر</button>
+    <div class="tot">
+      <div><span>المجموع قبل الضريبة</span><span class="n" id="sub"></span></div>
+      <div id="vatrow" hidden><span>ضريبة القيمة المضافة 10%</span><span class="n" id="vat"></span></div>
+      <div class="grand"><span>الإجمالي</span><span class="n" id="total"></span></div>
+    </div>
+    <div class="pay" contenteditable>
+      <b>الدفع:</b> خلال [14] يوم من تاريخ الفاتورة.<br>
+      BenefitPay: [الرقم] · تحويل بنكي (Fawri+): [اسم البنك] — IBAN: [BH.. ..]<br>
+      المرجع: رقم الفاتورة.
+    </div>
+  </div>
+  <div class="foot"><span>ودقة · صافية مثل المطر</span><span>مملكة البحرين</span></div>
+</div>
+<script>
+const f3 = (x) => (Math.round(x * 1000) / 1000).toFixed(3);
+const num = (el) => parseFloat(el.textContent.replace(/[^\d.]/g, '')) || 0;
+function calc() {
+  let sub = 0;
+  document.querySelectorAll('#rows tr').forEach((r) => { const s = Math.round(num(r.querySelector('.q')) * num(r.querySelector('.p')) * 1000) / 1000; r.querySelector('.s').textContent = f3(s); sub += s; });
+  const reg = document.getElementById('vatno').textContent.trim() !== '';
+  const vat = reg ? Math.round(sub * 100) / 1000 : 0;
+  document.getElementById('title').textContent = reg ? 'TAX INVOICE · فاتورة ضريبية' : 'INVOICE · فاتورة';
+  document.getElementById('vatrow').hidden = !reg;
+  document.getElementById('sub').textContent = f3(sub);
+  document.getElementById('vat').textContent = f3(vat);
+  document.getElementById('total').textContent = f3(sub + vat) + ' BHD';
+}
+function addRow() { const r = document.querySelector('#rows tr').cloneNode(true); r.querySelector('td').textContent = '[وصف]'; r.querySelector('.q').textContent = '1'; r.querySelector('.p').textContent = '0.000'; document.getElementById('rows').appendChild(r); calc(); }
+document.addEventListener('input', calc); calc();
+</script>
+</body>
+</html>

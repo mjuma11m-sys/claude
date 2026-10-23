@@ -1,0 +1,137 @@
+<!doctype html>
+<html dir="rtl">
+<head>
+<meta charset="utf-8">
+<!-- إعلان «ودقة · WADQA» 20 ث، 9:16. ولا قطعة: القطرة تنزل ← تموج ← القيم الثلاث ← المنتجات ← القطرة تصير الشعار.
+     هوية الشركة: حبري #0B1514، عاجي #F2EBDD، ذهبي #C8A04A (company-brand/BRAND.md) -->
+<style>
+@font-face { font-family: P; src: url(IBMPlexSansArabic-Bold.ttf); font-weight: 700; }
+@font-face { font-family: P; src: url(IBMPlexSansArabic-Regular.ttf); font-weight: 400; }
+:root { --ink: #0B1514; --bone: #F2EBDD; --gold: #C8A04A; --slate: #1C2B2A; --mist: #8FA09C; }
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; font-family: P; font-weight: 700; color: var(--bone); background: var(--ink); }
+.abs { position: absolute; }
+#bg { inset: 0; background: radial-gradient(110% 70% at 50% 42%, #16302d 0%, var(--ink) 62%); }
+.w { display: inline-block; will-change: transform, opacity; }
+.g { color: var(--gold); }
+.center { left: 0; right: 0; text-align: center; }
+.hook div { font-size: 92px; line-height: 1.18; }
+.val .big { font-size: 190px; line-height: 1; color: var(--gold); }
+.val .sub { font: 400 54px/1.5 P; color: var(--bone); margin-top: 34px; padding: 0 90px; }
+.chip { display: flex; align-items: center; gap: 34px; background: var(--slate); border-radius: 44px; padding: 34px 48px; width: 800px; box-shadow: inset 0 0 0 2px #2c403e; }
+.chip .ic { width: 120px; height: 120px; border-radius: 30px; flex: none; display: grid; place-items: center; font-size: 60px; }
+.chip .nm { font-size: 66px; }
+.chip .st { font: 400 34px P; color: var(--mist); margin-top: 6px; }
+.eyebrow { font: 700 40px P; letter-spacing: .14em; color: var(--mist); }
+</style>
+</head>
+<body>
+<div id="bg" class="abs"></div>
+
+<!-- القطرة والتموج -->
+<svg id="rip" class="abs" style="left:0;top:0" width="1080" height="1920" viewBox="0 0 1080 1920">
+  <ellipse id="r1" cx="540" cy="900" rx="0" ry="0" fill="none" stroke="#F2EBDD" stroke-width="5"/>
+  <ellipse id="r2" cx="540" cy="900" rx="0" ry="0" fill="none" stroke="#C8A04A" stroke-width="4"/>
+  <ellipse id="r3" cx="540" cy="900" rx="0" ry="0" fill="none" stroke="#F2EBDD" stroke-width="3"/>
+</svg>
+<svg id="fall" class="abs" width="90" height="90" viewBox="0 0 512 512" style="left:495px;top:0">
+  <path d="M256 104C256 104 160 228 160 310A96 96 0 0 0 352 310C352 228 256 104 256 104Z" fill="#F2EBDD"/>
+</svg>
+
+<!-- 1) الهوك -->
+<div id="hook" class="abs center hook" style="top:1060px">
+  <div><span class="w">تطبيقاتك</span> <span class="w">تعرف</span> <span class="w">عنك</span> <span class="w">كثير.</span></div>
+  <div style="margin-top:26px"><span class="w">وين</span> <span class="w">تروح</span> <span class="w g">بياناتك؟</span></div>
+</div>
+
+<!-- 2) القيم -->
+<div id="v0" class="abs center val" style="top:700px"><div class="big">شفافة</div><div class="sub">واضح وش يسوي التطبيق،<br>ووش ما يسوي.</div></div>
+<div id="v1" class="abs center val" style="top:700px"><div class="big">صادقة</div><div class="sub">ما نعدك بميزة<br>ما تشتغل اليوم.</div></div>
+<div id="v2" class="abs center val" style="top:700px"><div class="big">أمينة</div><div class="sub">بياناتك مو للبيع،<br>وبدون متتبعات.</div></div>
+<svg id="vdrop" class="abs" width="120" height="120" viewBox="0 0 512 512" style="left:480px;top:520px">
+  <path d="M256 104C256 104 160 228 160 310A96 96 0 0 0 352 310C352 228 256 104 256 104Z" fill="none" stroke="#F2EBDD" stroke-width="34" stroke-linejoin="round"/>
+  <circle cx="256" cy="316" r="38" fill="#C8A04A"/>
+</svg>
+
+<!-- 3) المنتجات -->
+<div id="prod" class="abs" style="left:140px;top:560px;width:800px">
+  <div id="from" class="eyebrow" style="text-align:center;margin-bottom:56px">من البحرين</div>
+  <div style="display:flex;flex-direction:column;gap:34px">
+    <div class="chip" id="c0"><div class="ic" style="background:#0E3B43"><img src="hayati-icon.png" style="width:120px;height:120px;border-radius:30px"></div><div><div class="nm">حياتي</div><div class="st">يومك وفلوسك ومحاضراتك</div></div></div>
+    <div class="chip" id="c1"><div class="ic" style="background:#1d3b2a">⚽</div><div><div class="nm" style="direction:ltr;text-align:right">Sports Hub</div><div class="st">إدارة الفرق واللاعبين</div></div></div>
+    <div class="chip" id="c2"><div class="ic" style="background:#3a3020">🏠</div><div><div class="nm">إجاراتي</div><div class="st">عقاراتك وإيجاراتك</div></div></div>
+  </div>
+  <div id="dev" style="text-align:center;margin-top:56px;font:400 40px P;color:var(--mist)">كلها قيد التطوير</div>
+</div>
+
+<!-- 4) الشعار -->
+<svg id="logo" class="abs" width="420" height="420" viewBox="0 0 512 512" style="left:330px;top:560px">
+  <path id="lp" d="M256 104C256 104 160 228 160 310A96 96 0 0 0 352 310C352 228 256 104 256 104Z" fill="none" stroke="#F2EBDD" stroke-width="34" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle id="ld" cx="256" cy="316" r="38" fill="#C8A04A"/>
+</svg>
+<div id="name" class="abs center" style="top:1010px;font-size:190px;line-height:1">ودقة</div>
+<div id="latin" class="abs center" style="top:1240px;font-size:50px;letter-spacing:.2em;color:var(--gold);direction:ltr">WADQA STUDIO</div>
+<div id="tag" class="abs center" style="top:1380px;font:400 60px P">صافية مثل المطر</div>
+<div id="foot" class="abs center" style="top:1700px;font:400 38px P;color:var(--mist)">قيد التطوير · نسخة تجريبية</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const cl = (x) => Math.max(0, Math.min(1, x));
+const seg = (t, a, b) => cl((t - a) / (b - a));
+const out3 = (x) => 1 - Math.pow(1 - x, 3);
+const in2 = (x) => x * x;
+const back = (x) => { const c = 1.7; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const show = (el, o, y = 0, s = 1) => { el.style.opacity = o; el.style.transform = `translateY(${y}px) scale(${s})`; };
+const LEN = $('lp').getTotalLength();
+$('lp').style.strokeDasharray = LEN;
+const hookW = [...document.querySelectorAll('#hook .w')];
+const rings = ['r1', 'r2', 'r3'].map($);
+
+function ripple(t, t0, cy) {
+  rings.forEach((r, i) => {
+    const k = seg(t, t0 + i * 0.18, t0 + 1.4 + i * 0.18);
+    r.setAttribute('cy', cy);
+    r.setAttribute('rx', 460 * out3(k)); r.setAttribute('ry', 120 * out3(k));
+    r.style.opacity = k > 0 && k < 1 ? (1 - k) * 0.9 : 0;
+  });
+}
+
+window.setT = (t) => {
+  // القطرة تنزل (0–0.75) وتموّج
+  const f = seg(t, 0, 0.75);
+  $('fall').style.opacity = t < 0.75 ? 1 : 0;
+  $('fall').style.transform = `translateY(${-120 + 960 * in2(f)}px) scale(${1 - 0.15 * f}, ${1 + 0.25 * f})`;
+  if (t < 2.5) ripple(t, 0.75, 900); else ripple(t, 15.35, 812);
+
+  // 1) الهوك 0.9–2.7
+  const ho = 1 - seg(t, 2.45, 2.75);
+  hookW.forEach((w, i) => { const k = out3(seg(t, 0.9 + i * 0.16, 1.25 + i * 0.16)); show(w, k * ho, 40 * (1 - k) - 60 * (1 - ho)); });
+
+  // 2) القيم: كل وحدة 2.2 ث من 2.8
+  for (let i = 0; i < 3; i++) {
+    const a = 2.8 + i * 2.2, k = out3(seg(t, a, a + 0.45)), o = 1 - seg(t, a + 1.9, a + 2.2);
+    show($('v' + i), Math.min(k, o), 60 * (1 - k) - 50 * (1 - o), 0.92 + 0.08 * k);
+  }
+  const vd = seg(t, 2.8, 3.25);
+  $('vdrop').style.opacity = t > 2.8 && t < 9.4 ? (1 - seg(t, 9.0, 9.4)) : 0;
+  $('vdrop').style.transform = `translateY(${-200 * (1 - out3(vd))}px) rotate(${8 * Math.sin(t * 2)}deg)`;
+
+  // 3) المنتجات 9.4–14
+  const po = 1 - seg(t, 13.6, 14);
+  show($('from'), out3(seg(t, 9.4, 9.8)) * po, 30 * (1 - seg(t, 9.4, 9.8)));
+  for (let i = 0; i < 3; i++) { const k = back(seg(t, 9.8 + i * 0.35, 10.35 + i * 0.35)); show($('c' + i), cl(k) * po, 120 * (1 - k) - 40 * (1 - po)); }
+  show($('dev'), out3(seg(t, 11.2, 11.6)) * po);
+
+  // 4) الشعار: الخط ينرسم 14–15.2، النقطة تنزل 15.2–15.6
+  const dr = out3(seg(t, 14, 15.2));
+  $('logo').style.opacity = t >= 14 ? 1 : 0;
+  $('lp').style.strokeDashoffset = LEN * (1 - dr);
+  const dk = seg(t, 15.0, 15.4);
+  $('ld').style.opacity = t >= 15.0 ? 1 : 0;
+  $('ld').setAttribute('cy', 316 - 260 * (1 - in2(dk)) + (t > 15.4 ? 10 * Math.sin((t - 15.4) * 18) * Math.exp(-(t - 15.4) * 6) : 0));
+  [['name', 15.8], ['latin', 16.25], ['tag', 16.8], ['foot', 17.4]].forEach(([id, a]) => { const k = out3(seg(t, a, a + 0.5)); show($(id), k, 40 * (1 - k)); });
+};
+window.READY = document.fonts.ready.then(() => Promise.all([...document.images].map((i) => i.decode()))).then(() => setT(0));
+</script>
+</body>
+</html>

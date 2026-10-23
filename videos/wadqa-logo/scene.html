@@ -1,0 +1,92 @@
+<!doctype html>
+<html dir="rtl">
+<head>
+<meta charset="utf-8">
+<!-- كشف شعار «ودقة» 8 ث. نقطة ذهبية تنزل ← القطرة تنرسم حولها ← تموّج ← الاسم ينكشف ← السطر.
+     #v = عمودي 1080×1920 · #h = أفقي 1920×1080. هوية: company-brand/BRAND.md -->
+<style>
+@font-face { font-family: P; src: url(IBMPlexSansArabic-Bold.ttf); font-weight: 700; }
+@font-face { font-family: P; src: url(IBMPlexSansArabic-Regular.ttf); font-weight: 400; }
+:root { --ink: #0B1514; --bone: #F2EBDD; --gold: #C8A04A; --mist: #8FA09C; }
+html, body { margin: 0; width: 100vw; height: 100vh; overflow: hidden; background: var(--ink); font-family: P; color: var(--bone); }
+#bg { position: absolute; inset: 0; background: radial-gradient(60vmax 50vmax at 50% 45%, #16302d 0%, var(--ink) 70%); }
+#glow { position: absolute; inset: 0; background: radial-gradient(30vmax 30vmax at 50% 45%, rgba(200,160,74,.18), transparent 70%); opacity: 0; }
+#stage { position: absolute; left: 50%; top: 50%; }
+svg { overflow: visible; }
+#name, #latin, #tag { position: absolute; left: 50%; white-space: nowrap; transform: translateX(-50%); text-align: center; }
+#name { font-weight: 700; line-height: 1; }
+#latin { font-weight: 700; color: var(--gold); direction: ltr; }
+#tag { font-weight: 400; }
+</style>
+</head>
+<body>
+<div id="bg"></div><div id="glow"></div>
+<svg id="rip" style="position:absolute;inset:0;width:100%;height:100%"></svg>
+<div id="stage">
+  <svg id="mark" viewBox="0 0 512 512" style="position:absolute;left:0;top:0">
+    <path id="lp" d="M256 104C256 104 160 228 160 310A96 96 0 0 0 352 310C352 228 256 104 256 104Z" fill="none" stroke="#F2EBDD" stroke-width="34" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle id="trail" cx="256" cy="316" r="38" fill="#C8A04A" opacity=".25"/>
+    <circle id="dot" cx="256" cy="316" r="38" fill="#C8A04A"/>
+  </svg>
+</div>
+<div id="name">ودقة</div>
+<div id="latin">WADQA STUDIO</div>
+<div id="tag">صافية مثل المطر</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const cl = (x) => Math.max(0, Math.min(1, x));
+const seg = (t, a, b) => cl((t - a) / (b - a));
+const out3 = (x) => 1 - Math.pow(1 - x, 3), out5 = (x) => 1 - Math.pow(1 - x, 5), in3 = (x) => x * x * x;
+const W = innerWidth, H = innerHeight, V = H > W;
+const S = V ? 520 : 440;                    // حجم الشعار النهائي (px)
+const cy = H * (V ? 0.40 : 0.36);           // مركز الشعار بعد ما يطلع
+const LEN = $('lp').getTotalLength();
+$('lp').style.strokeDasharray = LEN;
+const mark = $('mark'); mark.setAttribute('width', S); mark.setAttribute('height', S);
+const fs = V ? 210 : 170;
+Object.assign($('name').style, { fontSize: fs + 'px', top: (cy + S * 0.42) + 'px' });
+Object.assign($('latin').style, { fontSize: (V ? 50 : 40) + 'px', top: (cy + S * 0.42 + fs * 1.12) + 'px' });
+Object.assign($('tag').style, { fontSize: (V ? 60 : 46) + 'px', top: (cy + S * 0.42 + fs * 1.12 + (V ? 120 : 90)) + 'px' });
+// ثلاث حلقات تموّج
+const NS = 'http://www.w3.org/2000/svg', rings = [0, 1, 2].map((i) => { const e = document.createElementNS(NS, 'ellipse'); e.setAttribute('fill', 'none'); e.setAttribute('stroke', i === 1 ? '#C8A04A' : '#F2EBDD'); e.setAttribute('stroke-width', 3 - i * 0.6); $('rip').appendChild(e); return e; });
+
+window.setT = (t) => {
+  // المرحلة 1 (0–1.2): النقطة تنزل للمركز الأولي (وسط الشاشة)
+  const c0 = H * 0.5, lift = out3(seg(t, 3.0, 3.9));       // الشعار يطلع لفوق 3.0–3.9
+  const cyNow = c0 + (cy - c0) * lift;
+  const sc = 0.8 + 0.2 * out5(seg(t, 1.2, 2.8)) + 0.03 * Math.sin(seg(t, 2.6, 3.2) * Math.PI);
+  $('stage').style.transform = `translate(${-S / 2}px, ${cyNow - H / 2 - S * 0.617}px) scale(${sc})`;
+  $('stage').style.transformOrigin = `${S / 2}px ${S * 0.617}px`;
+  $('stage').style.top = '50%';
+  const f = seg(t, 0.2, 1.2), fall = 316 - 900 * (1 - in3(f));
+  const bounce = t > 1.2 ? 14 * Math.sin((t - 1.2) * 16) * Math.exp(-(t - 1.2) * 7) : 0;
+  $('dot').setAttribute('cy', fall + bounce);
+  $('dot').style.opacity = t >= 0.2 ? 1 : 0;
+  $('trail').setAttribute('cy', 316 - 900 * (1 - in3(Math.max(0, f - 0.12))));
+  $('trail').style.opacity = t > 0.2 && t < 1.25 ? 0.25 : 0;
+  // المرحلة 2 (1.3–2.7): القطرة تنرسم
+  $('lp').style.strokeDashoffset = LEN * (1 - out3(seg(t, 1.3, 2.7)));
+  $('lp').style.opacity = t >= 1.3 ? 1 : 0;
+  // تموّج عند وصول النقطة (1.2) وعند اكتمال الرسم (2.7)
+  rings.forEach((r, i) => {
+    const t0 = (i < 2 ? 1.2 : 2.7) + (i === 1 ? 0.18 : 0), k = seg(t, t0, t0 + 1.5);
+    r.setAttribute('cx', W / 2); r.setAttribute('cy', c0 + 40);
+    r.setAttribute('rx', (V ? 480 : 620) * out3(k)); r.setAttribute('ry', (V ? 120 : 140) * out3(k));
+    r.style.opacity = k > 0 && k < 1 ? (1 - k) * 0.8 : 0;
+  });
+  $('glow').style.opacity = 0.9 * Math.sin(seg(t, 2.5, 4.5) * Math.PI) + 0.35 * seg(t, 4.5, 6);
+  // المرحلة 3: الاسم ينكشف من اليمين لليسار (اتجاه القراءة)، ثم اللاتيني يضيق، ثم السطر
+  const nk = out3(seg(t, 3.5, 4.4));
+  $('name').style.clipPath = `inset(-20% 0 -40% ${100 * (1 - nk)}%)`;
+  $('name').style.opacity = t >= 3.5 ? 1 : 0;
+  const lk = out3(seg(t, 4.2, 5.0));
+  $('latin').style.opacity = lk; $('latin').style.letterSpacing = (0.6 - 0.4 * lk) + 'em';
+  const tk = out3(seg(t, 4.9, 5.6));
+  $('tag').style.opacity = tk; $('tag').style.transform = `translateX(-50%) translateY(${24 * (1 - tk)}px)`;
+  // خروج ناعم بآخر نص ثانية
+  document.body.style.opacity = 1 - seg(t, 7.5, 8);
+};
+window.READY = document.fonts.ready.then(() => setT(0));
+</script>
+</body>
+</html>

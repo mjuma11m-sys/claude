@@ -2,6 +2,10 @@
 /*
 !/hayati-app
 !/vercel.json
+# موقع ودقة (مشروع Vercel «wadqa»، Root Directory = company-brand/site، DW-050): المجلد المبني بس
+!/company-brand
+/company-brand/*
+!/company-brand/site
 /hayati-app/tests
 /hayati-app/node_modules
 /hayati-app/brand

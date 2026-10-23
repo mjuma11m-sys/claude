@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>ودقة — وش تغيّر</title>
+<style>
+/* فيديو ودقة (DW-062): 1080×1920، كل مشهد يترسم من الوقت t بس (render(t))، فالتصدير فريم بفريم ثابت */
+@font-face { font-family: Display; src: url("../../.claude/skills/video-ad-editor/motion/fonts/Tajawal-Black.ttf"); }
+@font-face { font-family: Body; src: url("../../.claude/skills/video-ad-editor/motion/fonts/IBMPlexSansArabic-Regular.ttf"); }
+@font-face { font-family: Body; font-weight: 700; src: url("../../.claude/skills/video-ad-editor/motion/fonts/IBMPlexSansArabic-Bold.ttf"); }
+:root { --ink: #0B1514; --slate: #1C2B2A; --line: #2c403e; --bone: #F2EBDD; --mist: #8FA09C; --gold: #C8A04A; --ok: #4FC79E; --coral: #FF6B4A; }
+* { box-sizing: border-box; margin: 0; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--ink); color: var(--bone); font-family: Body, sans-serif; }
+#stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+.scene { position: absolute; inset: 0; padding: 200px 90px 240px; display: flex; flex-direction: column; gap: 40px; opacity: 0; }
+.eyebrow { font: 700 40px Body; color: var(--gold); letter-spacing: .02em; }
+h1 { font: 900 112px/1.12 Display; }
+h2 { font: 900 88px/1.15 Display; }
+p.big { font: 400 50px/1.55 Body; color: #D9D2C2; }
+.phone { width: 520px; height: 1040px; border-radius: 64px; border: 14px solid #26302f; overflow: hidden; align-self: center; box-shadow: 0 40px 120px #0008; background: #000; }
+.phone img { width: 100%; display: block; }
+.tag { position: absolute; left: 90px; bottom: 150px; font: 400 30px Body; color: var(--mist); }
+.brand { position: absolute; right: 90px; top: 90px; display: flex; gap: 18px; align-items: center; font: 900 44px Display; color: var(--bone); }
+.brand svg { width: 60px; height: 60px; color: var(--bone); }
+.prog { position: absolute; left: 90px; right: 90px; top: 1840px; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.prog i { display: block; height: 100%; background: var(--gold); }
+.list { display: grid; gap: 26px; }
+.row { display: flex; gap: 28px; align-items: center; background: var(--slate); border: 2px solid var(--line); border-radius: 28px; padding: 30px 36px; font: 700 46px Body; }
+.row .ic { width: 84px; height: 84px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: 46px; background: #0B1514; }
+.row small { display: block; font: 400 34px Body; color: var(--mist); margin-top: 4px; }
+.seats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 26px; }
+.seat { display: grid; justify-items: center; gap: 12px; text-align: center; font: 700 30px Body; color: var(--mist); }
+.seat .av { width: 150px; height: 150px; border-radius: 50%; display: grid; place-items: center; font-size: 70px; background: var(--slate); border: 4px solid var(--line); }
+.seat.new .av { border-color: var(--gold); box-shadow: 0 0 0 10px #C8A04A33; }
+.seat.new { color: var(--bone); }
+.score { display: grid; gap: 22px; }
+.sr { display: grid; grid-template-columns: 300px 1fr 130px; gap: 24px; align-items: center; font: 700 38px Body; }
+.bar { height: 30px; border-radius: 15px; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: 15px; background: var(--gold); }
+.sr .n { text-align: left; font-variant-numeric: tabular-nums; direction: ltr; }
+.huge { font: 900 300px/1 Display; direction: ltr; text-align: center; font-variant-numeric: tabular-nums; }
+.huge small { font-size: 120px; color: var(--mist); }
+.check { display: flex; gap: 26px; align-items: center; font: 700 46px Body; }
+.check b { width: 70px; height: 70px; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--ok); color: var(--ink); font: 900 44px Display; }
+.zero { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+.zero div { background: var(--slate); border: 2px solid var(--line); border-radius: 32px; padding: 40px 36px; display: grid; gap: 6px; }
+.zero b { font: 900 180px/1 Display; color: var(--coral); direction: ltr; }
+.zero span { font: 700 40px Body; color: #D9D2C2; }
+.counter { font: 900 260px/1 Display; text-align: center; direction: ltr; }
+.counter small { font-size: 110px; color: var(--mist); }
+.link { direction: ltr; text-align: center; font: 700 52px Body; color: var(--ink); background: var(--gold); border-radius: 28px; padding: 30px 20px; }
+.pill { align-self: flex-start; font: 700 38px Body; color: var(--ink); background: var(--gold); border-radius: 999px; padding: 12px 34px; }
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+.split .phone { width: 100%; height: 900px; border-width: 10px; border-radius: 48px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="brand"><svg viewBox="0 0 512 512"><path d="M256 104C256 104 160 228 160 310A96 96 0 0 0 352 310C352 228 256 104 256 104Z" fill="none" stroke="currentColor" stroke-width="28"/><circle cx="256" cy="316" r="38" fill="#C8A04A"/></svg>ودقة</div>
+
+  <!-- 0 · الهوك -->
+  <section class="scene" id="s0" style="justify-content:center">
+    <div class="eyebrow">ودقة · WADQA Studio</div>
+    <h1>يومين شغل<br>على الشركة.</h1>
+    <p class="big">هذا كل اللي تغيّر، بدون تجميل.</p>
+  </section>
+
+  <!-- 1 · لوحة الإدارة -->
+  <section class="scene" id="s1">
+    <div class="eyebrow">1 · لوحة الإدارة</div>
+    <h2>الحسابات والميزانية بمكان واحد</h2>
+    <div class="phone"><img src="shots/admin-summary.png" alt=""></div>
+    <div class="check"><b>✓</b>الدخول بكلمة السر + رمز من الجوال</div>
+  </section>
+
+  <!-- 2 · الملفات -->
+  <section class="scene" id="s2">
+    <div class="eyebrow">2 · الملفات</div>
+    <h2>شرح تقني لكل تطبيق، داخل اللوحة</h2>
+    <div class="list">
+      <div class="row"><span class="ic">ح</span><div>حياتي<small>البنية، البيانات، الأمان، والكود</small></div></div>
+      <div class="row"><span class="ic">🏠</span><div>إداراتي<small>أملاك وميزانية العائلة</small></div></div>
+      <div class="row"><span class="ic">⚽</span><div>Sports Hub<small>إدارة الفرق والأندية</small></div></div>
+      <div class="row"><span class="ic">💧</span><div>موقع ولوحة ودقة<small>نفس قفل الرمز</small></div></div>
+    </div>
+  </section>
+
+  <!-- 3 · الأقسام -->
+  <section class="scene" id="s3">
+    <div class="eyebrow">3 · الهيكل</div>
+    <h2>3 أقسام جديدة بالشركة</h2>
+    <div class="seats">
+      <div class="seat"><span class="av">🧭</span>التنفيذي</div><div class="seat"><span class="av">📦</span>المنتج</div><div class="seat"><span class="av">🎨</span>التصميم</div><div class="seat"><span class="av">💻</span>الهندسة</div>
+      <div class="seat"><span class="av">🔍</span>الجودة</div><div class="seat"><span class="av">📣</span>التسويق</div><div class="seat"><span class="av">💰</span>المالية</div><div class="seat"><span class="av">⚖️</span>القانونية</div>
+      <div class="seat"><span class="av">⚙️</span>العمليات</div><div class="seat new"><span class="av">🖥️</span>تقنية المعلومات</div><div class="seat new"><span class="av">🎧</span>الدعم الفني</div><div class="seat new"><span class="av">👥</span>الموارد البشرية</div>
+    </div>
+  </section>
+
+  <!-- 4 · التقييم -->
+  <section class="scene" id="s4">
+    <div class="eyebrow">4 · المجلس قيّم الشركة</div>
+    <div class="huge" id="evalNum">5.0<small>/10</small></div>
+    <div class="score" id="score"></div>
+    <p class="big">الهدف 9. الباقي يحتاج مستخدمين حقيقيين، مو كود.</p>
+  </section>
+
+  <!-- 5 · حياتي 0.27 -->
+  <section class="scene" id="s5">
+    <div class="eyebrow">5 · حياتي 0.27</div>
+    <h2>نسخة وحدة، ورد واحد لمراجعة آبل</h2>
+    <div class="list" id="checks">
+      <div class="check"><b>✓</b>رقم النسخة نفسه بكل مكان</div>
+      <div class="check"><b>✓</b>الرد يذكر نفس النسخة</div>
+      <div class="check"><b>✓</b>ما فيه HealthKit</div>
+      <div class="check"><b>✓</b>الرد يطابق أزرار الدخول</div>
+      <div class="check"><b>✓</b>ما فيه كلمة سر بالرد</div>
+    </div>
+    <p class="big">فحص تلقائي يشتغل قبل كل إرسال للمتجر.</p>
+  </section>
+
+  <!-- 6 · الدعم والزيارات -->
+  <section class="scene" id="s6">
+    <div class="eyebrow">6 · الدعم والقياس</div>
+    <h2>صفحة دعم، وعدّ زيارات بدون كوكيز</h2>
+    <div class="split">
+      <div class="phone"><img src="shots/support.png" alt=""></div>
+      <div class="phone"><img src="shots/admin-visits.png" alt=""></div>
+    </div>
+  </section>
+
+  <!-- 7 · الأرقام الصادقة -->
+  <section class="scene" id="s7" style="justify-content:center">
+    <div class="eyebrow">7 · الأرقام الحقيقية</div>
+    <h2>بعد يومين من القياس:</h2>
+    <div class="zero"><div><b>0</b><span>زيارات جديدة</span></div><div><b>0</b><span>طلبات</span></div></div>
+    <p class="big">يعني المشكلة مو بالكود.<br><b style="color:var(--bone)">ما أحد يدري إننا موجودين.</b></p>
+  </section>
+
+  <!-- 8 · كن مختبر -->
+  <section class="scene" id="s8">
+    <div class="eyebrow">8 · نبيك</div>
+    <h2>نبي 12 مختبر لـ «حياتي»</h2>
+    <div class="counter" id="testers">0<small>/12</small></div>
+    <p class="big" style="text-align:center;color:var(--mist);margin-top:-20px">اليوم</p>
+    <p class="big">تجربه على جوالك 14 يوم، وتقول لنا وش ما اشتغل. بدون فلوس.</p>
+    <div class="link">myrent-sigma.vercel.app/testers</div>
+  </section>
+
+  <!-- 9 · النهاية -->
+  <section class="scene" id="s9" style="justify-content:center;align-items:center;text-align:center">
+    <svg viewBox="0 0 512 512" style="width:260px;height:260px;color:var(--bone)"><path d="M256 104C256 104 160 228 160 310A96 96 0 0 0 352 310C352 228 256 104 256 104Z" fill="none" stroke="currentColor" stroke-width="28"/><circle cx="256" cy="316" r="38" fill="#C8A04A"/></svg>
+    <h1>ودقة</h1>
+    <div class="pill" style="align-self:center">قيد التطوير · نسخة تجريبية</div>
+  </section>
+
+  <div class="tag" id="tag">* لقطات ببيانات تجريبية</div>
+  <div class="prog"><i id="prog"></i></div>
+</div>
+<script>
+// [start, end] لكل مشهد بالثواني
+const SCENES = [[0, 4], [4, 10.5], [10.5, 16], [16, 22.5], [22.5, 30.5], [30.5, 37.5], [37.5, 43.5], [43.5, 50], [50, 57], [57, 61]];
+const DUR = 61;
+const SCORES = [['🎨 التصميم', 8, 8], ['💻 الهندسة', 8, 8], ['🔍 الجودة', 7, 8], ['🎧 الدعم', 3, 5], ['⚖️ القانونية', 4, 6], ['💰 المالية', 4, 5], ['📣 التسويق', 3, 4]];
+const SHOT_SCENES = new Set([1, 6]);
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const ease = (x) => 1 - Math.pow(1 - clamp(x), 3);
+const $ = (id) => document.getElementById(id);
+$('score').innerHTML = SCORES.map(([n]) => '<div class="sr"><span>' + n + '</span><span class="bar"><i></i></span><span class="n">0</span></div>').join('');
+
+// ظهور عنصر: يطلع من تحت بـ 0.5 ثانية بعد تأخيره، ويختفي آخر 0.35 ثانية من المشهد
+function reveal(el, local, delay, len) {
+  const a = ease((local - delay) / 0.5), out = clamp((len - local) / 0.35);
+  el.style.opacity = Math.min(a, out);
+  el.style.transform = 'translateY(' + (1 - a) * 60 + 'px)';
+}
+window.render = function (t) {
+  SCENES.forEach(([s, e], i) => {
+    const sc = $('s' + i), local = t - s, len = e - s, on = t >= s && t < e;
+    sc.style.opacity = on ? 1 : 0;
+    if (!on) return;
+    [...sc.children].forEach((el, k) => reveal(el, local, 0.15 + k * 0.28, len));
+    if (i === 3) sc.querySelectorAll('.seat').forEach((el, k) => { const a = ease((local - 0.9 - (el.classList.contains('new') ? 1.6 : k * 0.06)) / 0.45); el.style.opacity = a; el.style.transform = 'scale(' + (0.7 + 0.3 * a) + ')'; });
+    if (i === 4) {
+      const p = ease((local - 1.2) / 3);
+      $('evalNum').innerHTML = (5.0 + 0.8 * p).toFixed(1) + '<small>/10</small>';
+      sc.querySelectorAll('.sr').forEach((row, k) => { const [, a, b] = SCORES[k]; const v = a + (b - a) * ease((local - 1.2 - k * 0.15) / 2.5); row.querySelector('i').style.width = v * 10 + '%'; row.querySelector('.n').textContent = Math.round(v) + '/10'; });
+    }
+    if (i === 5) $('checks').querySelectorAll('.check').forEach((el, k) => { const a = ease((local - 1.1 - k * 0.45) / 0.4); el.style.opacity = a; el.style.transform = 'translateX(' + (1 - a) * -80 + 'px)'; });
+  });
+  const cur = SCENES.findIndex(([s, e]) => t >= s && t < e);
+  $('tag').style.opacity = SHOT_SCENES.has(cur) ? 1 : 0;
+  $('prog').style.width = clamp(t / DUR) * 100 + '%';
+};
+window.DUR = DUR;
+render(0);
+</script>
+</body>
+</html>

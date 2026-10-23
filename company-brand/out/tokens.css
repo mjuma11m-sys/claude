@@ -1,0 +1,7 @@
+/* company-brand/tokens.css — ودقة (WADQA)، نفس الأرقام بالـ BRAND.md */
+:root{
+  --wadqa-ink:#0B1514; --wadqa-bone:#F2EBDD; --wadqa-gold:#C8A04A;
+  --wadqa-gold-deep:#7A5A12; /* نص ذهبي على فاتح (5.4:1) */
+  --wadqa-slate:#1C2B2A; --wadqa-mist:#8FA09C;
+  --wadqa-font:'IBM Plex Sans Arabic',system-ui,sans-serif;
+}

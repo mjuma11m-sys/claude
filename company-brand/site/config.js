@@ -1,0 +1,1 @@
+window.WADQA = {"url":"https://gqpagtblgqxzwjgsrech.supabase.co","key":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxcGFndGJsZ3F4endqZ3NyZWNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIwNDAxNTksImV4cCI6MjEwNzYxNjE1OX0.Bce2WgJ-BT50VBWFra1RK-hRNCz72M4bosywZV1eVgQ"};

@@ -3316,6 +3316,9 @@ window.HAYATI_CONFIG = {
       emit();
       return;
     }
+    // رابط «نسيت كلمة السر» (#…&type=recovery): المكتبة تطلق PASSWORD_RECOVERY وقت التهيئة، قبل ما نسجّل onAuthStateChange تحت،
+    //   وتمسح الرابط. فنقراه هني قبل createClient، وإلا الرابط يصير تسجيل دخول عادي بدون شاشة كلمة مرور جديدة (DW-050).
+    const recoveryLink = /(^|[#&?])type=recovery(&|$)/.test(String(location.hash || '').slice(1)) || /(^|[?&])type=recovery(&|$)/.test(String(location.search || '').slice(1));
     try {
       // PKCE: Google وApple يرجعون بـ ?code= ، والمكتبة تبدّله بجلسة
       sb = global.supabase.createClient(cfg.url, cfg.key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' } });
@@ -3326,6 +3329,7 @@ window.HAYATI_CONFIG = {
     }
     status.configured = true;
     const { data } = await sb.auth.getSession();
+    if (recoveryLink && data.session) status.recovery = true;
     onSession(data.session);
     sb.auth.onAuthStateChange((evt, s) => {
       if (evt === 'PASSWORD_RECOVERY') { status.recovery = true; }
