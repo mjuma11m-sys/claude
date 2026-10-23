@@ -1,0 +1,34 @@
+// لقطات حقيقية لـ DW-024 («أول دقيقة») من dist/Hayati.html: مستخدم جديد، بيانات تجريبية
+const { chromium } = require('/home/user/claude/hayati-app/node_modules/@playwright/test');
+const path = require('path');
+const APP = 'file://' + path.join(__dirname, '../../../hayati-app/dist/Hayati.html');
+(async () => {
+  const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+  const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, locale: 'ar-BH', timezoneId: 'Asia/Bahrain', colorScheme: 'light' });
+  await ctx.addInitScript(() => { localStorage.setItem('hayati-loop-ask', 'yes'); localStorage.setItem('hayati-seen-version', 'v22'); });
+  const p = await ctx.newPage();
+  const errs = []; p.on('pageerror', (e) => errs.push(e.message));
+  const shot = async (n) => { await p.waitForTimeout(700); await p.evaluate(() => document.activeElement && document.activeElement.blur()); await p.screenshot({ path: path.join(__dirname, 'shots', n + '.png') }); };
+  await p.goto(APP); await p.waitForFunction(() => window.App && App.st);
+  await p.addStyleTag({ content: '.morning{display:none!important}' });
+  await p.fill('#obName', 'سارة');
+  await p.click('.ob-chip[data-role="student"]');
+  await p.click('#obPrayer [data-p="gulf"]');
+  await p.fill('#obBudget', '380');
+  await p.evaluate(() => scrollTo(0, 0));
+  await shot('1-welcome');
+  await p.click('[data-action="ob-save"]'); await p.waitForTimeout(600);
+  await p.evaluate(() => scrollTo(0, 0));
+  await shot('2-step');
+  await p.evaluate(() => App.S.setSettings({ sms_consent_at: new Date().toISOString() }));
+  await p.click('#fmCard [data-action="paste-sms"]'); await p.waitForTimeout(400);
+  await p.fill('[name=sms]', 'Purchase of BHD 12.500 at LULU HYPERMARKET using card XXXX4821. Available balance BHD 980.000');
+  await shot('3-paste');
+  await p.click('#sheetSave'); await p.waitForTimeout(600);
+  await p.evaluate(() => scrollTo(0, 0));
+  await shot('4-win');
+  const box = async (sel) => p.evaluate((s) => { const r = document.querySelector(s).getBoundingClientRect(); return [r.left / 390, r.top / 844, r.width / 390, r.height / 844].map((x) => +x.toFixed(3)); }, sel);
+  console.log('fm', await box('#fmCard'));
+  console.log(errs.length ? errs : 'ok');
+  await b.close();
+})();

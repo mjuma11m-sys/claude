@@ -8,7 +8,8 @@
   },
   "plugins": {
     "LocalNotifications": {
-      "iconColor": "#0E3B43"
+      "iconColor": "#0E3B43",
+      "smallIcon": "ic_stat_hayati"
     },
     "Keyboard": {
       "resize": "native",

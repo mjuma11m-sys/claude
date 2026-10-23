@@ -6,23 +6,45 @@ Personal life-OS PWA: expenses, budgets, bank/BenefitPay SMS parsing, study sche
 - Source snapshot pulled from artifact version `1791724043-f44e`.
 - Data is **not** in this repo — it lives in the artifact's `db` (per Claude user), or Supabase if `config.js` is filled.
 
-| File | Role |
+## الملفات
+```
+hayati-app/
+├── index.html · privacy.html · terms.html · manifest.webmanifest · sw.js   ← لازم بالجذر (روابط المتاجر، ونطاق sw.js)
+├── js/
+│   ├── core/       config · sms · store · icons · app        ← الأساس، بهالترتيب
+│   ├── i18n/       i18n-en · i18n                            ← الإنجليزي (طبقة عرض بس)
+│   ├── features/   الميزات (كل ملف يضيف على window.Extras)
+│   └── native/     native.js                                 ← الآيفون بس (Capacitor)
+├── docs/           IOS.md · ANDROID.md · STORE.md · MONEY.md · DATA.md (خريطة البيانات)
+├── icons/ · brand/ · store/ (صور المتاجر) · supabase/
+├── tests/          app.spec.js (متصفح بمقاس الآيفون) · unit/ (قارئ رسايل البنك)
+├── scripts/        cap-www.js (يجهّز www/ للآيفون) · ios-smoke.sh (اختبار السميوليتر)
+└── ios/ · android/ · www/ · dist/   ← تنبني: Xcode، Android Studio، ملفات التطبيق للجوال، ونسخة ملف واحد بدون نت
+```
+**ترتيب السكربتات** بـ `index.html` مهم (كل ملف يعتمد على اللي قبله). أي سكربت جديد: أضفه هناك **وبـ `SHELL` في `sw.js`** (فيه اختبار يتأكد).
+
+## وين ألقى…؟
+| الميزة | الملف |
 |---|---|
-| `index.html` | Shell, styles, script order |
-| `store.js` | Local state + sync (Claude artifact db → Supabase fallback) |
-| `sms.js` | Bank/BenefitPay message parser (amount, merchant, category) |
-| `app.js` | Core views: Today, Expenses, Schedule, Tasks, Settings |
-| `extras.js`, `extras2.js` | Gym, health, GPA, study/focus, goals, challenges, assistant |
-| `calendar.js` | `.ics` export with alarms |
-| `motion.js` | Motion layer: view entrance, sheet enter/exit, count-up, bar/ring tweens, toggle feedback |
-| `config.js` | Supabase URL/anon key (empty) |
-| `sw.js` | Service worker: opens offline, iOS notifications via `showNotification`, tap opens the app. Add any new script to `SHELL` (a test checks) |
-| `find.js` | Search across expenses/tasks/schedule/matches (Arabic-normalised, total spent) + undo bar after any delete (wraps `S.remove`) |
-| `insights.js` | Month-end spending forecast (ignores subscriptions and one-offs > 25% of budget, from day 5) + goalkeeper readiness card (sleep, HRV and resting HR vs your own 14-night median, yesterday’s load) |
-| `community.js` | First-run welcome card (name, roles, prayer times, budget) + «ملفك» in settings. `App.has(role)` gates GPA/attendance (student), keeper mode, readiness (athlete). Empty roles = everything on (existing users unchanged) |
-| `privacy.js` + `privacy.html` | Masks card/account numbers in stored bank messages (also old ones, once), privacy policy page (AR/EN), «احذف كل بياناتي» (device + Claude db + Supabase + account) |
-| `i18n.js` + `i18n-en.js` | English (beta): display-only translation layer (text nodes + placeholders/aria), LTR switch; data is never translated. Language picker in the welcome card and settings |
-| `pwa.js` | App icon badge = today's + overdue undone tasks (toggle in settings) |
+| اليوم، المصاريف، الجدول، المهام، الإعدادات، النوافذ | `js/core/app.js` |
+| البيانات والمزامنة (`S.upsert`، `S.remove`) | `js/core/store.js` · وشكلها بـ `docs/DATA.md` |
+| قراءة رسايل البنك و BenefitPay | `js/core/sms.js` |
+| الصلاة، العادات، الماء والنوم، ملخص الصباح، تنبيه الميزانية، تفاصيل المادة | `js/features/extras.js` |
+| تقسيم الفاتورة، تحديات التوفير، ملخص السنة، الدرجات الجزئية، بطاقات المراجعة، المناسبات، المقاضي | `js/features/extras2.js` |
+| تقرير الأسبوع + وضع الحارس والمباريات | `js/features/extras3.js` |
+| سؤال الحضور، هدف المذاكرة، جاهزية الاختبار | `js/features/study.js` |
+| توقع آخر الشهر + الجاهزية | `js/features/insights.js` |
+| البحث + التراجع | `js/features/find.js` |
+| بطاقة الترحيب والأدوار (`App.has`) | `js/features/community.js` |
+| الخصوصية، الحذف، تذكير النسخة الاحتياطية، رقم الإصدار | `js/features/privacy.js` |
+| تصدير التقويم (.ics) | `js/features/calendar.js` |
+| Apple Watch (النوم والنبض) | `js/features/watch.js` |
+| استيراد جدول التمارين (صورة/PDF/رسالة) | `js/features/import.js` |
+| القفل بالرمز | `js/features/lock.js` |
+| الحركة | `js/features/motion.js` |
+| رقم أيقونة التطبيق | `js/features/pwa.js` |
+| تنبيهات الآيفون، الأزرار، الاهتزاز، المشاركة | `js/native/native.js` |
+| الإنجليزي | `js/i18n/i18n.js` + القاموس `js/i18n/i18n-en.js` |
 
 Run locally: `npx serve hayati-app` (artifact db unavailable outside claude.ai → falls back to localStorage/Supabase).
 

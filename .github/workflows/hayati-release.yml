@@ -1,0 +1,52 @@
+name: Hayati Release
+
+# DW-046: يبني نسخة المتجر (AAB) لـ Google Play. يوقّعها بس لو المالك حط الأسرار بإعدادات الريبو:
+#   HAYATI_KEYSTORE_B64 (ملف .jks بـ base64) · HAYATI_KEYSTORE_PASSWORD · HAYATI_KEY_ALIAS · HAYATI_KEY_PASSWORD
+# المفتاح ما ينحفظ بالريبو ولا ينطبع باللوق، والملف ينمسح بآخر التشغيل. ما يرفع للمتجر: الرفع يدوي من المالك.
+on:
+  workflow_dispatch:
+  push:
+    tags: ['hayati-v*']
+  pull_request:
+    paths: ['.github/workflows/hayati-release.yml', 'hayati-app/android/app/build.gradle', 'hayati-app/scripts/android-release.sh']
+
+concurrency:
+  group: hayati-release-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: hayati-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: hayati-app/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - name: Build release bundle (signed when the secrets exist)
+        env:
+          KS_B64: ${{ secrets.HAYATI_KEYSTORE_B64 }}
+          HAYATI_KEYSTORE_PASSWORD: ${{ secrets.HAYATI_KEYSTORE_PASSWORD }}
+          HAYATI_KEY_ALIAS: ${{ secrets.HAYATI_KEY_ALIAS }}
+          HAYATI_KEY_PASSWORD: ${{ secrets.HAYATI_KEY_PASSWORD }}
+        run: bash scripts/android-release.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hayati-release-aab
+          path: |
+            hayati-app/android/app/build/outputs/bundle/release/app-release.aab
+            hayati-app/android-release/summary.txt
+          retention-days: 7

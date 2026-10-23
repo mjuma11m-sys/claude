@@ -8,13 +8,18 @@
     "test:unit": "node --test tests/unit/*.test.js",
     "test:e2e": "playwright test",
     "cap:sync": "node scripts/cap-www.js && cap sync ios",
-    "cap:open": "cap open ios"
+    "cap:open": "cap open ios",
+    "cap:sync:android": "node scripts/cap-www.js && cap sync android",
+    "cap:open:android": "cap open android"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.5.3",
     "@playwright/test": "1.56.1"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/browser": "^8.0.5",
     "@capacitor/core": "^8.5.3",
     "@capacitor/filesystem": "^8.1.4",
     "@capacitor/haptics": "^8.0.2",

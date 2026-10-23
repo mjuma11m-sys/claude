@@ -1,15 +1,15 @@
 // Service worker: يخلّي «حياتي» يفتح بدون نت، ويوصل التنبيهات للآيفون (iOS يطلب showNotification من SW)
 // كود التطبيق بس ينحفظ هني — بياناتك ما تمر من الكاش أبداً.
-const VERSION = 'hayati-v10';
+const VERSION = 'hayati-v23';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest',
-  'i18n-en.js', 'i18n.js', 'config.js', 'sms.js', 'store.js', 'calendar.js', 'icons.js', 'app.js', 'extras.js', 'extras2.js', 'extras3.js',
-  'study.js', 'watch.js', 'import.js', 'lock.js', 'motion.js', 'pwa.js', 'find.js', 'insights.js', 'community.js', 'privacy.js', 'native.js', 'privacy.html',
+  'js/core/errlog.js', 'js/i18n/i18n-en.js', 'js/i18n/i18n.js', 'js/core/config.js', 'js/core/sms.js', 'js/core/store.js', 'js/features/calendar.js', 'js/core/icons.js', 'js/core/app.js', 'js/features/extras.js', 'js/features/extras2.js', 'js/features/extras3.js',
+  'js/features/study.js', 'js/features/watch.js', 'js/features/import.js', 'js/features/lock.js', 'js/features/motion.js', 'js/features/pwa.js', 'js/features/find.js', 'js/features/insights.js', 'js/features/community.js', 'js/features/privacy.js', 'js/features/payday.js', 'js/features/worship.js', 'js/features/ibada.js', 'js/features/qibla.js', 'js/features/travel.js', 'js/features/tools.js', 'js/features/lectures.js', 'js/features/firstmin.js', 'js/features/fit.js', 'js/features/goalphoto.js', 'js/features/reportimg.js', 'js/features/backup.js', 'js/features/widget.js', 'js/features/account.js', 'js/features/whatsnew.js', 'js/native/native.js', 'privacy.html', 'terms.html',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
+  // المكتبات والخطوط محلية (DW-011)؛ pdf.js ينحفظ أول ما ينستخدم
+  'vendor/supabase/supabase.min.js', 'vendor/fonts/fonts.css',
+  ...['arabic', 'latin'].flatMap((s) => [400, 500, 600, 700].map((w) => `vendor/fonts/plex-${s}-${w}.woff2`)),
 ];
-// مكتبات بإصدار مثبّت بالرابط = ما تتغير، فنقراها من الكاش أول
-const PINNED_CDN = ['https://cdn.jsdelivr.net/npm/', 'https://cdnjs.cloudflare.com/ajax/libs/'];
-
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(VERSION)
@@ -41,15 +41,6 @@ async function networkFirst(req) {
   }
 }
 
-async function cacheFirst(req) {
-  const c = await caches.open(VERSION);
-  const hit = await c.match(req);
-  if (hit) return hit;
-  const res = await fetch(req);
-  if (res.ok || res.type === 'opaque') c.put(req, res.clone());
-  return res;
-}
-
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
@@ -59,8 +50,7 @@ self.addEventListener('fetch', (e) => {
     if (url.pathname.startsWith(new URL('./', self.registration.scope).pathname)) e.respondWith(networkFirst(req));
     return;
   }
-  if (PINNED_CDN.some((p) => req.url.startsWith(p))) e.respondWith(cacheFirst(req));
-  // أي شي ثاني (Supabase وغيره) يروح للنت مباشرة بدون كاش
+  // أي شي برّا (Supabase لو تفعّلت الحسابات) يروح للنت مباشرة بدون كاش
 });
 
 // ضغطة على التنبيه تفتح التطبيق (أو ترجعك له لو مفتوح)

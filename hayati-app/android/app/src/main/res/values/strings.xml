@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">حياتي</string>
+    <string name="title_activity_main">حياتي</string>
+    <string name="package_name">bh.hayati.app</string>
+    <string name="custom_url_scheme">bh.hayati.app</string>
+    <!-- DW-031: ودجت الشاشة الرئيسية -->
+    <string name="widget_desc">الجاي اليوم وبكرة، والميزانية، وزر «+ مصروف»</string>
+    <string name="widget_empty">افتح حياتي مرة عشان يتعبّى الودجت</string>
+    <string name="widget_next">الجاي</string>
+    <string name="widget_add">+ مصروف</string>
+    <string name="widget_paste">الصق رسالة</string>
+    <string name="widget_small_desc">كم باقي من الميزانية، وزر «+ مصروف»</string>
+    <string name="widget_small_open">افتح حياتي مرة</string>
+    <string name="widget_small_label">حياتي · صغير</string>
+</resources>

@@ -3,7 +3,7 @@
 const { chromium } = require('/home/user/claude/hayati-app/node_modules/@playwright/test');
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const D = __dirname, F = path.join(D, '../hayati-insta');
-const ctx = { window: {} }; vm.runInNewContext(fs.readFileSync('/home/user/claude/hayati-app/icons.js', 'utf8'), ctx);
+const ctx = { window: {} }; vm.runInNewContext(fs.readFileSync('/home/user/claude/hayati-app/js/core/icons.js', 'utf8'), ctx);
 const I = (n, w) => ctx.window.icon(n).replace('class="i"', 'width="' + w + '" height="' + w + '"');
 const MARK = '<path d="M 383.3 172.7 A 160 160 0 1 1 300 102.2" fill="none" stroke="#E8DCC4" stroke-opacity=".28" stroke-width="22" stroke-linecap="round"/><path d="M 304 166 L 196 166 L 264 222 C 204 222 168 254 168 292 C 168 336 206 360 256 360 C 292 360 318 348 338 332" fill="none" stroke="#E8DCC4" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/><circle cx="352" cy="128" r="30" fill="#FF6B4A"/>';
 const html = `<!doctype html><html dir="rtl"><head><meta charset="utf-8"><style>

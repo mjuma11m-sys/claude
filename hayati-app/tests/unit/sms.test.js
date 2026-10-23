@@ -1,7 +1,7 @@
 // قارئ رسائل البنك: أرقام ومحلات وتصنيفات (node --test)
 const test = require('node:test');
 const assert = require('node:assert');
-const P = require('../../sms.js');
+const P = require('../../js/core/sms.js');
 
 test('BenefitPay / card purchase → expense with merchant and category', () => {
   const r = P.parse('Your card XX4821 was used for BHD 3.750 at COSTA COFFEE SEEF on 11/10/26. Avl bal BHD 412.300');
@@ -64,4 +64,28 @@ test('mask: card, account and IBAN numbers hidden; amounts and dates kept', () =
   assert.equal(P.mask('بطاقة 5123 4567 8901 2345 مبلغ 1250.000'), 'بطاقة ••45 مبلغ 1250.000');
   // القراءة تشتغل على النص الأصلي، والإخفاء ما يغيّر المبلغ
   assert.equal(P.parse(P.mask('Your card XX4821 was used for BHD 3.750 at COSTA')).amount, 3.75);
+});
+
+test('سطر سريع من التنبيه (DW-038): المبلغ قبل أو بعد، أرقام عربية، + للدخل', () => {
+  assert.deepStrictEqual(P.quick('1.200 قهوة'), { kind: 'expense', amount: 1.2, merchant: 'قهوة', category: 'قهوة' });
+  assert.deepStrictEqual(P.quick('٣٫٥ كوستا'), { kind: 'expense', amount: 3.5, merchant: 'كوستا', category: 'قهوة' });
+  assert.strictEqual(P.quick('طلبات 4.5 د.ب').category, 'أكل ومطاعم');
+  assert.strictEqual(P.quick('طلبات 4.5 د.ب').merchant, 'طلبات');
+  assert.strictEqual(P.quick('+50 راتب').kind, 'income');
+  assert.strictEqual(P.quick('3').category, 'أخرى');
+  for (const bad of ['', 'hello', '0', 'قهوة']) assert.strictEqual(P.quick(bad), null);
+});
+
+test('تصنيفاتك (DW-043): تصحيح محل مرة يغلب القواعد، بنفس المفتاح لفروعه، والدخل منفصل عن الصرف', () => {
+  P.setLearned({});
+  const msg = 'Purchase of BHD 4.000 at ALDANA STORE SEEF. Available balance BHD 100.000';
+  assert.strictEqual(P.parse(msg).category, 'أخرى');   // محل ما تعرفه القواعد
+  assert.ok(P.learn('expense', 'ALDANA STORE SEEF', 'هدايا'));
+  assert.strictEqual(P.parse(msg).category, 'هدايا');
+  assert.strictEqual(P.parse('Purchase of BHD 9.000 at ALDANA STORE MANAMA').category, 'هدايا');   // فرع ثاني = نفس المحل
+  assert.strictEqual(P.learnedFor('income', 'ALDANA STORE'), null);
+  assert.strictEqual(P.quick('aldana store 3').category, 'هدايا');
+  assert.strictEqual(P.learn('expense', '', 'x'), false);
+  P.setLearned({});
+  assert.strictEqual(P.parse(msg).category, 'أخرى');
 });

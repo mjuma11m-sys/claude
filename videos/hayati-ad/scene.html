@@ -1,0 +1,197 @@
+<!doctype html>
+<html dir="rtl">
+<head>
+<meta charset="utf-8">
+<!-- إعلان ريل 24 ث، 9:16: مشكلة ← حل ← 6 ميزات ← دعوة. النص بالمنطقة الآمنة للريلز (y 220–1480، بعيد عن أيقونات اليمين). نفس أسلوب hayati-motion:
+     ورق #F7F4EE، بحري #0E3B43، مرجاني #FF6B4A للكلمة المهمة. شاشات التطبيق لقطات حقيقية (shots.js) ببيانات تجريبية -->
+<style>
+@font-face { font-family: P; src: url(IBMPlexSansArabic-Bold.ttf); font-weight: 700; }
+@font-face { font-family: P; src: url(IBMPlexSansArabic-Regular.ttf); font-weight: 400; }
+:root { --sea: #0E3B43; --pearl: #E8DCC4; --coral: #FF6B4A; --paper: #F7F4EE; --ink: #0B2328; --ink2: #33494D; }
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; font-family: P; font-weight: 700; color: var(--ink); }
+.abs { position: absolute; }
+#bg { inset: 0; background: var(--paper); }
+#tint { inset: 0; }
+#dark { inset: 0; background: radial-gradient(120% 80% at 50% 40%, #134a52 0%, var(--sea) 50%, #071a1e 100%); }
+.w { display: inline-block; will-change: transform, opacity; }
+.c { color: var(--coral); }
+.h { left: 60px; right: 60px; text-align: center; line-height: 1.15; }
+.sub { left: 60px; right: 60px; text-align: center; font: 400 50px/1.45 P; color: var(--ink2); }
+.sms { background: #E9E9EB; color: #111; border-radius: 44px; padding: 30px 38px; font: 400 44px/1.4 P; direction: ltr; text-align: left; }
+.chip { left: 150px; right: 150px; height: 118px; border-radius: 36px; background: #fff; display: flex; align-items: center; gap: 26px; padding: 0 38px; font-size: 54px; box-shadow: 0 14px 30px -18px rgba(11,35,40,.35); }
+.chip .n { width: 68px; height: 68px; border-radius: 50%; background: rgba(14,59,67,.1); display: grid; place-items: center; font-size: 38px; flex: none; }
+.chip .x { position: absolute; left: 30px; right: 30px; top: 57px; height: 7px; border-radius: 4px; background: var(--coral); transform-origin: right center; }
+.phone { left: 270px; top: 520px; width: 540px; height: 1141px; border-radius: 66px; background: #0b1416; padding: 12px; box-shadow: 0 60px 100px -46px rgba(11,35,40,.65), inset 0 0 0 3px #2a4a50; }
+.scr { position: relative; width: 100%; height: 100%; border-radius: 54px; overflow: hidden; background: #fff; }
+.scr > * { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.scr img { object-fit: cover; object-position: top; display: block; }
+.touch { width: 110px; height: 110px; border-radius: 50%; background: rgba(255,107,74,.35); border: 5px solid var(--coral); }
+.tag { padding: 10px 26px; border-radius: 999px; background: rgba(11,35,40,.82); color: var(--pearl); font: 400 30px P; white-space: nowrap; }
+.step { left: 60px; right: 60px; text-align: center; font-size: 72px; line-height: 1.2; }
+.step b { display: inline-grid; place-items: center; width: 92px; height: 92px; border-radius: 50%; background: var(--coral); color: #2A0E07; font-size: 54px; margin-inline-end: 22px; vertical-align: middle; }
+.note { left: 26px; right: 26px; padding: 26px 28px; border-radius: 38px; background: rgba(250,250,250,.97); color: #111; box-shadow: 0 24px 40px -20px rgba(0,0,0,.6); }
+.note .top { display: flex; gap: 14px; align-items: center; font: 400 26px P; color: #555; }
+.note .ic { width: 44px; height: 44px; border-radius: 12px; overflow: hidden; flex: none; }
+.note b { display: block; font-size: 38px; margin-top: 12px; }
+.note small { display: block; font: 400 30px P; color: #444; margin-top: 4px; }
+.note .acts { display: flex; gap: 14px; margin-top: 18px; }
+.note .acts span { flex: 1; text-align: center; padding: 16px; border-radius: 22px; background: rgba(14,59,67,.1); color: var(--sea); font-size: 32px; }
+.demo { left: 0; right: 0; text-align: center; font: 400 30px P; color: var(--ink2); }
+/* بصفحة RTL، العنصر المطلق بدون left يلزق يمين؛ هذي نحرّكها بـ transform من الزاوية */
+#fx > .abs { left: 0; top: 0; }
+.days { left: 90px; right: 90px; display: flex; justify-content: center; gap: 22px; direction: ltr; }
+.days span { width: 112px; height: 112px; border-radius: 50%; display: grid; place-items: center; font-size: 48px; color: var(--pearl); background: rgba(232,220,196,.1); }
+.days span.on { background: var(--coral); color: #2A0E07; }
+.scr img { transform-origin: 50% 0; }
+.pill { position: absolute; left: 0; top: 0; padding: 22px 34px; border-radius: 999px; background: rgba(232,220,196,.12); border: 2px solid rgba(232,220,196,.25); color: var(--pearl); font-size: 50px; white-space: nowrap; }
+.bars { left: 140px; right: 140px; top: 226px; display: flex; gap: 10px; direction: rtl; }
+.bars i { flex: 1; height: 8px; border-radius: 4px; background: rgba(14,59,67,.15); overflow: hidden; position: relative; }
+.bars i b { position: absolute; inset: 0; background: var(--coral); transform-origin: right; }
+.step b { width: 84px; height: 84px; font-size: 48px; }
+</style>
+</head>
+<body>
+<div id="bg" class="abs"></div>
+<div id="tint" class="abs"></div>
+<div id="dark" class="abs"></div>
+<div id="stage" class="abs" style="inset:0"></div>
+<div id="fx" class="abs" style="inset:0;pointer-events:none"></div>
+<script>
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const eo = (x) => 1 - Math.pow(1 - x, 4);
+const ei = (x) => x * x * x;
+const eio = (x) => (x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+const back = (x) => { const c = 1.6; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const lerp = (a, b, x) => a + (b - a) * x;
+const $ = (h) => { const d = document.createElement('div'); d.innerHTML = h.trim(); return d.firstElementChild; };
+const stage = document.getElementById('stage'), fx = document.getElementById('fx');
+const add = (h, parent) => { const e = $(h); (parent || stage).appendChild(e); return e; };
+const set = (e, o, tf) => { e.style.opacity = o; e.style.transform = tf || ''; e.style.display = o <= 0.001 ? 'none' : ''; };
+// نافذة ظهور: يطلع بين a وb ويختفي بين c وd
+const win = (t, a, b, c, d) => eo(seg(t, a, b)) * (1 - ei(seg(t, c, d)));
+
+const ARC = 'M 383.3 172.7 A 160 160 0 1 1 300 102.2';
+const HA = 'M 304 166 L 196 166 L 264 222 C 204 222 168 254 168 292 C 168 336 206 360 256 360 C 292 360 318 348 338 332';
+const LOGO = (ink) => `<svg viewBox="0 0 512 512" style="width:100%;height:100%;overflow:visible"><path class="arc" d="${ARC}" fill="none" stroke="${ink}" stroke-opacity=".28" stroke-width="22" stroke-linecap="round"/><path class="ha" d="${HA}" fill="none" stroke="${ink}" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/><circle class="dot" cx="352" cy="128" r="30" fill="#FF6B4A"/></svg>`;
+const ICON = `<svg viewBox="0 0 512 512" style="width:100%;height:100%;display:block"><rect width="512" height="512" rx="116" fill="#0E3B43"/><path d="${ARC}" fill="none" stroke="#E8DCC4" stroke-opacity=".28" stroke-width="22" stroke-linecap="round"/><path d="${HA}" fill="none" stroke="#E8DCC4" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/><circle cx="352" cy="128" r="30" fill="#FF6B4A"/></svg>`;
+
+function words(el, text) {   // *كلمة* = مرجاني
+  el.innerHTML = text.split(' ').map((w) => (/^\*.*\*[.؟،]?$/.test(w) ? '<span class="w c">' + w.replace(/\*/g, '') + '</span>' : '<span class="w">' + w + '</span>')).join(' ');
+  return [...el.querySelectorAll('.w')];
+}
+function showWords(ws, t, start, gap, dur) {
+  ws.forEach((w, i) => { const x = eo(seg(t, start + i * gap, start + i * gap + (dur || .45))); w.style.opacity = x; w.style.transform = `translateY(${(1 - x) * 40}px)`; });
+}
+
+
+
+
+// ===== 1) المشكلة (0–3.6) =====
+const qa = add('<div class="abs h" style="top:280px;font-size:96px;color:var(--pearl)"></div>');
+const qaw = words(qa, 'وين تكتب *يومك؟*');
+const CH = [['💳 المصاريف', 130, 560, -6], ['📅 الجدول', 620, 520, 5], ['🕌 الصلاة', 210, 760, 4], ['✅ المهام', 640, 760, -4],
+  ['🛒 المشتريات', 110, 1000, 3], ['📚 المذاكرة', 600, 1010, -5], ['🎂 المناسبات', 170, 1240, -3], ['🎯 الادخار', 640, 1250, 6]];
+const chips = CH.map(([l]) => add('<div class="pill">' + l + '</div>', fx));
+const qb = add('<div class="abs sub" style="top:1460px;font-size:52px;color:rgba(232,220,196,.8)">ولا تنساه؟</div>');
+
+// ===== 2) الحل (3.4–5.4) =====
+const big = add(`<div class="abs" style="left:390px;top:620px;width:300px;height:300px;border-radius:70px;overflow:hidden;box-shadow:0 50px 90px -30px rgba(11,35,40,.6)">${ICON}</div>`);
+const sol = add('<div class="abs h" style="top:990px;font-size:104px;line-height:1.3;color:var(--sea)"></div>');
+const solw = words(sol, 'كلها في *«حياتي»*');
+
+// ===== 3) الميزات (5.4–19.2) =====
+const bars = add('<div class="abs bars">' + '<i><b></b></i>'.repeat(6) + '</div>');
+const barB = [...bars.querySelectorAll('b')];
+const phone = add('<div class="abs phone"><div class="scr"></div></div>');
+const scr = phone.querySelector('.scr');
+const NAMES = ['1-today', '2-money', '3-summary', '4-zakat', '5-ibada', '6-tools'];
+const SH = {}; NAMES.forEach((n) => { SH[n] = add('<img src="shots/' + n + '.png">', scr); });
+const CUTS = [5.4, 7.7, 10.0, 12.3, 14.6, 16.9, 19.2];
+const STEPS = [
+  ['يومك <span class="c">بنظرة</span> وحدة', 'المحاضرة الجاية، المهام، ومصروف اليوم'],
+  ['من <span class="c">راتب</span> لراتب', 'تختار يوم راتبك والشهر يمشي عليه'],
+  ['راتبك <span class="c">وين راح؟</span>', 'أكثر 3 أشياء صرفت عليها'],
+  ['<span class="c">الزكاة</span> والخُمس', 'حاسبة تقدير · سني / شيعي'],
+  ['<span class="c">عبادتي</span>', 'الهجري، الصلاة الجاية، والمناسبات'],
+  ['<span class="c">كل شي</span> بمكان واحد', 'الفلوس · يومك · الدراسة والصحة · العبادة'],
+].map(([a, b], i) => [add('<div class="abs step" style="top:268px;font-size:66px"><b>' + (i + 1) + '</b>' + a + '</div>'), add('<div class="abs sub" style="top:380px;font-size:40px">' + b + '</div>')]);
+const demo = add('<div class="abs demo" style="top:452px;font-size:28px">* لقطات ببيانات تجريبية</div>');
+
+// ===== 4) الختام (19.2–24) =====
+const icon = add(`<div class="abs" style="left:415px;top:330px;width:250px;height:250px;border-radius:58px;overflow:hidden;box-shadow:0 40px 70px -30px rgba(11,35,40,.6)">${ICON}</div>`);
+const logo = add(`<div class="abs" style="left:415px;top:330px;width:250px;height:250px">${LOGO('#0E3B43')}</div>`);
+const ha = logo.querySelector('.ha'), arc = logo.querySelector('.arc'), ldot = logo.querySelector('.dot');
+const HAL = ha.getTotalLength(), ARCL = arc.getTotalLength();
+const wm = add('<div class="abs" style="left:0;right:0;top:630px;text-align:center;font-size:160px;line-height:1;padding-bottom:60px;color:var(--sea)">حياتي</div>');
+const tag = add('<div class="abs sub" style="top:860px;font-size:54px"></div>');
+const tagw = words(tag, 'يومك كله *بتطبيق* واحد.');
+const beta = add('<div class="abs" style="left:0;right:0;top:1000px;text-align:center"><span style="display:inline-block;padding:16px 40px;border-radius:999px;background:var(--sea);color:var(--pearl);font:400 40px P">قيد التطوير · نسخة تجريبية</span></div>');
+const cta = add('<div class="abs" style="left:150px;right:150px;top:1150px;padding:32px 30px;border-radius:40px;background:#fff;text-align:center;box-shadow:0 20px 40px -24px rgba(11,35,40,.45)"><div style="font:400 42px P;color:var(--ink2)">تبي تجربه على أندرويد قبل الكل؟</div><div style="font-size:56px;margin-top:10px">اكتب <span class="c">«حياتي»</span> بالتعليقات 👇</div></div>');
+const demo2 = add('<div class="abs demo" style="top:1410px">* لقطات ببيانات تجريبية</div>');
+
+const TINTS = [[3.6, '150,215,190'], [10.0, '240,200,120'], [14.6, '150,200,230'], [19.2, '232,220,196']];
+function tintAt(t) {
+  let i = 0; while (i < TINTS.length - 1 && t >= TINTS[i + 1][0]) i++;
+  const [ta, ca] = TINTS[i], nb = TINTS[Math.min(i + 1, TINTS.length - 1)];
+  const x = eio(seg(t, nb[0] - .8, nb[0])), ca3 = ca.split(',').map(Number), cb3 = nb[1].split(',').map(Number);
+  return ca3.map((v, k) => Math.round(lerp(v, cb3[k], i < TINTS.length - 1 ? x : 0))).join(',');
+}
+function setT(t) {
+  set(document.getElementById('dark'), 1 - eio(seg(t, 3.2, 3.7)));
+  document.getElementById('tint').style.background = `radial-gradient(90% 60% at 80% 0%, rgba(${tintAt(t)},.45), transparent 70%), radial-gradient(80% 50% at 0% 100%, rgba(${tintAt(t)},.25), transparent 70%)`;
+
+  // المشكلة: الكلمات تنط متفرقة وتطفو، بعدين تنسحب للنص
+  showWords(qaw, t, .1, .15); set(qa, 1 - ei(seg(t, 2.8, 3.2)));
+  set(qb, win(t, 1.9, 2.2, 2.8, 3.1));
+  const pull = eio(seg(t, 2.7, 3.4));
+  chips.forEach((c, i) => {
+    const [, x, y, r] = CH[i], a = .35 + i * .17, p = back(seg(t, a, a + .4));
+    const fl = Math.sin(t * 2.2 + i) * 10, w = c.offsetWidth, hgt = c.offsetHeight;
+    const cx = lerp(x, 540 - w / 2, pull), cy = lerp(y + fl, 770 - hgt / 2, pull);
+    set(c, clamp(seg(t, a, a + .15)) * (1 - ei(seg(t, 3.2, 3.45))), `translate(${cx}px,${cy}px) rotate(${r * (1 - pull)}deg) scale(${(.4 + .6 * p) * (1 - .6 * pull)})`);
+  });
+
+  // الحل
+  const bp = back(seg(t, 3.3, 3.8)), bOut = eio(seg(t, 5.1, 5.5));
+  set(big, clamp(seg(t, 3.3, 3.45)) * (1 - bOut), `translateY(${-bOut * 300}px) scale(${(.3 + .7 * bp) * (1 - .4 * bOut)})`);
+  showWords(solw, t, 3.7, .15, .4); set(sol, 1 - ei(seg(t, 5.0, 5.3)));
+
+  // الميزات
+  const ph = eo(seg(t, 5.2, 5.8)), phOut = 1 - ei(seg(t, 18.9, 19.3));
+  const ry = Math.sin(t * .9) * 5, rx = Math.cos(t * .7) * 2, fy = Math.sin(t * 1.3) * 8;
+  set(phone, ph * phOut, `perspective(1800px) translateY(${(1 - ph) * 600 + fy}px) rotateY(${ry}deg) rotateX(${rx}deg) scale(${.94 + .06 * ph})`);
+  set(bars, ph * phOut);
+  barB.forEach((b, i) => { b.style.transform = `scaleX(${seg(t, CUTS[i], CUTS[i + 1])})`; });
+  NAMES.forEach((n, i) => {
+    const a = CUTS[i], b = CUTS[i + 1], last = i === NAMES.length - 1;
+    const x = (i === 0 ? 1 : eo(seg(t, a, a + .35))) * (last ? 1 : 1 - ei(seg(t, b, b + .3)));
+    SH[n].style.display = (t >= a - .01 || i === 0) && x > 0 ? '' : 'none';
+    const z = 1 + .04 * seg(t, a, b);   // زوم بطيء (Ken Burns)
+    SH[n].style.opacity = x; SH[n].style.transform = `translateX(${(1 - eo(seg(t, a, a + .35))) * (i ? -80 : 0)}px) scale(${z})`;
+    const [s1, s2] = STEPS[i], e1 = last ? 18.8 : b - .2, e2 = last ? 19.1 : b;
+    set(s1, win(t, a + .1, a + .4, e1, e2), `translateY(${(1 - eo(seg(t, a + .1, a + .4))) * 30}px)`);
+    set(s2, win(t, a + .25, a + .55, e1, e2));
+  });
+  set(demo, win(t, 5.6, 5.9, 18.8, 19.1));
+
+  // الختام
+  const ic = back(seg(t, 19.3, 19.8)), icOut = eio(seg(t, 20.0, 20.3));
+  set(icon, clamp(seg(t, 19.3, 19.5)) * (1 - icOut), `scale(${(.5 + .5 * ic) * (1 + .2 * icOut)})`);
+  const dr = eio(seg(t, 20.1, 20.7));
+  set(logo, seg(t, 20.05, 20.15));
+  ha.style.strokeDasharray = HAL; ha.style.strokeDashoffset = HAL * (1 - dr);
+  arc.style.strokeDasharray = ARCL; arc.style.strokeDashoffset = ARCL * (1 - eio(seg(t, 20.2, 20.8)));
+  ldot.style.opacity = eo(seg(t, 20.6, 20.8)); ldot.style.transformOrigin = '352px 128px'; ldot.style.transform = `scale(${back(seg(t, 20.6, 21.0))})`;
+  const wmx = eo(seg(t, 20.3, 20.7)); set(wm, wmx, `translateY(${(1 - wmx) * 50}px)`);
+  showWords(tagw, t, 20.6, .1); set(tag, t > 20.5 ? 1 : 0);
+  set(beta, eo(seg(t, 21.0, 21.3)));
+  const c = back(seg(t, 21.4, 21.8)); set(cta, clamp(seg(t, 21.4, 21.55)), `scale(${.85 + .15 * c})`);
+  set(demo2, eo(seg(t, 21.0, 21.3)));
+}
+window.setT = setT;
+window.READY = document.fonts.ready.then(() => Promise.all([...document.images].map((i) => i.complete ? 1 : new Promise((r) => (i.onload = r))))).then(() => setT(0));
+</script>
+</body>
+</html>

@@ -32,13 +32,13 @@
 <main>
   <header>
     <svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="116" fill="#0E3B43" stroke="rgba(232,220,196,.25)" stroke-width="8"/><path d="M 383.3 172.7 A 160 160 0 1 1 300 102.2" fill="none" stroke="#E8DCC4" stroke-opacity=".28" stroke-width="22" stroke-linecap="round"/><path d="M 304 166 L 196 166 L 264 222 C 204 222 168 254 168 292 C 168 336 206 360 256 360 C 292 360 318 348 338 332" fill="none" stroke="#E8DCC4" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/><circle cx="352" cy="128" r="30" fill="#FF6B4A"/></svg>
-    <div><h1>سياسة الخصوصية</h1><p>«حياتي» · آخر تحديث: 13 أكتوبر 2026</p></div>
+    <div><h1>سياسة الخصوصية</h1><p>«حياتي» · آخر تحديث: 15 أكتوبر 2026</p></div>
   </header>
 
   <section>
     <h2>باختصار</h2>
     <ul>
-      <li><b>بياناتك على جهازك.</b> ما فيه سيرفر لنا يجمعها.</li>
+      <li><b>بدون حساب، بياناتك على جهازك بس.</b> الحساب اختياري؛ لو سجّلت، بياناتك تنحفظ بحسابك على Supabase (ألمانيا) وما يشوفها غيرك.</li>
       <li><b>ولا إعلانات ولا تتبّع.</b> ما نبيع ولا نشارك أي شي.</li>
       <li><b>أرقام بطاقتك وحسابك ما تنحفظ.</b> «XX4821» تصير «••21».</li>
       <li><b>تقدر تحذف كل شي</b> بضغطة من الإعدادات، وتنزّل نسخة قبلها.</li>
@@ -51,7 +51,7 @@
       <thead><tr><th>البيانات</th><th>وين تنحفظ</th></tr></thead>
       <tbody>
         <tr><td>المصاريف والدخل والميزانية</td><td>جهازك</td></tr>
-        <tr><td>رسايل البنك اللي تلصقها</td><td>جهازك، بعد إخفاء أرقام البطاقة والحساب. ونطلب موافقتك قبل أول رسالة</td></tr>
+        <tr><td>رسايل البنك اللي تلصقها أو تشاركها لحياتي من تطبيق الرسائل</td><td>جهازك، بعد إخفاء أرقام البطاقة والحساب. ونطلب موافقتك قبل أول رسالة. ما نقرا رسايلك بروحنا: بس اللي أنت تلصقه أو تشاركه، وما ينحفظ إلا لما تضغط «إضافة»</td></tr>
         <tr><td>الجدول والمهام والدرجات والمذاكرة</td><td>جهازك</td></tr>
         <tr><td>النوم والنبض والخطوات (Apple Watch)</td><td>جهازك. ما تطلع منه أبداً</td></tr>
         <tr><td>اسمك وأدوارك وطريقة الصلاة</td><td>جهازك</td></tr>
@@ -63,16 +63,58 @@
 
   <section>
     <h2>خدمات خارجية يحمّل منها التطبيق</h2>
-    <p>التطبيق يحمّل <b>الخط</b> من Google Fonts، وبعض <b>المكتبات</b> (مثل قارئ PDF) من cdnjs وjsDelivr. هالخدمات تستلم <b>عنوان IP</b> ونوع المتصفح مثل أي موقع، و<b>ما توصلها بياناتك</b> (مصاريفك، جدولك، رسايلك). سيرفراتها ممكن تكون برا البحرين.</p>
+    <p><b>الخط والمكتبات</b> (مثل قارئ PDF) داخل التطبيق نفسه، فالتطبيق <b>ما يتصل بأي جهة خارجية</b> عشان يشتغل. الاستثناء الوحيد: لو فعّلت الحسابات، بياناتك تنحفظ بـ Supabase مثل ما هو مكتوب تحت. <small>(نسخة «الملف الواحد» اللي تنفتح بدون تثبيت تحمّل كود مكتبة Supabase وقارئ PDF من مواقع عامة (jsDelivr وcdnjs) أول مرة، كود بس وبدون أي بيانات منك.)</small></p>
   </section>
 
   <section>
-    <h2>المزامنة (اختيارية)</h2>
-    <p>لو فعّلت المزامنة بين جوالك والماك، بياناتك تنحفظ بقاعدة بيانات Supabase بحسابك:</p>
+    <h2>الحساب والمزامنة (اختيارية)</h2>
+    <p>لو سجّلت حساب (بالإيميل، أو Apple/Google لو مفعّلة)، بياناتك تنحفظ بقاعدة بيانات Supabase بسيرفر بفرانكفورت (ألمانيا، الاتحاد الأوروبي)، عشان تتزامن بين أجهزتك:</p>
     <ul>
       <li>كل مستخدم يشوف بياناته بس (Row Level Security).</li>
       <li>رسايل البنك اللي توصل من اختصار الآيفون تنخفى أرقامها <b>قبل</b> ما تنحفظ.</li>
+      <li>اللي ينحفظ: إيميلك (للدخول)، والبيانات اللي تدخلها بنفسك (مصاريف، جدول، مهام…). المذهب ويوم الراتب وإعدادات العبادة تظل على جهازك.</li>
       <li>تقدر توقف المزامنة أو تحذف حسابك كامل من داخل التطبيق.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>القبلة والموقع</h2>
+    <ul>
+      <li>اتجاه القبلة يتحسب على جوالك. الافتراضي المنامة، وما نطلب موقعك إلا لما تضغط «استخدم موقعي».</li>
+      <li>الموقع (تقريبي) ينستخدم مرة وحدة للحساب، <b>ما ينحفظ</b> ولا يتزامن ولا يطلع من جوالك. البوصلة من حساس الجوال نفسه.</li>
+      <li><b>تخطيط السفر</b>: الوجهة والتواريخ والميزانية والأغراض تنحفظ بجوالك، ولو عندك حساب تتزامن معاه عشان توصل لأجهزتك الثانية (مثل باقي بياناتك). <b>رحلات العمرة تظل على جوالك بس</b> وما تروح للحساب.</li>
+    </ul>
+  </section>
+  <section>
+    <h2>تسجيل المحاضرات</h2>
+    <ul>
+      <li>التطبيق يستخدم المايك <b>بس</b> لما تضغط «ابدأ التسجيل» بملف محاضرة.</li>
+      <li>التسجيل ينحفظ على جوالك بس، وما ينرفع لأي سيرفر حتى لو عندك حساب. ملاحظاتك وأسئلتك هي اللي تتزامن.</li>
+      <li>سجّل بإذن الدكتور، والمسؤولية عليك حسب أنظمة جامعتك.</li>
+      <li><b>«لخّصها لي ✨» و«سوّ لي أسئلة ✨»</b> (اختياري، لأصحاب الحسابات بس): لما تضغط الزر، نرسل <b>عنوان المحاضرة وملاحظاتك المكتوبة بس</b> (مو التسجيل) عبر خادمنا إلى Anthropic (مزوّد نموذج Claude) عشان يطلع الملخص أو الأسئلة، والنتيجة ترجع لجوالك. ما نستخدمها لأي غرض ثاني، وما ترسل شي إذا ما ضغطت الزر. نحتفظ بعدد مرات الاستخدام اليومي بس (عشان الحد اليومي)، مو النص.</li>
+      <li><b>«📷 صوّر السبورة أو الورقة»</b> (اختياري، لأصحاب الحسابات بس): الصورة تتصغّر بجوالك، وبعدين تنرسل مرة وحدة لنفس الخدمة (Anthropic) عشان تتحوّل لنص بملاحظاتك. <b>الصورة ما تنحفظ عندنا ولا بحسابك</b>، النص بس اللي تحفظه أنت. لا تصوّر وجيه الناس أو بيانات شخصية.</li>
+      <li><b>تحويل تسجيل المحاضرة لنص</b> (آيفون): يصير <b>على جوالك نفسه</b> بخاصية Apple للتعرّف على الكلام بدون نت. الصوت ما يطلع لأي سيرفر (ولا سيرفرات Apple)، والنص يدخل ملاحظاتك وتقدر تعدّله أو تمسحه.</li>
+      <li><b>سجل الأخطاء التقنية</b>: لو صار خطأ بالكود، نحفظ آخر 20 خطأ <b>على جوالك بس</b> (نوع الخطأ ومكانه بالكود، بدون أرقام ولا أسماء ولا نص رسائل). ما يطلع لأي مكان إلا لو اخترت ترفقه بنفسك مع «بلّغ عن مشكلة»، وينمسح مع «احذف كل بياناتي».</li>
+      <li><b>تصنيفاتك للمحلات</b>: لو غيّرت تصنيف محل، نتذكره <b>على جوالك بس</b> عشان الرسايل الجاية منه تتصنّف صح. ما يرتفع لأي سيرفر، ويطلع داخل «النسخة المشفّرة» لو سويتها.</li>
+      <li><b>صورة هدف التوفير</b> (اختياري): تنحفظ على جوالك بس (مصغّرة)، <b>ما ترتفع لأي سيرفر ولا تتزامن مع أجهزتك الثانية</b>. تطلع داخل «النسخة المشفّرة» لو سويتها، وتنمسح لما تشيلها أو تحذف الهدف.</li>
+      <li><b>«📄 ملف PDF»</b> (اختياري، لأصحاب الحسابات بس): ملف المحاضرة اللي تختاره ينرسل مرة وحدة لنفس الخدمة (Anthropic) عشان يطلع منه ملاحظات وملخص وأسئلة. <b>الملف ما ينحفظ عندنا ولا بحسابك</b>، والنتيجة تنحفظ بس لو ضغطت «حفظ». الحد 6MB.</li>
+      <li><b>«المساعد الذكي» (اسأل حياتي)</b> (اختياري، لأصحاب الحسابات بس): لما تسأل، نرسل سؤالك مع <b>ملخص أرقامك</b> (المصاريف حسب الفئة، الميزانية، الجدول، المهام، الأهداف، الاشتراكات، الديون <b>بدون أسماء الناس</b>) لنفس الخدمة (Anthropic) عشان الجواب. ما ينحفظ عندنا ولا عندهم كسجل لك، وما نرسل شي إلا لما تسأل. إعدادات العبادة والرحلات ما تدخل بالملخص.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>تنبيهات الآيفون</h2>
+    <ul>
+      <li>التنبيهات (المحاضرات، الصلاة، الاختبارات، الاشتراكات، الحضور) <b>تنجدول على جوالك نفسه</b>. نصها ما يمر على أي سيرفر لنا.</li>
+      <li>إعداداتها والتأجيل («بعد ساعة») محفوظة بجهازك، وتقدر تسكّر كل نوع من الإعدادات ← التنبيهات.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>آراؤك واقتراحاتك</h2>
+    <ul>
+      <li>لو راسلتنا على إنستقرام أو عبّيت فورم قوقل، اللي تكتبه ينحفظ عند إنستقرام أو قوقل، وتحكمه سياساتهم.</li>
+      <li>نستخدمه عشان نطوّر «حياتي» بس. ما نذكر اسمك ولا حسابك بأي محتوى إلا بإذنك.</li>
     </ul>
   </section>
 
@@ -80,16 +122,23 @@
     <h2>حقوقك</h2>
     <p>حسب قانون حماية البيانات الشخصية في البحرين (رقم 30 لسنة 2018):</p>
     <ul>
-      <li><b>تشوف بياناتك:</b> الإعدادات ← نسخة احتياطية (ملف كامل).</li>
+      <li><b>تشوف بياناتك:</b> الإعدادات ← نسخة احتياطية (ملف كامل)، أو «صدّر مصاريفك» (ملف ينفتح بـ Excel).</li>
+      <li><b>ودجت الشاشة الرئيسية (أندرويد):</b> لو أضفته، التطبيق يحفظ لقطة صغيرة على جوالك بس (الجاي اليوم وبكرة، ونسبة الباقي من الميزانية) عشان الودجت يعرضها. المبالغ ما تطلع إلا لو فعّلتها من الإعدادات، ولو قفل التطبيق شغّال الودجت ما يعرض أي بيانات. ما فيه شي يطلع من جوالك.</li>
+      <li><b>نسخة مشفّرة:</b> الإعدادات ← «نسخة مشفّرة بكلمة سر» تحط كل بياناتك (ومعها الرحلات والإعدادات اللي على الجهاز، وتسجيلات المحاضرات لو اخترت) بملف واحد مشفّر على جهازك (AES-256). كلمة السر ما تنحفظ ولا توصلنا، ولو نسيتها ما نقدر نفتح الملف. الملف ما فيه جلسة الدخول ولا رمز القفل.</li>
       <li><b>تحذفها:</b> الإعدادات ← «احذف كل بياناتي».</li>
       <li><b>توقف أي شي:</b> التنبيهات، الصلاة، المزامنة، كلها اختيارية.</li>
     </ul>
   </section>
 
   <section>
+    <h2>الأعمار</h2>
+    <p>«حياتي» مو موجّه للأطفال تحت 13 سنة، وما نجمع بيانات عن أحد عن قصد.</p>
+  </section>
+
+  <section>
     <h2>التواصل</h2>
     <p>أي سؤال أو طلب عن بياناتك: راسلنا على إنستقرام <a href="https://instagram.com/hayati.bh" rel="noopener">@hayati.bh</a>.</p>
-    <p class="muted">«حياتي» نسخة تجريبية قيد التطوير. لو تغيّرت هالسياسة، نكتب التاريخ الجديد فوق.</p>
+    <p class="muted">«حياتي» نسخة تجريبية قيد التطوير. لو تغيّرت هالسياسة، نكتب التاريخ الجديد فوق. وشوف كمان <a href="terms.html">شروط الاستخدام</a>.</p>
   </section>
 
   <hr>
@@ -98,12 +147,16 @@
       <h2>Privacy policy (English)</h2>
       <ul>
         <li><b>Your data stays on your device.</b> We run no server that collects it. No ads, no trackers, nothing is sold or shared.</li>
-        <li><b>Bank messages</b> you paste are stored with card and account numbers masked (e.g. “XX4821” → “••21”). We ask for your consent before the first one.</li>
+        <li><b>Bank messages</b> you paste, or share to Hayati from your messages app, are stored with card and account numbers masked (e.g. “XX4821” → “••21”). We ask for your consent before the first one. Hayati never reads your messages on its own: only the text you paste or share, and only after you tap Add.</li>
+        <li><b>iPhone notifications</b> are scheduled on the device itself; their text never passes through a server of ours. Feedback sent via Instagram or Google Forms is held by those services under their own policies, and we never name you without your permission. Hayati is not directed at children under 13.</li>
+        <li><b>Lecture recording to text</b> (iPhone): done <b>on your phone itself</b> with Apple's offline speech recognition. The audio is not sent to any server (not even Apple's), and the text goes into your notes where you can edit or delete it.</li>
+        <li><b>Technical error log:</b> if the code hits an error, the last 20 errors are kept <b>on your phone only</b> (error type and code location, with no numbers, names or message text). It leaves the phone only if you choose to attach it to a «Report a problem» message, and «Delete all my data» clears it.</li>
         <li><b>Health data</b> (sleep, heart rate, steps from Apple Watch) never leaves your device.</li>
-        <li><b>Third-party services:</b> the app loads its font from Google Fonts and some libraries (e.g. the PDF reader) from cdnjs and jsDelivr. These services receive your IP address and browser type, like any website, but never your data (expenses, schedule, messages). Their servers may be outside Bahrain.</li>
-        <li><b>Optional sync</b> uses Supabase with row-level security, so each user sees only their own data. Messages from the iPhone shortcut are masked on the server before they are stored.</li>
-        <li><b>Your rights</b> (Bahrain PDPL, Law No. 30 of 2018): export everything from Settings → Backup, and delete everything, including your sync account, from Settings → “Delete all my data”.</li>
-        <li><b>Contact:</b> Instagram <a href="https://instagram.com/hayati.bh" rel="noopener">@hayati.bh</a>. Last updated 13 October 2026. Hayati is a beta in active development.</li>
+        <li><b>Third-party services:</b> the font and libraries (e.g. the PDF reader) ship inside the app, so it contacts no outside service to work. The only exception: if you turn on accounts, your data is stored with Supabase as described below. (The single-file version that opens without installing loads the Supabase library and the PDF reader code from public CDNs, jsDelivr and cdnjs; code only, none of your data.)</li>
+        <li><b>Optional account and sync</b> store your email and the data you enter with Supabase on a server in Frankfurt, Germany (EU), with row-level security so each user sees only their own data. Without an account everything stays on your device. Messages from the iPhone shortcut are masked on the server before they are stored.</li>
+        <li><b>Your rights</b> (Bahrain PDPL, Law No. 30 of 2018): export everything from Settings → Backup (or your expenses as a spreadsheet file), and delete everything, including your sync account, from Settings → “Delete all my data”.</li>
+        <li><b>Lecture recordings</b> use the microphone only when you tap record, and stay on your device; they are never uploaded.</li>
+        <li><b>Contact:</b> Instagram <a href="https://instagram.com/hayati.bh" rel="noopener">@hayati.bh</a>. Last updated 15 October 2026. See also the <a href="terms.html">terms of use</a>. Hayati is a beta in active development.</li>
       </ul>
     </section>
   </div>
