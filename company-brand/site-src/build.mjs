@@ -352,7 +352,10 @@ fs.copyFileSync(path.join(SRC, 'site.css'), path.join(OUT, 'site.css'));
 fs.copyFileSync(path.join(SRC, 'app.js'), path.join(OUT, 'app.js'));
 // لوحة الإدارة (DW-052): ملفات ثابتة + supabase-js محلي (MIT) عشان CSP «script-src 'self'»
 fs.mkdirSync(path.join(OUT, 'admin'), { recursive: true });
-for (const f of ['index.html', 'admin.css', 'admin.js', 'logic.js', 'docs.js']) fs.copyFileSync(path.join(SRC, 'admin', f), path.join(OUT, 'admin', f));
+for (const f of ['index.html', 'admin.css', 'admin.js', 'logic.js', 'docs.js', 'manifest.webmanifest']) fs.copyFileSync(path.join(SRC, 'admin', f), path.join(OUT, 'admin', f));
+// أيقونات تطبيق اللوحة (DW-062)
+fs.mkdirSync(path.join(OUT, 'admin/icons'), { recursive: true });
+for (const f of fs.readdirSync(path.join(SRC, 'admin/icons'))) fs.copyFileSync(path.join(SRC, 'admin/icons', f), path.join(OUT, 'admin/icons', f));
 // لقطات «الملفات» (بيانات تجريبية). نص الملفات نفسه بالقاعدة بس، وما ينبني للموقع
 fs.mkdirSync(path.join(OUT, 'admin/docs-img'), { recursive: true });
 for (const f of fs.readdirSync(path.join(SRC, 'admin/docs-src/img'))) fs.copyFileSync(path.join(SRC, 'admin/docs-src/img', f), path.join(OUT, 'admin/docs-img', f));

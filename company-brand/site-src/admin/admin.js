@@ -13,7 +13,7 @@
   const prodName = (k) => (L.PRODUCTS.find((p) => p[0] === k) || [k, k])[1];
   const periodName = (k) => (L.PERIODS.find((p) => p[0] === k) || [k, k])[1];
   const money = (f, cls = '') => '<span class="num ' + cls + '">' + L.fmt(f) + '</span>';
-  const TABS = [['summary', 'الملخص'], ['ledger', 'الدفتر'], ['budget', 'الميزانية'], ['recurring', 'الاشتراكات'], ['leads', 'الطلبات'], ['visits', 'الزيارات'], ['files', 'الملفات']];
+  const TABS = [['company', 'الشركة'], ['summary', 'الملخص'], ['ledger', 'الدفتر'], ['budget', 'الميزانية'], ['recurring', 'الاشتراكات'], ['leads', 'الطلبات'], ['visits', 'الزيارات'], ['files', 'الملفات']];
   // أسعار تقديرية تعبّي النموذج بس — المالك يتأكد من السعر قبل الحفظ
   const PRESETS = [
     ['Apple Developer Program', 9900, 'USD', 'year', 'رسوم المتاجر', 'hayati'],
@@ -23,7 +23,7 @@
     ['دومين wadqa', 1500, 'USD', 'year', 'دومين وإيميل', 'wadqa-site'],
   ];
 
-  const S = { demo: /[?&]demo=1\b/.test(location.search), sb: null, email: '', entries: [], budgets: [], recurring: [], leads: [], visits: [], docs: [], docBody: {}, month: L.ymOf(today()), edit: null, form: null, kind: 'expense', q: '', leadProduct: '' };
+  const S = { demo: /[?&]demo=1\b/.test(location.search), sb: null, email: '', entries: [], budgets: [], recurring: [], leads: [], visits: [], tasks: [], company: {}, docs: [], docBody: {}, month: L.ymOf(today()), edit: null, form: null, kind: 'expense', q: '', leadProduct: '' };
 
   // ———— البيانات ————
   function demoData() {
@@ -46,6 +46,12 @@
       { id: id(), name: 'Apple Developer Program', amount_minor: 9900, currency: 'USD', period: 'year', category: 'رسوم المتاجر', product: 'hayati', active: true, next_due: L.shiftYm(m, 11) + '-05' },
       { id: id(), name: 'Supabase Pro', amount_minor: 2500, currency: 'USD', period: 'month', category: 'استضافة وسحابة', product: 'general', active: true, next_due: L.shiftYm(m, 1) + '-08' },
     ];
+    S.tasks = [
+      { id: id(), title: 'ارفع حياتي 0.27 من الماك', area: 'المتجر', due: isoDay(today()), done: false },
+      { id: id(), title: 'انشر رابط «كن مختبر» لـ 12 شخص', area: 'حياتي', due: null, done: false },
+      { id: id(), title: 'شغّل التحقق بخطوتين على GitHub', area: 'الحسابات', due: null, done: true },
+    ];
+    S.company = { evaluation: { avg: 5.8, date: '2026-10-21', depts: [['التصميم', 8], ['الهندسة', 8], ['الجودة', 8], ['التسويق', 4], ['HR', 4], ['العمليات', 4]] }, tickets: { open: 22, blocked: 6, review: 0, blocked_list: ['DW-054 رفض آبل', 'DW-001 Google Play'] } };
     S.visits = [['/', 14], ['/hayati.html', 9], ['/idarati.html', 4], ['/en/', 3]].flatMap(([path, n], k) => [0, 3, 12].map((ago) => ({ day: new Date(Date.now() - ago * 864e5).toISOString().slice(0, 10), path, n: Math.max(1, n - ago - k) })));
     S.leads = [
       { id: 1, created_at: new Date().toISOString(), kind: 'waitlist', product: 'hayati', name: 'مختبر تجريبي', email: 'tester@example.com', message: 'أندرويد · Samsung', lang: 'ar' },
@@ -58,15 +64,17 @@
   const store = {
     async load() {
       if (S.demo) return;
-      const [e, b, r, l, d, v] = await Promise.all([
+      const [e, b, r, l, d, v, t, c] = await Promise.all([
         q(S.sb.from('wadqa_entries').select('*').order('occurred_on', { ascending: false }).order('created_at', { ascending: false }).limit(5000)),
         q(S.sb.from('wadqa_budgets').select('*')),
         q(S.sb.from('wadqa_recurring').select('*').order('created_at')),
         q(S.sb.rpc('wadqa_admin_leads')),
         q(S.sb.from('wadqa_docs').select('slug,title,updated_at').order('sort')),
         q(S.sb.rpc('wadqa_admin_views')).catch(() => []),
+        q(S.sb.from('wadqa_tasks').select('*').order('done').order('due', { ascending: true, nullsFirst: false }).order('created_at')).catch(() => []),
+        q(S.sb.from('wadqa_company').select('key,value,updated_at')).catch(() => []),
       ]);
-      S.entries = e; S.budgets = b; S.recurring = r; S.leads = l || []; S.docs = d || []; S.visits = v || [];
+      S.entries = e; S.budgets = b; S.recurring = r; S.leads = l || []; S.docs = d || []; S.visits = v || []; S.tasks = t || []; S.company = Object.fromEntries((c || []).map((x) => [x.key, x.value]));
     },
     async saveEntry(row) {
       if (S.demo) { if (row.id) Object.assign(S.entries.find((x) => x.id === row.id), row); else S.entries.unshift({ ...row, id: Math.random().toString(36).slice(2) }); return; }
@@ -89,6 +97,11 @@
       if (S.demo) { if (row.id) Object.assign(S.recurring.find((x) => x.id === row.id), row); else S.recurring.push({ ...row, id: Math.random().toString(36).slice(2) }); return; }
       if (row.id) { const { id, ...rest } = row; await q(S.sb.from('wadqa_recurring').update(rest).eq('id', id)); } else await q(S.sb.from('wadqa_recurring').insert(row));
     },
+    async saveTask(row) {
+      if (S.demo) { if (row.id) Object.assign(S.tasks.find((x) => x.id === row.id), row); else S.tasks.push({ ...row, id: Math.random().toString(36).slice(2), done: false }); return; }
+      if (row.id) { const { id, ...rest } = row; await q(S.sb.from('wadqa_tasks').update(rest).eq('id', id)); } else await q(S.sb.from('wadqa_tasks').insert(row));
+    },
+    async removeTask(id) { if (S.demo) { S.tasks = S.tasks.filter((x) => x.id !== id); return; } await q(S.sb.from('wadqa_tasks').delete().eq('id', id)); },
     async removeRec(id) { if (S.demo) { S.recurring = S.recurring.filter((x) => x.id !== id); return; } await q(S.sb.from('wadqa_recurring').delete().eq('id', id)); },
   };
 
@@ -177,7 +190,7 @@
   }
 
   // ———— الشاشات ————
-  const tab = () => { const t = location.hash.slice(1).split('/')[0]; return TABS.some((x) => x[0] === t) ? t : 'summary'; };
+  const tab = () => { const t = location.hash.slice(1).split('/')[0]; return TABS.some((x) => x[0] === t) ? t : 'company'; };
   const docSlug = () => decodeURIComponent(location.hash.slice(1).split('/')[1] || '');
   function nav() {
     const t = tab();
@@ -189,6 +202,39 @@
       '<button class="icon-btn" type="button" data-act="month" data-by="1" aria-label="الشهر اللي بعد"' + (S.month >= now ? ' disabled' : '') + '>‹</button></div>';
   }
   const stat = (label, f, cls, sub) => '<div class="card stat"><small>' + label + '</small><b class="' + (cls || '') + '">' + money(f) + '<span class="cur">د.ب</span></b>' + (sub ? '<em>' + sub + '</em>' : '') + '</div>';
+
+  // «الشركة» (DW-062): أول شاشة بالتطبيق — التقييم، مهامي، المختبرين، الزيارات، وصافي الشهر
+  const AREAS = ['عام', 'حياتي', 'إداراتي', 'المتجر', 'الحسابات', 'المالية', 'القانونية', 'التسويق'];
+  const numCard = (label, n, sub, cls) => '<div class="card stat"><small>' + label + '</small><b class="num ' + (cls || '') + '" dir="ltr">' + n + '</b>' + (sub ? '<em>' + sub + '</em>' : '') + '</div>';
+  function taskItem(k) {
+    const late = !k.done && k.due && k.due < isoDay(today());
+    return '<li class="task' + (k.done ? ' done' : '') + '"><button class="tick" type="button" data-act="task-toggle" data-id="' + h(k.id) + '" aria-pressed="' + !!k.done + '" aria-label="' + (k.done ? 'رجّعها مفتوحة' : 'خلّصتها') + '">' + (k.done ? '✓' : '') + '</button>' +
+      '<div class="main"><b>' + h(k.title) + '</b><small>' + h(k.area || 'عام') + (k.due ? ' · <span dir="ltr" class="num' + (late ? ' neg' : '') + '">' + h(k.due) + '</span>' + (late ? ' متأخرة' : '') : '') + '</small></div>' +
+      '<button class="x" type="button" data-act="del-task" data-id="' + h(k.id) + '" aria-label="احذف «' + h(k.title) + '»">✕</button></li>';
+  }
+  function companyView() {
+    const ev = S.company.evaluation, tk = S.company.tickets;
+    const s = L.monthSummary(S.entries, L.ymOf(today())), w = L.views(S.visits, today(), 7);
+    const testers = S.leads.filter((l) => l.kind === 'tester').length;
+    const open = S.tasks.filter((k) => !k.done), done = S.tasks.filter((k) => k.done).slice(-3);
+    const weak = ev && Array.isArray(ev.depts) ? ev.depts.slice().sort((a, b) => a[1] - b[1]).slice(0, 3) : [];
+    return '<div class="grid">' +
+      numCard('تقييم المجلس', ev ? h(String(ev.avg)) + '<span class="cur">/10</span>' : '—', ev ? 'آخر تقييم <span class="num" dir="ltr">' + h(ev.date) + '</span>' : 'ما فيه تقييم') +
+      numCard('مختبرين حياتي', testers + '<span class="cur">/12</span>', 'شرط Google', testers >= 12 ? 'pos' : '') + '</div>' +
+      '<div class="grid">' + numCard('زيارات 7 أيام', w.total.toLocaleString('en'), 'الموقع') + stat('صافي الشهر', s.net, s.net < 0 ? 'neg' : 'pos', S.entries.length ? monthName(L.ymOf(today())) : 'الدفتر فاضي') + '</div>' +
+      '<section class="card"><h2>مهامي <span class="num">(' + open.length + ')</span></h2>' +
+      '<form id="taskForm" class="task-form" novalidate><label class="sr" for="t_title">مهمة جديدة</label><input id="t_title" name="title" maxlength="140" placeholder="مهمة جديدة…" autocomplete="off">' +
+      '<select id="t_area" name="area" aria-label="المجال">' + AREAS.map((a) => '<option>' + a + '</option>').join('') + '</select>' +
+      '<input id="t_due" name="due" type="date" aria-label="الموعد (اختياري)"><button class="btn solid" type="submit">أضف</button><p class="err" id="taskErr"></p></form>' +
+      (open.length ? '<ul class="list">' + open.map(taskItem).join('') + '</ul>' : '<div class="empty">ما عليك شي مفتوح 👌</div>') +
+      (done.length ? '<details class="done-list"><summary>آخر المنجز (' + done.length + ')</summary><ul class="list">' + done.map(taskItem).join('') + '</ul></details>' : '') + '</section>' +
+      (weak.length ? '<section class="card"><h2>أضعف الأقسام</h2><ul class="list">' + weak.map(([n, v]) => '<li><div class="main"><b>' + h(n) + '</b></div><span class="amt num">' + h(String(v)) + '/10</span></li>').join('') + '</ul></section>' : '') +
+      (tk ? '<section class="card"><h2>التذاكر</h2><p class="note"><span class="num">' + h(String(tk.open)) + '</span> مفتوحة · <span class="num">' + h(String(tk.blocked)) + '</span> متوقفة · <span class="num">' + h(String(tk.review)) + '</span> بالمراجعة</p>' +
+        (Array.isArray(tk.blocked_list) && tk.blocked_list.length ? '<ul class="list">' + tk.blocked_list.map((x) => '<li><div class="main"><b>' + h(x) + '</b></div><span class="tag err">متوقفة</span></li>').join('') + '</ul>' : '') + '</section>' : '') +
+      (S.demo ? '' : '<details class="card"><summary>الدخول من تطبيق الجوال</summary><p class="note">على الآيفون، الدخول بـ Google من أيقونة الشاشة الرئيسية يفتح Safari وما يرجع للتطبيق. اضبط كلمة سر هني مرة وحدة، وادخل بالإيميل وكلمة السر من التطبيق (والرمز من الجوال يظل مطلوب).</p>' +
+        '<form id="pwForm" novalidate><label for="pw_new">كلمة سر جديدة (8 أحرف أو أكثر)</label><input id="pw_new" name="pw" type="password" autocomplete="new-password" minlength="8">' +
+        '<p class="err" id="pwErr"></p><div class="toolbar"><button class="btn" type="submit">احفظ كلمة السر</button></div></form></details>');
+  }
 
   function summaryView() {
     const s = L.monthSummary(S.entries, S.month), b = L.budgetStatus(S.budgets, S.entries, S.month), v = L.vatStatus(S.entries, today());
@@ -330,7 +376,7 @@
   }
 
   function render() {
-    const t = tab(), views = { summary: summaryView, ledger: ledgerView, budget: budgetView, recurring: recurringView, leads: leadsView, visits: visitsView, files: filesView };
+    const t = tab(), views = { company: companyView, summary: summaryView, ledger: ledgerView, budget: budgetView, recurring: recurringView, leads: leadsView, visits: visitsView, files: filesView };
     const slug = t === 'files' && docSlug();
     if (slug && !S.demo && S.docBody[slug] == null) store.doc(slug).then(() => { if (docSlug() === slug) render(); }).catch((e) => toast(errText(e)));
     app.innerHTML = nav() + '<div id="view">' + views[t]() + '</div>';
@@ -360,6 +406,8 @@
         return download('wadqa-' + S.month + '.csv', L.csv(rows, [['occurred_on', 'التاريخ'], [(e) => (e.kind === 'income' ? 'دخل' : 'مصروف'), 'النوع'], [(e) => L.fmt(e.amount_fils).replace(/,/g, ''), 'المبلغ د.ب'], ['category', 'البند'], [(e) => prodName(e.product), 'التطبيق'], ['method', 'طريقة الدفع'], ['note', 'ملاحظة']]));
       }
       if (a === 'csv-leads') return download('wadqa-leads.csv', L.csv(S.leads, [['created_at', 'الوقت'], ['kind', 'النوع'], [(l) => prodName(l.product), 'التطبيق'], ['name', 'الاسم'], ['email', 'الإيميل'], ['message', 'الرسالة'], ['lang', 'اللغة']]));
+      if (a === 'task-toggle') { const k = S.tasks.find((x) => x.id === id); await store.saveTask({ id, done: !k.done, done_at: k.done ? null : new Date().toISOString() }); await store.load(); return render(); }
+      if (a === 'del-task') { const k = S.tasks.find((x) => x.id === id); if (!confirm('تحذف «' + k.title + '»؟')) return; await store.removeTask(id); await store.load(); toast('انحذفت'); return render(); }
       if (a === 'new-rec') { S.form = 'rec'; S.edit = null; render(); return $('#r_name').focus(); }
       if (a === 'edit-rec') { S.form = 'rec'; S.edit = id; render(); return $('#r_name').focus(); }
       if (a === 'preset') { const [n, amt, cur, per, cat, prod] = PRESETS[Number(btn.dataset.i)]; $('#r_name').value = n; $('#r_amount').value = cur === 'USD' ? (amt / 100).toFixed(2) : L.fmt(amt); $('#r_cur').value = cur; $('#r_period').value = per; $('#r_cat').value = cat; $('#r_prod').value = prod; return $('#r_amount').focus(); }
@@ -413,6 +461,19 @@
         for (const [c, f] of changes) await store.saveBudget(c, f);
         await store.load(); toast(changes.length ? 'انحفظت الميزانية' : 'ما فيه تغيير'); return render();
       }
+      if (form.id === 'taskForm') {
+        const fd = new FormData(form), title = String(fd.get('title') || '').trim(), due = fd.get('due') || null;
+        if (!title) { $('#taskErr').textContent = 'اكتب المهمة'; return $('#t_title').focus(); }
+        if (due && !/^\d{4}-\d{2}-\d{2}$/.test(due)) { $('#taskErr').textContent = 'التاريخ غير صحيح'; return; }
+        await store.saveTask({ title, area: fd.get('area'), due }); await store.load(); toast('انضافت'); render(); return $('#t_title').focus();
+      }
+      if (form.id === 'pwForm') {
+        const pw = String(form.pw.value || '');
+        if (pw.length < 8) { $('#pwErr').textContent = 'كلمة السر 8 أحرف أو أكثر'; return; }
+        const { error } = await S.sb.auth.updateUser({ password: pw });
+        if (error) { $('#pwErr').textContent = /known to be weak|pwned|leaked/i.test(error.message || '') ? 'كلمة السر هذي منتشرة بتسريبات سابقة، اختار وحدة ثانية' : errText(error); return; }
+        form.reset(); toast('انحفظت كلمة السر. ادخل فيها من تطبيق الجوال'); return;
+      }
       if (form.id === 'recForm') {
         const fd = new FormData(form), cur = fd.get('currency'), raw = String(fd.get('amount') || '').trim();
         const minor = cur === 'USD' ? (/^\d+(\.\d{1,2})?$/.test(raw.replace(',', '.')) ? Math.round(Number(raw.replace(',', '.')) * 100) : null) : L.parseFils(raw);
@@ -436,7 +497,7 @@
     if (S.demo) { $('#demoBar').hidden = false; demoData(); return render(); }
     if (!window.supabase || !window.WADQA) { app.innerHTML = '<p class="err center">ما قدرنا نحمّل الإعدادات.</p>'; return; }
     S.sb = window.supabase.createClient(window.WADQA.url, window.WADQA.key, { auth: { persistSession: true, storageKey: 'wadqa-admin', autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' } });
-    $('#signOut').onclick = async () => { await S.sb.auth.signOut(); S.email = ''; S.entries = S.budgets = S.recurring = S.leads = S.visits = []; loginView(); };
+    $('#signOut').onclick = async () => { await S.sb.auth.signOut(); S.email = ''; S.entries = S.budgets = S.recurring = S.leads = S.visits = S.tasks = []; S.company = {}; loginView(); };
     S.sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT') { S.email = ''; loginView(); } });
     afterLogin();
   }

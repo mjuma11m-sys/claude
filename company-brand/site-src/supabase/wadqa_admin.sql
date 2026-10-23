@@ -144,3 +144,27 @@ grant execute on function public.wadqa_admin_views() to authenticated;
 -- DW-061: صفحة «كن مختبر» (testers.html) ترسل kind = 'tester' عبر نفس wadqa_submit (انجرّب بمعاملة rollback: anon ينحفظ له صف tester)
 alter table wadqa.leads drop constraint leads_kind_check;
 alter table wadqa.leads add constraint leads_kind_check check (kind = any (array['contact', 'waitlist', 'tester']));
+
+-- DW-062: تطبيق الشركة (PWA) — «الشركة» أول شاشة: مهامي (wadqa_tasks) وملخص الشركة (wadqa_company: التقييم والتذاكر، يكتبه Claude بعد كل اجتماع)
+-- (انجرّب بمعاملة rollback: أدمن aal1 ← 0 صف، أدمن aal2 ← كل الصفوف، غريب aal2 ← 0)
+create table if not exists public.wadqa_tasks (
+  id uuid primary key default gen_random_uuid(),
+  title text not null check (char_length(title) between 1 and 140),
+  area text not null default 'عام' check (char_length(area) between 1 and 30),
+  due date,
+  done boolean not null default false,
+  done_at timestamptz,
+  created_at timestamptz not null default now()
+);
+create table if not exists public.wadqa_company (
+  key text primary key check (key ~ '^[a-z_]{1,30}$'),
+  value jsonb not null,
+  updated_at timestamptz not null default now()
+);
+alter table public.wadqa_tasks enable row level security;
+alter table public.wadqa_company enable row level security;
+revoke all on public.wadqa_tasks, public.wadqa_company from public, anon;
+grant select, insert, update, delete on public.wadqa_tasks to authenticated;
+grant select on public.wadqa_company to authenticated;
+create policy admin_all on public.wadqa_tasks for all to authenticated using ((select public.wadqa_admin_ok())) with check ((select public.wadqa_admin_ok()));
+create policy admin_read on public.wadqa_company for select to authenticated using ((select public.wadqa_admin_ok()));

@@ -152,3 +152,18 @@ form.card { display: grid; gap: 12px; }
 .doc figure { margin: 0; }
 .doc figure img { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); display: block; }
 .doc figcaption { font-size: 12px; color: var(--mist); text-align: center; margin-top: 4px; }
+
+/* «الشركة» (DW-062) */
+.task-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-bottom: 12px; }
+.task-form #t_title { grid-column: 1 / -1; }
+.task-form .err { grid-column: 1 / -1; margin: 0; }
+.task-form #t_due { min-width: 0; }
+ul.list li.task { gap: 10px; }
+.tick { flex: none; width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--mist); background: transparent; color: var(--ink); font-weight: 700; cursor: pointer; }
+li.task.done .tick { background: var(--ok); border-color: var(--ok); }
+li.task.done .main b { text-decoration: line-through; color: var(--mist); }
+.done-list summary, details.card summary { cursor: pointer; color: var(--mist); font-weight: 700; padding: 6px 0; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.stat b[dir="ltr"] { text-align: right; }
+li.task .x { flex: none; width: 34px; height: 34px; border: 0; border-radius: 50%; background: transparent; color: var(--mist); font-size: 16px; cursor: pointer; }
+li.task .x:hover, li.task .x:focus-visible { color: var(--err); background: var(--ink); }

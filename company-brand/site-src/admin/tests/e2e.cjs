@@ -19,6 +19,20 @@ const ok = (c, m) => { if (c) { pass++; console.log('✅', m); } else { fail++; 
 
   await p.goto(B + '?demo=1'); await p.waitForSelector('nav.tabs');
   ok(await p.isVisible('#demoBar'), 'شريط «بيانات تجريبية» ظاهر');
+  // «الشركة» أول شاشة (DW-062): التقييم، المختبرين، ومهامي (إضافة وإنجاز)
+  ok(await p.isVisible('nav.tabs a[href="#company"][aria-current=page]'), 'الشركة: أول شاشة');
+  ok(/تقييم المجلس[\s\S]*5\.8/.test(await p.textContent('#view')), 'الشركة: التقييم');
+  const openBefore = await p.locator('li.task:not(.done)').count();
+  await p.fill('#t_title', 'مهمة اختبار'); await p.click('#taskForm button[type=submit]');
+  await p.waitForFunction((n) => document.querySelectorAll('li.task:not(.done)').length === n + 1, openBefore);
+  ok(true, 'الشركة: إضافة مهمة');
+  await p.click('li.task:not(.done) .tick');
+  await p.waitForFunction((n) => document.querySelectorAll('li.task:not(.done)').length === n, openBefore);
+  ok(true, 'الشركة: إنجاز مهمة');
+  await p.fill('#t_title', ''); await p.click('#taskForm button[type=submit]');
+  ok((await p.textContent('#taskErr')).includes('اكتب المهمة'), 'الشركة: مهمة فاضية مرفوضة');
+  await p.screenshot({ path: OUT + '/adm_company.png', fullPage: true });
+  await go('summary');
   ok((await p.textContent('#view')).includes('دخل الشهر'), 'الملخص: بطاقات الشهر');
   ok(await p.locator('.chart .col').count() === 6, 'الملخص: رسم 6 شهور');
   ok((await p.textContent('#view')).includes('تحت الحد'), 'الملخص: مؤشر الضريبة');
@@ -97,7 +111,7 @@ const ok = (c, m) => { if (c) { pass++; console.log('✅', m); } else { fail++; 
 
   // جوال 320: ولا تبويب يطلع برا
   await p.setViewportSize({ width: 320, height: 700 });
-  for (const t of ['summary', 'ledger', 'budget', 'recurring', 'leads']) {
+  for (const t of ['company', 'visits', 'summary', 'ledger', 'budget', 'recurring', 'leads']) {
     await p.goto(B + '?demo=1#' + t); await p.waitForSelector('nav.tabs');
     if (t === 'ledger') await p.click('[data-act=new-entry]');
     const over = await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
