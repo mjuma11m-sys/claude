@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   web:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # ubuntu-latest is 26.04 now and Playwright 1.56 does not support it
     timeout-minutes: 15
     defaults:
       run:
@@ -47,7 +47,7 @@ jobs:
           path: sports-hub-app/playwright-report
 
   database:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # ubuntu-latest is 26.04 now and Playwright 1.56 does not support it
     timeout-minutes: 10
     services:
       postgres:
