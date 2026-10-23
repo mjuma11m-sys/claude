@@ -12,6 +12,11 @@ const srv = http.createServer((q, r) => { let p = path.join(root, decodeURICompo
   await p.goto('http://localhost:4391/login');
   ok(await p.getByRole('button', { name: 'أرسل رابط الدخول' }).isVisible(), 'real mode shows the email form (no demo roles)');
   ok(await p.getByRole('button', { name: 'إدارة النادي' }).count() === 0, 'no demo role buttons in a real build');
+  ok(await p.getByRole('button', { name: 'تابع مع Google' }).isVisible() && await p.getByRole('button', { name: 'تابع مع Apple' }).isVisible(), 'both provider buttons show when their flags are on');
+  const authorize = p.waitForRequest((r) => r.url().includes('/auth/v1/authorize'));
+  await p.getByRole('button', { name: 'تابع مع Google' }).click(); const au = (await authorize).url();
+  ok(au.includes('provider=google') && au.includes('redirect_to=' + encodeURIComponent('http://localhost:4391')), 'Google sends the person to the provider and back to this origin: ' + au.split('?')[1]);
+  await p.goto('http://localhost:4391/login');
   await p.getByLabel('البريد الإلكتروني').fill('a@b'); await p.getByRole('button', { name: 'أرسل رابط الدخول' }).click();
   ok(await p.getByRole('alert').textContent().then((t) => t.includes('غير صالح')), 'a bad address is refused before any request'); ok(bodies.length === 0, 'and nothing was sent');
   mode = '429'; await p.getByLabel('البريد الإلكتروني').fill('  Coach@Club.COM '); await p.getByRole('button', { name: 'أرسل رابط الدخول' }).click();

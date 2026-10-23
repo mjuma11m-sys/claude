@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cooldownLeft, looksLikeEmail, mapAuthError, normalizeEmail } from './auth-form'
+import { cooldownLeft, looksLikeEmail, mapAuthError, mapOAuthError, normalizeEmail, OAUTH_LABEL } from './auth-form'
 
 describe('auth form helpers', () => {
   it('trims and lowercases the address', () => { expect(normalizeEmail('  Coach@Club.COM ')).toBe('coach@club.com') })
@@ -26,4 +26,13 @@ describe('auth form helpers', () => {
     expect(cooldownLeft(1000, 61_000)).toBe(0)
     expect(cooldownLeft(1000, 999_000)).toBe(0)
   })
+})
+
+describe('oauth helpers', () => {
+  it('has no error when there is no error', () => { expect(mapOAuthError(null)).toBeNull() })
+  it('tells the person what to do, without technical detail', () => {
+    expect(mapOAuthError({ message: 'Unsupported provider: provider is not enabled' })).toBe('ما قدرنا نكمل الدخول عبر المزوّد. جرّب مرة ثانية أو ادخل بالبريد.')
+    expect(mapOAuthError({ status: 0, message: 'Failed to fetch' })).toContain('اتصال')
+  })
+  it('labels both providers in Arabic', () => { expect(OAUTH_LABEL.google).toBe('تابع مع Google'); expect(OAUTH_LABEL.apple).toBe('تابع مع Apple') })
 })

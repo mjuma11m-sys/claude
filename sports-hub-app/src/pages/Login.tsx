@@ -8,7 +8,13 @@ import { PRIVACY_CONTACT } from '../lib/legal'
 import { supabase } from '../lib/supabase'
 import type { IconName } from '../components/Icon'
 import { DEMO_ROLES, ROLE_LABEL, type Role } from '../lib/roles'
-import { cooldownLeft, looksLikeEmail, mapAuthError, normalizeEmail } from '../lib/auth-form'
+import { cooldownLeft, looksLikeEmail, mapAuthError, mapOAuthError, normalizeEmail, OAUTH_LABEL, type OAuthProvider } from '../lib/auth-form'
+import { OAUTH_PROVIDERS } from '../lib/features'
+
+const PROVIDER_MARK: Record<OAuthProvider, string> = {
+  google: 'M21.35 11.1H12v3.8h5.35c-.5 2.4-2.5 3.8-5.35 3.8a6 6 0 1 1 0-12c1.5 0 2.85.55 3.9 1.45l2.7-2.7A9.8 9.8 0 0 0 12 2.2a9.8 9.8 0 1 0 0 19.6c5.65 0 9.4-3.95 9.4-9.55 0-.4-.02-.8-.05-1.15z',
+  apple: 'M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.15-2.8.85-3.5.85s-1.8-.8-3-.8C6.9 7.4 5.5 8.3 4.7 9.7c-1.6 2.8-.4 6.9 1.2 9.2.8 1.1 1.7 2.3 2.9 2.3 1.2 0 1.6-.75 3-.75s1.8.75 3 .72c1.25 0 2.05-1.1 2.8-2.2.9-1.3 1.25-2.5 1.27-2.6-.03 0-2.45-.95-2.47-3.77zM14.1 5.8c.65-.8 1.1-1.9.95-3-.95.04-2.1.65-2.8 1.45-.6.7-1.15 1.85-1 2.9 1.05.08 2.1-.55 2.85-1.35z',
+}
 
 const ROLE_ICON: Record<Role, IconName> = { club_admin: 'club', bfa_admin: 'hub', medical: 'pulse', fan: 'vote', player: 'vote' }
 
@@ -38,6 +44,15 @@ export function Login() {
     if (msg) setError(msg)
     else { setEmail(address); setNow(Date.now()); setSentAt(Date.now()) }
     setBusy(false)
+  }
+  async function viaProvider(provider: OAuthProvider) {
+    if (!supabase) return
+    setBusy(true)
+    setError(null)
+    // Leaves for the provider and comes back to this origin; the profile row is created by the same database trigger as for email sign-in.
+    const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin } })
+    const msg = mapOAuthError(error)
+    if (msg) { setError(msg); setBusy(false) }
   }
   const onSubmit = (e: FormEvent) => { e.preventDefault(); void send() }
 
@@ -81,6 +96,18 @@ export function Login() {
             </div>
           </div>
         ) : (
+          <div className="space-y-4">
+          {OAUTH_PROVIDERS.length > 0 && (
+            <div className="space-y-2">
+              {OAUTH_PROVIDERS.map((p) => (
+                <button key={p} type="button" disabled={busy} onClick={() => void viaProvider(p)} className="flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/[0.04] px-4 font-bold transition hover:bg-white/10 active:scale-[0.98] disabled:opacity-60">
+                  <svg viewBox="0 0 24 24" aria-hidden className="size-5 fill-current"><path d={PROVIDER_MARK[p]} /></svg>
+                  {OAUTH_LABEL[p]}
+                </button>
+              ))}
+              <p className="flex items-center gap-3 text-xs text-mute"><span className="h-px flex-1 bg-white/10" />أو بالبريد<span className="h-px flex-1 bg-white/10" /></p>
+            </div>
+          )}
           <form onSubmit={onSubmit} className="space-y-4">
             <label className="block space-y-1">
               <span className="text-sm text-mute">البريد الإلكتروني</span>
@@ -95,6 +122,7 @@ export function Login() {
               {busy ? 'جارٍ الإرسال…' : 'أرسل رابط الدخول'}
             </button>
           </form>
+          </div>
         )}
         <p className="flex gap-4 text-xs text-mute">
           <Link to="/privacy" className="hover:text-ink">سياسة الخصوصية</Link>

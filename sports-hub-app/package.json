@@ -16,7 +16,7 @@
     "verify": "tsc -b && vitest run && node scripts/check-columns.mjs && vite build && node scripts/budget.mjs && playwright test",
     "import:standings": "node scripts/import-standings.mjs",
     "setup:supabase": "node scripts/supabase-setup.mjs",
-    "test:login-real": "VITE_SUPABASE_URL=http://localhost:4400 VITE_SUPABASE_ANON_KEY=test-key VITE_PRIVACY_CONTACT=privacy@example.com vite build --outDir dist-real && node scripts/login-real.test.cjs",
+    "test:login-real": "VITE_SUPABASE_URL=http://localhost:4400 VITE_SUPABASE_ANON_KEY=test-key VITE_PRIVACY_CONTACT=privacy@example.com VITE_AUTH_GOOGLE=true VITE_AUTH_APPLE=true vite build --outDir dist-real && node scripts/login-real.test.cjs",
     "check:columns": "node scripts/check-columns.mjs"
   },
   "dependencies": {

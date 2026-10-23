@@ -14,3 +14,13 @@ export function mapAuthError(e: { status?: number; code?: string; message?: stri
 }
 
 export const cooldownLeft = (sentAt: number | null, now: number, seconds = RESEND_SECONDS) => (sentAt === null ? 0 : Math.max(0, Math.ceil(seconds - (now - sentAt) / 1000)))
+
+export type OAuthProvider = 'google' | 'apple'
+export const OAUTH_LABEL: Record<OAuthProvider, string> = { google: 'تابع مع Google', apple: 'تابع مع Apple' }
+
+/* Cancelling at the provider or a provider that is not set up both come back as a plain error: say what to do, not what broke. */
+export function mapOAuthError(e: { status?: number; code?: string; message?: string } | null): string | null {
+  if (!e) return null
+  if (e.status === 0 || /fetch|network/i.test(e.message ?? '')) return 'ما فيه اتصال. تأكد من الإنترنت وجرّب مرة ثانية.'
+  return 'ما قدرنا نكمل الدخول عبر المزوّد. جرّب مرة ثانية أو ادخل بالبريد.'
+}
