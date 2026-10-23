@@ -37,7 +37,7 @@ function invoiceText(p: Payment, u: Unit, no: number, seller: { name: string; tr
 /** إيصال بهوية إداراتي: مشاركة (واتساب وغيره) أو نسخ أو طباعة. DW-035: وفاتورة ضريبية للإيجار التجاري */
 export function ReceiptSheet({ value, onClose }: { value: ReceiptRef; onClose: () => void }) {
   const toast = useToast();
-  const { data, issueInvoice } = useStore();
+  const { data, issueInvoice, sync } = useStore();
   const [shown, setShown] = useState<ReceiptRef>(value);
   const [mode, setMode] = useState<"receipt" | "invoice">("receipt");
   useEffect(() => { if (value) { setShown(value); setMode("receipt"); } }, [value]);
@@ -118,6 +118,7 @@ export function ReceiptSheet({ value, onClose }: { value: ReceiptRef; onClose: (
             <button className="btn press" onClick={share}>مشاركة</button>
             <button className="btn btn-ghost press" onClick={() => window.print()}>طباعة</button>
           </div>
+          {canInvoice && !live?.inv && sync && typeof navigator !== "undefined" && !navigator.onLine && <p className="small inv-warn" style={{ margin: 0 }} id="inv-offline">أنت بدون نت: لو جهاز ثاني طلّع فاتورة بنفس الوقت، رقم الفاتورة يتعدّل بعد المزامنة. الأحسن تطلّعها وأنت متصل.</p>}
           {canInvoice && <button className="btn btn-ghost press" id="make-invoice" onClick={openInvoice}>{live?.inv ? `الفاتورة الضريبية ${invoiceLabel(live.inv)}` : "اطلع فاتورة ضريبية"}</button>}
           {vat && !isCommercial(shown.unit) && <p className="muted small" style={{ margin: 0 }} id="vat-exempt">الإيجار السكني معفى من الضريبة، فيكفي الإيصال.</p>}
         </div>

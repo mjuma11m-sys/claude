@@ -473,5 +473,14 @@ export const VAT_RATE = 0.1;
 /** المبلغ المستلم شامل الضريبة ← الصافي والضريبة بالفلس */
 export function vatSplit(gross: Fils) { const net = Math.round((gross * 10) / 11); return { net, vat: gross - net }; }
 export const validTrn = (s: string) => /^\d{15}$/.test(s.trim());
-export const nextInvoiceNo = (d: Data) => d.payments.reduce((m, p) => Math.max(m, p.inv ?? 0), 0) + 1;
+export const nextInvoiceNo = (d: Data) => Math.max(0, ...d.payments.map((p) => p.inv ?? 0), ...(d.credits ?? []).map((c) => c.payment.inv ?? 0)) + 1;
+export const creditLabel = (no: number) => `CN-${String(no).padStart(6, "0")}`;
+/** DW-036: ملخص الضريبة لكل ربع سنة (للإقرار). الفاتورة بتاريخها، والإشعار الدائن ينخصم بربع تاريخه */
+export function vatSummary(d: Data, year: number) {
+  const q = (day: string) => Math.floor((Number(day.slice(5, 7)) - 1) / 3);
+  const rows = [0, 1, 2, 3].map((i) => ({ quarter: i + 1, invoices: 0, credits: 0, net: 0, vat: 0 }));
+  for (const p of d.payments) if (p.inv && p.date.startsWith(String(year))) { const r = rows[q(p.date)]; const s = vatSplit(p.amount); r.invoices++; r.net += s.net; r.vat += s.vat; }
+  for (const c of d.credits ?? []) if (c.date.startsWith(String(year))) { const r = rows[q(c.date)]; const s = vatSplit(c.payment.amount); r.credits++; r.net -= s.net; r.vat -= s.vat; }
+  return { rows, net: rows.reduce((t, r) => t + r.net, 0), vat: rows.reduce((t, r) => t + r.vat, 0) };
+}
 export const invoiceLabel = (no: number) => `INV-${String(no).padStart(6, "0")}`;

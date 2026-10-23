@@ -1,8 +1,8 @@
 // منطق ملف متابعة الإيجار (DW-022): npm run test:track
-import { isCommercial, vatSplit, validTrn, nextInvoiceNo, invoiceLabel, describeAction, buildIcs, chequeSeries, chequesDue, billsDue, collection, monthlyReport, addMonthsDay, renewUnit, rentAt, upcomingRent, owedMonths, docStatus, docsList, docAlerts, kindOf, nextUnpaid, paidThrough, prepaid, rentTracker, statement, trackerTotals, monthKey } from "../src/data/logic";
+import { vatSummary, creditLabel, isCommercial, vatSplit, validTrn, nextInvoiceNo, invoiceLabel, describeAction, buildIcs, chequeSeries, chequesDue, billsDue, collection, monthlyReport, addMonthsDay, renewUnit, rentAt, upcomingRent, owedMonths, docStatus, docsList, docAlerts, kindOf, nextUnpaid, paidThrough, prepaid, rentTracker, statement, trackerTotals, monthKey } from "../src/data/logic";
 import { reducer } from "../src/data/store";
 import { demoData } from "../src/data/demo";
-import { planImport, trackerSheet, TRACK_HEAD } from "../src/data/excel";
+import { exportSheets, planImport, trackerSheet, TRACK_HEAD } from "../src/data/excel";
 import type { Data, Unit } from "../src/data/types";
 
 let failed = 0;
@@ -137,6 +137,30 @@ ok(describeAction({ type: "cheque", cheque: { number: "000101", unitId: "u6", st
   ok(first === 1 && v.payments.find((p) => p.id === pid)!.inv === 1 && nextInvoiceNo(v) === 2, "رقم الفاتورة ينحفظ مرة وحدة، والتالي = 2");
   ok(describeAction({ type: "invoice", paymentId: "x", no: 3 }, d) === "طلّع فاتورة ضريبية INV-000003" && describeAction({ type: "vat" }, d) === "أوقف الفاتورة الضريبية", "سجل النشاط: الفاتورة الضريبية");
   ok(invoiceLabel(12) === "INV-000012" && reducer(v, { type: "vat" }).vat === undefined, "صيغة الرقم + الإيقاف يمسح الإعداد");
+}
+
+// 14) DW-036: الإشعار الدائن + تصادم الأرقام + ملخص الضريبة
+{
+  const P = (id: string, month: string, date: string) => ({ id, unitId: "u6", month, amount: 450000, method: "تحويل" as const, date });
+  let v: Data = { ...d, payments: [...d.payments, P("x1", "2027-01", "2027-01-02"), P("x2", "2027-04", "2027-04-02"), P("x3", "2027-05", "2027-05-02")], vat: { trn: "200012345600003", name: "س", address: "ع" } };
+  v = reducer(v, { type: "invoice", paymentId: "x1", no: 1 });
+  v = reducer(v, { type: "invoice", paymentId: "x2", no: 2 });
+  // تصادم: جهاز ثاني طلّع رقم 2 لدفعة ثانية بنفس الوقت ← ياخذ 3
+  v = reducer(v, { type: "invoice", paymentId: "x3", no: 2 });
+  ok(v.payments.find((p) => p.id === "x3")!.inv === 3, "تصادم رقم الفاتورة: الثانية تاخذ أول رقم فاضي (3)");
+  const plain = reducer(v, { type: "unpay", id: v.payments[0].id, at: "2027-06-01" });
+  ok(!plain.credits?.length, "حذف دفعة بدون فاتورة: ما يطلع إشعار دائن");
+  v = reducer(v, { type: "unpay", id: "x2", at: "2027-07-10" });
+  const cn = v.credits?.[0];
+  ok(!!cn && cn.no === 1 && cn.payment.inv === 2 && cn.date === "2027-07-10" && cn.tenant === "مطعم الريف" && !v.payments.some((p) => p.id === "x2"), "حذف دفعة عليها فاتورة: إشعار دائن CN-000001 يخص INV-000002");
+  ok(nextInvoiceNo(v) === 4, "رقم الفاتورة المحذوفة ما ينعاد (التالي 4)");
+  v = reducer(v, { type: "unimport", restore: [], unitIds: [], paymentIds: ["x3"], expenseIds: [], catIds: [], at: "2027-07-11" });
+  ok(v.credits?.length === 2 && v.credits[1].no === 2 && v.credits[1].payment.inv === 3, "التراجع عن استيراد: الدفعة المفوترة تطلع لها إشعار دائن");
+  const sm = vatSummary(v, 2027);
+  ok(sm.rows[0].invoices === 1 && sm.rows[0].vat === 40909 && sm.rows[2].credits === 2 && sm.rows[2].vat === -81818 && sm.vat === 40909 - 81818, "ملخص الضريبة: الربع 1 فاتورة، والربع 3 إشعاران بالسالب", JSON.stringify(sm.rows.map((r) => r.vat)));
+  const sheet = exportSheets(v).find((x) => x.sheet === "الضريبة");
+  ok(!!sheet && sheet.data.length === 1 + 1 + 2 && creditLabel(1) === "CN-000001", "Excel: صفحة «الضريبة» فيها الفاتورة والإشعارين");
+  ok(!exportSheets(d).some((x) => x.sheet === "الضريبة"), "Excel: بدون فواتير ما تطلع صفحة الضريبة");
 }
 
 console.log(failed ? `\n${failed} فشل` : "\nكل اختبارات المتابعة نجحت");

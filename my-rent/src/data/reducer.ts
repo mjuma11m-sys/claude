@@ -1,11 +1,12 @@
 // المحوّل الصافي (DW-032): كل تعديل على البيانات حدث، والـ reducer يطبّقه. بدون React ولا تخزين — يتزامن ويُختبر لحاله.
 import type { Bill, BudgetCat, Cheque, Data, DepositLog, Doc, Expense, Payment, Recurring, Unit, VatCfg } from "./types";
+import type { CreditNote } from "./types";
 
 export const FORMER = "مستأجر سابق";
 
 export type Action =
   | { type: "pay"; payment: Payment }
-  | { type: "unpay"; id: string }
+  | { type: "unpay"; id: string; at?: string } // at = تاريخ الإشعار الدائن لو الدفعة عليها فاتورة
   | { type: "expense"; expense: Expense }
   | { type: "unexpense"; id: string }
   | { type: "task"; id: string }
@@ -31,12 +32,30 @@ export type Action =
   | { type: "vat"; vat?: VatCfg }                        // DW-035: تفعيل/إيقاف الفاتورة الضريبية
   | { type: "invoice"; paymentId: string; no: number }    // رقم الفاتورة ينحفظ على الدفعة مرة وحدة
   | { type: "import"; units: Unit[]; payments: Payment[]; expenses: Expense[]; cats: BudgetCat[] }
-  | { type: "unimport"; restore: Unit[]; unitIds: string[]; paymentIds: string[]; expenseIds: string[]; catIds: string[] };
+  | { type: "unimport"; restore: Unit[]; unitIds: string[]; paymentIds: string[]; expenseIds: string[]; catIds: string[]; at?: string };
+
+/** DW-036: أرقام الفواتير المستخدمة (الحالية + اللي صار لها إشعار دائن) — ما تنعاد أبداً */
+export const usedInvoiceNos = (d: Data) => new Set([...d.payments.map((p) => p.inv ?? 0), ...(d.credits ?? []).map((c) => c.payment.inv ?? 0)].filter(Boolean));
+const nextFree = (d: Data) => Math.max(0, ...usedInvoiceNos(d)) + 1;
+
+/** حذف دفعات: اللي عليها فاتورة ضريبية تطلع لها إشعار دائن بدل ما تختفي */
+function dropPayments(state: Data, ids: string[], at?: string): Data {
+  const gone = state.payments.filter((p) => ids.includes(p.id));
+  if (!gone.length) return state;
+  let credits = state.credits ?? [];
+  for (const p of gone.filter((x) => x.inv)) {
+    const u = state.units.find((x) => x.id === p.unitId);
+    const no = Math.max(0, ...credits.map((c) => c.no)) + 1;
+    const cn: CreditNote = { id: "cn-" + p.id, no, date: at ?? p.date, payment: p, unit: u ? `${u.name} · ${u.building}` : "—", tenant: u?.tenant?.name ?? "—", ...(u?.tenant?.trn ? { trn: u.tenant.trn } : {}) };
+    credits = [...credits, cn];
+  }
+  return { ...state, payments: state.payments.filter((p) => !ids.includes(p.id)), ...(credits.length ? { credits } : {}) };
+}
 
 export function reducer(state: Data, a: Action): Data {
   switch (a.type) {
     case "pay": return { ...state, payments: [...state.payments, a.payment] };
-    case "unpay": return { ...state, payments: state.payments.filter((p) => p.id !== a.id) };
+    case "unpay": return dropPayments(state, [a.id], a.at);
     case "expense": return { ...state, expenses: [a.expense, ...state.expenses] };
     case "unexpense": return { ...state, expenses: state.expenses.filter((e) => e.id !== a.id) };
     case "task": return { ...state, tasks: state.tasks.map((t) => (t.id === a.id ? { ...t, done: !t.done } : t)) };
@@ -61,9 +80,8 @@ export function reducer(state: Data, a: Action): Data {
       expenses: [...a.expenses, ...state.expenses],
       cats: [...state.cats, ...a.cats.filter((c) => !state.cats.some((x) => x.id === c.id))],
     };
-    case "unimport": return { ...state,
+    case "unimport": return { ...dropPayments(state, a.paymentIds, a.at),
       units: state.units.filter((u) => !a.unitIds.includes(u.id)).map((u) => a.restore.find((r) => r.id === u.id) ?? u),
-      payments: state.payments.filter((p) => !a.paymentIds.includes(p.id)),
       expenses: state.expenses.filter((e) => !a.expenseIds.includes(e.id)),
       cats: state.cats.filter((c) => !a.catIds.includes(c.id)),
     };
@@ -85,7 +103,10 @@ export function reducer(state: Data, a: Action): Data {
     case "uncheque": return { ...state, cheques: (state.cheques ?? []).filter((c) => c.id !== a.id) };
     case "anonymize": return { ...state, deposits: (state.deposits ?? []).map((d) => (a.depositIds.includes(d.id) ? { ...d, tenant: FORMER } : d)) };
     case "vat": return { ...state, vat: a.vat };
-    case "invoice": return { ...state, payments: state.payments.map((p) => (p.id === a.paymentId && !p.inv ? { ...p, inv: a.no } : p)) };
+    case "invoice": { // DW-036: لو الرقم انأخذ (جهاز ثاني بنفس الوقت) ياخذ أول رقم فاضي — كل الأجهزة توصل لنفس النتيجة
+      const no = usedInvoiceNos(state).has(a.no) ? nextFree(state) : a.no;
+      return { ...state, payments: state.payments.map((p) => (p.id === a.paymentId && !p.inv ? { ...p, inv: no } : p)) };
+    }
     case "restoreDeposits": return { ...state, deposits: (state.deposits ?? []).map((d) => a.logs.find((l) => l.id === d.id) ?? d) };
     default: return state; // حدث من نسخة أحدث للتطبيق: نتجاهله بدل ما ننكسر
   }

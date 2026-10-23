@@ -814,6 +814,21 @@ try {
     await v.locator(".dlg .rows-tap li button").first().click(); await v.waitForTimeout(450);
     ok(await v.locator("#make-invoice").count() === 0 && await v.locator("#vat-exempt").isVisible(), "الشقة: إيصال بس (السكني معفى)");
     await v.keyboard.press("Escape"); await v.waitForTimeout(400); await v.keyboard.press("Escape"); await v.waitForTimeout(400);
+    // DW-036: التراجع عن دفعة عليها فاتورة ← إشعار دائن بالتقارير
+    await v.evaluate(() => { const d = JSON.parse(localStorage.getItem("idarati:v2")); const p = d.payments.find((x) => x.id === "pv2");
+      d.payments = d.payments.filter((x) => x.id !== "pv2"); d.credits = [{ id: "cn-pv2", no: 1, date: "2027-03-01", payment: p, unit: "محل 1 · شارع المالكية", tenant: "مطعم الريف" }];
+      localStorage.setItem("idarati:v2", JSON.stringify(d)); });
+    await v.goto(URL + "#reports"); await v.reload(); await v.waitForTimeout(900);
+    await v.locator("#vs-year").scrollIntoViewIfNeeded();
+    for (let i = 0; i < 3 && (await v.locator("#vs-year").innerText()) !== "2027"; i++) { await v.getByRole("button", { name: "السنة اللي بعد" }).click(); await v.waitForTimeout(100); }
+    ok((await v.locator("#vs-vat").innerText()) === "0.000", "ملخص الضريبة: فاتورة + إشعار دائن = صفر", await v.locator("#vs-vat").innerText());
+    await v.locator("#credit-list button").first().click(); await v.waitForTimeout(400);
+    const cnt = await v.locator("#credit-note").innerText();
+    ok(cnt.includes("إشعار دائن") && cnt.includes("CN-000001") && cnt.includes("INV-000002"), "الإشعار الدائن: رقمه ويذكر الفاتورة الأصلية");
+    await v.addScriptTag({ content: fs.readFileSync("node_modules/axe-core/axe.min.js", "utf8") });
+    const ca = await v.evaluate(async () => (await axe.run(document, { resultTypes: ["violations"] })).violations.filter((x) => x.impact === "serious" || x.impact === "critical").map((x) => `${x.id}×${x.nodes.length}`));
+    ok(ca.length === 0, "التقارير + الإشعار الدائن: axe بدون مخالفات خطيرة", ca.join(","));
+    await v.keyboard.press("Escape"); await v.waitForTimeout(400);
     // جهّز إداراتي
     await v.goto(URL + "#home"); await v.evaluate(() => localStorage.clear()); await v.reload(); await v.waitForTimeout(900);
     ok(await v.locator("#setup").count() === 0, "بالبيانات التجريبية: قائمة التجهيز ما تطلع");

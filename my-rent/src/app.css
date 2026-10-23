@@ -167,8 +167,8 @@ a.icon-btn { color: var(--brand); }
 
 @media print {
   body * { visibility: hidden !important; }
-  #receipt, #receipt *, #statement, #statement *, #contract, #contract *, #month-report, #month-report *, #tax-invoice, #tax-invoice * { visibility: visible !important; }
-  #receipt, #statement, #contract, #month-report, #tax-invoice { position: absolute; inset: 0 auto auto 0; width: 100%; border: 0; }
+  #receipt, #receipt *, #statement, #statement *, #contract, #contract *, #month-report, #month-report *, #tax-invoice, #tax-invoice *, #credit-note, #credit-note * { visibility: visible !important; }
+  #receipt, #statement, #contract, #month-report, #tax-invoice, #credit-note { position: absolute; inset: 0 auto auto 0; width: 100%; border: 0; }
   #month-report, #month-report * { color: #000 !important; background: #fff !important; }
 }
 
@@ -491,3 +491,12 @@ select.input { appearance: auto; }
 .setup-step.done .setup-dot { background: var(--paid); border-color: var(--paid); color: #fff; }
 .setup-dot svg { width: 14px; height: 14px; }
 @media (prefers-reduced-motion: reduce) { .setup-bar span { transition: none; } }
+/* DW-036: ملخص الضريبة */
+.vs-year { display: flex; align-items: center; gap: 6px; }
+.vs-table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 420px; }
+.vs-table th, .vs-table td { padding: 6px 8px; text-align: start; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.vs-table thead th { color: var(--muted); font-weight: 500; font-size: 13px; }
+.vs-table tfoot th, .vs-table tfoot td { font-weight: 700; border-bottom: 0; }
+.vs-table td.num { text-align: end; }
+.table-scroll { overflow-x: auto; }
+.inv-warn { color: var(--due); }

@@ -173,14 +173,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "pay", payment });
       return payment;
     },
-    unpay: (id) => dispatch({ type: "unpay", id }),
+    unpay: (id) => dispatch({ type: "unpay", id, at: isoDay(new Date()) }),
     payAhead: (unitId, n, method) => {
       const unit = data.units.find((u) => u.id === unitId);
       if (!unit?.tenant || n < 1) return null;
       const date = isoDay(new Date());
       const ps = nextUnpaid(data, unit, n).map((month) => ({ id: uid(), unitId, month, amount: rentAt(unit, month) - data.payments.filter((p) => p.unitId === unitId && p.month === month).reduce((s, p) => s + p.amount, 0), method, date }));
       ps.forEach((payment) => dispatch({ type: "pay", payment }));
-      return { months: ps.map((p) => p.month), undo: () => ps.forEach((p) => dispatch({ type: "unpay", id: p.id })) };
+      return { months: ps.map((p) => p.month), undo: () => ps.forEach((p) => dispatch({ type: "unpay", id: p.id, at: isoDay(new Date()) })) };
     },
     // ضغطة وحدة: أقدم شهر ما اندفع، بالمبلغ الباقي، وبآخر طريقة دفع استخدمها نفس المستأجر
     quickPay: (unitId) => {
@@ -222,13 +222,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const payment = { id: uid(), unitId: unit.id, month, amount: c.amount, method: "شيك", date: isoDay(new Date()) } as Payment;
       dispatch({ type: "pay", payment });
       dispatch({ type: "cheque", cheque: { ...c, state: "deposited", paymentId: payment.id } });
-      return () => { dispatch({ type: "unpay", id: payment.id }); dispatch({ type: "cheque", cheque: c }); };
+      return () => { dispatch({ type: "unpay", id: payment.id, at: isoDay(new Date()) }); dispatch({ type: "cheque", cheque: c }); };
     },
     returnCheque: (id) => {
       const c = (data.cheques ?? []).find((x) => x.id === id);
       if (!c || c.state === "returned") return null;
       const pay = c.paymentId ? data.payments.find((p) => p.id === c.paymentId) : undefined;
-      if (pay) dispatch({ type: "unpay", id: pay.id });
+      if (pay) dispatch({ type: "unpay", id: pay.id, at: isoDay(new Date()) });
       dispatch({ type: "cheque", cheque: { ...c, state: "returned", paymentId: undefined } });
       return () => { if (pay) dispatch({ type: "pay", payment: pay }); dispatch({ type: "cheque", cheque: c }); };
     },
@@ -285,7 +285,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     importPlan: (p) => {
       const restore = data.units.filter((u) => p.units.some((x) => x.id === u.id));
       dispatch({ type: "import", units: p.units, payments: p.payments, expenses: p.expenses, cats: p.cats });
-      return () => dispatch({ type: "unimport", restore, unitIds: p.units.filter((u) => !restore.some((r) => r.id === u.id)).map((u) => u.id), paymentIds: p.payments.map((x) => x.id), expenseIds: p.expenses.map((x) => x.id), catIds: p.cats.map((c) => c.id) });
+      return () => dispatch({ type: "unimport", restore, unitIds: p.units.filter((u) => !restore.some((r) => r.id === u.id)).map((u) => u.id), paymentIds: p.payments.map((x) => x.id), expenseIds: p.expenses.map((x) => x.id), catIds: p.cats.map((c) => c.id), at: isoDay(new Date()) });
     },
     deleteUnit: (id) => {
       if (data.payments.some((p) => p.unitId === id)) return false;

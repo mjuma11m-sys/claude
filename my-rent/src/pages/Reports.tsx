@@ -5,6 +5,7 @@ import { fmt, isoDay, monthName, monthlyReport, toCSV } from "../data/logic";
 import { Money } from "../theme/AppShell";
 import { DemoNote, SectionHead, useToast } from "../ui/kit";
 import { ExcelPanel } from "./ExcelPanel";
+import { VatSummary } from "./VatSummary";
 
 /** الدخل مقابل المصروف لآخر 6 أشهر + تصدير CSV للمحاسب */
 export function Reports() {
@@ -71,6 +72,7 @@ export function Reports() {
 
       <button className="btn press" id="month-report-btn" onClick={() => setReport(true)}>تقرير الشهر للطباعة</button>
       <MonthReportSheet open={report} onClose={() => setReport(false)} />
+      <VatSummary />
       <ExcelPanel />
       <button className="btn btn-ghost press" onClick={exportCsv}>تصدير CSV للمحاسب</button>
       <p className="muted small" style={{ margin: 0 }}>ملفات Excel وCSV فيها أسماء المستأجرين — لا ترسلها إلا للمحاسب.</p>

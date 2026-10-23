@@ -23,6 +23,8 @@ export type Payment = { id: string; unitId: string; month: string; amount: Fils;
 
 /** DW-035: بيانات المؤجر للفاتورة الضريبية. وجودها = الفاتورة مفعّلة */
 export type VatCfg = { trn: string; name: string; address: string };
+/** DW-036: إشعار دائن — دفعة عليها فاتورة ضريبية انحذفت. ينحفظ نسخة الفاتورة عشان التسلسل ما ينكسر */
+export type CreditNote = { id: string; no: number; date: string; payment: Payment; unit: string; tenant: string; trn?: string };
 export type Method = "BenefitPay" | "تحويل" | "نقد" | "شيك";
 
 export type BudgetCat = { id: string; name: string; limit: Fils };
@@ -75,4 +77,5 @@ export type Data = {
   bills?: Bill[];            // DW-026
   cheques?: Cheque[];        // DW-029
   vat?: VatCfg;              // DW-035: للإيجار التجاري بس
+  credits?: CreditNote[];    // DW-036: الإشعارات الدائنة
 };
