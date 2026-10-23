@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import type { Payment, Unit } from "../data/types";
-import { fmt, invoiceLabel, isCommercial, monthName, vatSplit } from "../data/logic";
+import { creditLabel, fmt, invoiceLabel, isCommercial, monthName, parseBHD, vatSplit } from "../data/logic";
 import { useStore } from "../data/store";
+import { creditable } from "../data/reducer";
 import { Sheet, useToast } from "../ui/kit";
 import logoUrl from "../../brand/logo-horizontal.svg";
 import sealUrl from "../../brand/symbol.svg";
@@ -23,13 +24,14 @@ function receiptText(p: Payment, u: Unit) {
 }
 
 function invoiceText(p: Payment, u: Unit, no: number, seller: { name: string; trn: string }) {
-  const { net, vat } = vatSplit(p.amount);
+  const gross = p.invAmount ?? p.amount;
+  const { net, vat } = vatSplit(gross);
   return [
     `فاتورة ضريبية · Tax Invoice · ${invoiceLabel(no)}`,
     `المؤجر: ${seller.name} · الرقم الضريبي ${seller.trn}`,
     `المستأجر: ${u.tenant?.name ?? "—"}${u.tenant?.trn ? ` · الرقم الضريبي ${u.tenant.trn}` : ""}`,
     `إيجار ${u.name} · ${u.building} عن ${monthName(p.month)} ${p.month.slice(0, 4)}`,
-    `الصافي: ${fmt(net)} د.ب · الضريبة 10%: ${fmt(vat)} د.ب · الإجمالي: ${fmt(p.amount)} د.ب`,
+    `الصافي: ${fmt(net)} د.ب · الضريبة 10%: ${fmt(vat)} د.ب · الإجمالي: ${fmt(gross)} د.ب`,
     `التاريخ: ${p.date}`,
   ].join("\n");
 }
@@ -37,13 +39,17 @@ function invoiceText(p: Payment, u: Unit, no: number, seller: { name: string; tr
 /** إيصال بهوية إداراتي: مشاركة (واتساب وغيره) أو نسخ أو طباعة. DW-035: وفاتورة ضريبية للإيجار التجاري */
 export function ReceiptSheet({ value, onClose }: { value: ReceiptRef; onClose: () => void }) {
   const toast = useToast();
-  const { data, issueInvoice, sync } = useStore();
+  const { data, issueInvoice, sync, creditPayment } = useStore();
+  const [credit, setCredit] = useState<string | null>(null); // DW-037: مبلغ الإشعار الدائن (نص)
+  const [creditErr, setCreditErr] = useState("");
   const [shown, setShown] = useState<ReceiptRef>(value);
   const [mode, setMode] = useState<"receipt" | "invoice">("receipt");
-  useEffect(() => { if (value) { setShown(value); setMode("receipt"); } }, [value]);
+  useEffect(() => { if (value) { setShown(value); setMode("receipt"); setCredit(null); setCreditErr(""); } }, [value]);
   const vat = data.vat;
   const canInvoice = !!vat && !!shown && isCommercial(shown.unit);
   const live = shown ? data.payments.find((x) => x.id === shown.payment.id) ?? shown.payment : null;
+  const cns = live ? (data.credits ?? []).filter((c) => c.payment.id === live.id) : [];
+  const left = live ? creditable(data, live) : 0;
   const openInvoice = () => { if (shown) { issueInvoice(shown.payment.id); setMode("invoice"); } };
 
   const share = async () => {
@@ -76,21 +82,43 @@ export function ReceiptSheet({ value, onClose }: { value: ReceiptRef; onClose: (
               <dt>تاريخ الفاتورة</dt><dd className="num">{live.date}</dd>
               <dt>الوصف</dt><dd>إيجار {shown.unit.name} · {shown.unit.building} عن {monthName(live.month)} <span className="num">{live.month.slice(0, 4)}</span></dd>
             </dl>
-            {(() => { const { net, vat: tax } = vatSplit(live.amount); return (
+            {(() => { const gross = live.invAmount ?? live.amount; const { net, vat: tax } = vatSplit(gross); return (
               <table className="inv-table">
                 <tbody>
                   <tr><th scope="row">المبلغ قبل الضريبة</th><td className="num">{fmt(net)} د.ب</td></tr>
                   <tr><th scope="row">ضريبة القيمة المضافة 10%</th><td className="num">{fmt(tax)} د.ب</td></tr>
-                  <tr className="inv-total"><th scope="row">الإجمالي شامل الضريبة</th><td className="num">{fmt(live.amount)} د.ب</td></tr>
+                  <tr className="inv-total"><th scope="row">الإجمالي شامل الضريبة</th><td className="num">{fmt(gross)} د.ب</td></tr>
                 </tbody>
               </table>
             ); })()}
             <img className="receipt-seal" src={sealUrl} alt="" />
           </div>
+          {cns.length > 0 && <p className="muted small" style={{ margin: 0 }} id="inv-credited">عليها إشعار دائن: {cns.map((c) => `${creditLabel(c.no)} (${fmt(c.amount ?? c.payment.amount)} د.ب)`).join("، ")}. الباقي <span className="num">{fmt(left)}</span> د.ب.</p>}
           <div className="grid-2">
             <button className="btn press" onClick={share}>مشاركة</button>
             <button className="btn btn-ghost press" onClick={() => window.print()}>طباعة</button>
           </div>
+          {credit === null ? (
+            <button className="btn btn-ghost press" id="credit-open" onClick={() => { setCredit(""); setCreditErr(""); }}>إشعار دائن (رجّعت مبلغ للمستأجر)</button>
+          ) : (
+            <div className="sync-box stack" id="credit-form">
+              <label className="field"><span>المبلغ اللي رجّعته شامل الضريبة (الباقي {fmt(left)} د.ب)</span><input id="credit-amount" className="input num" inputMode="decimal" dir="ltr" value={credit} onChange={(e) => { setCredit(e.target.value); setCreditErr(""); }} /></label>
+              {creditErr && <p className="field-error" role="alert">{creditErr}</p>}
+              <p className="muted small" style={{ margin: 0 }}>الفاتورة تبقى مثل ما هي، ويطلع إشعار دائن برقمه. لو رجّعت الباقي كله، الدفعة تنلغي.</p>
+              <div className="grid-2">
+                <button className="btn press" id="credit-save" onClick={() => {
+                  const f = parseBHD(credit);
+                  if (f === null || f <= 0) return setCreditErr("اكتب المبلغ بالدينار، مثل 50 أو 45.500");
+                  if (f > left) return setCreditErr(`أكثر من الباقي (${fmt(left)} د.ب)`);
+                  const full = f === left;
+                  creditPayment(live.id, f);
+                  toast({ text: full ? "انطلع إشعار دائن وانلغت الدفعة" : `انطلع إشعار دائن بـ ${fmt(f)} د.ب` });
+                  if (full) onClose(); else setCredit(null);
+                }}>اطلع الإشعار</button>
+                <button className="btn btn-ghost press" onClick={() => setCredit(null)}>إلغاء</button>
+              </div>
+            </div>
+          )}
           <button className="link press" onClick={() => setMode("receipt")} style={{ justifySelf: "center" }}>رجوع للإيصال</button>
         </div>
       ) : shown && (

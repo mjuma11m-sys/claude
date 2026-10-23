@@ -60,6 +60,7 @@ type Store = {
   setContract: (template: string, owner: string) => void;
   setVat: (vat?: VatCfg) => void;          // DW-035
   issueInvoice: (paymentId: string) => number; // يرجّع رقم الفاتورة (نفسه لو انطلع قبل)
+  creditPayment: (paymentId: string, amount: number) => void; // DW-037: إشعار دائن (جزئي أو كامل)
   saveDoc: (doc: Omit<Doc, "id"> & { id?: string }) => Doc;
   removeDoc: (id: string) => Doc | null;
   saveBill: (b: Omit<Bill, "id"> & { id?: string }) => Bill;
@@ -274,6 +275,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     unexpenses: (ids) => dispatch({ type: "unexpenses", ids }),
     setContract: (template, owner) => dispatch({ type: "contract", template, owner }),
     setVat: (vat) => dispatch({ type: "vat", vat }),
+    creditPayment: (paymentId, amount) => dispatch({ type: "credit", paymentId, amount, at: isoDay(new Date()) }),
     issueInvoice: (paymentId) => {
       const p = data.payments.find((x) => x.id === paymentId);
       if (!p) return 0;

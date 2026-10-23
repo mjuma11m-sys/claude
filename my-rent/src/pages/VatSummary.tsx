@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useStore } from "../data/store";
-import { creditLabel, fmt, invoiceLabel, monthName, vatSplit, vatSummary } from "../data/logic";
+import { creditAmount, creditLabel, fmt, invoiceLabel, monthName, vatSplit, vatSummary } from "../data/logic";
 import type { CreditNote } from "../data/types";
 import { Sheet } from "../ui/kit";
 import logoUrl from "../../brand/logo-horizontal.svg";
@@ -45,7 +45,7 @@ export function VatSummary() {
               <li key={c.id}>
                 <button className="row-btn press" onClick={() => setCn(c)} aria-label={`إشعار دائن ${creditLabel(c.no)}`}>
                   <span><span className="num strong">{creditLabel(c.no)}</span> <span className="muted small">يخص {invoiceLabel(c.payment.inv ?? 0)} · {c.unit}</span></span>
-                  <span className="num">−{fmt(c.payment.amount)}</span>
+                  <span className="num">−{fmt(creditAmount(c))}</span>
                 </button>
               </li>
             ))}
@@ -62,7 +62,8 @@ export function CreditNoteSheet({ value, onClose }: { value: CreditNote | null; 
   const { data } = useStore();
   const vat = data.vat;
   const c = value;
-  const split = c ? vatSplit(c.payment.amount) : { net: 0, vat: 0 };
+  const gross = c ? creditAmount(c) : 0;
+  const split = vatSplit(gross);
   return (
     <Sheet open={!!c} onClose={onClose} title="إشعار دائن">
       {c && (
@@ -82,13 +83,13 @@ export function CreditNoteSheet({ value, onClose }: { value: CreditNote | null; 
             <dl>
               <dt>التاريخ</dt><dd className="num">{c.date}</dd>
               <dt>يخص الفاتورة</dt><dd className="num" id="cn-ref">{invoiceLabel(c.payment.inv ?? 0)} · {c.payment.date}</dd>
-              <dt>الوصف</dt><dd>إلغاء إيجار {c.unit} عن {monthName(c.payment.month)} <span className="num">{c.payment.month.slice(0, 4)}</span></dd>
+              <dt>الوصف</dt><dd>{c.amount ? "إرجاع جزء من" : "إلغاء"} إيجار {c.unit} عن {monthName(c.payment.month)} <span className="num">{c.payment.month.slice(0, 4)}</span></dd>
             </dl>
             <table className="inv-table">
               <tbody>
                 <tr><th scope="row">المبلغ قبل الضريبة</th><td className="num">−{fmt(split.net)} د.ب</td></tr>
                 <tr><th scope="row">ضريبة القيمة المضافة 10%</th><td className="num">−{fmt(split.vat)} د.ب</td></tr>
-                <tr className="inv-total"><th scope="row">الإجمالي</th><td className="num">−{fmt(c.payment.amount)} د.ب</td></tr>
+                <tr className="inv-total"><th scope="row">الإجمالي</th><td className="num">−{fmt(gross)} د.ب</td></tr>
               </tbody>
             </table>
           </div>

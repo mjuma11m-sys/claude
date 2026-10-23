@@ -1,4 +1,4 @@
-import type { Bill, BillKind, ChequeState, Data, Doc, DocKind, Fils, Kind, Status, Unit } from "./types";
+import type { Bill, BillKind, ChequeState, Data, Doc, DocKind, Fils, Kind, Payment, Status, Unit } from "./types";
 
 export const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 export const isoDay = (d: Date) => `${monthKey(d)}-${String(d.getDate()).padStart(2, "0")}`;
@@ -109,7 +109,9 @@ export function contractAlerts(data: Data, now = new Date(), days = 30) {
 export function monthlyReport(data: Data, now = new Date(), n = 6) {
   const months = monthsBetween(monthKey(new Date(now.getFullYear(), now.getMonth() - (n - 1), 1)), monthKey(now));
   const rows = months.map((m) => {
-    const income = data.payments.filter((p) => p.month === m).reduce((s, p) => s + p.amount, 0);
+    // DW-037: الإشعار الدائن الجزئي ينقص من دخل شهر الدفعة (الدفعة نفسها تبقى، والشهر مسدد)
+    const refunds = (data.credits ?? []).filter((c) => c.amount && c.payment.month === m && data.payments.some((p) => p.id === c.payment.id)).reduce((s, c) => s + (c.amount ?? 0), 0);
+    const income = data.payments.filter((p) => p.month === m).reduce((s, p) => s + p.amount, 0) - refunds;
     const expense = data.expenses.filter((e) => e.date.startsWith(m)).reduce((s, e) => s + e.amount, 0);
     return { month: m, income, expense, net: income - expense };
   });
@@ -462,6 +464,7 @@ export function describeAction(a: { type: string; [k: string]: unknown }, data: 
     case "recurring": case "unrecurring": return "عدّل المصاريف الثابتة";
     case "vat": return o.vat ? "فعّل الفاتورة الضريبية" : "أوقف الفاتورة الضريبية"; // DW-035
     case "invoice": return `طلّع فاتورة ضريبية ${invoiceLabel(Number(o.no) || 0)}`;
+    case "credit": return `إشعار دائن ${money(o.amount)}`;
     default: return "تعديل";
   }
 }
@@ -475,12 +478,20 @@ export function vatSplit(gross: Fils) { const net = Math.round((gross * 10) / 11
 export const validTrn = (s: string) => /^\d{15}$/.test(s.trim());
 export const nextInvoiceNo = (d: Data) => Math.max(0, ...d.payments.map((p) => p.inv ?? 0), ...(d.credits ?? []).map((c) => c.payment.inv ?? 0)) + 1;
 export const creditLabel = (no: number) => `CN-${String(no).padStart(6, "0")}`;
+/** مبلغ الإشعار الدائن: الجزئي لو فيه، وإلا الباقي من الدفعة وقت الإلغاء */
+export const creditAmount = (c: { amount?: Fils; payment: { amount: Fils } }) => c.amount ?? c.payment.amount;
+/** DW-037: كل الفواتير اللي انطلعت — حتى اللي دفعتها انلغت (نسختها بالإشعار الدائن). مرة وحدة لكل رقم */
+export function issuedInvoices(d: Data): Payment[] {
+  const seen = new Set<number>(); const out: Payment[] = [];
+  for (const p of [...d.payments, ...(d.credits ?? []).map((c) => c.payment)]) if (p.inv && !seen.has(p.inv)) { seen.add(p.inv); out.push(p); }
+  return out.sort((a, b) => (a.inv ?? 0) - (b.inv ?? 0));
+}
 /** DW-036: ملخص الضريبة لكل ربع سنة (للإقرار). الفاتورة بتاريخها، والإشعار الدائن ينخصم بربع تاريخه */
 export function vatSummary(d: Data, year: number) {
   const q = (day: string) => Math.floor((Number(day.slice(5, 7)) - 1) / 3);
   const rows = [0, 1, 2, 3].map((i) => ({ quarter: i + 1, invoices: 0, credits: 0, net: 0, vat: 0 }));
-  for (const p of d.payments) if (p.inv && p.date.startsWith(String(year))) { const r = rows[q(p.date)]; const s = vatSplit(p.amount); r.invoices++; r.net += s.net; r.vat += s.vat; }
-  for (const c of d.credits ?? []) if (c.date.startsWith(String(year))) { const r = rows[q(c.date)]; const s = vatSplit(c.payment.amount); r.credits++; r.net -= s.net; r.vat -= s.vat; }
+  for (const p of issuedInvoices(d)) if (p.date.startsWith(String(year))) { const r = rows[q(p.date)]; const s = vatSplit(p.invAmount ?? p.amount); r.invoices++; r.net += s.net; r.vat += s.vat; }
+  for (const c of d.credits ?? []) if (c.date.startsWith(String(year))) { const r = rows[q(c.date)]; const s = vatSplit(creditAmount(c)); r.credits++; r.net -= s.net; r.vat -= s.vat; }
   return { rows, net: rows.reduce((t, r) => t + r.net, 0), vat: rows.reduce((t, r) => t + r.vat, 0) };
 }
 export const invoiceLabel = (no: number) => `INV-${String(no).padStart(6, "0")}`;

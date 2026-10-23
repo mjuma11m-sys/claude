@@ -1,7 +1,7 @@
 // Excel (DW-021): قالب بثلاث صفحات، قراءة ملف المستخدم مع أخطاء لكل صف، وتصدير التقارير.
 // المنطق هني صافي (بدون مكتبات) عشان ينختبر؛ القراءة والكتابة الفعلية بمكتبات تتحمّل وقت الحاجة.
 import type { BudgetCat, Data, Expense, Kind as UnitKind, Method, Payment, Unit } from "./types";
-import { DOC_LABEL, docKindLabel, docsList, rentAt, LEASE_LABEL, isoDay, kindLabel, kindOf as unitKind, monthKey, monthLabel, monthName, monthlyReport, parseBHD, rentTracker, vatSplit, invoiceLabel, creditLabel } from "./logic";
+import { DOC_LABEL, docKindLabel, docsList, rentAt, LEASE_LABEL, isoDay, kindLabel, kindOf as unitKind, monthKey, monthLabel, monthName, monthlyReport, parseBHD, rentTracker, vatSplit, invoiceLabel, creditLabel, creditAmount, issuedInvoices } from "./logic";
 import { normalize } from "./prefs";
 
 export type Cell = string | number | boolean | Date | null | undefined;
@@ -179,11 +179,11 @@ export function exportSheets(data: Data, now = new Date()) {
   const unitName = (id: string) => data.units.find((u) => u.id === id)?.name ?? "—";
   const catName = (id: string) => data.cats.find((c) => c.id === id)?.name ?? "—";
   const rep = monthlyReport(data, now, 12);
-  const invoiced = data.payments.filter((p) => p.inv);
+  const invoiced = issuedInvoices(data); // DW-037: حتى الملغاة (لها إشعار دائن)
   // DW-036: صفحة الضريبة (للإقرار) — الفواتير والإشعارات الدائنة بالسالب
   const vatSheet = invoiced.length || data.credits?.length ? [{ sheet: "الضريبة", data: [["الرقم", "النوع", "التاريخ", "الوحدة", "الصافي (د.ب)", "الضريبة 10% (د.ب)", "الإجمالي (د.ب)", "يخص الفاتورة"].map(H),
-    ...[...invoiced].sort((a, b) => (a.inv ?? 0) - (b.inv ?? 0)).map((p) => { const s = vatSplit(p.amount); return [invoiceLabel(p.inv!), "فاتورة ضريبية", p.date, unitName(p.unitId), D(s.net), D(s.vat), D(p.amount), ""]; }),
-    ...(data.credits ?? []).map((c) => { const s = vatSplit(c.payment.amount); return [creditLabel(c.no), "إشعار دائن", c.date, c.unit, -D(s.net), -D(s.vat), -D(c.payment.amount), invoiceLabel(c.payment.inv ?? 0)]; })] }] : [];
+    ...invoiced.map((p) => { const g = p.invAmount ?? p.amount, s = vatSplit(g); return [invoiceLabel(p.inv!), "فاتورة ضريبية", p.date, unitName(p.unitId), D(s.net), D(s.vat), D(g), ""]; }),
+    ...(data.credits ?? []).map((c) => { const g = creditAmount(c), s = vatSplit(g); return [creditLabel(c.no), c.amount ? "إشعار دائن جزئي" : "إشعار دائن", c.date, c.unit, -D(s.net), -D(s.vat), -D(g), invoiceLabel(c.payment.inv ?? 0)]; })] }] : [];
   return [
     trackerSheet(data, now),
     ...vatSheet,

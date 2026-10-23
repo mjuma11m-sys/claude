@@ -1,6 +1,6 @@
 /* إداراتي — layout لكل الأجهزة. كل الألوان من tokens.css */
 
-.shell { min-height: 100dvh; }
+.shell { min-height: 100vh; min-height: 100dvh; }
 
 /* ===== الجوال (الافتراضي) ===== */
 .shell-side { display: none; }
@@ -90,7 +90,7 @@
   .shell-bottom, .sheet, .sheet-backdrop { display: none; }
   .shell-side {
     display: flex; flex-direction: column; gap: 16px;
-    position: sticky; top: 0; height: 100dvh; overflow-y: auto;
+    position: sticky; top: 0; height: 100vh; height: 100dvh; overflow-y: auto;
     padding: calc(env(safe-area-inset-top) + 16px) 10px 16px;
     background: var(--night); color: #F5F2EB;
   }

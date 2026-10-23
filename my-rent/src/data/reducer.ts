@@ -31,6 +31,7 @@ export type Action =
   | { type: "restoreDeposits"; logs: DepositLog[] }
   | { type: "vat"; vat?: VatCfg }                        // DW-035: تفعيل/إيقاف الفاتورة الضريبية
   | { type: "invoice"; paymentId: string; no: number }    // رقم الفاتورة ينحفظ على الدفعة مرة وحدة
+  | { type: "credit"; paymentId: string; amount: number; at?: string } // DW-037: إشعار دائن جزئي (إرجاع جزء للمستأجر)
   | { type: "import"; units: Unit[]; payments: Payment[]; expenses: Expense[]; cats: BudgetCat[] }
   | { type: "unimport"; restore: Unit[]; unitIds: string[]; paymentIds: string[]; expenseIds: string[]; catIds: string[]; at?: string };
 
@@ -39,14 +40,20 @@ export const usedInvoiceNos = (d: Data) => new Set([...d.payments.map((p) => p.i
 const nextFree = (d: Data) => Math.max(0, ...usedInvoiceNos(d)) + 1;
 
 /** حذف دفعات: اللي عليها فاتورة ضريبية تطلع لها إشعار دائن بدل ما تختفي */
+const snapshot = (state: Data, p: Payment) => { const u = state.units.find((x) => x.id === p.unitId);
+  return { unit: u ? `${u.name} · ${u.building}` : "—", tenant: u?.tenant?.name ?? "—", ...(u?.tenant?.trn ? { trn: u.tenant.trn } : {}) }; };
+const nextCredit = (state: Data) => Math.max(0, ...(state.credits ?? []).map((c) => c.no)) + 1;
+/** DW-037: الباقي من الدفعة بعد الإشعارات الجزئية (الدفعة نفسها ما تنقص — الشهر يبقى مسدد) */
+export const creditable = (state: Data, p: Payment) => p.amount - (state.credits ?? []).filter((c) => c.payment.id === p.id && c.amount).reduce((s, c) => s + (c.amount ?? 0), 0);
+
 function dropPayments(state: Data, ids: string[], at?: string): Data {
   const gone = state.payments.filter((p) => ids.includes(p.id));
   if (!gone.length) return state;
   let credits = state.credits ?? [];
   for (const p of gone.filter((x) => x.inv)) {
-    const u = state.units.find((x) => x.id === p.unitId);
     const no = Math.max(0, ...credits.map((c) => c.no)) + 1;
-    const cn: CreditNote = { id: "cn-" + p.id, no, date: at ?? p.date, payment: p, unit: u ? `${u.name} · ${u.building}` : "—", tenant: u?.tenant?.name ?? "—", ...(u?.tenant?.trn ? { trn: u.tenant.trn } : {}) };
+    const left = creditable(state, p);
+    const cn: CreditNote = { id: "cn-" + p.id, no, date: at ?? p.date, payment: p, ...(left !== p.amount ? { amount: left } : {}), ...snapshot(state, p) };
     credits = [...credits, cn];
   }
   return { ...state, payments: state.payments.filter((p) => !ids.includes(p.id)), ...(credits.length ? { credits } : {}) };
@@ -105,7 +112,15 @@ export function reducer(state: Data, a: Action): Data {
     case "vat": return { ...state, vat: a.vat };
     case "invoice": { // DW-036: لو الرقم انأخذ (جهاز ثاني بنفس الوقت) ياخذ أول رقم فاضي — كل الأجهزة توصل لنفس النتيجة
       const no = usedInvoiceNos(state).has(a.no) ? nextFree(state) : a.no;
-      return { ...state, payments: state.payments.map((p) => (p.id === a.paymentId && !p.inv ? { ...p, inv: no } : p)) };
+      return { ...state, payments: state.payments.map((p) => (p.id === a.paymentId && !p.inv ? { ...p, inv: no, invAmount: p.amount } : p)) };
+    }
+    case "credit": {
+      const p = state.payments.find((x) => x.id === a.paymentId);
+      const amount = Math.round(a.amount);
+      if (!p?.inv || amount <= 0) return state;
+      if (amount >= creditable(state, p)) return dropPayments(state, [p.id], a.at); // كل الباقي = إشعار بالباقي والدفعة تنشال
+      const cn: CreditNote = { id: `cn-${p.id}-${nextCredit(state)}`, no: nextCredit(state), date: a.at ?? p.date, payment: p, amount, ...snapshot(state, p) };
+      return { ...state, credits: [...(state.credits ?? []), cn] };
     }
     case "restoreDeposits": return { ...state, deposits: (state.deposits ?? []).map((d) => a.logs.find((l) => l.id === d.id) ?? d) };
     default: return state; // حدث من نسخة أحدث للتطبيق: نتجاهله بدل ما ننكسر

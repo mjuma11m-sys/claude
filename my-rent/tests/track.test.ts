@@ -1,6 +1,7 @@
 // منطق ملف متابعة الإيجار (DW-022): npm run test:track
 import { vatSummary, creditLabel, isCommercial, vatSplit, validTrn, nextInvoiceNo, invoiceLabel, describeAction, buildIcs, chequeSeries, chequesDue, billsDue, collection, monthlyReport, addMonthsDay, renewUnit, rentAt, upcomingRent, owedMonths, docStatus, docsList, docAlerts, kindOf, nextUnpaid, paidThrough, prepaid, rentTracker, statement, trackerTotals, monthKey } from "../src/data/logic";
 import { reducer } from "../src/data/store";
+import { creditable } from "../src/data/reducer";
 import { demoData } from "../src/data/demo";
 import { exportSheets, planImport, trackerSheet, TRACK_HEAD } from "../src/data/excel";
 import type { Data, Unit } from "../src/data/types";
@@ -157,10 +158,32 @@ ok(describeAction({ type: "cheque", cheque: { number: "000101", unitId: "u6", st
   v = reducer(v, { type: "unimport", restore: [], unitIds: [], paymentIds: ["x3"], expenseIds: [], catIds: [], at: "2027-07-11" });
   ok(v.credits?.length === 2 && v.credits[1].no === 2 && v.credits[1].payment.inv === 3, "التراجع عن استيراد: الدفعة المفوترة تطلع لها إشعار دائن");
   const sm = vatSummary(v, 2027);
-  ok(sm.rows[0].invoices === 1 && sm.rows[0].vat === 40909 && sm.rows[2].credits === 2 && sm.rows[2].vat === -81818 && sm.vat === 40909 - 81818, "ملخص الضريبة: الربع 1 فاتورة، والربع 3 إشعاران بالسالب", JSON.stringify(sm.rows.map((r) => r.vat)));
+  ok(sm.rows[0].invoices === 1 && sm.rows[1].invoices === 2 && sm.rows[1].vat === 81818 && sm.rows[2].credits === 2 && sm.rows[2].vat === -81818 && sm.vat === 40909, "ملخص الضريبة: 3 فواتير (حتى الملغاة) ناقص إشعارين = 40.909", JSON.stringify(sm.rows.map((r) => r.vat)));
   const sheet = exportSheets(v).find((x) => x.sheet === "الضريبة");
-  ok(!!sheet && sheet.data.length === 1 + 1 + 2 && creditLabel(1) === "CN-000001", "Excel: صفحة «الضريبة» فيها الفاتورة والإشعارين");
+  ok(!!sheet && sheet.data.length === 1 + 3 + 2 && creditLabel(1) === "CN-000001", "Excel: صفحة «الضريبة» فيها الفواتير الثلاث والإشعارين");
   ok(!exportSheets(d).some((x) => x.sheet === "الضريبة"), "Excel: بدون فواتير ما تطلع صفحة الضريبة");
+}
+
+// 15) DW-037: إشعار دائن جزئي — الدفعة تبقى والشهر مسدد، والدخل ينقص
+{
+  const m = monthKey(new Date());
+  let v: Data = { ...d, payments: [...d.payments, { id: "y1", unitId: "u6", month: m, amount: 450000, method: "تحويل", date: `${m}-02` }], vat: { trn: "200012345600003", name: "س", address: "ع" } };
+  const inc0 = monthlyReport(v).rows.at(-1)!.income; // eslint-disable-line
+  v = reducer(v, { type: "invoice", paymentId: "y1", no: nextInvoiceNo(v) });
+  const invNo = v.payments.find((p) => p.id === "y1")!.inv!;
+  ok(v.payments.find((p) => p.id === "y1")!.invAmount === 450000, "الفاتورة تحفظ مبلغها الأصلي");
+  v = reducer(v, { type: "credit", paymentId: "y1", amount: 50000, at: `${m}-20` });
+  const y1 = v.payments.find((p) => p.id === "y1")!;
+  ok(y1.amount === 450000 && v.credits?.length === 1 && v.credits[0].amount === 50000 && creditable(v, y1) === 400000, "جزئي 50: الدفعة تبقى 450 والباقي للإشعار 400");
+  ok(statement(v, v.units.find((u) => u.id === "u6")!).rows.find((r) => r.month === m)!.state === "paid", "جزئي: الشهر يبقى مسدد (ما يطلع متأخر)");
+  ok(monthlyReport(v).rows.at(-1)!.income === inc0 - 50000, "جزئي: دخل الشهر ينقص 50");
+  v = reducer(v, { type: "credit", paymentId: "y1", amount: 400000, at: `${m}-25` });
+  ok(!v.payments.some((p) => p.id === "y1") && v.credits?.length === 2 && v.credits[1].amount === 400000 && v.credits[1].payment.inv === invNo, "الباقي كله: إشعار بـ 400 والدفعة تنلغي");
+  ok(monthlyReport(v).rows.at(-1)!.income === inc0 - 450000, "بعد الإلغاء: ما ينخصم مرتين");
+  const yr = Number(m.slice(0, 4));
+  const q = vatSummary(v, yr); const qi = Math.floor((Number(m.slice(5, 7)) - 1) / 3);
+  ok(q.rows[qi].credits === 2 && q.rows[qi].vat === 40909 - vatSplit(50000).vat - vatSplit(400000).vat, "ملخص الربع: الفاتورة ناقص الإشعارين", String(q.rows[qi].vat));
+  ok(describeAction({ type: "credit", amount: 50000 }, d) === "إشعار دائن 50.000 د.ب", "سجل النشاط: الإشعار الدائن");
 }
 
 console.log(failed ? `\n${failed} فشل` : "\nكل اختبارات المتابعة نجحت");

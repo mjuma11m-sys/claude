@@ -809,6 +809,12 @@ try {
     await v.addScriptTag({ content: fs.readFileSync("node_modules/axe-core/axe.min.js", "utf8") });
     const ia = await v.evaluate(async () => (await axe.run(document.querySelector(".dlg"), { resultTypes: ["violations"] })).violations.filter((x) => x.impact === "serious" || x.impact === "critical").map((x) => `${x.id}×${x.nodes.length}`));
     ok(ia.length === 0, "الفاتورة: axe بدون مخالفات خطيرة", ia.join(","));
+    // DW-037: إشعار دائن جزئي من شاشة الفاتورة
+    await v.locator("#credit-open").click(); await v.locator("#credit-amount").fill("500"); await v.locator("#credit-save").click(); await v.waitForTimeout(200);
+    ok((await v.locator("#credit-form .field-error").innerText()).includes("الباقي"), "إشعار أكبر من الباقي ينرفض");
+    await v.locator("#credit-amount").fill("50"); await v.locator("#credit-save").click(); await v.waitForTimeout(400);
+    const credited = await v.locator("#inv-credited").innerText();
+    ok(credited.includes("CN-000001") && credited.includes("400.000") && (await v.locator("#tax-invoice").innerText()).includes("450.000"), "جزئي 50: الفاتورة تبقى 450 والباقي 400", credited);
     await v.keyboard.press("Escape"); await v.waitForTimeout(400); await v.keyboard.press("Escape"); await v.waitForTimeout(400);
     await v.locator(".unit-card", { hasText: "شقة 1 " }).first().click(); await v.waitForTimeout(500); await unitTab(v, "السجل");
     await v.locator(".dlg .rows-tap li button").first().click(); await v.waitForTimeout(450);
@@ -821,7 +827,7 @@ try {
     await v.goto(URL + "#reports"); await v.reload(); await v.waitForTimeout(900);
     await v.locator("#vs-year").scrollIntoViewIfNeeded();
     for (let i = 0; i < 3 && (await v.locator("#vs-year").innerText()) !== "2027"; i++) { await v.getByRole("button", { name: "السنة اللي بعد" }).click(); await v.waitForTimeout(100); }
-    ok((await v.locator("#vs-vat").innerText()) === "0.000", "ملخص الضريبة: فاتورة + إشعار دائن = صفر", await v.locator("#vs-vat").innerText());
+    ok((await v.locator("#vs-vat").innerText()) === "40.909", "ملخص الضريبة: فاتورتين (وحدة ملغاة) ناقص إشعار = 40.909", await v.locator("#vs-vat").innerText());
     await v.locator("#credit-list button").first().click(); await v.waitForTimeout(400);
     const cnt = await v.locator("#credit-note").innerText();
     ok(cnt.includes("إشعار دائن") && cnt.includes("CN-000001") && cnt.includes("INV-000002"), "الإشعار الدائن: رقمه ويذكر الفاتورة الأصلية");

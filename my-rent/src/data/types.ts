@@ -19,12 +19,12 @@ export type Unit = {
   contractFile?: ContractFile; // DW-020: العقد الموقّع (الملف نفسه بالجهاز أو بالسحابة، هني بس وصفه) // since = YYYY-MM · until = YYYY-MM-DD نهاية العقد · deposit = مبلغ التأمين
 };
 
-export type Payment = { id: string; unitId: string; month: string; amount: Fils; method: Method; date: string; inv?: number }; // inv = رقم الفاتورة الضريبية (DW-035)
+export type Payment = { id: string; unitId: string; month: string; amount: Fils; method: Method; date: string; inv?: number; invAmount?: Fils }; // inv = رقم الفاتورة الضريبية (DW-035) · invAmount = مبلغها الأصلي (DW-037)
 
 /** DW-035: بيانات المؤجر للفاتورة الضريبية. وجودها = الفاتورة مفعّلة */
 export type VatCfg = { trn: string; name: string; address: string };
 /** DW-036: إشعار دائن — دفعة عليها فاتورة ضريبية انحذفت. ينحفظ نسخة الفاتورة عشان التسلسل ما ينكسر */
-export type CreditNote = { id: string; no: number; date: string; payment: Payment; unit: string; tenant: string; trn?: string };
+export type CreditNote = { id: string; no: number; date: string; payment: Payment; unit: string; tenant: string; trn?: string; amount?: Fils }; // amount = جزئي (DW-037)، بدونه = كل الباقي
 export type Method = "BenefitPay" | "تحويل" | "نقد" | "شيك";
 
 export type BudgetCat = { id: string; name: string; limit: Fils };

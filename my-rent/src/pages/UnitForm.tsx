@@ -91,7 +91,7 @@ export function UnitForm({ open, unit, onClose, onSaved }: Props) {
           <label className="field"><span>الهاتف</span><input id="u-phone" className="input num" inputMode="tel" dir="ltr" value={f.phone} onChange={set("phone")} placeholder="3xxxxxxx" /></label>
         </div>
         <div className="grid-2 dates">
-          <label className="field"><span>بداية العقد (شهر)</span><input id="u-since" className="input num" type="month" dir="ltr" value={f.since} onChange={set("since")} /></label>
+          <label className="field"><span>بداية العقد (شهر)</span><input id="u-since" className="input num" type="month" dir="ltr" placeholder="2026-03" pattern="\d{4}-\d{2}" value={f.since} onChange={set("since")} /></label>
           <label className="field"><span>نهاية العقد</span><input id="u-until" className="input num" type="date" dir="ltr" value={f.until} onChange={set("until")} /></label>
         </div>
         {["shop", "store", "nursery"].includes(kind) && (

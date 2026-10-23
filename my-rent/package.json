@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "node tests/e2e.mjs",
+    "test": "node tests/compat.mjs && node tests/e2e.mjs",
     "test:sync": "esbuild tests/sync.test.ts --bundle --platform=node --format=esm --jsx=automatic --loader:.svg=empty --outfile=node_modules/.cache/sync.test.mjs --log-level=warning && node node_modules/.cache/sync.test.mjs",
     "test:track": "esbuild tests/track.test.ts --bundle --platform=node --format=esm --jsx=automatic --loader:.svg=empty --outfile=node_modules/.cache/track.test.mjs --log-level=warning && node node_modules/.cache/track.test.mjs",
     "test:db": "bash supabase/tests/run.sh",
