@@ -250,3 +250,6 @@
 | 2026-10-23 | DW-062 | كلمة سر للتطبيق من داخل اللوحة لأن Google من أيقونة الآيفون يطلع لـ Safari وما يرجع | IT | حساب المالك انسوّى بـ Google |
 | 2026-10-23 | DW-063 | DOMAIN = myrent-sigma.vercel.app لين ينشرى دومين؛ كل canonical/hreflang/og:url/og:image منه، وsitemap.xml + robots.txt (يمنع /admin/) | IT | wadqa.com مو لنا: Google يعتبر صفحاتنا نسخة، ومعاينة واتساب صورتها مكسورة |
 | 2026-10-23 | DW-063 | site.test.cjs يمنع رجوع أي wadqa.com للصفحات العامة | QA | الخطأ كان بثابت واحد ما انتبه له أحد |
+| 2026-10-23 | DW-064 | الفحص: 41 دالة تتخطى RLS بالمشاريع الثلاث؛ كلها تفحص auth.uid() أو صلاحية بداخلها، إلا refund_ai_quota بحياتي: أي مستخدم مسجّل يقدر يرجّع كل طلب ناجح ويلغي حده الشهري | QA | advisors + قراءة جسم كل دالة بدون فحص ظاهر |
+| 2026-10-23 | DW-064 | انسدّت بالقاعدة الحين: refund_ai_quota انسحبت من authenticated، وrefund_ai_quota_for لـ service_role بس (مجرّب بـ has_function_privilege). تعديل lecture-ai على after-0.27 (9fa2b86) وينشر بعد رفع 0.27 | CTO | الدالة القديمة تتجاهل نتيجة الإرجاع فما ينكسر شي، والذكاء الاصطناعي مطفّي بالسيرفر |
+| 2026-10-23 | DW-064 | مقبول كما هو: wadqa_hit وwadqa_submit وingest_sms (برمز سري) لـ anon مقصودة؛ motm_tally بـ Sports Hub تعرض أعداد أصوات بس (0 مستخدمين، المنتج موقوف) | IT | كل وحدة لها فحص أو حد داخلي |
