@@ -48,3 +48,8 @@ export function setLastBackup(day: string) {
 const WELCOME_KEY = "idarati:welcomed";
 export function welcomed(): boolean { try { return !!localStorage.getItem(WELCOME_KEY); } catch { return true; } }
 export function setWelcomed() { try { localStorage.setItem(WELCOME_KEY, "1"); } catch { /* ignore */ } }
+
+// DW-035: قائمة «جهّز إداراتي» — تطلع بعد «ابدأ ببياناتي» لين يكمّل أو يسكّرها
+const SETUP_KEY = "idarati:setup";
+export function setupOpen(): boolean { try { return localStorage.getItem(SETUP_KEY) === "open"; } catch { return false; } }
+export function setSetup(v: "open" | "done") { try { localStorage.setItem(SETUP_KEY, v); } catch { /* ignore */ } }

@@ -13,15 +13,19 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
   const req = e.request;
-  if (req.method !== "GET" || new URL(req.url).origin !== location.origin) return;
+  const url = new URL(req.url);
+  if (req.method !== "GET" || url.origin !== location.origin) return;
+  if (req.headers.has("range")) return; // DW-035: الفيديو (طلبات جزئية 206) ما ينحفظ بالكاش
   if (req.mode === "navigate") {
+    // DW-035: نسخة «./» = صفحة التطبيق بس. صفحة التعريف (about.html) لها نسختها، وما تطغى على التطبيق
+    const isApp = url.pathname.endsWith("/") || url.pathname.endsWith("/index.html");
     e.respondWith((async () => {
       try {
         const res = await fetch(req);
-        (await caches.open(CACHE)).put("./", res.clone());
+        if (res.ok) (await caches.open(CACHE)).put(isApp ? "./" : req, res.clone());
         return res;
       } catch {
-        return (await caches.match("./")) || Response.error();
+        return (await caches.match(isApp ? "./" : req)) || Response.error();
       }
     })());
     return;
@@ -29,7 +33,7 @@ self.addEventListener("fetch", (e) => {
   e.respondWith((async () => {
     const cache = await caches.open(CACHE);
     const hit = await cache.match(req);
-    const net = fetch(req).then((res) => { if (res.ok) cache.put(req, res.clone()); return res; }).catch(() => hit);
+    const net = fetch(req).then((res) => { if (res.ok && res.status === 200) cache.put(req, res.clone()); return res; }).catch(() => hit);
     return hit || net;
   })());
 });

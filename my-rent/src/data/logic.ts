@@ -460,6 +460,18 @@ export function describeAction(a: { type: string; [k: string]: unknown }, data: 
     case "cheque": return `شيك ${o.cheque?.number ?? ""} · ${unit(o.cheque?.unitId)} · ${CHEQUE_LABEL[o.cheque?.state as ChequeState] ?? ""}`;
     case "uncheque": return "حذف شيك";
     case "recurring": case "unrecurring": return "عدّل المصاريف الثابتة";
+    case "vat": return o.vat ? "فعّل الفاتورة الضريبية" : "أوقف الفاتورة الضريبية"; // DW-035
+    case "invoice": return `طلّع فاتورة ضريبية ${invoiceLabel(Number(o.no) || 0)}`;
     default: return "تعديل";
   }
 }
+
+// ---------- DW-035: الفاتورة الضريبية (VAT 10%) ----------
+/** الإيجار التجاري عليه VAT، والسكني (شقة، بيت) معفى */
+export const isCommercial = (u: Unit) => ["shop", "store", "nursery"].includes(kindOf(u));
+export const VAT_RATE = 0.1;
+/** المبلغ المستلم شامل الضريبة ← الصافي والضريبة بالفلس */
+export function vatSplit(gross: Fils) { const net = Math.round((gross * 10) / 11); return { net, vat: gross - net }; }
+export const validTrn = (s: string) => /^\d{15}$/.test(s.trim());
+export const nextInvoiceNo = (d: Data) => d.payments.reduce((m, p) => Math.max(m, p.inv ?? 0), 0) + 1;
+export const invoiceLabel = (no: number) => `INV-${String(no).padStart(6, "0")}`;

@@ -167,8 +167,8 @@ a.icon-btn { color: var(--brand); }
 
 @media print {
   body * { visibility: hidden !important; }
-  #receipt, #receipt *, #statement, #statement *, #contract, #contract *, #month-report, #month-report * { visibility: visible !important; }
-  #receipt, #statement, #contract, #month-report { position: absolute; inset: 0 auto auto 0; width: 100%; border: 0; }
+  #receipt, #receipt *, #statement, #statement *, #contract, #contract *, #month-report, #month-report *, #tax-invoice, #tax-invoice * { visibility: visible !important; }
+  #receipt, #statement, #contract, #month-report, #tax-invoice { position: absolute; inset: 0 auto auto 0; width: 100%; border: 0; }
   #month-report, #month-report * { color: #000 !important; background: #fff !important; }
 }
 
@@ -465,3 +465,29 @@ select.input { appearance: auto; }
 .row-btn > span, .unit-top > span, .unit-card .muted, .dlg-head h2, .kv-row > div, .att-row .row-btn, .strong, .doc-main, .cheque-main, .bill-row > span:first-child { overflow-wrap: anywhere; min-width: 0; }
 .row-btn, .unit-top, .kv-row, .att-row { min-width: 0; }
 .att-row > .row-btn { flex: 1 1 auto; }
+
+/* DW-035: عن التطبيق */
+.about-head { display: flex; gap: 12px; align-items: center; }
+.about-head img { border-radius: 12px; background: var(--night, #14213A); padding: 6px; flex: none; }
+.about-list { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 0; font-size: 14px; }
+.about-list dt { color: var(--muted); }
+.about-list dd { margin: 0; }
+.inv-parties { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.inv-parties > div { min-width: 0; overflow-wrap: anywhere; }
+.inv-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
+.inv-table th { text-align: start; font-weight: 400; color: #5B6578; padding: 6px 0; }
+.inv-table td { text-align: end; font-weight: 600; padding: 6px 0; white-space: nowrap; }
+.inv-table tr + tr { border-top: 1px solid #E6E0D3; }
+.inv-total th, .inv-total td { color: #14213A; font-weight: 700; font-size: 16px; padding-top: 10px; }
+/* DW-035: جهّز إداراتي */
+.row-between { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.setup-bar { height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+.setup-bar span { display: block; height: 100%; background: var(--gold); transform-origin: right; transition: transform 320ms var(--ease-out); }
+.setup-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.setup-step { width: 100%; display: flex; gap: 10px; align-items: center; text-align: start; background: none; border: 1px solid var(--line, #E3DACA); border-radius: 10px; padding: 10px 12px; font: inherit; color: var(--text); cursor: pointer; min-width: 0; }
+.setup-step span:last-child { min-width: 0; overflow-wrap: anywhere; }
+.setup-step.done { color: var(--muted); text-decoration: line-through; cursor: default; }
+.setup-dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--muted); display: grid; place-items: center; flex: none; }
+.setup-step.done .setup-dot { background: var(--paid); border-color: var(--paid); color: #fff; }
+.setup-dot svg { width: 14px; height: 14px; }
+@media (prefers-reduced-motion: reduce) { .setup-bar span { transition: none; } }

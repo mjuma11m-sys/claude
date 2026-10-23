@@ -10,7 +10,7 @@ type Props = { open: boolean; unit: Unit | null; onClose: () => void; onSaved?: 
 export function UnitForm({ open, unit, onClose, onSaved }: Props) {
   const { saveUnit } = useStore();
   const toast = useToast();
-  const [f, setF] = useState({ name: "", building: "", rent: "", dueDay: "1", tenant: "", phone: "", since: "", until: "", deposit: "", elec: "", water: "", notes: "" });
+  const [f, setF] = useState({ name: "", building: "", rent: "", dueDay: "1", tenant: "", phone: "", since: "", until: "", deposit: "", elec: "", water: "", notes: "", trn: "" });
   const [kind, setKind] = useState<Kind>("flat");
   const [error, setError] = useState("");
 
@@ -28,6 +28,7 @@ export function UnitForm({ open, unit, onClose, onSaved }: Props) {
       since: unit?.tenant?.since ?? monthKey(new Date()),
       until: unit?.tenant?.until ?? "",
       deposit: unit?.tenant?.deposit ? fmt(unit.tenant.deposit) : "",
+      trn: unit?.tenant?.trn ?? "",
       elec: unit?.meters?.elec ?? "",
       water: unit?.meters?.water ?? "",
       notes: unit?.notes ?? "",
@@ -41,6 +42,7 @@ export function UnitForm({ open, unit, onClose, onSaved }: Props) {
     const day = Number(f.dueDay);
     if (!f.name.trim()) return setError("اكتب اسم الوحدة، مثل «شقة 6»");
     if (rent === null) return setError("اكتب الإيجار بالدينار، مثل 200 أو 185.500");
+    if (f.trn.trim() && !/^\d{15}$/.test(f.trn.trim())) return setError("الرقم الضريبي للمستأجر 15 رقم بالضبط، أو خلّه فاضي");
     if (!Number.isInteger(day) || day < 1 || day > 28) return setError("يوم الاستحقاق من 1 إلى 28");
     if (f.tenant.trim() && !/^\d{4}-\d{2}$/.test(f.since)) return setError("اختار شهر بداية العقد");
     if (f.until && f.until.slice(0, 7) < f.since) return setError("نهاية العقد قبل بدايته");
@@ -59,7 +61,7 @@ export function UnitForm({ open, unit, onClose, onSaved }: Props) {
       ...(f.elec.trim() || f.water.trim() ? { meters: { ...(f.elec.trim() ? { elec: f.elec.trim() } : {}), ...(f.water.trim() ? { water: f.water.trim() } : {}) } } : {}),
       rent,
       dueDay: day,
-      tenant: f.tenant.trim() ? { name: f.tenant.trim(), phone: f.phone.trim(), since: f.since, until: f.until || undefined, ...(deposit ? { deposit } : {}) } : undefined,
+      tenant: f.tenant.trim() ? { name: f.tenant.trim(), phone: f.phone.trim(), since: f.since, until: f.until || undefined, ...(deposit ? { deposit } : {}), ...(f.trn.trim() && ["shop", "store", "nursery"].includes(kind) ? { trn: f.trn.trim() } : {}) } : undefined,
     });
     onClose();
     toast({ text: unit ? `انحفظ تعديل ${saved.name}` : `انضافت ${saved.name}` });
@@ -92,6 +94,9 @@ export function UnitForm({ open, unit, onClose, onSaved }: Props) {
           <label className="field"><span>بداية العقد (شهر)</span><input id="u-since" className="input num" type="month" dir="ltr" value={f.since} onChange={set("since")} /></label>
           <label className="field"><span>نهاية العقد</span><input id="u-until" className="input num" type="date" dir="ltr" value={f.until} onChange={set("until")} /></label>
         </div>
+        {["shop", "store", "nursery"].includes(kind) && (
+          <label className="field"><span>الرقم الضريبي للمستأجر (اختياري، للفاتورة الضريبية)</span><input id="u-trn" className="input num" inputMode="numeric" dir="ltr" maxLength={15} value={f.trn} onChange={set("trn")} /></label>
+        )}
         <label className="field"><span>التأمين (د.ب) <span className="muted small">اختياري · يرجع وقت الإخلاء</span></span><input id="u-deposit" className="input num" inputMode="decimal" dir="ltr" value={f.deposit} onChange={set("deposit")} placeholder="0.000" /></label>
         <label className="field"><span>ملاحظات <span className="muted small">اختياري · مثل «المكيف تبدّل 2026»</span></span><textarea id="u-notes" className="input" rows={2} value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} /></label>
         {error && <div className="field-error" role="alert">{error}</div>}

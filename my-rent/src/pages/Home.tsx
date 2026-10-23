@@ -7,7 +7,7 @@ import { Money, StatusPill } from "../theme/AppShell";
 import { useStagger } from "../theme/motion";
 import { Bar, DemoNote, EmptyState, SectionHead, SkeletonCards, useToast } from "../ui/kit";
 import { Icon } from "../ui/icons";
-import { getLastBackup, setWelcomed, welcomed } from "../data/prefs";
+import { getLastBackup, setSetup, setWelcomed, setupOpen, welcomed } from "../data/prefs";
 
 /** حلقة التحصيل: تنرسم لما تتغيّر النسبة (stroke-dashoffset) */
 function Ring({ value, label }: { value: number; label: string }) {
@@ -28,6 +28,7 @@ export type QuickAction = "pay" | "expense" | "unit" | "search";
 export function Home({ onOpenUnit, go, onQuick }: { onOpenUnit: (u: Unit) => void; go: (id: string) => void; onQuick: (a: QuickAction) => void }) {
   const { data, loading, quickPay, unpay, eraseAll, sync } = useStore();
   const [welcome, setWelcome] = useState(() => !welcomed()); // DW-031
+  const [setup, setSetupShown] = useState(setupOpen); // DW-035
   const toast = useToast();
   const received = (u: Unit) => {
     const p = quickPay(u.id);
@@ -52,12 +53,40 @@ export function Home({ onOpenUnit, go, onQuick }: { onOpenUnit: (u: Unit) => voi
           <h2 className="set-title" id="wl-h">أهلاً بإداراتي 👋</h2>
           <p className="small" style={{ margin: 0 }}>اللي تشوفه الحين <b>بيانات تجريبية</b> عشان تتعرّف على التطبيق. لما تكون جاهز، ابدأ ببياناتك: التطبيق يفضى وتضيف أول وحدة.</p>
           <div className="grid-2">
-            <button className="btn press" id="welcome-start" onClick={() => { setWelcomed(); setWelcome(false); eraseAll(); onQuick("unit"); }}>ابدأ ببياناتي</button>
+            <button className="btn press" id="welcome-start" onClick={() => { setWelcomed(); setWelcome(false); setSetup("open"); setSetupShown(true); eraseAll(); onQuick("unit"); }}>ابدأ ببياناتي</button>
             <button className="btn btn-ghost press" id="welcome-demo" onClick={() => { setWelcomed(); setWelcome(false); }}>خلّني أجرب أول</button>
           </div>
           <p className="muted small" style={{ margin: 0 }}>قيد التطوير · نسخة تجريبية. بدون حساب كل شي على جوالك بس.</p>
         </section>
       )}
+      {setup && !welcome && (() => {
+        const steps = [
+          { id: "unit", label: "أضف أول وحدة", done: data.units.length > 0, act: () => onQuick("unit") },
+          { id: "pay", label: "سجّل أول دفعة", done: data.payments.length > 0, act: () => go("tenants") },
+          { id: "sync", label: "فعّل المزامنة (اختياري، للعائلة وجهاز ثاني)", done: !!sync, act: () => go("settings") },
+          { id: "backup", label: "خذ نسخة احتياطية", done: !!last, act: () => go("settings") },
+        ];
+        const n = steps.filter((x) => x.done).length;
+        return (
+          <section className="card stack setup-card" id="setup" aria-labelledby="setup-h">
+            <div className="row-between"><h2 className="set-title" id="setup-h" style={{ margin: 0 }}>جهّز إداراتي</h2><span className="num muted small">{n} من {steps.length}</span></div>
+            <div className="setup-bar" role="progressbar" aria-label="تقدّم التجهيز" aria-valuemin={0} aria-valuemax={steps.length} aria-valuenow={n}><span style={{ transform: `scaleX(${n / steps.length})` }} /></div>
+            <ul className="setup-list">
+              {steps.map((x) => (
+                <li key={x.id}>
+                  <button className={`setup-step press${x.done ? " done" : ""}`} id={`setup-${x.id}`} onClick={x.act} disabled={x.done}>
+                    <span className="setup-dot" aria-hidden="true">{x.done ? Icon.check : null}</span>
+                    <span>{x.label}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {n === steps.length
+              ? <button className="btn press" id="setup-done" onClick={() => { setSetup("done"); setSetupShown(false); }}>كل شي جاهز، سكّر القائمة</button>
+              : <button className="link press" id="setup-hide" style={{ justifySelf: "start" }} onClick={() => { setSetup("done"); setSetupShown(false); }}>إخفاء القائمة</button>}
+          </section>
+        );
+      })()}
     <div className="stack-lg home-grid">
       <div className="hero-card area-hero">
         <div className="hero-top">

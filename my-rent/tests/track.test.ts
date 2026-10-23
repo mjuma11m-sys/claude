@@ -1,5 +1,5 @@
 // منطق ملف متابعة الإيجار (DW-022): npm run test:track
-import { describeAction, buildIcs, chequeSeries, chequesDue, billsDue, collection, monthlyReport, addMonthsDay, renewUnit, rentAt, upcomingRent, owedMonths, docStatus, docsList, docAlerts, kindOf, nextUnpaid, paidThrough, prepaid, rentTracker, statement, trackerTotals, monthKey } from "../src/data/logic";
+import { isCommercial, vatSplit, validTrn, nextInvoiceNo, invoiceLabel, describeAction, buildIcs, chequeSeries, chequesDue, billsDue, collection, monthlyReport, addMonthsDay, renewUnit, rentAt, upcomingRent, owedMonths, docStatus, docsList, docAlerts, kindOf, nextUnpaid, paidThrough, prepaid, rentTracker, statement, trackerTotals, monthKey } from "../src/data/logic";
 import { reducer } from "../src/data/store";
 import { demoData } from "../src/data/demo";
 import { planImport, trackerSheet, TRACK_HEAD } from "../src/data/excel";
@@ -121,6 +121,23 @@ ok(m77?.elec === "123456" && m77?.water === "987", "استيراد العداد�
 // 12) DW-030: وصف أحداث سجل النشاط
 ok(describeAction({ type: "pay", payment: { unitId: "u2", month: "2026-10", amount: 220000 } }, d) === "سجّل دفعة شقة 2 · أكتوبر · 220.000 د.ب", "سجل النشاط: دفعة", describeAction({ type: "pay", payment: { unitId: "u2", month: "2026-10", amount: 220000 } }, d));
 ok(describeAction({ type: "cheque", cheque: { number: "000101", unitId: "u6", state: "deposited" } }, d).includes("مودع") && describeAction({ type: "something-new" }, d) === "تعديل", "سجل النشاط: شيك + حدث مجهول");
+
+// 13) DW-035: الفاتورة الضريبية
+{
+  for (const g of [450000, 100000, 1, 333333, 0]) { const { net, vat } = vatSplit(g); ok(net + vat === g && Number.isInteger(net) && Math.abs(vat - net * 0.1) <= 1, `VAT: ${g} = ${net} + ${vat}`); }
+  ok(vatSplit(450000).net === 409091 && vatSplit(450000).vat === 40909, "VAT: 450.000 شامل = 409.091 + 40.909");
+  ok(validTrn("200012345600003") && !validTrn("12345") && !validTrn("20001234560000a"), "الرقم الضريبي 15 رقم");
+  const shop = d.units.find((u) => u.id === "u6")!, flat = d.units.find((u) => u.id === "u1")!;
+  ok(isCommercial(shop) && !isCommercial(flat) && isCommercial({ ...flat, kind: "store" }) && isCommercial({ ...flat, kind: "nursery" }) && !isCommercial({ ...flat, kind: "house" }), "التجاري (محل/مخزن/روضة) عليه VAT، والسكني معفى");
+  let v = reducer(d, { type: "vat", vat: { trn: "200012345600003", name: "س", address: "ع" } });
+  const pid = v.payments[0].id;
+  v = reducer(v, { type: "invoice", paymentId: pid, no: nextInvoiceNo(v) });
+  const first = v.payments.find((p) => p.id === pid)!.inv;
+  v = reducer(v, { type: "invoice", paymentId: pid, no: 99 });
+  ok(first === 1 && v.payments.find((p) => p.id === pid)!.inv === 1 && nextInvoiceNo(v) === 2, "رقم الفاتورة ينحفظ مرة وحدة، والتالي = 2");
+  ok(describeAction({ type: "invoice", paymentId: "x", no: 3 }, d) === "طلّع فاتورة ضريبية INV-000003" && describeAction({ type: "vat" }, d) === "أوقف الفاتورة الضريبية", "سجل النشاط: الفاتورة الضريبية");
+  ok(invoiceLabel(12) === "INV-000012" && reducer(v, { type: "vat" }).vat === undefined, "صيغة الرقم + الإيقاف يمسح الإعداد");
+}
 
 console.log(failed ? `\n${failed} فشل` : "\nكل اختبارات المتابعة نجحت");
 process.exit(failed ? 1 : 0);

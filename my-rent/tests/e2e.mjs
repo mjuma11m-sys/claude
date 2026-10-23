@@ -773,6 +773,84 @@ try {
     await x.close();
   }
 
+  // 26) DW-035: الفاتورة الضريبية (للتجاري بس) + «جهّز إداراتي» + عن التطبيق + صفحة التعريف + الكاش
+  {
+    const v = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const vErr = []; v.on("pageerror", (e) => vErr.push(e.message));
+    await v.goto(URL + "#settings"); await v.evaluate(() => localStorage.clear()); await v.reload(); await v.waitForTimeout(900);
+    ok(await v.locator("#vat-panel").isVisible() && await v.locator("#vat-off").count() === 0, "الفاتورة الضريبية مقفلة افتراضياً");
+    await v.locator("#vat-name").fill("أبو جعفر للعقارات"); await v.locator("#vat-address").fill("المنامة، البحرين"); await v.locator("#vat-trn").fill("12345");
+    await v.locator("#vat-save").click(); await v.waitForTimeout(200);
+    ok((await v.locator("#vat-panel .field-error").innerText()).includes("15"), "رقم ضريبي ناقص ينرفض");
+    await v.locator("#vat-trn").fill("200012345600003"); await v.locator("#vat-save").click(); await v.waitForTimeout(300);
+    ok(await v.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")).vat?.trn) === "200012345600003", "الإعداد الضريبي انحفظ بالبيانات");
+    ok(await v.locator("#about").isVisible() && (await v.locator("#about").innerText()).includes("WADQA"), "عن التطبيق: الشعار و BY WADQA");
+    // دفعتين للمحل (u6) ودفعة للشقة (u1)
+    await v.evaluate(() => { const d = JSON.parse(localStorage.getItem("idarati:v2"));
+      d.payments.push({ id: "pv1", unitId: "u6", month: "2027-01", amount: 450000, method: "تحويل", date: "2027-01-02" }, { id: "pv2", unitId: "u6", month: "2027-02", amount: 450000, method: "تحويل", date: "2027-02-02" });
+      localStorage.setItem("idarati:v2", JSON.stringify(d)); });
+    await v.goto(URL + "#tenants"); await v.reload(); await v.waitForTimeout(800);
+    const openReceipt = async (unit, month) => {
+      await v.locator(".unit-card", { hasText: unit }).first().click(); await v.waitForTimeout(500); await unitTab(v, "السجل");
+      await v.locator(".dlg .rows-tap li button", { hasText: month }).first().click(); await v.waitForTimeout(450);
+    };
+    await openReceipt("محل 1", "يناير");
+    ok(await v.locator("#make-invoice").isVisible(), "المحل: زر الفاتورة الضريبية يطلع");
+    await v.locator("#make-invoice").click(); await v.waitForTimeout(300);
+    const inv = await v.locator("#tax-invoice").innerText();
+    ok(inv.includes("فاتورة ضريبية") && inv.includes("INV-000001") && inv.includes("200012345600003"), "الفاتورة: العنوان والرقم التسلسلي والرقم الضريبي", inv.slice(0, 60));
+    ok(inv.includes("409.091") && inv.includes("40.909") && inv.includes("450.000"), "الحساب: 450.000 شامل = 409.091 + ضريبة 40.909");
+    await v.keyboard.press("Escape"); await v.waitForTimeout(400); await v.keyboard.press("Escape"); await v.waitForTimeout(400);
+    await openReceipt("محل 1", "يناير"); await v.locator("#make-invoice").click(); await v.waitForTimeout(300);
+    ok((await v.locator("#inv-no").innerText()) === "INV-000001", "نفس الدفعة = نفس رقم الفاتورة");
+    await v.keyboard.press("Escape"); await v.waitForTimeout(400); await v.keyboard.press("Escape"); await v.waitForTimeout(400);
+    await openReceipt("محل 1", "فبراير"); await v.locator("#make-invoice").click(); await v.waitForTimeout(300);
+    ok((await v.locator("#inv-no").innerText()) === "INV-000002", "الدفعة الثانية = INV-000002");
+    await v.addScriptTag({ content: fs.readFileSync("node_modules/axe-core/axe.min.js", "utf8") });
+    const ia = await v.evaluate(async () => (await axe.run(document.querySelector(".dlg"), { resultTypes: ["violations"] })).violations.filter((x) => x.impact === "serious" || x.impact === "critical").map((x) => `${x.id}×${x.nodes.length}`));
+    ok(ia.length === 0, "الفاتورة: axe بدون مخالفات خطيرة", ia.join(","));
+    await v.keyboard.press("Escape"); await v.waitForTimeout(400); await v.keyboard.press("Escape"); await v.waitForTimeout(400);
+    await v.locator(".unit-card", { hasText: "شقة 1 " }).first().click(); await v.waitForTimeout(500); await unitTab(v, "السجل");
+    await v.locator(".dlg .rows-tap li button").first().click(); await v.waitForTimeout(450);
+    ok(await v.locator("#make-invoice").count() === 0 && await v.locator("#vat-exempt").isVisible(), "الشقة: إيصال بس (السكني معفى)");
+    await v.keyboard.press("Escape"); await v.waitForTimeout(400); await v.keyboard.press("Escape"); await v.waitForTimeout(400);
+    // جهّز إداراتي
+    await v.goto(URL + "#home"); await v.evaluate(() => localStorage.clear()); await v.reload(); await v.waitForTimeout(900);
+    ok(await v.locator("#setup").count() === 0, "بالبيانات التجريبية: قائمة التجهيز ما تطلع");
+    await v.locator("#welcome-start").click(); await v.waitForTimeout(600); await v.keyboard.press("Escape"); await v.waitForTimeout(400);
+    ok((await v.locator("#setup").innerText()).includes("0 من 4"), "بعد «ابدأ ببياناتي»: جهّز إداراتي 0 من 4");
+    await v.evaluate(() => { const d = JSON.parse(localStorage.getItem("idarati:v2"));
+      d.units.push({ id: "n1", name: "شقة تجربة", building: "ع", rent: 100000, dueDay: 1, tenant: { name: "س", phone: "", since: "2026-01" } });
+      d.payments.push({ id: "np1", unitId: "n1", month: "2026-01", amount: 100000, method: "نقد", date: "2026-01-03" });
+      localStorage.setItem("idarati:v2", JSON.stringify(d)); });
+    await v.reload(); await v.waitForTimeout(800);
+    ok((await v.locator("#setup").innerText()).includes("2 من 4") && await v.locator("#setup-unit").isDisabled(), "الخطوات تتأشر بروحها (وحدة + دفعة)");
+    await v.locator("#setup-hide").click(); await v.waitForTimeout(200); await v.reload(); await v.waitForTimeout(600);
+    ok(await v.locator("#setup").count() === 0, "إخفاء القائمة يثبت بعد إعادة الفتح");
+    ok(vErr.length === 0, "DW-035: بدون أخطاء", vErr.join(" | "));
+    // صفحة التعريف
+    const lErr = []; v.on("pageerror", (e) => lErr.push(e.message));
+    await v.goto(URL + "about.html"); await v.waitForTimeout(800);
+    const lt = await v.locator("body").innerText();
+    ok(lt.includes("قيد التطوير · نسخة تجريبية") && lt.includes("* لقطات ببيانات تجريبية") && lt.includes("WADQA"), "صفحة التعريف: الصراحة + تنبيه اللقطات + WADQA");
+    ok(!/20[2-9]\d-\d\d-\d\d|يوم الإطلاق|قريباً/.test(lt), "صفحة التعريف: بدون تاريخ إطلاق");
+    ok(await v.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "صفحة التعريف: بدون تمرير أفقي بـ 390");
+    ok(await v.locator("#try").getAttribute("href") === "./", "زر «جرّب التطبيق» يفتح التطبيق");
+    await v.addScriptTag({ content: fs.readFileSync("node_modules/axe-core/axe.min.js", "utf8") });
+    const la = await v.evaluate(async () => (await axe.run(document, { resultTypes: ["violations"] })).violations.filter((x) => x.impact === "serious" || x.impact === "critical").map((x) => `${x.id}×${x.nodes.length}`));
+    ok(la.length === 0, "صفحة التعريف: axe بدون مخالفات خطيرة", la.join(","));
+    ok(lErr.length === 0, "صفحة التعريف: بدون أخطاء", lErr.join(" | "));
+    await v.close();
+    // الكاش: فتح صفحة التعريف ما يطغى على نسخة التطبيق بدون نت
+    const sc = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const sp = await sc.newPage();
+    await sp.goto(URL); await sp.evaluate(() => navigator.serviceWorker.ready); await sp.reload(); await sp.waitForTimeout(800);
+    await sp.goto(URL + "about.html"); await sp.waitForTimeout(600);
+    await sc.setOffline(true); await sp.goto(URL); await sp.waitForTimeout(1000);
+    ok(await sp.locator(".hero-card").isVisible(), "بعد فتح صفحة التعريف: التطبيق يفتح بدون نت (مو صفحة التعريف)");
+    await sc.close();
+  }
+
   if (process.env.SHOTS) {
     for (const [n, w, h, s] of [["home-phone", 390, 844, "light"], ["home-dark", 390, 844, "dark"], ["home-desk", 1280, 800, "light"], ["tenants-tab", 820, 1180, "light"], ["budget-phone", 390, 844, "light"]]) {
       const q = await browser.newPage({ viewport: { width: w, height: h }, colorScheme: s });

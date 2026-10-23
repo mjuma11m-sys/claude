@@ -8,6 +8,9 @@ import { Feedback } from "./Feedback";
 import { POLICY_VERSION } from "./Privacy";
 import { loadSyncConfig } from "../data/sync";
 import { ContractTemplateEditor } from "./Contract";
+import { VatPanel } from "./VatPanel";
+import symbolUrl from "../../brand/symbol.svg";
+import pkg from "../../package.json";
 import { getLastBackup, loadPrefs, savePrefs, setLastBackup, type Prefs, type TextSize, type Theme } from "../data/prefs";
 
 /** نسخة احتياطية، استرجاع، وحذف كل البيانات (حق المحو — PDPL) */
@@ -78,6 +81,7 @@ export function Settings() {
       </section>
 
       <ContractTemplateEditor />
+      <VatPanel />
 
       <SyncPanel />
 
@@ -111,6 +115,20 @@ export function Settings() {
           <p className="muted small" style={{ margin: 0 }}>لو مستأجر سابق طلب مسح بياناته: يخفي اسمه من سجل التأمين (يصير «مستأجر سابق»). الدفعات والمبالغ تبقى للسجل المالي.</p>
           <button className="btn btn-ghost press" id="anonymize-btn" onClick={() => { const r = anonymizeFormer(); toast(r.count ? { text: `انخفت أسماء ${r.count} مستأجرين سابقين`, undo: r.undo } : { text: "ما فيه أسماء مستأجرين سابقين" }); }}>أخفِ أسماء المستأجرين السابقين</button>
         </div>
+      </section>
+      <section className="card stack about-card" id="about" aria-labelledby="about-h">
+        <div className="about-head">
+          <img src={symbolUrl} alt="" width={52} height={52} />
+          <div>
+            <h2 className="set-title" id="about-h" style={{ margin: 0 }}>إداراتي</h2>
+            <div className="muted small">يرتّب إيجاراتك وعقاراتك · <span dir="ltr">BY WADQA</span></div>
+          </div>
+        </div>
+        <dl className="about-list">
+          <dt>النسخة</dt><dd className="num">{pkg.version}</dd>
+          <dt>الحالة</dt><dd>قيد التطوير · نسخة تجريبية</dd>
+        </dl>
+        <a className="link press" id="about-page" href="about.html" style={{ justifySelf: "start" }}>صفحة التعريف (للمشاركة)</a>
       </section>
       <p className="demo-note">إداراتي · قيد التطوير · نسخة تجريبية</p>
     </div>

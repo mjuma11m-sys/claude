@@ -1,8 +1,8 @@
 // مخزن البيانات: useReducer + localStorage. لما ينربط Supabase، يتبدل load/save بس والشاشات ما تتغيّر.
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import type { Bill, BudgetCat, Cheque, Data, DepositLog, Doc, Expense, Method, Payment, Recurring, Unit } from "./types";
+import type { Bill, BudgetCat, Cheque, Data, DepositLog, Doc, Expense, Method, Payment, Recurring, Unit, VatCfg } from "./types";
 import { demoData, emptyData } from "./demo";
-import { dueRecurring, findBill, isoDay, monthKey, nextUnpaid, owedMonths, rentAt } from "./logic";
+import { dueRecurring, findBill, nextInvoiceNo, isoDay, monthKey, nextUnpaid, owedMonths, rentAt } from "./logic";
 import { SyncEngine, loadSyncConfig, saveSyncConfig, type SyncAction, type SyncConfig, type SyncStatus } from "./sync";
 
 const KEY = "idarati:v2";
@@ -58,6 +58,8 @@ type Store = {
   logRecurring: () => Expense[];
   unexpenses: (ids: string[]) => void;
   setContract: (template: string, owner: string) => void;
+  setVat: (vat?: VatCfg) => void;          // DW-035
+  issueInvoice: (paymentId: string) => number; // يرجّع رقم الفاتورة (نفسه لو انطلع قبل)
   saveDoc: (doc: Omit<Doc, "id"> & { id?: string }) => Doc;
   removeDoc: (id: string) => Doc | null;
   saveBill: (b: Omit<Bill, "id"> & { id?: string }) => Bill;
@@ -271,6 +273,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     unexpenses: (ids) => dispatch({ type: "unexpenses", ids }),
     setContract: (template, owner) => dispatch({ type: "contract", template, owner }),
+    setVat: (vat) => dispatch({ type: "vat", vat }),
+    issueInvoice: (paymentId) => {
+      const p = data.payments.find((x) => x.id === paymentId);
+      if (!p) return 0;
+      if (p.inv) return p.inv;
+      const no = nextInvoiceNo(data);
+      dispatch({ type: "invoice", paymentId, no });
+      return no;
+    },
     importPlan: (p) => {
       const restore = data.units.filter((u) => p.units.some((x) => x.id === u.id));
       dispatch({ type: "import", units: p.units, payments: p.payments, expenses: p.expenses, cats: p.cats });

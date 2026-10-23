@@ -15,11 +15,14 @@ export type Unit = {
   rent: Fils;              // الإيجار الحالي (وما بعده)
   rentBefore?: { until: string; rent: Fils }[]; // DW-024: إيجارات سابقة — كل شهر <= until (YYYY-MM) ياخذ أقرب واحد
   dueDay: number; // يوم الاستحقاق بالشهر
-  tenant?: { name: string; phone: string; since: string; until?: string; deposit?: Fils };
+  tenant?: { name: string; phone: string; since: string; until?: string; deposit?: Fils; trn?: string }; // trn = الرقم الضريبي للمستأجر التجاري (DW-035)
   contractFile?: ContractFile; // DW-020: العقد الموقّع (الملف نفسه بالجهاز أو بالسحابة، هني بس وصفه) // since = YYYY-MM · until = YYYY-MM-DD نهاية العقد · deposit = مبلغ التأمين
 };
 
-export type Payment = { id: string; unitId: string; month: string; amount: Fils; method: Method; date: string };
+export type Payment = { id: string; unitId: string; month: string; amount: Fils; method: Method; date: string; inv?: number }; // inv = رقم الفاتورة الضريبية (DW-035)
+
+/** DW-035: بيانات المؤجر للفاتورة الضريبية. وجودها = الفاتورة مفعّلة */
+export type VatCfg = { trn: string; name: string; address: string };
 export type Method = "BenefitPay" | "تحويل" | "نقد" | "شيك";
 
 export type BudgetCat = { id: string; name: string; limit: Fils };
@@ -71,4 +74,5 @@ export type Data = {
   docs?: Doc[];              // DW-023
   bills?: Bill[];            // DW-026
   cheques?: Cheque[];        // DW-029
+  vat?: VatCfg;              // DW-035: للإيجار التجاري بس
 };

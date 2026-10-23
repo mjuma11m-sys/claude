@@ -1,5 +1,5 @@
 // المحوّل الصافي (DW-032): كل تعديل على البيانات حدث، والـ reducer يطبّقه. بدون React ولا تخزين — يتزامن ويُختبر لحاله.
-import type { Bill, BudgetCat, Cheque, Data, DepositLog, Doc, Expense, Payment, Recurring, Unit } from "./types";
+import type { Bill, BudgetCat, Cheque, Data, DepositLog, Doc, Expense, Payment, Recurring, Unit, VatCfg } from "./types";
 
 export const FORMER = "مستأجر سابق";
 
@@ -28,6 +28,8 @@ export type Action =
   | { type: "uncheque"; id: string }
   | { type: "anonymize"; depositIds: string[] }          // DW-032: حق المحو — اسم المستأجر السابق يصير «مستأجر سابق»
   | { type: "restoreDeposits"; logs: DepositLog[] }
+  | { type: "vat"; vat?: VatCfg }                        // DW-035: تفعيل/إيقاف الفاتورة الضريبية
+  | { type: "invoice"; paymentId: string; no: number }    // رقم الفاتورة ينحفظ على الدفعة مرة وحدة
   | { type: "import"; units: Unit[]; payments: Payment[]; expenses: Expense[]; cats: BudgetCat[] }
   | { type: "unimport"; restore: Unit[]; unitIds: string[]; paymentIds: string[]; expenseIds: string[]; catIds: string[] };
 
@@ -82,6 +84,8 @@ export function reducer(state: Data, a: Action): Data {
     }
     case "uncheque": return { ...state, cheques: (state.cheques ?? []).filter((c) => c.id !== a.id) };
     case "anonymize": return { ...state, deposits: (state.deposits ?? []).map((d) => (a.depositIds.includes(d.id) ? { ...d, tenant: FORMER } : d)) };
+    case "vat": return { ...state, vat: a.vat };
+    case "invoice": return { ...state, payments: state.payments.map((p) => (p.id === a.paymentId && !p.inv ? { ...p, inv: a.no } : p)) };
     case "restoreDeposits": return { ...state, deposits: (state.deposits ?? []).map((d) => a.logs.find((l) => l.id === d.id) ?? d) };
     default: return state; // حدث من نسخة أحدث للتطبيق: نتجاهله بدل ما ننكسر
   }
