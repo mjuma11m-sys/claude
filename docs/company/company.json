@@ -552,6 +552,27 @@
       "owner": "CEO",
       "status": "review",
       "opened": "2026-10-19"
+    },
+    "DW-071": {
+      "title": "Sports Hub: هوية WADQA (الشركة) وهوية التطبيق الجديدة",
+      "priority": "P2",
+      "owner": "CEO",
+      "status": "review",
+      "opened": "2026-10-20"
+    },
+    "DW-072": {
+      "title": "Sports Hub: وضع «ملعب» + نسخة تجريبية بالرابط",
+      "priority": "P2",
+      "owner": "CEO",
+      "status": "review",
+      "opened": "2026-10-23"
+    },
+    "DW-073": {
+      "title": "Sports Hub: الدخول عبر Google وApple",
+      "priority": "P2",
+      "owner": "CEO",
+      "status": "review",
+      "opened": "2026-10-23"
     }
   }
 }
