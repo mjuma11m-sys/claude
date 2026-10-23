@@ -1,4 +1,5 @@
 import { Link } from 'react-router'
+import { jumpTo } from '../lib/anchor'
 import { vars } from '../lib/css'
 import type { Tone, TodayItem } from '../lib/today'
 import { Icon } from './Icon'
@@ -35,7 +36,7 @@ export function TodayStrip({ items, onAct }: { items: TodayItem[]; onAct?: (act:
               <li key={it.key}>
                 {it.act ? <button className={`${cls} w-full`} style={style} onClick={() => onAct?.(it.act!)}>{body}</button>
                   : it.to?.startsWith('/') ? <Link to={it.to} className={cls} style={style}>{body}</Link>
-                  : <a href={it.to} className={cls} style={style}>{body}</a>}
+                  : <a href={it.to} onClick={(e) => jumpTo(e, it.to)} className={cls} style={style}>{body}</a>}
               </li>
             )
           })}

@@ -1,4 +1,5 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
+import { jumpTo } from '../lib/anchor'
 import { NavLink, Outlet, useLocation, useMatches } from 'react-router'
 import { useAuth } from '../auth/AuthProvider'
 import { trackScreen } from '../data/telemetry'
@@ -45,7 +46,7 @@ export function Layout() {
 
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[4.75rem_1fr] lg:grid-cols-[16rem_1fr]">
-      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:start-3 focus:top-3 focus:z-50 focus:rounded-xl focus:bg-pulse focus:px-4 focus:py-2 focus:font-bold focus:text-pulse-ink">تخطي للمحتوى</a>
+      <a href="#main" onClick={(e) => jumpTo(e, '#main')} className="sr-only focus:not-sr-only focus:fixed focus:start-3 focus:top-3 focus:z-50 focus:rounded-xl focus:bg-pulse focus:px-4 focus:py-2 focus:font-bold focus:text-pulse-ink">تخطي للمحتوى</a>
       {/* iPad: icon rail · desktop: full sidebar */}
       <aside className="sticky top-0 hidden h-dvh flex-col border-e border-white/10 bg-white/[0.02] p-3 md:flex lg:p-4">
         <div className="mb-8 flex items-center gap-3 px-1.5 pt-2">

@@ -1,5 +1,5 @@
 import { lazy } from 'react'
-import { createBrowserRouter, Navigate } from 'react-router'
+import { createBrowserRouter, createHashRouter, Navigate } from 'react-router'
 import { RequireArea, RequireAuth } from './auth/RequireAuth'
 import { Layout } from './components/Layout'
 import { RouteError } from './components/RouteError'
@@ -27,7 +27,9 @@ const Analysis = lazy(() => import('./pages/Analysis').then((m) => ({ default: m
 const Rights = lazy(() => import('./pages/Rights').then((m) => ({ default: m.Rights })))
 const Medical = lazy(() => import('./pages/Medical').then((m) => ({ default: m.Medical })))
 
-export const router = createBrowserRouter([
+const createRouter = import.meta.env.VITE_SHARE ? createHashRouter : createBrowserRouter
+
+export const router = createRouter([
   { errorElement: <RouteError />, children: [
   { path: '/login', element: <Login /> },
   { path: '/privacy', handle: { title: 'الخصوصية' }, element: <Privacy /> },
