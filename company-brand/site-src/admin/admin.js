@@ -49,6 +49,7 @@
     S.visits = [['/', 14], ['/hayati.html', 9], ['/idarati.html', 4], ['/en/', 3]].flatMap(([path, n], k) => [0, 3, 12].map((ago) => ({ day: new Date(Date.now() - ago * 864e5).toISOString().slice(0, 10), path, n: Math.max(1, n - ago - k) })));
     S.leads = [
       { id: 1, created_at: new Date().toISOString(), kind: 'waitlist', product: 'hayati', name: 'مختبر تجريبي', email: 'tester@example.com', message: 'أندرويد · Samsung', lang: 'ar' },
+      { id: 3, created_at: new Date().toISOString(), kind: 'tester', product: 'hayati', name: 'مختبر تجريبي ٢', email: 'tester2@example.com', message: 'أندرويد · Samsung A54', lang: 'ar' },
       { id: 2, created_at: new Date(Date.now() - 864e5).toISOString(), kind: 'contact', product: 'general', name: null, email: 'hello@example.com', message: 'أبي تطبيق لمحلي', lang: 'ar' },
     ];
   }
@@ -296,8 +297,9 @@
     return '<div class="toolbar"><select id="leadProduct" aria-label="التطبيق"><option value="">كل التطبيقات (' + S.leads.length + ')</option>' +
       Object.keys(counts).map((k) => '<option value="' + h(k) + '"' + (k === S.leadProduct ? ' selected' : '') + '>' + h(prodName(k)) + ' (' + counts[k] + ')</option>').join('') + '</select>' +
       '<span class="grow"></span><button class="btn" type="button" data-act="csv-leads">تصدير CSV</button></div>' +
+      '<p class="note"><b>مختبرين حياتي: <span class="num">' + S.leads.filter((l) => l.kind === 'tester').length + '</span> من 12</b> (شرط Google: 12 × 14 يوم).</p>' +
       '<p class="note">من نماذج موقع ودقة (تواصل وقوائم انتظار). نحتفظ فيها 24 شهر بحد أقصى. لو أحد طلب حذف بياناته: Supabase ← Table Editor ← wadqa.leads.</p>' +
-      (rows.length ? '<ul class="list">' + rows.map((l) => '<li><div class="main"><b>' + h(l.name || l.email) + ' <span class="tag">' + (l.kind === 'waitlist' ? 'انتظار' : 'تواصل') + ' · ' + h(prodName(l.product)) + '</span></b><small dir="auto">' + h(l.message || '—') + '</small><small><span dir="ltr">' + h(l.email) + '</span> · ' + h(String(l.created_at).slice(0, 10)) + '</small></div>' +
+      (rows.length ? '<ul class="list">' + rows.map((l) => '<li><div class="main"><b>' + h(l.name || l.email) + ' <span class="tag">' + ({ waitlist: 'انتظار', tester: 'مختبر' }[l.kind] || 'تواصل') + ' · ' + h(prodName(l.product)) + '</span></b><small dir="auto">' + h(l.message || '—') + '</small><small><span dir="ltr">' + h(l.email) + '</span> · ' + h(String(l.created_at).slice(0, 10)) + '</small></div>' +
         '<a class="mini" href="mailto:' + encodeURIComponent(l.email) + '">رد</a></li>').join('') + '</ul>'
         : '<div class="empty">ما وصلت طلبات للحين.</div>');
   }

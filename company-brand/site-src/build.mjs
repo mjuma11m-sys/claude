@@ -86,12 +86,12 @@ ${body.replaceAll('IMG/', pre + 'img/').replaceAll('PRIV', 'privacy.html')}
 `;
 }
 
-const form = (L, kind, product, { btn, msgLabel, msg = true }) => `<form class="lead-form" data-kind="${kind}" data-product="${product}" novalidate>
+const form = (L, kind, product, { btn, msgLabel, msg = true, msgRequired = false, consentText }) => `<form class="lead-form" data-kind="${kind}" data-product="${product}" novalidate>
   <div class="field"><label for="${product}-name">${T.name_l[L]}</label><input id="${product}-name" name="name" type="text" maxlength="80" autocomplete="name"></div>
   <div class="field"><label for="${product}-email">${T.email_l[L]}</label><input id="${product}-email" name="email" type="email" maxlength="254" autocomplete="email" required dir="ltr"></div>
-  ${msg ? `<div class="field"><label for="${product}-msg">${msgLabel}</label><textarea id="${product}-msg" name="message" maxlength="2000"></textarea></div>` : ''}
+  ${msg ? `<div class="field"><label for="${product}-msg">${msgLabel}</label><textarea id="${product}-msg" name="message" maxlength="2000"${msgRequired ? ' required' : ''}></textarea></div>` : ''}
   <div class="hp" aria-hidden="true"><label for="${product}-web">Website</label><input id="${product}-web" name="website" type="text" tabindex="-1" autocomplete="off"></div>
-  <label class="consent"><input type="checkbox" name="consent" required><span>${T.consent[L]}</span></label>
+  <label class="consent"><input type="checkbox" name="consent" required><span>${consentText || T.consent[L]}</span></label>
   <div><button class="btn solid" type="submit">${btn}</button></div>
   <p class="status" role="status" aria-live="polite"></p>
 </form>`;
@@ -191,6 +191,7 @@ P.hayati = (L) => ({
   <h2>${L === 0 ? 'جرّب النسخة التجريبية' : 'Try the beta'}</h2>
   <p class="h-sub">${L === 0 ? 'نجمع مختبرين أندرويد للاختبار المغلق على Google Play. سجّل وبنراسلك.' : 'We are gathering Android testers for a closed test on Google Play. Sign up and we will email you.'}</p>
   ${form(L, 'waitlist', 'hayati', { btn: T.join[L], msgLabel: L === 0 ? 'اختياري: جوالك (أندرويد/آيفون) وشنو تبي من التطبيق' : 'Optional: your phone (Android/iPhone) and what you want from the app' })}
+  <p class="note"><a href="testers.html">${L === 0 ? 'تبي تصير مختبر رسمي (14 يوم)؟ شوف وش المطلوب ←' : 'Want to be an official tester (14 days)? See what it involves →'}</a></p>
 </div></section>`,
 });
 
@@ -242,6 +243,59 @@ P.idarati = (L) => ({
   <h2>${L === 0 ? 'بلّغني لما يجهز' : 'Tell me when it is ready'}</h2>
   <p class="h-sub">${L === 0 ? 'عندك أملاك أو تدير ميزانية البيت؟ سجّل وبنراسلك.' : 'Own property or run the household budget? Sign up and we will email you.'}</p>
   ${form(L, 'waitlist', 'idarati', { btn: T.join[L], msgLabel: L === 0 ? 'اختياري: كم وحدة عندك، وشلون تتابعها اليوم؟' : 'Optional: how many units you have, and how you track them today' })}
+</div></section>`,
+});
+
+const AR_AGREEMENT = [
+  `<b>وش تجرب:</b> نسخة تجريبية من «حياتي» قيد التطوير، عبر TestFlight (آيفون) أو اختبار Google Play المغلق (أندرويد). ممكن فيها أخطاء أو تنحذف ميزات.`,
+  `<b>المدة:</b> Google يطلب 14 يوم متواصلة لأندرويد، فنطلب تخلي التطبيق مثبّت هالمدة لو تقدر. مو إلزام.`,
+  `<b>بلا ضمان:</b> التطبيق «كما هو». لا تعتمد عليه وحده لأي قرار مالي، وخذ نسخة احتياطية.`,
+  `<b>بياناتك:</b> نحتاج إيميلك بس عشان نضيفك للاختبار. بياناتك داخل التطبيق تظل بجهازك إلا لو سوّيت حساب. ما نطلب لقطات فيها أرقامك الحقيقية.`,
+  `<b>ملاحظاتك:</b> نقدر نستخدم أفكارك وملاحظاتك لتطوير التطبيق بدون مقابل، وبدون ذكر اسمك إلا بإذنك.`,
+  `<b>السرية:</b> لا تنشر لقطات أو تفاصيل ميزات ما انعلنت. اللي بالموقع أو المتجر مو سري.`,
+  `<b>الانسحاب:</b> بأي وقت وبدون سبب. احذف التطبيق، ولو تبي نحذف إيميلك راسلنا من نموذج التواصل.`,
+  `<b>العمر والقانون:</b> 18 سنة وفوق، وتنطبق قوانين مملكة البحرين.`
+];
+const EN_AGREEMENT = [
+  `<b>What you test:</b> a beta of Hayati, in development, through TestFlight (iPhone) or Google Play closed testing (Android). It may have bugs, and features may change.`,
+  `<b>How long:</b> Google requires 14 consecutive days on Android, so please keep the app installed that long if you can. Not mandatory.`,
+  `<b>No warranty:</b> the app is provided as is. Don’t rely on it alone for money decisions, and keep a backup.`,
+  `<b>Your data:</b> we only need your email to add you to the test. Data inside the app stays on your device unless you create an account. We never ask for screenshots with your real numbers.`,
+  `<b>Your feedback:</b> we may use your ideas and notes to improve the app, without payment, and without naming you unless you agree.`,
+  `<b>Confidentiality:</b> please don’t publish screenshots or details of unannounced features. Anything on the website or in the store is not confidential.`,
+  `<b>Leaving:</b> any time, no reason needed. Delete the app, and contact us through the form if you want your email removed.`,
+  `<b>Age and law:</b> 18 or older; the laws of the Kingdom of Bahrain apply.`
+];
+
+P.testers = (L) => ({
+  navOn: 'apps',
+  title: L === 0 ? 'كن مختبر · حياتي' : 'Become a tester · Hayati',
+  desc: L === 0 ? 'جرّب «حياتي» قبل الكل: نسخة تجريبية لأندرويد وآيفون، 14 يوم، بدون فلوس.' : 'Try Hayati before everyone else: a beta for Android and iPhone, 14 days, free.',
+  body: `<div class="wrap hero">
+  <div>
+    <div class="app-ic ic-hayati reveal">${apps.hayati.ic}</div>
+    <h1 class="sm reveal r2">${L === 0 ? 'كن مختبر «حياتي»' : 'Become a Hayati tester'}</h1>
+    <p class="lead reveal r3">${L === 0 ? 'نبي 12 شخص يجربون «حياتي» على جوالاتهم قبل ما ينزل للكل، ويقولون لنا وش ما اشتغل. بدون فلوس، وتقدر تنسحب بأي وقت.' : 'We are looking for 12 people to try Hayati on their phones before it goes public, and tell us what did not work. It is free, and you can leave any time.'}</p>
+    <div class="cta reveal r4"><span class="pill beta">${apps.hayati.pill[L]}</span></div>
+  </div>
+</div>
+<section><div class="wrap">
+  <h2>${L === 0 ? 'وش المطلوب منك' : 'What it involves'}</h2>
+  <div class="feat">
+    ${(L === 0 ? [['1 · سجّل', 'إيميلك ونوع جوالك بالنموذج تحت.'], ['2 · ثبّت', 'نرسلك دعوة: TestFlight للآيفون أو رابط Google Play للأندرويد.'], ['3 · استخدمه 14 يوم', 'سجّل مصاريفك أو جدولك مثل العادة. خله مثبّت لين تخلص المدة.'], ['4 · قول لنا', 'من الإعدادات ← «بلّغ عن مشكلة» أو «رأيك بالتطبيق».']]
+      : [['1 · Sign up', 'Your email and phone type in the form below.'], ['2 · Install', 'We send an invite: TestFlight for iPhone or a Google Play link for Android.'], ['3 · Use it for 14 days', 'Log your spending or timetable as usual. Keep it installed for the whole period.'], ['4 · Tell us', 'From Settings → “Report a problem” or “Your feedback”.']]).map(([t, d]) => `<div class="card"><h3>${t}</h3><p>${d}</p></div>`).join('')}
+  </div>
+  <p class="note">${L === 0 ? 'أندرويد: نبدأ أول ما Google يفعّل حساب المطوّر. آيفون: بعد ما تخلص مراجعة آبل. قبلها نحفظ اسمك بالقائمة بس.' : 'Android: we start once Google activates our developer account. iPhone: once Apple’s review is done. Until then we only keep you on the list.'}</p>
+</div></section>
+<section><div class="wrap prose">
+  <h2>${L === 0 ? 'اتفاقية المختبر' : 'Tester agreement'}</h2>
+  <p class="note">${L === 0 ? 'مسودة للمراجعة، مو استشارة قانونية ملزمة.' : 'Draft for review, not binding legal advice.'}</p>
+  <ol>${(L === 0 ? AR_AGREEMENT : EN_AGREEMENT).map((x) => `<li>${x}</li>`).join('')}</ol>
+</div></section>
+<section id="contact"><div class="wrap">
+  <h2>${L === 0 ? 'سجّلني مختبر' : 'Sign me up as a tester'}</h2>
+  ${form(L, 'tester', 'hayati', { btn: L === 0 ? 'سجّلني مختبر' : 'Sign me up', msgRequired: true, msgLabel: L === 0 ? 'جوالك: أندرويد أو آيفون، والموديل (مثلاً: Samsung A54)' : 'Your phone: Android or iPhone, and the model (e.g. Samsung A54)',
+    consentText: L === 0 ? 'قرأت اتفاقية المختبر وأوافق عليها، وأوافق إن ودقة تحفظ اسمي وإيميلي ونوع جوالي على خوادم Supabase بألمانيا عشان تضيفني للاختبار، حسب <a href="PRIV">سياسة الخصوصية</a>. عمري 18 أو أكثر.' : 'I have read and accept the tester agreement, and I agree that WADQA stores my name, email and phone type on Supabase servers in Germany to add me to the test, as described in the <a href="PRIV">privacy policy</a>. I am 18 or older.' })}
 </div></section>`,
 });
 

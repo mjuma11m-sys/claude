@@ -84,9 +84,10 @@ const ok = (c, m) => { if (c) { pass++; console.log('✅', m); } else { fail++; 
 
   // الطلبات
   await go('leads');
-  ok(await p.locator('ul.list li').count() === 2, 'الطلبات: القائمة');
+  ok(await p.locator('ul.list li').count() === 3, 'الطلبات: القائمة');
+  ok(/مختبرين حياتي: 1 من 12/.test(await p.locator('main').innerText()), 'الطلبات: عدّاد المختبرين');
   await p.selectOption('#leadProduct', 'hayati');
-  ok(await p.locator('ul.list li').count() === 1, 'الطلبات: فلتر التطبيق');
+  ok(await p.locator('ul.list li').count() === 2, 'الطلبات: فلتر التطبيق');
   ok(await p.getAttribute('ul.list li a.mini', 'href') === 'mailto:tester%40example.com', 'الطلبات: زر رد بالإيميل');
   await p.screenshot({ path: OUT + '/adm_leads.png', fullPage: true });
 

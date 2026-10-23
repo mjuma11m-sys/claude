@@ -140,3 +140,7 @@ begin
 end $$;
 revoke all on function public.wadqa_admin_views() from public, anon;
 grant execute on function public.wadqa_admin_views() to authenticated;
+
+-- DW-061: صفحة «كن مختبر» (testers.html) ترسل kind = 'tester' عبر نفس wadqa_submit (انجرّب بمعاملة rollback: anon ينحفظ له صف tester)
+alter table wadqa.leads drop constraint leads_kind_check;
+alter table wadqa.leads add constraint leads_kind_check check (kind = any (array['contact', 'waitlist', 'tester']));
