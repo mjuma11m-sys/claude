@@ -167,3 +167,13 @@ li.task.done .main b { text-decoration: line-through; color: var(--mist); }
 .stat b[dir="ltr"] { text-align: right; }
 li.task .x { flex: none; width: 34px; height: 34px; border: 0; border-radius: 50%; background: transparent; color: var(--mist); font-size: 16px; cursor: pointer; }
 li.task .x:hover, li.task .x:focus-visible { color: var(--err); background: var(--ink); }
+
+/* «الأقسام» (DW-065) */
+ul.depts li { display: block; padding: 0; }
+details.dept summary { list-style: none; display: flex; gap: 12px; align-items: center; padding: 12px 14px; cursor: pointer; }
+details.dept summary::-webkit-details-marker { display: none; }
+.d-ic { flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); font-size: 19px; }
+.d-score { flex: none; font-size: 20px; font-weight: 700; }
+.d-body { padding: 0 14px 12px; display: grid; gap: 4px; color: var(--text-2, var(--bone)); font-size: 14px; }
+.d-body p { margin: 0; }
+.card h2 .mini { float: left; font-size: 12px; }

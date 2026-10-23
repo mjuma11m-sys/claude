@@ -13,7 +13,7 @@
   const prodName = (k) => (L.PRODUCTS.find((p) => p[0] === k) || [k, k])[1];
   const periodName = (k) => (L.PERIODS.find((p) => p[0] === k) || [k, k])[1];
   const money = (f, cls = '') => '<span class="num ' + cls + '">' + L.fmt(f) + '</span>';
-  const TABS = [['company', 'الشركة'], ['summary', 'الملخص'], ['ledger', 'الدفتر'], ['budget', 'الميزانية'], ['recurring', 'الاشتراكات'], ['leads', 'الطلبات'], ['visits', 'الزيارات'], ['files', 'الملفات']];
+  const TABS = [['company', 'الشركة'], ['depts', 'الأقسام'], ['summary', 'الملخص'], ['ledger', 'الدفتر'], ['budget', 'الميزانية'], ['recurring', 'الاشتراكات'], ['leads', 'الطلبات'], ['visits', 'الزيارات'], ['files', 'الملفات']];
   // أسعار تقديرية تعبّي النموذج بس — المالك يتأكد من السعر قبل الحفظ
   const PRESETS = [
     ['Apple Developer Program', 9900, 'USD', 'year', 'رسوم المتاجر', 'hayati'],
@@ -52,6 +52,11 @@
       { id: id(), title: 'شغّل التحقق بخطوتين على GitHub', area: 'الحسابات', due: null, done: true },
     ];
     S.company = { evaluation: { avg: 5.8, date: '2026-10-21', depts: [['التصميم', 8], ['الهندسة', 8], ['الجودة', 8], ['التسويق', 4], ['HR', 4], ['العمليات', 4]] }, tickets: { open: 22, blocked: 6, review: 0, blocked_list: ['DW-054 رفض آبل', 'DW-001 Google Play'] } };
+    S.company.departments = [
+      { key: 'design', icon: '🎨', name: 'التصميم', score: 8, live: null, kpi: 'إمكانية الوصول (DW-026)', value: 'ما بدت', evidence: 'هوية موحدة، 320px بدون طلوع', next: 'فحص التباين وأسماء الأزرار', who: 'Claude' },
+      { key: 'cmo', icon: '📣', name: 'التسويق', score: 4, live: 'visits', kpi: 'زيارات 7 أيام', evidence: 'عدّاد بدون كوكيز', next: 'Search Console + نشر الفيديو', who: 'المالك' },
+      { key: 'hr', icon: '👥', name: 'الموارد البشرية', score: 4, live: 'testers', kpi: 'مختبرين حياتي', evidence: 'صفحة «كن مختبر»', next: 'نشر الرابط لـ 12 شخص', who: 'المالك' },
+    ];
     S.visits = [['/', 14], ['/hayati.html', 9], ['/idarati.html', 4], ['/en/', 3]].flatMap(([path, n], k) => [0, 3, 12].map((ago) => ({ day: new Date(Date.now() - ago * 864e5).toISOString().slice(0, 10), path, n: Math.max(1, n - ago - k) })));
     S.leads = [
       { id: 1, created_at: new Date().toISOString(), kind: 'waitlist', product: 'hayati', name: 'مختبر تجريبي', email: 'tester@example.com', message: 'أندرويد · Samsung', lang: 'ar' },
@@ -228,12 +233,36 @@
       '<input id="t_due" name="due" type="date" aria-label="الموعد (اختياري)"><button class="btn solid" type="submit">أضف</button><p class="err" id="taskErr"></p></form>' +
       (open.length ? '<ul class="list">' + open.map(taskItem).join('') + '</ul>' : '<div class="empty">ما عليك شي مفتوح 👌</div>') +
       (done.length ? '<details class="done-list"><summary>آخر المنجز (' + done.length + ')</summary><ul class="list">' + done.map(taskItem).join('') + '</ul></details>' : '') + '</section>' +
-      (weak.length ? '<section class="card"><h2>أضعف الأقسام</h2><ul class="list">' + weak.map(([n, v]) => '<li><div class="main"><b>' + h(n) + '</b></div><span class="amt num">' + h(String(v)) + '/10</span></li>').join('') + '</ul></section>' : '') +
+      (weak.length ? '<section class="card"><h2>أضعف الأقسام <a class="mini" href="#depts">كل الأقسام</a></h2><ul class="list">' + weak.map(([n, v]) => '<li><div class="main"><b>' + h(n) + '</b></div><span class="amt num">' + h(String(v)) + '/10</span></li>').join('') + '</ul></section>' : '') +
       (tk ? '<section class="card"><h2>التذاكر</h2><p class="note"><span class="num">' + h(String(tk.open)) + '</span> مفتوحة · <span class="num">' + h(String(tk.blocked)) + '</span> متوقفة · <span class="num">' + h(String(tk.review)) + '</span> بالمراجعة</p>' +
         (Array.isArray(tk.blocked_list) && tk.blocked_list.length ? '<ul class="list">' + tk.blocked_list.map((x) => '<li><div class="main"><b>' + h(x) + '</b></div><span class="tag err">متوقفة</span></li>').join('') + '</ul>' : '') + '</section>' : '') +
       (S.demo ? '' : '<details class="card"><summary>الدخول من تطبيق الجوال</summary><p class="note">على الآيفون، الدخول بـ Google من أيقونة الشاشة الرئيسية يفتح Safari وما يرجع للتطبيق. اضبط كلمة سر هني مرة وحدة، وادخل بالإيميل وكلمة السر من التطبيق (والرمز من الجوال يظل مطلوب).</p>' +
         '<form id="pwForm" novalidate><label for="pw_new">كلمة سر جديدة (8 أحرف أو أكثر)</label><input id="pw_new" name="pw" type="password" autocomplete="new-password" minlength="8">' +
         '<p class="err" id="pwErr"></p><div class="toolbar"><button class="btn" type="submit">احفظ كلمة السر</button></div></form></details>');
+  }
+
+  // «الأقسام» (DW-065): لكل قسم درجته ومؤشره ودليله وخطوته الجاية. ستة مؤشرات تنحسب حيّة من القاعدة، والباقي يحدّثه Claude بعد كل اجتماع
+  function liveKpi(k) {
+    if (k === 'visits') return [L.views(S.visits, today(), 7).total.toLocaleString('en'), 'زيارة'];
+    if (k === 'testers') return [S.leads.filter((l) => l.kind === 'tester').length + ' / 12', 'مختبر'];
+    if (k === 'ledger') return [String(S.entries.filter((e) => L.ym(e.occurred_on) === L.ymOf(today())).length), 'عملية هالشهر'];
+    if (k === 'leads') return [String(S.leads.filter((l) => Date.now() - new Date(l.created_at) < 30 * 864e5).length), 'طلب آخر 30 يوم'];
+    if (k === 'tasks') return [S.tasks.filter((t) => !t.done).length + ' / ' + S.tasks.length, 'مهمة مفتوحة'];
+    if (k === 'blocked') return [String((S.company.tickets || {}).blocked ?? '—'), 'تذكرة متوقفة'];
+    return null;
+  }
+  function deptsView() {
+    const ds = Array.isArray(S.company.departments) ? S.company.departments.slice().sort((a, b) => a.score - b.score) : [];
+    if (!ds.length) return '<div class="empty">ما فيه بيانات أقسام للحين. تنضاف بعد أول تقييم للمجلس.</div>';
+    const avg = ds.reduce((t, d) => t + Number(d.score || 0), 0) / ds.length;
+    return '<p class="note">الأضعف أول. المعدل <b class="num" dir="ltr">' + avg.toFixed(1) + '/10</b> · <span class="num">' + ds.length + '</span> قسم. المؤشرات المعلّمة بـ «حي» تنحسب الحين من القاعدة.</p>' +
+      '<ul class="list depts">' + ds.map((d) => {
+        const lv = d.live ? liveKpi(d.live) : null, val = lv ? '<span class="num" dir="ltr">' + h(lv[0]) + '</span> ' + h(lv[1]) : h(d.value || '—');
+        const lvl = d.score >= 8 ? 'pos' : d.score <= 4 ? 'neg' : '';
+        return '<li><details class="dept"><summary><span class="d-ic" aria-hidden="true">' + h(d.icon || '•') + '</span><span class="main"><b>' + h(d.name) + '</b><small>' + h(d.kpi || '') + ': ' + val + (lv ? ' <span class="tag">حي</span>' : '') + '</small></span>' +
+          '<span class="d-score num ' + lvl + '" dir="ltr">' + h(String(d.score)) + '<span class="cur">/10</span></span></summary>' +
+          '<div class="d-body"><p><b>الدليل:</b> ' + h(d.evidence || '—') + '</p><p><b>الخطوة الجاية:</b> ' + h(d.next || '—') + '</p><p><b>على مين:</b> <span class="tag' + (d.who === 'المالك' ? ' warn' : '') + '">' + h(d.who || '—') + '</span></p></div></details></li>';
+      }).join('') + '</ul>';
   }
 
   function summaryView() {
@@ -376,7 +405,7 @@
   }
 
   function render() {
-    const t = tab(), views = { company: companyView, summary: summaryView, ledger: ledgerView, budget: budgetView, recurring: recurringView, leads: leadsView, visits: visitsView, files: filesView };
+    const t = tab(), views = { company: companyView, depts: deptsView, summary: summaryView, ledger: ledgerView, budget: budgetView, recurring: recurringView, leads: leadsView, visits: visitsView, files: filesView };
     const slug = t === 'files' && docSlug();
     if (slug && !S.demo && S.docBody[slug] == null) store.doc(slug).then(() => { if (docSlug() === slug) render(); }).catch((e) => toast(errText(e)));
     app.innerHTML = nav() + '<div id="view">' + views[t]() + '</div>';

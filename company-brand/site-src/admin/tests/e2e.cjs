@@ -32,6 +32,12 @@ const ok = (c, m) => { if (c) { pass++; console.log('✅', m); } else { fail++; 
   await p.fill('#t_title', ''); await p.click('#taskForm button[type=submit]');
   ok((await p.textContent('#taskErr')).includes('اكتب المهمة'), 'الشركة: مهمة فاضية مرفوضة');
   await p.screenshot({ path: OUT + '/adm_company.png', fullPage: true });
+  // «الأقسام» (DW-065): الأضعف أول، والمؤشر الحي يطلع
+  await go('depts');
+  ok(await p.locator('details.dept').count() === 3, 'الأقسام: البطاقات');
+  ok((await p.locator('details.dept summary b').first().innerText()).length > 0 && /حي/.test(await p.textContent('#view')), 'الأقسام: مؤشر حي');
+  await p.click('details.dept summary >> nth=0');
+  ok(/الخطوة الجاية/.test(await p.locator('details.dept').first().innerText()), 'الأقسام: التفاصيل');
   await go('summary');
   ok((await p.textContent('#view')).includes('دخل الشهر'), 'الملخص: بطاقات الشهر');
   ok(await p.locator('.chart .col').count() === 6, 'الملخص: رسم 6 شهور');
@@ -111,7 +117,7 @@ const ok = (c, m) => { if (c) { pass++; console.log('✅', m); } else { fail++; 
 
   // جوال 320: ولا تبويب يطلع برا
   await p.setViewportSize({ width: 320, height: 700 });
-  for (const t of ['company', 'visits', 'summary', 'ledger', 'budget', 'recurring', 'leads']) {
+  for (const t of ['company', 'depts', 'visits', 'summary', 'ledger', 'budget', 'recurring', 'leads']) {
     await p.goto(B + '?demo=1#' + t); await p.waitForSelector('nav.tabs');
     if (t === 'ledger') await p.click('[data-act=new-entry]');
     const over = await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
