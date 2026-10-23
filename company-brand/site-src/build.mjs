@@ -10,6 +10,8 @@ const ROOT = path.join(SRC, '..');
 // العنوان الحقيقي للموقع (DW-063). wadqa.com مو لنا: لما ينشرى دومين، يتغيّر هالسطر بس (canonical، og، sitemap، الخصوصية)
 const DOMAIN = 'https://myrent-sigma.vercel.app';
 const HOST = DOMAIN.replace(/^https:\/\//, '');
+// Google Search Console (DW-063): قيمة content من سطر google-site-verification (مو سر). null = ما ينضاف
+const GOOGLE_VERIFY = null;
 // الإيميل يطلع بالموقع بس لما يكون فيه صندوق حقيقي على دومين نملكه (DW-056). قبلها: نموذج التواصل
 const EMAIL = null;
 
@@ -59,7 +61,7 @@ function page(L, slug, { title, desc, body, navOn }) {
 <link rel="alternate" hreflang="ar" href="${urlOf(0, slug)}"><link rel="alternate" hreflang="en" href="${urlOf(1, slug)}">
 <meta property="og:title" content="${title}"><meta property="og:description" content="${desc}">
 <meta property="og:image" content="${DOMAIN}/og-logo.png"><meta property="og:type" content="website"><meta property="og:url" content="${urlOf(L, slug)}"><meta property="og:locale" content="${ar ? 'ar_BH' : 'en_US'}"><meta name="twitter:card" content="summary">
-<meta name="theme-color" content="#0B1514">
+<meta name="theme-color" content="#0B1514">${GOOGLE_VERIFY && slug === 'index' && ar ? `\n<meta name="google-site-verification" content="${GOOGLE_VERIFY}">` : ''}
 <link rel="icon" href="${pre}favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="${pre}site.css">
 </head>
