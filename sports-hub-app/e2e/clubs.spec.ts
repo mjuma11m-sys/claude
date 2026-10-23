@@ -193,7 +193,7 @@ test.describe('ease of use', () => {
     const strip = page.getByRole('region', { name: 'اليوم' })
     await expect(strip).toBeVisible()
     await expect(strip.getByRole('link', { name: /عقود تنتهي خلال 6 أشهر: 5/ })).toBeVisible()
-    await expect(strip.getByRole('link', { name: /لاعبون غير متاحين/ })).toBeVisible()
+    await expect(strip.getByRole('link')).toHaveCount(5) // capped at five: the softer items drop off when urgent ones appear (unavailable players are covered in today.test.ts)
     await strip.getByRole('link', { name: /عقود تنتهي/ }).click()
     await expect(page).toHaveURL(/#contracts$/)
     await expect(strip.getByRole('link', { name: /ابدأ باستيراد بيانات ناديك/ })).toHaveAttribute('href', '/data')
