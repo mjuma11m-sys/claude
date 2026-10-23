@@ -18,7 +18,7 @@ adb shell am start -n "$PKG/.MainActivity" >/dev/null
 to_bmp() {
   if command -v magick >/dev/null; then magick "$1" -resize '120x240!' BMP3:"$2"
   elif command -v convert >/dev/null; then convert "$1" -resize '120x240!' BMP3:"$2"
-  else sudo apt-get install -y -qq imagemagick >/dev/null && convert "$1" -resize '120x240!' BMP3:"$2"; fi
+  else sudo apt-get update -qq >/dev/null && sudo apt-get install -y -qq imagemagick >/dev/null && convert "$1" -resize '120x240!' BMP3:"$2"; fi
 }
 
 echo "▶ الشاشة مو سودا ومو فاضية؟"
