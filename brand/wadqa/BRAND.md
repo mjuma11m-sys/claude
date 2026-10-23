@@ -1,6 +1,6 @@
 # هوية WADQA (الشركة)
 
-> مقترح بانتظار اعتماد المالك (DW-031). **فرضية الاسم:** «ودقة» = ودق (قطر المطر) + «و دقة». إذا المعنى غيره، الرمز يتعدّل. مصدر كل الملفات: `python3 brand/wadqa/build.py && (cd sports-hub-app && PW=$PWD/node_modules/playwright node ../brand/wadqa/render.cjs)`.
+> مقترح بانتظار اعتماد المالك (DW-071). **فرضية الاسم:** «ودقة» = ودق (قطر المطر) + «و دقة». إذا المعنى غيره، الرمز يتعدّل. مصدر كل الملفات: `python3 brand/wadqa/build.py && (cd sports-hub-app && PW=$PWD/node_modules/playwright node ../brand/wadqa/render.cjs)`.
 > الشركة هي WADQA، والتطبيق يبقى **Sports Hub** بهويته (`sports-hub-app/brand/`). ما نغيّر اسم التطبيق.
 
 ## الرمز
