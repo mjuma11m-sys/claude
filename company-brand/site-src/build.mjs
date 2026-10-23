@@ -7,7 +7,9 @@ import { fileURLToPath } from 'node:url';
 const SRC = path.dirname(fileURLToPath(import.meta.url));
 const OUT = path.join(SRC, '../site');
 const ROOT = path.join(SRC, '..');
-const DOMAIN = 'https://wadqa.com';
+// العنوان الحقيقي للموقع (DW-063). wadqa.com مو لنا: لما ينشرى دومين، يتغيّر هالسطر بس (canonical، og، sitemap، الخصوصية)
+const DOMAIN = 'https://myrent-sigma.vercel.app';
+const HOST = DOMAIN.replace(/^https:\/\//, '');
 // الإيميل يطلع بالموقع بس لما يكون فيه صندوق حقيقي على دومين نملكه (DW-056). قبلها: نموذج التواصل
 const EMAIL = null;
 
@@ -56,7 +58,7 @@ function page(L, slug, { title, desc, body, navOn }) {
 <link rel="canonical" href="${urlOf(L, slug)}">
 <link rel="alternate" hreflang="ar" href="${urlOf(0, slug)}"><link rel="alternate" hreflang="en" href="${urlOf(1, slug)}">
 <meta property="og:title" content="${title}"><meta property="og:description" content="${desc}">
-<meta property="og:image" content="${DOMAIN}/og-logo.png"><meta property="og:type" content="website">
+<meta property="og:image" content="${DOMAIN}/og-logo.png"><meta property="og:type" content="website"><meta property="og:url" content="${urlOf(L, slug)}"><meta property="og:locale" content="${ar ? 'ar_BH' : 'en_US'}"><meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#0B1514">
 <link rel="icon" href="${pre}favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="${pre}site.css">
@@ -321,7 +323,7 @@ P.privacy = (L) => ({
   body: `<section><div class="wrap prose">
   <p class="note">${L === 0 ? 'مسودة للمراجعة — مو استشارة قانونية ملزمة. آخر تحديث: 21 أكتوبر 2026' : 'Draft for review, not binding legal advice. Last updated: 21 October 2026'}</p>
   <h1 class="sm">${L === 0 ? 'سياسة الخصوصية' : 'Privacy policy'}</h1>
-  <p>${L === 0 ? `هذي السياسة لموقع <span dir="ltr">wadqa.com</span> بس. كل تطبيق من تطبيقاتنا (مثل «حياتي») له سياسة خاصة داخل التطبيق.` : 'This policy covers the wadqa.com website only. Each of our apps (such as Hayati) has its own policy inside the app.'}</p>
+  <p>${L === 0 ? `هذي السياسة لموقع <span dir="ltr">${HOST}</span> بس. كل تطبيق من تطبيقاتنا (مثل «حياتي») له سياسة خاصة داخل التطبيق.` : 'This policy covers the ${HOST} website only. Each of our apps (such as Hayati) has its own policy inside the app.'}</p>
   <h3>${L === 0 ? 'لما تتصفح' : 'When you browse'}</h3>
   <p>${L === 0 ? 'ما فيه ملفات تعريف ارتباط (cookies) ولا إعلانات ولا أدوات تحليل خارجية. الخطوط والصور على نفس الدومين. نعدّ فتح كل صفحة (المسار ولغة الصفحة واليوم بس، بدون IP ولا أي معرّف) عشان نعرف أي صفحة تنقرا، وما نعدّ لو متصفحك مفعّل «عدم التتبع». مزوّد الاستضافة (Vercel) يسجّل بيانات تقنية عادية لكل زيارة (عنوان IP، المتصفح، الوقت) لتشغيل الموقع وحمايته، حسب سياسته.' : 'There are no cookies, ads or third-party analytics. Fonts and images are served from this domain. We count page opens (only the path, page language and day, with no IP address or identifier) to learn which pages are read, and we do not count you if your browser sends Do Not Track. Our host (Vercel) logs standard technical data for each visit (IP address, browser, time) to run and protect the site, under its own policy.'}</p>
   <h3>${L === 0 ? 'لما تعبّي نموذج' : 'When you fill in a form'}</h3>
@@ -348,6 +350,11 @@ for (const slug of Object.keys(P)) {
     fs.writeFileSync(file, page(L, slug, P[slug](L)));
   }
 }
+// sitemap + robots (DW-063): الصفحات العامة بس، واللوحة ممنوعة
+const urlOfPage = (l, s) => DOMAIN + (l === 0 ? '/' : '/en/') + (s === 'index' ? '' : s);
+fs.writeFileSync(path.join(OUT, 'sitemap.xml'), '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n' +
+  Object.keys(P).flatMap((s) => [0, 1].map((l) => '  <url><loc>' + urlOfPage(l, s) + '</loc><xhtml:link rel="alternate" hreflang="ar" href="' + urlOfPage(0, s) + '"/><xhtml:link rel="alternate" hreflang="en" href="' + urlOfPage(1, s) + '"/></url>')).join('\n') + '\n</urlset>\n');
+fs.writeFileSync(path.join(OUT, 'robots.txt'), 'User-agent: *\nAllow: /\nDisallow: /admin/\n\nSitemap: ' + DOMAIN + '/sitemap.xml\n');
 fs.copyFileSync(path.join(SRC, 'site.css'), path.join(OUT, 'site.css'));
 fs.copyFileSync(path.join(SRC, 'app.js'), path.join(OUT, 'app.js'));
 // لوحة الإدارة (DW-052): ملفات ثابتة + supabase-js محلي (MIT) عشان CSP «script-src 'self'»
