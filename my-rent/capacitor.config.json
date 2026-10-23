@@ -1,0 +1,8 @@
+{
+  "appId": "bh.wadqa.idarati",
+  "appName": "إداراتي",
+  "webDir": "dist",
+  "backgroundColor": "#14213A",
+  "ios": { "contentInset": "never" },
+  "android": { "allowMixedContent": false }
+}

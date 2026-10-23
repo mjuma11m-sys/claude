@@ -1,0 +1,38 @@
+name: Idarati iPhone
+
+# «إداراتي» (DW-038) يختبر نفسه على آيفون سميوليتر بمحرك Safari الحقيقي: يبني مشروع Xcode، يشغّل التطبيق،
+# يصوّر الشاشة، ويفشل لو البناء انكسر أو التطبيق طاح أو الشاشة سودا. الصورة تنحفظ مع كل تشغيل (Artifacts).
+on:
+  push:
+    paths: ['my-rent/src/**', 'my-rent/ios/**', 'my-rent/capacitor.config.json', 'my-rent/package.json', '.github/workflows/idarati-ios.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: idarati-ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  simulator:
+    runs-on: macos-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: my-rent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: my-rent/package-lock.json
+      - run: npm ci
+      - name: Build, launch on iPhone simulator, check the screen
+        run: bash scripts/ios-smoke.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: idarati-iphone-screenshot
+          path: |
+            my-rent/ios-smoke/launch.png
+            my-rent/ios-smoke/build.log
+          retention-days: 14

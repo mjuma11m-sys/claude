@@ -3,6 +3,7 @@ import type { Payment, Unit } from "../data/types";
 import { creditLabel, fmt, invoiceLabel, isCommercial, monthName, parseBHD, vatSplit } from "../data/logic";
 import { useStore } from "../data/store";
 import { creditable } from "../data/reducer";
+import { canPrint, shareText } from "../native";
 import { Sheet, useToast } from "../ui/kit";
 import logoUrl from "../../brand/logo-horizontal.svg";
 import sealUrl from "../../brand/symbol.svg";
@@ -56,9 +57,7 @@ export function ReceiptSheet({ value, onClose }: { value: ReceiptRef; onClose: (
     if (!shown || !live) return;
     const text = mode === "invoice" && vat && live.inv ? invoiceText(live, shown.unit, live.inv, vat) : receiptText(shown.payment, shown.unit);
     try {
-      if (navigator.share) { await navigator.share({ title: mode === "invoice" ? "فاتورة ضريبية" : "إيصال إيجار", text }); return; }
-      await navigator.clipboard.writeText(text);
-      toast({ text: "انسخ الإيصال، الصقه بالواتساب" });
+      if ((await shareText(mode === "invoice" ? "فاتورة ضريبية" : "إيصال إيجار", text)) === "copied") toast({ text: "انسخ الإيصال، الصقه بالواتساب" });
     } catch { /* المستخدم سكّر المشاركة */ }
   };
 
@@ -94,9 +93,9 @@ export function ReceiptSheet({ value, onClose }: { value: ReceiptRef; onClose: (
             <img className="receipt-seal" src={sealUrl} alt="" />
           </div>
           {cns.length > 0 && <p className="muted small" style={{ margin: 0 }} id="inv-credited">عليها إشعار دائن: {cns.map((c) => `${creditLabel(c.no)} (${fmt(c.amount ?? c.payment.amount)} د.ب)`).join("، ")}. الباقي <span className="num">{fmt(left)}</span> د.ب.</p>}
-          <div className="grid-2">
+          <div className={canPrint() ? "grid-2" : ""}>
             <button className="btn press" onClick={share}>مشاركة</button>
-            <button className="btn btn-ghost press" onClick={() => window.print()}>طباعة</button>
+            {canPrint() && <button className="btn btn-ghost press" onClick={() => window.print()}>طباعة</button>}
           </div>
           {credit === null ? (
             <button className="btn btn-ghost press" id="credit-open" onClick={() => { setCredit(""); setCreditErr(""); }}>إشعار دائن (رجّعت مبلغ للمستأجر)</button>
@@ -142,9 +141,9 @@ export function ReceiptSheet({ value, onClose }: { value: ReceiptRef; onClose: (
             <img className="receipt-seal" src={sealUrl} alt="" />
             <p className="muted small" style={{ margin: "10px 0 0" }}>إيصال استلام، مو فاتورة ضريبية.</p>
           </div>
-          <div className="grid-2">
+          <div className={canPrint() ? "grid-2" : ""}>
             <button className="btn press" onClick={share}>مشاركة</button>
-            <button className="btn btn-ghost press" onClick={() => window.print()}>طباعة</button>
+            {canPrint() && <button className="btn btn-ghost press" onClick={() => window.print()}>طباعة</button>}
           </div>
           {canInvoice && !live?.inv && sync && typeof navigator !== "undefined" && !navigator.onLine && <p className="small inv-warn" style={{ margin: 0 }} id="inv-offline">أنت بدون نت: لو جهاز ثاني طلّع فاتورة بنفس الوقت، رقم الفاتورة يتعدّل بعد المزامنة. الأحسن تطلّعها وأنت متصل.</p>}
           {canInvoice && <button className="btn btn-ghost press" id="make-invoice" onClick={openInvoice}>{live?.inv ? `الفاتورة الضريبية ${invoiceLabel(live.inv)}` : "اطلع فاتورة ضريبية"}</button>}

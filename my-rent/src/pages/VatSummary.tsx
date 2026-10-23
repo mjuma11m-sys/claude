@@ -4,6 +4,7 @@ import { creditAmount, creditLabel, fmt, invoiceLabel, monthName, vatSplit, vatS
 import type { CreditNote } from "../data/types";
 import { Sheet } from "../ui/kit";
 import logoUrl from "../../brand/logo-horizontal.svg";
+import { canPrint } from "../native";
 
 /** DW-036: ملخص الضريبة لكل ربع (للإقرار) + الإشعارات الدائنة. يطلع بس لو الفاتورة مفعّلة أو فيه فواتير */
 export function VatSummary() {
@@ -93,7 +94,7 @@ export function CreditNoteSheet({ value, onClose }: { value: CreditNote | null; 
               </tbody>
             </table>
           </div>
-          <button className="btn btn-ghost press" onClick={() => window.print()}>طباعة</button>
+          {canPrint() && <button className="btn btn-ghost press" onClick={() => window.print()}>طباعة</button>}
         </div>
       )}
     </Sheet>

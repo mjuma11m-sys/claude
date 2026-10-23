@@ -4,6 +4,7 @@ import { useStore } from "../data/store";
 import { fmt, isoDay, monthKey, monthLabel, monthName, rentAt, statement, upcomingRent } from "../data/logic";
 import { Sheet, useToast } from "../ui/kit";
 import logoUrl from "../../brand/logo-horizontal.svg";
+import { canPrint, shareText } from "../native";
 
 const STATE = { paid: "مدفوع", due: "مستحق", late: "متأخر" } as const;
 
@@ -31,9 +32,7 @@ export function StatementSheet({ unit, onClose }: { unit: Unit | null; onClose: 
 
   const share = async () => {
     try {
-      if (navigator.share) { await navigator.share({ title: "كشف حساب إيجار", text: text() }); return; }
-      await navigator.clipboard.writeText(text());
-      toast({ text: "انسخ الكشف، الصقه بالواتساب" });
+      if ((await shareText("كشف حساب إيجار", text())) === "copied") toast({ text: "انسخ الكشف، الصقه بالواتساب" });
     } catch { /* المستخدم سكّر المشاركة */ }
   };
 
@@ -77,7 +76,7 @@ export function StatementSheet({ unit, onClose }: { unit: Unit | null; onClose: 
           </div>
           <div className="grid-2">
             <button className="btn press" onClick={share}>مشاركة</button>
-            <button className="btn btn-ghost press" onClick={() => window.print()}>طباعة</button>
+            {canPrint() && <button className="btn btn-ghost press" onClick={() => window.print()}>طباعة</button>}
           </div>
         </div>
       )}

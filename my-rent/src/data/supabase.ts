@@ -76,6 +76,25 @@ export const joinFamily = (sb: SupabaseClient, code: string) => rpc<string>(sb, 
 export const deleteFamily = (sb: SupabaseClient, familyId: string) => rpc<void>(sb, "delete_family", { f: familyId });
 export const leaveFamily = (sb: SupabaseClient, familyId: string) => rpc<void>(sb, "leave_family", { f: familyId });
 
+/** DW-038: يحذف كل ملفات العقود والوثائق من السحابة لعائلة (المالك بس — سياسة الحذف). قبل حذف العائلة أو الحساب */
+export async function wipeFamilyFiles(sb: SupabaseClient, familyId: string) {
+  for (let i = 0; i < 100; i++) {
+    const { data, error } = await sb.storage.from("contracts").list(familyId, { limit: 100 });
+    if (error) throw new Error("ما قدرنا نوصل لملفات السحابة: " + error.message);
+    const paths = (data ?? []).filter((x) => x.id).map((x) => `${familyId}/${x.name}`);
+    if (!paths.length) return;
+    const { error: e } = await sb.storage.from("contracts").remove(paths);
+    if (e) throw new Error("ما انحذفت ملفات السحابة: " + e.message);
+  }
+}
+
+/** DW-038: حذف الحساب نهائياً (شرط المتاجر): ملفات العائلة لو مالك ← الحساب والعائلة والعضوية ← خروج */
+export async function deleteAccount(sb: SupabaseClient, familyId: string | undefined, role: "owner" | "member" | undefined) {
+  if (familyId && role === "owner") await wipeFamilyFiles(sb, familyId);
+  await rpc<void>(sb, "delete_my_account", {});
+  await sb.auth.signOut().catch(() => undefined);
+}
+
 /** العائلة اللي المستخدم عضو فيها (أول وحدة) */
 export async function myFamily(sb: SupabaseClient): Promise<{ id: string; name: string; role: "owner" | "member"; canEdit: boolean } | null> {
   const { data: u } = await sb.auth.getUser();

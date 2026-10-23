@@ -164,6 +164,7 @@ function Connected() {
   const [invite, setInvite] = useState("");
   const [inviteEdit, setInviteEdit] = useState<"edit" | "view">("edit");
   const [confirm, setConfirm] = useState(false);
+  const [confirmAcc, setConfirmAcc] = useState(false); // DW-038: حذف الحساب
   const waText = `كود الانضمام لإداراتي: ${invite} (صالح 48 ساعة${inviteEdit === "view" ? "، مشاهدة بس" : ""}). الإعدادات ← المزامنة ← عندك كود دعوة؟`;
   const withClient = async () => { const c = loadSyncConfig()!; const m = await import("../data/supabase"); return { m, c: await m.getClient(c.url, c.key) }; };
   return (
@@ -195,11 +196,30 @@ function Connected() {
           <div className="grid-2">
             <button className="btn btn-danger press" disabled={busy} onClick={() => run(async () => {
               const { m, c } = await withClient();
-              if (s.role === "owner") await m.deleteFamily(c, s.familyId); else await m.leaveFamily(c, s.familyId);
+              if (s.role === "owner") { await m.wipeFamilyFiles(c, s.familyId); await m.deleteFamily(c, s.familyId); } else await m.leaveFamily(c, s.familyId);
               disconnectSync();
               toast({ text: s.role === "owner" ? "انمسحت بيانات العائلة من السيرفر" : "طلعت من العائلة" });
             })}>أكيد</button>
             <button className="btn btn-ghost press" onClick={() => setConfirm(false)}>إلغاء</button>
+          </div>
+        </div>
+      )}
+      {!confirmAcc ? (
+        <button className="btn btn-ghost press danger-text" id="delete-account" onClick={() => setConfirmAcc(true)}>احذف حسابي نهائياً</button>
+      ) : (
+        <div className="confirm-box" role="alert" id="delete-account-confirm">
+          <div className="strong">{s.role === "owner"
+            ? "ينحذف حسابك (الإيميل وكلمة السر)، ومساحة العائلة كاملة وملفات العقود والوثائق من السحابة، لكل الأعضاء. ما يرجع."
+            : "ينحذف حسابك (الإيميل وكلمة السر) وتطلع من العائلة. بيانات العائلة تبقى للمالك."}</div>
+          <p className="muted small" style={{ margin: 0 }}>النسخة اللي على هالجهاز تبقى. تقدر تمسحها بعدين من «حذف كل البيانات».</p>
+          <div className="grid-2">
+            <button className="btn btn-danger press" id="delete-account-yes" disabled={busy} onClick={() => run(async () => {
+              const { m, c } = await withClient();
+              await m.deleteAccount(c, s.familyId, s.role);
+              disconnectSync();
+              toast({ text: "انحذف حسابك من السيرفر" });
+            })}>احذف الحساب</button>
+            <button className="btn btn-ghost press" onClick={() => setConfirmAcc(false)}>إلغاء</button>
           </div>
         </div>
       )}

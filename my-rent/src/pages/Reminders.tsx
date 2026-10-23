@@ -1,18 +1,15 @@
 import { useStore } from "../data/store";
 import { buildIcs, isoDay } from "../data/logic";
 import { useToast } from "../ui/kit";
+import { saveFile } from "../native";
 
 /** DW-029: ملف تقويم بمواعيد الإيجار والعقود والوثائق والشيكات — ينبني بالجهاز وما يطلع شي للنت */
 export function Reminders() {
   const { data } = useStore();
   const toast = useToast();
-  const save = () => {
+  const save = async () => {
     const { text, count } = buildIcs(data);
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([text], { type: "text/calendar;charset=utf-8" }));
-    a.download = `idarati-${isoDay(new Date())}.ics`;
-    a.click();
-    window.setTimeout(() => URL.revokeObjectURL(a.href), 30_000);
+    try { await saveFile(`idarati-${isoDay(new Date())}.ics`, new Blob([text], { type: "text/calendar;charset=utf-8" }), "مواعيد إداراتي"); } catch { return; }
     toast({ text: `انحفظ ملف التقويم (${count} موعد) — افتحه وأضفه للتقويم` });
   };
   return (

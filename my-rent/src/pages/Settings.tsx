@@ -12,6 +12,7 @@ import { VatPanel } from "./VatPanel";
 import symbolUrl from "../../brand/symbol.svg";
 import pkg from "../../package.json";
 import { getLastBackup, loadPrefs, savePrefs, setLastBackup, type Prefs, type TextSize, type Theme } from "../data/prefs";
+import { isNative, saveFile } from "../native";
 
 /** نسخة احتياطية، استرجاع، وحذف كل البيانات (حق المحو — PDPL) */
 export function Settings() {
@@ -24,16 +25,12 @@ export function Settings() {
   const [lastBackup, setLast] = useState(getLastBackup);
   const update = (p: Partial<Prefs>) => { const n = { ...prefs, ...p }; setPrefs(n); savePrefs(n); };
 
-  const exportJson = () => {
+  const exportJson = async () => {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `idarati-backup-${isoDay(new Date())}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
+    try { await saveFile(`idarati-backup-${isoDay(new Date())}.json`, blob, "نسخة إداراتي الاحتياطية"); } catch { return; }
     const day = isoDay(new Date());
     setLastBackup(day); setLast(day);
-    toast({ text: "انحفظت النسخة الاحتياطية بالتنزيلات" });
+    toast({ text: isNative() ? "انحفظت النسخة الاحتياطية" : "انحفظت النسخة الاحتياطية بالتنزيلات" });
   };
 
   const importJson = async (f: File) => {

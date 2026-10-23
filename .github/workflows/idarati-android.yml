@@ -1,0 +1,41 @@
+name: Idarati Android
+
+# «إداراتي» (DW-038): يبني تطبيق أندرويد (APK للتجربة) من نفس الكود. الملف ينحفظ مع كل تشغيل (Artifacts):
+# نزّله وثبّته على جوال أندرويد (السماح بالتثبيت من مصادر غير معروفة). نسخة المتجر (AAB موقّع) تحتاج مفتاح المالك.
+on:
+  push:
+    paths: ['my-rent/src/**', 'my-rent/android/**', 'my-rent/capacitor.config.json', 'my-rent/package.json', '.github/workflows/idarati-android.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: idarati-android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: my-rent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: my-rent/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npm run cap:sync -- android
+      - name: Build debug APK
+        working-directory: my-rent/android
+        run: ./gradlew assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: idarati-android-apk
+          path: my-rent/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30

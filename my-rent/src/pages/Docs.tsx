@@ -5,6 +5,7 @@ import { ACCEPT, checkFile, fetchFile, putLocal, removeFile, uploadCloud } from 
 import type { Doc, DocKind } from "../data/types";
 import { useStagger } from "../theme/motion";
 import { Chips, DemoNote, EmptyState, Sheet, useToast } from "../ui/kit";
+import { openFile } from "../native";
 
 type KindF = "all" | DocKind;
 type StateF = "all" | DocState;
@@ -119,9 +120,7 @@ export function DocSheet({ value, onClose }: { value: { doc: Doc | null } | null
     if (!doc?.file) return;
     const blob = await fetchFile(doc.file.id, doc.file.path);
     if (!blob) return setError(doc.file.path ? "ما قدرنا نجيب الملف من السحابة. تأكد من النت" : "الملف محفوظ على جهاز ثاني");
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank", "noopener");
-    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    await openFile(doc.file.name, blob);
   };
 
   return (

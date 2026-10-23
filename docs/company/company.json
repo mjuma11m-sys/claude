@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 38,
+  "next": 39,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -294,6 +294,14 @@
     "DW-037": {
       "title": "سلبيات التقييم 9: توافق Safari/آيفون + إشعار دائن جزئي",
       "owner": "QA",
+      "priority": "P1",
+      "status": "done",
+      "opened": "2026-10-23",
+      "updated": "2026-10-23"
+    },
+    "DW-038": {
+      "title": "جاهزية المتاجر: آيفون وأندرويد (Capacitor) + حذف الحساب + ملف المتجر",
+      "owner": "CTO",
       "priority": "P1",
       "status": "done",
       "opened": "2026-10-23",

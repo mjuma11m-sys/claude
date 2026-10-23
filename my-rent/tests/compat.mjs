@@ -31,5 +31,15 @@ const month = js.filter(([, s]) => /type="month"/.test(s) && !/type="month"[^>]*
 ok(month.length === 0, 'خانة type="month" فيها مثال (Safari الماك يعرضها نص)', month.join(", "));
 const html = fs.readFileSync("index.html", "utf8");
 ok(/apple-mobile-web-app-capable/.test(html) && /apple-touch-icon/.test(html) && /viewport-fit=cover/.test(html), "آيفون: أيقونة الشاشة الرئيسية + وضع التطبيق + الحواف");
+// DW-038: سياسة الخصوصية العامة (رابط المتجر) = نفس نص التطبيق
+{
+  const tsx = fs.readFileSync("src/pages/Privacy.tsx", "utf8"), pub = fs.readFileSync("public/privacy.html", "utf8");
+  const ver = tsx.match(/POLICY_VERSION = "([^"]+)"/)[1];
+  const strip = (x) => x.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+  const items = [...tsx.matchAll(/<li>([\s\S]*?)<\/li>/g)].map((m) => strip(m[1]));
+  const pubText = strip(pub);
+  const missing = items.filter((t) => !pubText.includes(t));
+  ok(pub.includes(ver) && missing.length === 0 && items.length > 10, `privacy.html مطابقة للتطبيق (النسخة ${ver}، ${items.length} بند)`, missing.slice(0, 2).join(" | "));
+}
 console.log(failed ? `\n${failed} فشل` : "\nكل فحوصات التوافق نجحت");
 process.exit(failed ? 1 : 0);

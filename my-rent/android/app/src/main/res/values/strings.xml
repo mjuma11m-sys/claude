@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">إداراتي</string>
+    <string name="title_activity_main">إداراتي</string>
+    <string name="package_name">bh.wadqa.idarati</string>
+    <string name="custom_url_scheme">bh.wadqa.idarati</string>
+</resources>

@@ -5,6 +5,7 @@ import { DEFAULT_CONTRACT, fillContract, isoDay } from "../data/logic";
 import { ACCEPT, checkFile, fetchFile, putLocal, removeFile, uploadCloud } from "../data/files";
 import { Sheet, useToast } from "../ui/kit";
 import logoUrl from "../../brand/logo-horizontal.svg";
+import { canPrint, openFile, shareText } from "../native";
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const kb = (n: number) => (n > 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)}MB` : `${Math.ceil(n / 1024)}KB`);
@@ -27,9 +28,7 @@ export function ContractSheet({ unit, onClose }: { unit: Unit | null; onClose: (
 
   const share = async () => {
     try {
-      if (navigator.share) { await navigator.share({ title: "عقد إيجار", text }); return; }
-      await navigator.clipboard.writeText(text);
-      toast({ text: "انسخ العقد، الصقه وين ما تبي" });
+      if ((await shareText("عقد إيجار", text)) === "copied") toast({ text: "انسخ العقد، الصقه وين ما تبي" });
     } catch { /* سكّر المشاركة */ }
   };
 
@@ -56,9 +55,7 @@ export function ContractSheet({ unit, onClose }: { unit: Unit | null; onClose: (
     if (!cf) return;
     const blob = await fetchFile(cf.id, cf.path);
     if (!blob) return setError(cf.path ? "ما قدرنا نجيب الملف من السحابة. تأكد من النت" : "الملف محفوظ على جهاز ثاني");
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank", "noopener");
-    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    await openFile(cf.name, blob);
   };
 
   const remove = async () => {
@@ -100,7 +97,7 @@ export function ContractSheet({ unit, onClose }: { unit: Unit | null; onClose: (
           </div>
           <p className="muted small" style={{ margin: 0 }}>نموذج عام من نصك بالإعدادات، مو استشارة قانونية. راجعه مع محامي، وسجّل العقد بالجهة الرسمية المختصة.</p>
           <div className="grid-2">
-            <button className="btn press" onClick={() => window.print()}>طباعة / PDF</button>
+            {canPrint() && <button className="btn press" onClick={() => window.print()}>طباعة / PDF</button>}
             <button className="btn btn-ghost press" onClick={share}>مشاركة النص</button>
           </div>
         </div>

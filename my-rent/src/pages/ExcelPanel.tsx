@@ -3,6 +3,7 @@ import { useStore } from "../data/store";
 import { isoDay } from "../data/logic";
 import { exportSheets, planImport, templateSheets, type ImportPlan, type Sheet } from "../data/excel";
 import { useToast } from "../ui/kit";
+import { saveFile } from "../native";
 
 const XLSX = ".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
@@ -10,7 +11,8 @@ export async function save(sheets: { sheet: string; data: unknown[][] }[], fileN
   const { default: writeXlsxFile } = await import("write-excel-file/browser");
   type Sheets = Parameters<typeof writeXlsxFile>[0];
   const all = sheets.map((s) => ({ ...s, rightToLeft: true, columns: s.data[0].map(() => ({ width: 18 })) }));
-  await writeXlsxFile(all as unknown as Sheets, {}).toFile(fileName);
+  const blob = await writeXlsxFile(all as unknown as Sheets, {}).toBlob();
+  await saveFile(fileName, blob, "ملف Excel من إداراتي");
 }
 
 /** Excel (DW-021): قالب · استيراد بمعاينة وأخطاء لكل صف · تصدير التقارير */

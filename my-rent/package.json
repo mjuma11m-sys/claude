@@ -11,9 +11,17 @@
     "test:sync": "esbuild tests/sync.test.ts --bundle --platform=node --format=esm --jsx=automatic --loader:.svg=empty --outfile=node_modules/.cache/sync.test.mjs --log-level=warning && node node_modules/.cache/sync.test.mjs",
     "test:track": "esbuild tests/track.test.ts --bundle --platform=node --format=esm --jsx=automatic --loader:.svg=empty --outfile=node_modules/.cache/track.test.mjs --log-level=warning && node node_modules/.cache/track.test.mjs",
     "test:db": "bash supabase/tests/run.sh",
-    "build:vercel": "tsc --noEmit && vite build --outDir ../idarati-app --emptyOutDir"
+    "build:vercel": "tsc --noEmit && vite build --outDir ../idarati-app --emptyOutDir",
+    "cap:sync": "npm run build && cap sync",
+    "cap:assets": "node tools/native-assets.mjs"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/ios": "^8.5.3",
+    "@capacitor/share": "^8.0.3",
     "@supabase/supabase-js": "2.49.4",
     "react": "18.3.1",
     "react-dom": "18.3.1",
@@ -21,6 +29,7 @@
     "write-excel-file": "4.1.1"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
     "@types/react": "18.3.12",
     "@types/react-dom": "18.3.1",
     "@vitejs/plugin-react": "4.3.4",

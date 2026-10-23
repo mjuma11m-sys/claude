@@ -3,6 +3,7 @@ import { useStore } from "../data/store";
 import { arrears, billsDue, budget, chequesDue, collection, docAlerts, fmt, isoDay, monthLabel, unitStatus } from "../data/logic";
 import { Sheet } from "../ui/kit";
 import logoUrl from "../../brand/logo-horizontal.svg";
+import { canPrint } from "../native";
 
 const Row = ({ k, v }: { k: ReactNode; v: ReactNode }) => <tr><td>{k}</td><td className="num">{v}</td></tr>;
 
@@ -38,7 +39,7 @@ export function MonthReportSheet({ open, onClose }: { open: boolean; onClose: ()
           {docs.length > 0 && <><h4>وثائق تحتاج تجديد</h4><table className="st-table mr-table"><tbody>{docs.map(({ doc, left }) => <Row key={doc.id} k={doc.title} v={left! < 0 ? "منتهية" : `باقي ${left} يوم`} />)}</tbody></table></>}
           <p className="muted small" style={{ margin: "10px 0 0" }}>من الدفعات والمصاريف المسجلة بإداراتي · قيد التطوير · نسخة تجريبية</p>
         </div>
-        <button className="btn press" onClick={() => window.print()}>طباعة / PDF</button>
+        {canPrint() ? <button className="btn press" onClick={() => window.print()}>طباعة / PDF</button> : <p className="muted small" style={{ margin: 0 }}>للطباعة أو PDF افتح إداراتي من المتصفح بالكمبيوتر.</p>}
       </div>
     </Sheet>
   );
