@@ -31,6 +31,7 @@ const ok = (c, m) => { if (c) { pass++; console.log('✅', m); } else { fail++; 
   ok(true, 'الشركة: إنجاز مهمة');
   await p.fill('#t_title', ''); await p.click('#taskForm button[type=submit]');
   ok((await p.textContent('#taskErr')).includes('اكتب المهمة'), 'الشركة: مهمة فاضية مرفوضة');
+  ok(await p.evaluate(() => [...document.querySelectorAll('input[type=date]')].every((i) => getComputedStyle(i).direction === 'ltr')), 'حقول التاريخ LTR (ما تنقلب «يوم/شهر/سنة»)');
   await p.screenshot({ path: OUT + '/adm_company.png', fullPage: true });
   // «الأقسام» (DW-065): الأضعف أول، والمؤشر الحي يطلع
   await go('depts');

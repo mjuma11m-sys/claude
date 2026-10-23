@@ -177,3 +177,5 @@ details.dept summary::-webkit-details-marker { display: none; }
 .d-body { padding: 0 14px 12px; display: grid; gap: 4px; color: var(--text-2, var(--bone)); font-size: 14px; }
 .d-body p { margin: 0; }
 .card h2 .mini { float: left; font-size: 12px; }
+/* حقول التاريخ (DW-065، من فحص Chrome): placeholder المتصفح «يوم/شهر/سنة» كان ينقلب حروفه تحت RTL ← الحقل نفسه LTR ويظل محاذي يمين */
+input[type="date"] { direction: ltr; text-align: right; }
