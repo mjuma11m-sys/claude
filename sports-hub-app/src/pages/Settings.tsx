@@ -7,6 +7,7 @@ import { getClubs } from '../data/source'
 import { useLoad } from '../data/useLoad'
 import { DEMO_KEYS } from '../lib/legal'
 import { ROLE_LABEL } from '../lib/roles'
+import { readPitch, setPitch } from '../lib/pitchmode'
 import { supabase } from '../lib/supabase'
 
 export function Settings() {
@@ -15,6 +16,7 @@ export function Settings() {
   const clubs = useLoad(getClubs)
   const [confirming, setConfirming] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [pitch, setPitchState] = useState(readPitch)
 
   async function eraseAll() {
     setError(null)
@@ -34,6 +36,17 @@ export function Settings() {
         <div className="flex items-center justify-between p-4">
           <span className="text-mute">الدور</span>
           <span>{user && ROLE_LABEL[user.role]}{demo && ' · تجريبي'}</span>
+        </div>
+        <div className="flex items-center justify-between gap-4 p-4">
+          <div>
+            <span id="pitch-label">وضع الملعب</span>
+            <p className="text-sm text-mute">خط أكبر، تباين أعلى، وأزرار أكبر للشمس وإمساك الجوال بيد وحدة. يُحفظ على هالجهاز فقط.</p>
+          </div>
+          <button
+            type="button" role="switch" aria-checked={pitch} aria-labelledby="pitch-label"
+            onClick={() => { setPitch(!pitch); setPitchState(!pitch) }}
+            className={`min-h-11 min-w-20 shrink-0 rounded-xl border px-4 text-sm font-bold ${pitch ? 'border-transparent bg-pulse text-pulse-ink' : 'border-white/15 text-ink'}`}
+          >{pitch ? 'مفعّل' : 'متوقف'}</button>
         </div>
         {user && !['club_admin', 'bfa_admin'].includes(user.role) && (
         <label className="flex items-center justify-between gap-4 p-4">

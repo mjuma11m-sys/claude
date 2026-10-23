@@ -158,6 +158,15 @@
 @keyframes grow { from { transform: scaleX(0); } to { transform: none; } }
 @keyframes bar-in { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
+/* Pitch mode (Settings): readable in sun, one-handed. Raises contrast and size only; same palette, same layout. */
+html[data-pitch] {
+  font-size: 112.5%;
+  --color-mute: #cfdbe7;
+  & .glass { border-color: rgb(255 255 255 / 0.28); }
+  & header .truncate { max-width: 10rem; }
+  & a, & button, & select, & [role="tab"] { min-height: 3rem; }
+}
+
 /* Print: the monthly report prints on white with no navigation, so it can go to the club board as a page. */
 @media print {
   aside, header, nav, .no-print, a[href="#main"] { display: none !important; }
