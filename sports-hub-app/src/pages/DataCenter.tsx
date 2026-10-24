@@ -1,0 +1,373 @@
+import { useRef, useState, type FormEvent } from 'react'
+import { Link } from 'react-router'
+import { useAuth } from '../auth/AuthProvider'
+import { DemoNote } from '../components/DemoNote'
+import { Icon } from '../components/Icon'
+import { PageTitle } from '../components/PageTitle'
+import { Failed, Loading } from '../components/States'
+import { getAudit, BY_TEXT, ENTITY_TEXT, OP_TEXT } from '../data/audit'
+import { getDevelopment } from '../data/development'
+import { getClubRoom } from '../data/source'
+import { addPlayers, getDataCenter, importSquad, recordAgreement, revokeAgreement, withdrawConsent, type DataCenter as DC } from '../data/datacenter'
+import { useLoad } from '../data/useLoad'
+import { vars } from '../lib/css'
+import { fmtDate, fmtDateTime, fmtMoney } from '../lib/format'
+import { DPA_TEMPLATE, DPA_VERSION } from '../lib/dpa-template'
+import { DEFAULT_POS, parseRoster, POSITION_SUGGESTIONS, ROSTER_ERROR_TEXT, validateRow, type RosterError, type RosterRow } from '../lib/roster-paste'
+import { ERROR_TEXT, FIELD_TEXT, parseSquadCsv, TEMPLATE_CSV, type CsvError, type ImportRow } from '../lib/squad-csv'
+
+const field = 'min-h-11 w-full rounded-xl border border-white/15 bg-white/5 px-3 text-start'
+const btn = 'min-h-11 rounded-xl bg-pulse px-5 text-sm font-bold text-pulse-ink disabled:opacity-60'
+const ghost = 'min-h-11 rounded-xl border border-white/15 px-5 text-sm'
+
+function download(name: string, text: string) {
+  const url = URL.createObjectURL(new Blob(['﻿' + text], { type: 'text/plain;charset=utf-8' }))
+  const a = Object.assign(document.createElement('a'), { href: url, download: name })
+  document.body.append(a); a.click(); a.remove(); URL.revokeObjectURL(url)
+}
+
+function Step({ n, title, state, children }: { n: number; title: string; state: 'done' | 'current' | 'locked'; children: React.ReactNode }) {
+  return (
+    <li aria-current={state === 'current' ? 'step' : undefined} className={`glass rise space-y-3 p-4 md:p-5 ${state === 'locked' ? 'opacity-60' : ''}`} style={vars({ '--i': n + 1 })}>
+      <h2 className="flex items-center gap-3 font-display text-2xl">
+        <span className={`grid size-9 shrink-0 place-items-center rounded-full text-lg ${state === 'done' ? 'bg-safe/20 text-safe' : state === 'current' ? 'bg-pulse/20 text-pulse' : 'bg-white/10 text-mute'}`}>
+          {state === 'done' ? <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path className="draw" d="M5 12.5l4.5 4.5L19 7.5" /></svg> : <span className="num">{n}</span>}
+        </span>
+        {title}
+        <span className="sr-only">{state === 'done' ? ' (تم)' : state === 'locked' ? ' (مقفول)' : ''}</span>
+      </h2>
+      {children}
+    </li>
+  )
+}
+
+function AgreementForm({ userId, onDone }: { userId: string; onDone: () => void }) {
+  const [v, setV] = useState({ signatory: '', title: '', reference: '', signedOn: new Date().toISOString().slice(0, 10), ack: false })
+  const [err, setErr] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const set = (k: keyof typeof v) => (e: { target: { value: string; checked?: boolean; type?: string } }) => setV({ ...v, [k]: k === 'ack' ? !!e.target.checked : e.target.value })
+  async function submit(e: FormEvent) {
+    e.preventDefault()
+    if (v.signatory.trim().length < 2 || v.title.trim().length < 2 || v.reference.trim().length < 3) return setErr('اكتب اسم الموقّع ومسماه ومرجع الوثيقة (3 أحرف على الأقل)')
+    if (v.signedOn > new Date().toISOString().slice(0, 10)) return setErr('تاريخ التوقيع ما يكون بالمستقبل')
+    if (!v.ack) return setErr('لازم تقرّ إن نسخة موقّعة محفوظة عندكم')
+    setErr(null); setBusy(true)
+    try { await recordAgreement(userId, { version: DPA_VERSION, signatory: v.signatory.trim(), title: v.title.trim(), reference: v.reference.trim(), signedOn: v.signedOn }); onDone() }
+    catch { setErr('ما انحفظت الاتفاقية. تأكد من الاتصال وحاول مرة ثانية') }
+    finally { setBusy(false) }
+  }
+  return (
+    <form onSubmit={submit} className="space-y-3">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="block space-y-1"><span className="text-xs text-mute">اسم الموقّع عن النادي</span><input id="signatory" value={v.signatory} onChange={set('signatory')} className={field} /></label>
+        <label className="block space-y-1"><span className="text-xs text-mute">المسمى</span><input id="title" value={v.title} onChange={set('title')} className={field} /></label>
+        <label className="block space-y-1"><span className="text-xs text-mute">مرجع الوثيقة الموقّعة</span><input id="reference" dir="ltr" value={v.reference} onChange={set('reference')} className={field} placeholder="DPA-2026-001" /></label>
+        <label className="block space-y-1"><span className="text-xs text-mute">تاريخ التوقيع</span><input id="signedOn" type="date" dir="ltr" value={v.signedOn} onChange={set('signedOn')} className={field} /></label>
+      </div>
+      <label className="flex min-h-11 items-start gap-3 text-sm"><input id="ack" type="checkbox" checked={v.ack} onChange={set('ack')} className="mt-1 size-5" /><span>أقرّ إن عندنا نسخة موقّعة من الاتفاقية، وإن مراجعتها القانونية تمّت عندنا. التطبيق يحفظ اسم الموقّع ومرجع الوثيقة، مو الوثيقة نفسها.</span></label>
+      {err && <p role="alert" className="text-sm text-crimson-ink">{err}</p>}
+      <div className="flex flex-wrap gap-2">
+        <button disabled={busy} className={btn}>سجّل الاتفاقية</button>
+        <button type="button" onClick={() => download('dpa-draft.txt', DPA_TEMPLATE)} className={ghost}>حمّل المسودة (للمراجعة القانونية)</button>
+      </div>
+    </form>
+  )
+}
+
+function ImportPanel({ onDone, demo }: { onDone: () => void; demo: boolean }) {
+  const [rows, setRows] = useState<ImportRow[] | null>(null)
+  const [errors, setErrors] = useState<CsvError[]>([])
+  const [fileName, setFileName] = useState('')
+  const [confirming, setConfirming] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [fail, setFail] = useState<string | null>(null)
+  const [done, setDone] = useState<number | null>(null)
+  const input = useRef<HTMLInputElement>(null)
+
+  async function pick(f: File | undefined) {
+    setFail(null); setDone(null); setConfirming(false)
+    if (!f) return
+    setFileName(f.name)
+    const r = parseSquadCsv(await f.text())
+    setRows(r.errors.length ? null : r.rows); setErrors(r.errors)
+  }
+  async function send() {
+    if (!rows) return
+    setBusy(true); setFail(null)
+    try {
+      const res = await importSquad(rows)
+      if (res.ok) { setDone(res.players); setRows(null); setConfirming(false); onDone() }
+      else { setErrors(res.errors); setRows(null); setConfirming(false) }
+    } catch (e) {
+      const m = e instanceof Error ? e.message : ''
+      setFail(m === 'dpa_required' ? 'الاتفاقية غير مسجّلة أو انسحبت. سجّلها بالخطوة 1 أول.' : 'ما تم الاستيراد. تأكد من الاتصال وحاول مرة ثانية.')
+    } finally { setBusy(false) }
+  }
+
+  const total = rows?.reduce((a, r) => a + r.monthly_wage_bhd, 0) ?? 0
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <input ref={input} id="csv" type="file" accept=".csv,text/csv,text/plain" className="sr-only" onChange={(e) => { void pick(e.target.files?.[0]); e.target.value = '' }} />
+        <button type="button" onClick={() => input.current?.click()} className={btn}>اختر ملف CSV</button>
+        <button type="button" onClick={() => download('squad-template.csv', TEMPLATE_CSV)} className={ghost}>حمّل القالب</button>
+        {fileName && <span className="num text-xs text-mute" dir="ltr">{fileName}</span>}
+      </div>
+      {errors.length > 0 && (
+        <div role="alert" className="space-y-2 rounded-xl border border-crimson/40 bg-crimson/10 p-3 text-sm">
+          <p className="font-bold">ما انقبل الملف. صحّح هالأخطاء وارفعه مرة ثانية (ما انكتب أي شي):</p>
+          <ul className="max-h-56 space-y-1 overflow-y-auto">
+            {errors.slice(0, 40).map((e, i) => (
+              <li key={i} className="flex gap-2"><span className="num shrink-0 text-crimson-ink">{e.row ? `سطر ${e.row + 1}` : 'الملف'}</span><span>{FIELD_TEXT[e.field] ?? e.field}: {ERROR_TEXT[e.code] ?? e.code}</span></li>
+            ))}
+          </ul>
+          {errors.length > 40 && <p className="text-xs text-mute">وفيه {errors.length - 40} أخطاء ثانية.</p>}
+        </div>
+      )}
+      {rows && (
+        <div className="space-y-3">
+          <p className="text-sm"><b className="num">{rows.length}</b> لاعب جاهزين للاستيراد · الرواتب <b className="num">{fmtMoney(total)}</b> / شهر</p>
+          <div className="max-h-64 overflow-auto rounded-xl border border-white/10">
+            <table className="w-full text-start text-sm">
+              <thead className="sticky top-0 bg-deep text-xs text-mute"><tr>{['الرقم', 'الاسم', 'المركز', 'الحالة', 'ينتهي', 'مرجع الموافقة'].map((h) => <th key={h} scope="col" className="px-3 py-2 text-start font-normal">{h}</th>)}</tr></thead>
+              <tbody className="divide-y divide-white/10">
+                {rows.map((r) => <tr key={r.num}><td className="num px-3 py-2">{r.num}</td><td className="px-3 py-2">{r.name}</td><td className="px-3 py-2">{r.pos}</td><td className="px-3 py-2">{r.status}</td><td className="num px-3 py-2">{fmtDate(r.ends_on)}</td><td className="num px-3 py-2" dir="ltr">{r.consent_ref}</td></tr>)}
+              </tbody>
+            </table>
+          </div>
+          {confirming ? (
+            <div className="space-y-3 rounded-xl border border-warn/40 bg-warn/10 p-3 text-sm">
+              <p>الاستيراد <b>يستبدل</b> تشكيلة ناديك الحالية كلها (اللاعبين وعقودهم وحالاتهم). {demo ? 'هذي تجربة داخل متصفحك فقط.' : 'ما يتراجع عنه إلا باستيراد ملف ثاني.'}</p>
+              <div className="flex flex-wrap gap-2"><button type="button" onClick={send} disabled={busy} className={btn}>أكّد الاستيراد</button><button type="button" onClick={() => setConfirming(false)} className={ghost}>رجوع</button></div>
+            </div>
+          ) : <button type="button" onClick={() => setConfirming(true)} className={btn}>استورد واستبدل التشكيلة</button>}
+        </div>
+      )}
+      {fail && <p role="alert" className="text-sm text-crimson-ink">{fail}</p>}
+      {done !== null && (
+        <p role="status" className="flex items-center gap-2 rounded-xl bg-safe/10 p-3 text-sm text-safe">
+          <svg viewBox="0 0 24 24" className="size-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path className="draw" d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+          انستوردوا <b className="num">{done}</b> لاعب. <Link to="/club" className="underline underline-offset-4">افتح غرفة النادي</Link>
+        </p>
+      )}
+    </div>
+  )
+}
+
+function Withdraw({ userId, onDone }: { userId: string; onDone: () => void }) {
+  const load = useLoad(() => getClubRoom(userId), [userId])
+  const [id, setId] = useState('')
+  const [confirming, setConfirming] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const squad = load.data?.data.squad ?? []
+  if (squad.length === 0) return null
+  const who = squad.find((p) => p.id === id)
+  async function go() {
+    setBusy(true); setErr(null)
+    try { await withdrawConsent(id); setId(''); setConfirming(false); load.reload(); onDone() } catch { setErr('ما انسحبت الموافقة. حاول مرة ثانية.') } finally { setBusy(false) }
+  }
+  return (
+    <article className="glass rise space-y-3 p-4 md:p-5" style={vars({ '--i': 6 })}>
+      <h2 className="font-display text-2xl">سحب موافقة لاعب</h2>
+      <p className="text-sm text-mute">لو لاعب سحب موافقته، نحذف راتبه وعقده وحالته من المنصة فوراً. يبقى سطر سجل بدون هوية.</p>
+      <label className="block space-y-1"><span className="text-xs text-mute">اللاعب</span>
+        <select id="withdraw" value={id} onChange={(e) => { setId(e.target.value); setConfirming(false) }} className={field}>
+          <option value="">اختر لاعب</option>
+          {squad.map((p) => <option key={p.id} value={p.id}>{p.num ?? '—'} · {p.name}</option>)}
+        </select></label>
+      {err && <p role="alert" className="text-sm text-crimson-ink">{err}</p>}
+      {who && (confirming ? (
+        <div className="space-y-3 rounded-xl border border-crimson/40 bg-crimson/10 p-3 text-sm">
+          <p>بنحذف <b>{who.name}</b> وكل بياناته من المنصة. ما يتراجع عنه.</p>
+          <div className="flex flex-wrap gap-2"><button type="button" onClick={go} disabled={busy} className="min-h-11 rounded-xl bg-crimson px-5 text-sm font-bold text-white disabled:opacity-60">احذف بياناته</button><button type="button" onClick={() => setConfirming(false)} className={ghost}>رجوع</button></div>
+        </div>
+      ) : <button type="button" onClick={() => setConfirming(true)} className={ghost}>اسحب موافقته</button>)}
+    </article>
+  )
+}
+
+/* Adds players to the squad by pasting a list or one at a time: number, name, position. Nothing leaves the device until "add". The club writes the consent reference itself. */
+function RosterPanel({ existing, onDone }: { existing: number[]; onDone: () => void }) {
+  const [text, setText] = useState('')
+  const [staged, setStaged] = useState<RosterRow[]>([])
+  const [errors, setErrors] = useState<(RosterError & { line: string })[]>([])
+  const [ref, setRef] = useState('')
+  const [one, setOne] = useState({ num: '', name: '', pos: '' })
+  const [oneErr, setOneErr] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [fail, setFail] = useState<string | null>(null)
+  const [done, setDone] = useState<number | null>(null)
+  const taken = () => [...existing, ...staged.map((r) => r.num)]
+
+  function read() {
+    setDone(null); setFail(null)
+    const r = parseRoster(text, taken())
+    const lines = text.split(/\r?\n/).filter((l) => l.trim())
+    const bad = r.errors.map((e) => ({ ...e, line: lines[e.row - 1] ?? '' }))
+    setStaged((s) => [...s, ...r.rows]); setErrors(bad)
+    setText(bad.map((e) => e.line).join('\n')) // only the lines that did not read stay, to fix and read again
+  }
+  function addOne(e: FormEvent) {
+    e.preventDefault(); setDone(null); setFail(null)
+    const row = { num: Number(one.num), name: one.name.replace(/\s+/g, ' ').trim(), pos: one.pos.trim() || DEFAULT_POS }
+    const code = validateRow(row, taken()) ?? (staged.length + existing.length >= 60 ? 'too_many' : null)
+    if (code) { setOneErr(ROSTER_ERROR_TEXT[code]); return }
+    setOneErr(null); setStaged((s) => [...s, { ...row, guessed: !one.pos.trim() }]); setOne({ num: '', name: '', pos: '' })
+  }
+  async function send() {
+    setBusy(true); setFail(null)
+    try {
+      const res = await addPlayers(staged.map(({ num, name, pos }) => ({ num, name, pos })), ref)
+      if (res.ok) { setDone(res.players); setStaged([]); setRef(''); onDone() }
+      else setFail(res.errors.map((e) => `${e.row ? 'سطر ' + e.row + ': ' : ''}${ERROR_TEXT[e.code] ?? e.code}`).join('، '))
+    } catch (e) {
+      setFail((e instanceof Error ? e.message : '') === 'dpa_required' ? 'الاتفاقية غير مسجّلة أو انسحبت. سجّلها بالخطوة 1 أول.' : 'ما انضافوا. تأكد من الاتصال وحاول مرة ثانية.')
+    } finally { setBusy(false) }
+  }
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <label htmlFor="rosterText" className="block text-sm font-bold">الصق القائمة (سطر لكل لاعب)</label>
+        <textarea id="rosterText" dir="rtl" rows={6} value={text} onChange={(e) => setText(e.target.value)} placeholder={'7 خالد المحمد مهاجم\n10 سالم العلي وسط\n1 يوسف حارس'} className={`${field} py-2`} />
+        <p className="text-xs text-mute">من واتساب أو إكسل أو ملف. يقرأ الرقم والاسم والمركز بأي فاصل. <b className="text-ink">عندك صورة أو PDF؟</b> حدّد النص منها بجوالك (Live Text بالآيفون، Google Lens بالأندرويد) وانسخه والصقه هنا: ما نرفع صور لأي سيرفر.</p>
+        <button type="button" onClick={read} disabled={!text.trim()} className={btn}>اقرأ القائمة</button>
+      </div>
+      {errors.length > 0 && (
+        <div role="alert" className="space-y-1 rounded-xl border border-warn/40 bg-warn/10 p-3 text-sm">
+          <p className="font-bold">بعض الأسطر ما انقرت. الباقي انضاف للمعاينة، وهذي بقيت بالمربع فوق عشان تصحّحها وتقرأها مرة ثانية:</p>
+          <ul className="space-y-0.5">{errors.map((e, i) => <li key={i}><bdi className="font-bold">{e.line}</bdi>: {ROSTER_ERROR_TEXT[e.code]}</li>)}</ul>
+        </div>
+      )}
+      <form onSubmit={addOne} className="space-y-2" aria-label="إضافة لاعب">
+        <p className="text-sm font-bold">أو أضف لاعباً</p>
+        <div className="grid grid-cols-[5rem_minmax(0,1fr)] gap-2 sm:grid-cols-[5rem_minmax(0,1fr)_10rem_auto]">
+          <input aria-label="رقم القميص" inputMode="numeric" dir="ltr" placeholder="رقم" value={one.num} onChange={(e) => setOne({ ...one, num: e.target.value.replace(/\D/g, '').slice(0, 2) })} className={field} />
+          <input aria-label="اسم اللاعب" placeholder="الاسم" value={one.name} onChange={(e) => setOne({ ...one, name: e.target.value })} className={field} />
+          <input aria-label="المركز" list="posList" placeholder="المركز" value={one.pos} onChange={(e) => setOne({ ...one, pos: e.target.value })} className={`${field} col-span-2 sm:col-span-1`} />
+          <button className={`${ghost} col-span-2 sm:col-span-1`}>أضف للمعاينة</button>
+        </div>
+        <datalist id="posList">{POSITION_SUGGESTIONS.map((p) => <option key={p} value={p} />)}</datalist>
+        {oneErr && <p role="alert" className="text-sm text-crimson-ink">{oneErr}</p>}
+      </form>
+      {staged.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-sm"><b className="num">{staged.length}</b> لاعب جاهزين للإضافة. راجع المعاينة: <span className="text-mute">«لاعب» يعني ما عرفنا المركز.</span></p>
+          <div className="max-h-64 overflow-auto rounded-xl border border-white/10">
+            <table className="w-full text-start text-sm">
+              <thead className="sticky top-0 bg-deep text-xs text-mute"><tr>{['الرقم', 'الاسم', 'المركز', ''].map((h, i) => <th key={i} scope="col" className="px-3 py-2 text-start font-normal">{h}</th>)}</tr></thead>
+              <tbody className="divide-y divide-white/10">
+                {staged.map((r) => (
+                  <tr key={r.num}><td className="num px-3 py-2">{r.num}</td><td className="px-3 py-2">{r.name}</td><td className={`px-3 py-2 ${r.guessed ? 'text-warn' : ''}`}>{r.pos}</td>
+                    <td className="px-3 py-1"><button type="button" onClick={() => setStaged((s) => s.filter((x) => x.num !== r.num))} aria-label={`احذف ${r.name} من المعاينة`} className="min-h-11 rounded-lg px-3 text-xs text-crimson-ink">احذف</button></td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <label className="block space-y-1"><span className="text-xs text-mute">مرجع الموافقة (تكتبه أنت: رقم نموذج الموافقة أو اسم ملفه)</span><input id="rosterRef" dir="ltr" value={ref} onChange={(e) => setRef(e.target.value)} className={field} /></label>
+          <p className="text-xs text-mute">نضيف الأسماء للتشكيلة ولا نحذف أحداً. بدون رواتب ولا عقود: تضيفها بعدين من الاستيراد.</p>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={send} disabled={busy || ref.trim().length < 3} className={btn}>أضف {staged.length} لاعب</button>
+            <button type="button" onClick={() => { setStaged([]); setErrors([]) }} className={ghost}>امسح المعاينة</button>
+          </div>
+        </div>
+      )}
+      {fail && <p role="alert" className="text-sm text-crimson-ink">{fail}</p>}
+      {done !== null && <p role="status" className="text-sm text-safe">انضاف <b className="num">{done}</b> لاعب. تلقاهم بالحضور والتشكيلة والتطوير.</p>}
+    </div>
+  )
+}
+
+/* Internal trail of what changed, never of what it contained. Collapsed: it is for the day something looks wrong. */
+function AuditPanel({ userId }: { userId: string }) {
+  const load = useLoad(() => getAudit(userId), [userId])
+  return (
+    <details className="glass rise p-4 md:p-5" style={vars({ '--i': 5 })}>
+      <summary className="min-h-11 cursor-pointer font-display text-2xl">سجل العمليات (داخلي)</summary>
+      <div className="space-y-2 pt-2">
+        <p className="text-xs text-mute">يسجّل من غيّر أي جدول ومتى وكم صف، <b>بدون أسماء ولا قيم</b>. سجل داخلي للنادي مو دليل قانوني: احتفظ بنسخ احتياطية.</p>
+        {load.loading && !load.data ? <p className="text-sm text-mute">يحمّل…</p> : !load.data ? <p className="text-sm text-crimson-ink">ما قدرنا نقرأ السجل.</p>
+          : !load.data.enabled ? <p className="text-sm text-mute">السجل يشتغل مع قاعدة البيانات الحقيقية. التجربة داخل متصفحك ما تكتب سجل.</p>
+          : load.data.rows.length === 0 ? <p className="text-sm text-mute">ما فيه عمليات مسجلة.</p>
+          : <ul className="divide-y divide-white/10" data-audit>{load.data.rows.map((r) => <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm"><span>{OP_TEXT[r.op]} · {ENTITY_TEXT[r.entity] ?? r.entity} · <span className="num">{r.n}</span></span><span className="text-xs text-mute">{BY_TEXT[r.by]} · <span className="num">{fmtDateTime(r.at)}</span></span></li>)}</ul>}
+      </div>
+    </details>
+  )
+}
+
+export function DataCenter() {
+  const { user } = useAuth()
+  const load = useLoad<DC>(() => getDataCenter(user!.id), [user?.id])
+  const [revoking, setRevoking] = useState(false)
+  const squad = useLoad(async () => (await getDevelopment(user!.id)).data.players.map((p) => p.num).filter((n): n is number => n !== null), [user?.id])
+  if (load.error instanceof Error && load.error.message === 'no-club') {
+    return <section className="space-y-4"><PageTitle>مركز البيانات</PageTitle><p className="glass p-5 text-mute">حسابك ما هو مربوط بنادي بعد.</p></section>
+  }
+  if (load.loading && !load.data) return <Loading variant="home" />
+  if (!load.data) return <Failed retry={load.reload} />
+  const dc = load.data
+  const demo = !dc.connected
+  const s1 = dc.agreement ? 'done' : 'current'
+  const s2 = !dc.agreement ? 'locked' : dc.players > 0 ? 'done' : 'current'
+  const s3 = !dc.agreement ? 'locked' : dc.players > 0 ? 'done' : 'current'
+
+  return (
+    <section className="space-y-5 md:space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <PageTitle>مركز البيانات</PageTitle>
+        <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs ${demo ? 'bg-warn/15 text-warn' : 'bg-safe/15 text-safe'}`}>
+          <span aria-hidden className={`size-2 rounded-full ${demo ? 'bg-warn' : 'bg-safe'}`} />
+          {demo ? 'تجربة داخل متصفحك: ما فيه قاعدة بيانات متصلة' : 'متصل بقاعدة البيانات'}
+        </span>
+      </div>
+      <p className="glass rise flex items-start gap-3 p-4 text-sm" style={vars({ '--i': 1 })}>
+        <Icon name="data" className="mt-0.5 size-5 shrink-0 text-pulse" />
+        <span>ثلاث خطوات قبل أي بيانات حقيقية. <b>القاعدة نفسها ترفض الاستيراد</b> بدون اتفاقية مسجّلة ومرجع موافقة لكل لاعب، مو بس الواجهة.</span>
+      </p>
+
+      <ol className="space-y-4">
+        <Step n={1} title="اتفاقية معالجة البيانات" state={s1}>
+          {dc.agreement ? (
+            <>
+              <dl className="grid gap-3 text-sm sm:grid-cols-2">
+                <div><dt className="text-xs text-mute">مرجع الوثيقة</dt><dd className="num font-bold" dir="ltr">{dc.agreement.reference}</dd></div>
+                <div><dt className="text-xs text-mute">الموقّع</dt><dd className="font-bold">{dc.agreement.signatory} · {dc.agreement.title}</dd></div>
+                <div><dt className="text-xs text-mute">تاريخ التوقيع</dt><dd className="num font-bold">{fmtDate(dc.agreement.signedOn)}</dd></div>
+                <div><dt className="text-xs text-mute">نسخة المسودة</dt><dd className="num font-bold" dir="ltr">{dc.agreement.version}</dd></div>
+              </dl>
+              {revoking ? (
+                <div className="space-y-3 rounded-xl border border-crimson/40 bg-crimson/10 p-3 text-sm">
+                  <p>سحب الاتفاقية يوقف أي استيراد جديد، {demo ? 'ويمسح التجربة من متصفحك.' : 'وما يرجع يتفعّل؛ تحتاج تسجّل اتفاقية جديدة.'}</p>
+                  <div className="flex flex-wrap gap-2"><button type="button" onClick={async () => { await revokeAgreement(user!.id); setRevoking(false); load.reload() }} className="min-h-11 rounded-xl bg-crimson px-5 text-sm font-bold text-white">اسحب الاتفاقية</button><button type="button" onClick={() => setRevoking(false)} className={ghost}>رجوع</button></div>
+                </div>
+              ) : <button type="button" onClick={() => setRevoking(true)} className={ghost}>اسحب الاتفاقية</button>}
+            </>
+          ) : <AgreementForm userId={user!.id} onDone={load.reload} />}
+        </Step>
+
+        <Step n={2} title="موافقات اللاعبين" state={s2}>
+          <p className="text-sm">كل لاعب يوقّع نموذج موافقة على معالجة بياناته (العقد والراتب وحالة الجاهزية). رقم النموذج أو اسم ملفه يروح بعمود <bdi dir="ltr" className="num">consent_ref</bdi> لكل لاعب. ما نخزّن النماذج، بس مرجعها.</p>
+          <ul className="list-disc space-y-1 ps-5 text-sm text-mute">
+            <li>الحالة: جاهز، مشكوك، مصاب، موقوف فقط. <b className="text-ink">ما نقبل ملاحظات صحية ولا تشخيصات.</b></li>
+            <li>أقصى 60 لاعب بالملف، وأقصى 200KB.</li>
+            <li>أي صف بدون مرجع موافقة يرفض الملف كله.</li>
+          </ul>
+        </Step>
+
+        <Step n={3} title="استيراد التشكيلة والعقود" state={s3}>
+          {dc.agreement ? <ImportPanel demo={demo} onDone={load.reload} /> : <p className="text-sm text-mute">سجّل الاتفاقية بالخطوة 1 أول.</p>}
+          {dc.players > 0 && <p className="text-xs text-mute">التشكيلة الحالية: <span className="num">{dc.players}</span> لاعب{dc.real ? ' (بيانات حقيقية)' : ' (تجربة)'}{dc.withdrawals > 0 && <> · موافقات انسحبت: <span className="num">{dc.withdrawals}</span></>}</p>}
+        </Step>
+      </ol>
+
+      <article className="glass rise space-y-3 p-4 md:p-5" style={vars({ '--i': 4 })} aria-label="أضف لاعبين">
+        <h2 className="font-display text-2xl">أضف لاعبين</h2>
+        {dc.agreement ? <RosterPanel existing={squad.data ?? []} onDone={() => { load.reload(); squad.reload() }} /> : <p className="text-sm text-mute">سجّل الاتفاقية بالخطوة 1 أول، وبعدها تقدر تلصق قائمة لاعبينك أو تضيفهم واحد واحد.</p>}
+      </article>
+
+      {dc.agreement && dc.players > 0 && <Withdraw userId={user!.id} onDone={load.reload} />}
+      <AuditPanel userId={user!.id} />
+      {demo && <DemoNote text="* تجربة داخل متصفحك فقط: ما ينرفع شي لأي سيرفر، ويتمسح مع «احذف بياناتي». الأندية خيالية." />}
+    </section>
+  )
+}

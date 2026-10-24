@@ -2,7 +2,7 @@ import { createContext, use, useEffect, useState, type ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
 import { isRole, type Role } from '../lib/roles'
 
-export type User = { id: string; email?: string; role: Role }
+type User = { id: string; email?: string; role: Role }
 type AuthState = {
   user: User | null
   loading: boolean
@@ -12,7 +12,7 @@ type AuthState = {
 }
 
 const AuthContext = createContext<AuthState | null>(null)
-const DEMO_KEY = 'sh.demoRole'
+const DEMO_KEY = 'sh.demoRole' // listed in lib/legal.ts DEMO_KEYS for erasure
 
 function readDemoRole(): Role | null {
   try {

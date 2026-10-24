@@ -1,3 +1,3 @@
-export function DemoNote() {
-  return <p className="text-xs text-mute">* بيانات تجريبية للعرض، مو نتائج حقيقية</p>
+export function DemoNote({ text = '* بيانات تجريبية للعرض، مو نتائج حقيقية' }: { text?: string }) {
+  return <p className="text-xs text-mute">{text}</p>
 }

@@ -11,15 +11,25 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b",
-    "test": "vitest run"
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "verify": "tsc -b && vitest run && node scripts/check-columns.mjs && vite build && node scripts/budget.mjs && playwright test",
+    "import:standings": "node scripts/import-standings.mjs",
+    "setup:supabase": "node scripts/supabase-setup.mjs",
+    "test:login-real": "VITE_SUPABASE_URL=http://localhost:4400 VITE_SUPABASE_ANON_KEY=test-key VITE_PRIVACY_CONTACT=privacy@example.com VITE_AUTH_GOOGLE=true VITE_AUTH_APPLE=true vite build --outDir dist-real && node scripts/login-real.test.cjs",
+    "check:columns": "node scripts/check-columns.mjs"
   },
   "dependencies": {
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/tajawal": "^5.3.0",
     "@supabase/supabase-js": "2.117.3",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-router": "7.18.4"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.56.1",
     "@tailwindcss/vite": "4.3.3",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
