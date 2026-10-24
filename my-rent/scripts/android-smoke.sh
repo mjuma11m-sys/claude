@@ -41,8 +41,8 @@ SOCK=$(adb shell cat /proc/net/unix | grep -o 'webview_devtools_remote_[0-9]*' |
 measured=0
 if [ -n "$SOCK" ] && [ "$BAR" -gt 0 ]; then
   adb forward tcp:9333 "localabstract:$SOCK" >/dev/null
-  WV_TOP=$( [ "$dumped" = 1 ] && python3 -c "import re,sys;m=re.search(r'class=\"android.webkit.WebView\"[^>]*bounds=\"\[\d+,(\d+)\]',open(sys.argv[1]).read());print(m.group(1) if m else 0)" "$OUT/ui.xml" || echo 0)
-  WV_TOP="$WV_TOP" node scripts/android-webview.mjs 9333 "$BAR" "$(adb shell wm density | tr -dc '0-9\n' | tail -1)" && measured=1 || exit 1
+  SCREEN_H=$(adb shell wm size | grep -o '[0-9]*x[0-9]*' | tail -1 | cut -dx -f2)
+  SCREEN_H="$SCREEN_H" node scripts/android-webview.mjs 9333 "$BAR" "$(adb shell wm density | tr -dc '0-9\n' | tail -1)" && measured=1 || exit 1
 fi
 if [ "$measured" = 1 ]; then :
 elif [ "$dumped" = 1 ]; then
