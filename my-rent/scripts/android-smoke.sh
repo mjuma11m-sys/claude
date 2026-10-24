@@ -36,7 +36,16 @@ for try in 1 2 3; do
   if adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 && adb pull /sdcard/ui.xml "$OUT/ui.xml" >/dev/null 2>&1; then dumped=1; break; fi
   sleep 3
 done
-if [ "$dumped" = 1 ]; then
+BAR=$(python3 -c "import re,sys;m=re.findall(r'type=statusBars[^\n]*?frame=\[\d+,\d+\]\[\d+,(\d+)\]',open(sys.argv[1]).read());print(max(map(int,m)) if m else 0)" "$OUT/window.txt")
+SOCK=$(adb shell cat /proc/net/unix | grep -o 'webview_devtools_remote_[0-9]*' | head -1 || true)
+measured=0
+if [ -n "$SOCK" ] && [ "$BAR" -gt 0 ]; then
+  adb forward tcp:9333 "localabstract:$SOCK" >/dev/null
+  WV_TOP=$( [ "$dumped" = 1 ] && python3 -c "import re,sys;m=re.search(r'class=\"android.webkit.WebView\"[^>]*bounds=\"\[\d+,(\d+)\]',open(sys.argv[1]).read());print(m.group(1) if m else 0)" "$OUT/ui.xml" || echo 0)
+  WV_TOP="$WV_TOP" node scripts/android-webview.mjs 9333 "$BAR" "$(adb shell wm density | tr -dc '0-9\n' | tail -1)" && measured=1 || exit 1
+fi
+if [ "$measured" = 1 ]; then :
+elif [ "$dumped" = 1 ]; then
   python3 scripts/android-insets.py "$OUT/ui.xml" "$OUT/window.txt" "$(adb shell wm density | tr -dc '0-9\n' | tail -1)"
 else
   echo "⚠️ ما قدرنا نقرا شجرة الواجهة (uiautomator) — شيك على launch.png بعينك"

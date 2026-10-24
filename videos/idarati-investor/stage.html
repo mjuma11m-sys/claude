@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>إداراتي · فيديو للشركاء</title>
+<!-- فيديو إداراتي للمستثمر/الشريك (الديوانية 2026-10-24): 50 ثانية، 1920×1080، render(t) يرسم الفريم (Playwright يصوّره).
+     صراحة: كل ميزة هني شغالة اليوم، اللقطات عليها «* لقطات ببيانات تجريبية»، وبدون تاريخ إطلاق -->
+<style>
+@font-face{font-family:Plex;src:url(../hayati-promo-v2/IBMPlexSansArabic-Bold.ttf);font-weight:700}
+@font-face{font-family:Plex;src:url(../hayati-promo-v2/IBMPlexSansArabic-Regular.ttf);font-weight:400}
+:root{--night:#14213A;--night2:#1B2B4A;--gold:#C9963A;--sand:#F5F2EB;--muted:#BFC6D4}
+*{box-sizing:border-box;margin:0}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--night)}
+body{font-family:Plex,sans-serif;color:var(--sand)}
+#world{position:absolute;inset:0;overflow:hidden;background:radial-gradient(circle at 75% 30%,#22345A,#14213A 62%)}
+.pat{position:absolute;inset:-60px;opacity:.07;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Cpath d='M48 10 L56 40 L86 48 L56 56 L48 86 L40 56 L10 48 L40 40Z' fill='none' stroke='%23C9963A' stroke-width='2'/%3E%3C/svg%3E")}
+.scene{position:absolute;inset:0;opacity:0}
+.abs{position:absolute}
+.h{font-weight:700;line-height:1.15}
+.gold{color:var(--gold)}
+.muted{color:var(--muted)}
+/* المشهد 1: الفوضى */
+.chip{position:absolute;padding:22px 30px;border-radius:22px;font-size:38px;font-weight:700;box-shadow:0 20px 50px rgba(0,0,0,.35);white-space:nowrap}
+.wa{background:#DCF8C6;color:#173A26}
+.paper{background:#FBF6E8;color:#3A3226;border:2px dashed #C8BBA0}
+.xl{background:#fff;color:#1E5E3A;font-family:Plex,monospace}
+/* الجوال */
+.phone{position:absolute;width:400px;height:866px;border-radius:58px;background:#0A1120;padding:12px;box-shadow:0 50px 100px rgba(0,0,0,.45),0 0 0 2px #26344F}
+.phone img{width:100%;height:100%;object-fit:cover;object-position:top;border-radius:46px;display:block}
+.feat{position:absolute;display:flex;align-items:center;gap:22px;background:var(--night2);border:1px solid #2A3D63;border-radius:26px;padding:28px 36px;font-size:42px;font-weight:700;white-space:nowrap}
+.feat i{width:22px;height:22px;border-radius:50%;background:var(--gold);flex:none}
+.note{position:absolute;left:60px;bottom:40px;font-size:26px;color:#9AA4B6;opacity:0}
+.pill{border:2px solid var(--gold);color:var(--gold);border-radius:999px;padding:10px 30px;font-size:34px;display:inline-block}
+</style>
+</head>
+<body>
+<div id="world">
+  <div class="pat" id="pat"></div>
+
+  <!-- 1) المشكلة -->
+  <div class="scene" id="s1">
+    <div class="chip paper" id="c1" style="left:180px;top:170px">دفتر: شقة 2 — دفع؟</div>
+    <div class="chip wa" id="c2" style="left:1220px;top:150px">«الإيجار وصل؟» 🤔</div>
+    <div class="chip xl" id="c3" style="left:260px;top:770px">Sheet1 · B7 = ؟؟</div>
+    <div class="chip wa" id="c4" style="left:1180px;top:790px">«العقد خلص الشهر الماضي!»</div>
+    <div class="chip paper" id="c5" style="left:820px;top:60px">شيك 000505 · متى؟</div>
+    <div class="abs h" id="q" style="left:0;right:0;top:420px;text-align:center;font-size:120px">مين دفع الإيجار هالشهر؟</div>
+  </div>
+
+  <!-- 2) الشعار -->
+  <div class="scene" id="s2">
+    <svg class="abs" id="logo" viewBox="72 72 368 368" style="left:810px;top:170px;width:300px;height:300px">
+      <g transform="translate(256 256) scale(1.1) translate(-256 -265)">
+        <rect id="lg-cap" x="178" y="112" width="156" height="30" rx="6" fill="#C9963A"/>
+        <rect id="lg-body" x="194" y="142" width="124" height="256" fill="#C9963A"/>
+        <rect x="212" y="164" width="18" height="96" rx="5" fill="#14213A"/><rect x="247" y="164" width="18" height="96" rx="5" fill="#14213A"/><rect x="282" y="164" width="18" height="96" rx="5" fill="#14213A"/>
+        <path d="M234 398 V344 Q234 316 256 308 Q278 316 278 344 V398 Z" fill="#14213A"/>
+        <rect id="lg-base" x="146" y="394" width="220" height="24" rx="10" fill="#C9963A"/>
+      </g>
+    </svg>
+    <div class="abs h" id="name" style="left:0;right:0;top:500px;text-align:center;font-size:150px">إداراتي</div>
+    <div class="abs" id="tag" style="left:0;right:0;top:700px;text-align:center;font-size:54px">يرتّب إيجارات العائلة وعقاراتها</div>
+    <div class="abs gold" id="by" style="left:0;right:0;top:800px;text-align:center;font-size:30px;letter-spacing:8px;direction:ltr">IDARATI · BY WADQA</div>
+  </div>
+
+  <!-- 3–5) المنتج -->
+  <div class="scene" id="s3">
+    <div class="phone" id="ph"><img id="shot" src="../../docs/company/store/iphone-1-home.png" alt=""></div>
+    <div class="abs" id="t3" style="right:150px;top:330px;width:1000px">
+      <div class="gold" id="t3e" style="font-size:36px;margin-bottom:18px">التحصيل الشهري</div>
+      <div class="h" id="t3h" style="font-size:96px">مين دفع ومين تأخر</div>
+      <div class="muted" id="t3p" style="font-size:46px;margin-top:22px">كل وحدة: مدفوعة، مستحقة، أو متأخرة — بشاشة وحدة</div>
+    </div>
+  </div>
+
+  <!-- 6) الميزات -->
+  <div class="scene" id="s6">
+    <div class="abs h" id="t6" style="right:150px;top:150px;font-size:84px">وكل اللي حول الإيجار</div>
+    <div class="feat" id="f1" style="right:150px;top:340px"><i></i>إيصال بالواتساب لكل دفعة</div>
+    <div class="feat" id="f2" style="right:150px;top:500px"><i></i>الشيكات المؤجلة ومواعيدها</div>
+    <div class="feat" id="f3" style="right:150px;top:660px"><i></i>فاتورة ضريبية للمحلات المسجّلة</div>
+    <div class="feat" id="f4" style="left:150px;top:420px"><i></i>حساب عائلي بصلاحيات</div>
+    <div class="feat" id="f5" style="left:150px;top:580px"><i></i>يشتغل بدون نت + Excel</div>
+  </div>
+
+  <!-- 7) الثقة -->
+  <div class="scene" id="s7">
+    <svg class="abs" id="lock" viewBox="0 0 120 140" style="left:885px;top:170px;width:150px;height:175px"><rect x="10" y="58" width="100" height="78" rx="16" fill="#C9963A"/><path d="M30 60 V40 a30 30 0 0 1 60 0 V60" fill="none" stroke="#C9963A" stroke-width="14"/><circle cx="60" cy="96" r="11" fill="#14213A"/></svg>
+    <div class="abs h" id="t7" style="left:0;right:0;top:400px;text-align:center;font-size:104px">بيانات العائلة للعائلة</div>
+    <div class="abs muted" id="t7a" style="left:0;right:0;top:570px;text-align:center;font-size:48px">بدون حساب: كل شي على جوالك بس</div>
+    <div class="abs muted" id="t7b" style="left:0;right:0;top:650px;text-align:center;font-size:48px">بدون إعلانات ولا تتبّع · ولا نطلب الرقم الشخصي</div>
+  </div>
+
+  <!-- 8) الختام -->
+  <div class="scene" id="s8">
+    <svg class="abs" id="logo2" viewBox="72 72 368 368" style="left:885px;top:110px;width:150px;height:150px"><g transform="translate(256 256) scale(1.1) translate(-256 -265)"><rect x="178" y="112" width="156" height="30" rx="6" fill="#C9963A"/><rect x="194" y="142" width="124" height="256" fill="#C9963A"/><rect x="212" y="164" width="18" height="96" rx="5" fill="#14213A"/><rect x="247" y="164" width="18" height="96" rx="5" fill="#14213A"/><rect x="282" y="164" width="18" height="96" rx="5" fill="#14213A"/><path d="M234 398 V344 Q234 316 256 308 Q278 316 278 344 V398 Z" fill="#14213A"/><rect x="146" y="394" width="220" height="24" rx="10" fill="#C9963A"/></g></svg>
+    <div class="abs muted" id="t8a" style="left:0;right:0;top:300px;text-align:center;font-size:44px">ويب · آيفون · أندرويد</div>
+    <div class="abs h" id="t8b" style="left:0;right:0;top:390px;text-align:center;font-size:96px">نبحث عن شريك لأول 10 عائلات</div>
+    <div class="abs" id="t8c" style="left:0;right:0;top:560px;text-align:center"><span class="pill">قيد التطوير · نسخة تجريبية</span></div>
+    <div class="abs" id="t8d" style="left:0;right:0;top:690px;text-align:center;font-size:50px">محمد جمعة · مؤسس WADQA</div>
+    <div class="abs gold" id="t8e" style="left:0;right:0;top:790px;text-align:center;font-size:30px;letter-spacing:8px;direction:ltr">IDARATI · BY WADQA</div>
+  </div>
+
+  <div class="note" id="note">* لقطات ببيانات تجريبية</div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const clamp = (x) => Math.max(0, Math.min(1, x));
+const k = (t, a, b) => clamp((t - a) / (b - a));
+const out = (x) => 1 - Math.pow(1 - x, 3);            // ease-out cubic
+const inout = (x) => x < .5 ? 4*x*x*x : 1 - Math.pow(-2*x + 2, 3) / 2;
+const back = (x) => { const c = 1.7; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const set = (el, o, tf = "") => { el.style.opacity = o; el.style.transform = tf; };
+/** مشهد يظهر من a إلى b مع دخول وخروج 0.5ث */
+const win = (t, a, b, f = .5) => Math.min(k(t, a, a + f), 1 - k(t, b - f, b));
+/** عنصر يطلع (يرتفع ويظهر) عند a */
+const rise = (el, t, a, d = .7, dy = 50) => { const p = out(k(t, a, a + d)); set(el, p, `translateY(${(1 - p) * dy}px)`); };
+
+const SHOTS = ["iphone-1-home.png", "iphone-4-track.png", "iphone-5-docs.png"];
+const COPY = [
+  ["التحصيل الشهري", "مين دفع ومين تأخر", "كل وحدة: مدفوعة، مستحقة، أو متأخرة — بشاشة وحدة"],
+  ["متابعة الإيجار", "المسدد والمتبقي لكل مستأجر", "والدفعات المقدمة، وتصدير Excel بضغطة"],
+  ["العقود والوثائق", "تنبيه قبل ما يخلص العقد", "والسجل التجاري والتأمين قبل 30 يوم، وتذكير من الجوال (اختياري)"],
+];
+let lastShot = -1;
+
+window.render = (t) => {
+  $("pat").style.transform = `translate(${-t * 6}px, ${-t * 3}px)`;
+  // 1) 0–5: الفوضى ← السؤال
+  const s1 = $("s1"); s1.style.opacity = 1 - k(t, 4.4, 5);
+  ["c1", "c2", "c3", "c4", "c5"].forEach((id, i) => {
+    const a = .1 + i * .18, p = out(k(t, a, a + .6));
+    const wob = Math.sin(t * 1.6 + i * 1.3) * 10, rot = Math.sin(t * .9 + i) * 4 + (i % 2 ? 5 : -5);
+    const flee = inout(k(t, 3.8, 4.8)) * (i % 2 ? 600 : -600);
+    set($(id), p * (1 - k(t, 4.2, 4.8)), `translate(${flee}px, ${wob}px) rotate(${rot}deg) scale(${.8 + .2 * p})`);
+  });
+  { const p = out(k(t, .9, 1.6)); set($("q"), p, `scale(${.92 + .08 * p})`); }
+
+  // 2) 5–9.5: الشعار
+  $("s2").style.opacity = win(t, 4.9, 9.6);
+  { const p = back(k(t, 5.1, 5.9)); set($("logo"), clamp(k(t, 5.1, 5.4)), `translateY(${(1 - p) * 120}px) scale(${.6 + .4 * p})`); }
+  rise($("name"), t, 5.8); rise($("tag"), t, 6.3); rise($("by"), t, 6.8, .6, 20);
+
+  // 3–5) 9.5–31: المنتج — 3 لقطات، 7ث لكل وحدة
+  const s3 = $("s3"); s3.style.opacity = win(t, 9.5, 31);
+  const idx = t < 16.8 ? 0 : t < 23.9 ? 1 : 2, st = [9.5, 16.8, 23.9][idx];
+  if (idx !== lastShot) { $("shot").src = "../../docs/company/store/" + SHOTS[idx]; lastShot = idx; }
+  {
+    const enter = out(k(t, 9.6, 10.6));
+    const swap = idx > 0 ? 1 - Math.abs(1 - 2 * clamp((t - st + .35) / .7)) : 0; // غمزة التبديل
+    const drift = Math.sin(t * .5) * 8;
+    set($("ph"), 1 - .7 * swap, `translate(${(1 - enter) * -500}px, ${drift}px) rotate(${(1 - enter) * -8 + Math.sin(t * .4) * 1.2}deg) scale(${1 - .04 * swap})`);
+    $("ph").style.left = "190px"; $("ph").style.top = "107px";
+    const [e, h, pp] = COPY[idx];
+    if ($("t3h").textContent !== h) { $("t3e").textContent = e; $("t3h").textContent = h; $("t3p").textContent = pp; }
+    rise($("t3e"), t, st + .4, .6, 30); rise($("t3h"), t, st + .6); rise($("t3p"), t, st + .9);
+    const fade = 1 - k(t, st + 6.7, st + 7.1);
+    if (idx < 2) ["t3e", "t3h", "t3p"].forEach((id) => { $(id).style.opacity = parseFloat($(id).style.opacity) * fade; });
+  }
+  $("note").style.opacity = win(t, 9.7, 31);
+
+  // 6) 31–38: الميزات
+  $("s6").style.opacity = win(t, 30.9, 38);
+  rise($("t6"), t, 31.2);
+  ["f1", "f2", "f3", "f4", "f5"].forEach((id, i) => {
+    const a = 31.8 + i * .45, p = back(k(t, a, a + .6));
+    set($(id), clamp(k(t, a, a + .3)), `translateX(${(1 - p) * (i < 3 ? 80 : -80)}px) scale(${.9 + .1 * p})`);
+  });
+
+  // 7) 38–44: الثقة
+  $("s7").style.opacity = win(t, 37.9, 44);
+  { const p = back(k(t, 38.2, 39)); set($("lock"), clamp(k(t, 38.2, 38.5)), `translateY(${(1 - p) * 60}px) scale(${.7 + .3 * p})`); }
+  rise($("t7"), t, 38.8); rise($("t7a"), t, 39.6); rise($("t7b"), t, 40.2);
+
+  // 8) 44–50: الختام
+  $("s8").style.opacity = k(t, 43.9, 44.4) * (1 - k(t, 49.4, 50));
+  { const p = back(k(t, 44.2, 45)); set($("logo2"), clamp(k(t, 44.2, 44.5)), `scale(${.6 + .4 * p})`); }
+  rise($("t8a"), t, 44.6, .6, 30); rise($("t8b"), t, 45); rise($("t8c"), t, 45.7, .6, 30); rise($("t8d"), t, 46.3); rise($("t8e"), t, 46.9, .6, 20);
+};
+window.render(0);
+</script>
+</body>
+</html>
