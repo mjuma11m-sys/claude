@@ -6,12 +6,14 @@ import { Icon } from '../components/Icon'
 import { PageTitle } from '../components/PageTitle'
 import { Failed, Loading } from '../components/States'
 import { getAudit, BY_TEXT, ENTITY_TEXT, OP_TEXT } from '../data/audit'
+import { getDevelopment } from '../data/development'
 import { getClubRoom } from '../data/source'
-import { getDataCenter, importSquad, recordAgreement, revokeAgreement, withdrawConsent, type DataCenter as DC } from '../data/datacenter'
+import { addPlayers, getDataCenter, importSquad, recordAgreement, revokeAgreement, withdrawConsent, type DataCenter as DC } from '../data/datacenter'
 import { useLoad } from '../data/useLoad'
 import { vars } from '../lib/css'
 import { fmtDate, fmtDateTime, fmtMoney } from '../lib/format'
 import { DPA_TEMPLATE, DPA_VERSION } from '../lib/dpa-template'
+import { DEFAULT_POS, parseRoster, POSITION_SUGGESTIONS, ROSTER_ERROR_TEXT, validateRow, type RosterError, type RosterRow } from '../lib/roster-paste'
 import { ERROR_TEXT, FIELD_TEXT, parseSquadCsv, TEMPLATE_CSV, type CsvError, type ImportRow } from '../lib/squad-csv'
 
 const field = 'min-h-11 w-full rounded-xl border border-white/15 bg-white/5 px-3 text-start'
@@ -185,6 +187,97 @@ function Withdraw({ userId, onDone }: { userId: string; onDone: () => void }) {
   )
 }
 
+/* Adds players to the squad by pasting a list or one at a time: number, name, position. Nothing leaves the device until "add". The club writes the consent reference itself. */
+function RosterPanel({ existing, onDone }: { existing: number[]; onDone: () => void }) {
+  const [text, setText] = useState('')
+  const [staged, setStaged] = useState<RosterRow[]>([])
+  const [errors, setErrors] = useState<(RosterError & { line: string })[]>([])
+  const [ref, setRef] = useState('')
+  const [one, setOne] = useState({ num: '', name: '', pos: '' })
+  const [oneErr, setOneErr] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [fail, setFail] = useState<string | null>(null)
+  const [done, setDone] = useState<number | null>(null)
+  const taken = () => [...existing, ...staged.map((r) => r.num)]
+
+  function read() {
+    setDone(null); setFail(null)
+    const r = parseRoster(text, taken())
+    const lines = text.split(/\r?\n/).filter((l) => l.trim())
+    const bad = r.errors.map((e) => ({ ...e, line: lines[e.row - 1] ?? '' }))
+    setStaged((s) => [...s, ...r.rows]); setErrors(bad)
+    setText(bad.map((e) => e.line).join('\n')) // only the lines that did not read stay, to fix and read again
+  }
+  function addOne(e: FormEvent) {
+    e.preventDefault(); setDone(null); setFail(null)
+    const row = { num: Number(one.num), name: one.name.replace(/\s+/g, ' ').trim(), pos: one.pos.trim() || DEFAULT_POS }
+    const code = validateRow(row, taken()) ?? (staged.length + existing.length >= 60 ? 'too_many' : null)
+    if (code) { setOneErr(ROSTER_ERROR_TEXT[code]); return }
+    setOneErr(null); setStaged((s) => [...s, { ...row, guessed: !one.pos.trim() }]); setOne({ num: '', name: '', pos: '' })
+  }
+  async function send() {
+    setBusy(true); setFail(null)
+    try {
+      const res = await addPlayers(staged.map(({ num, name, pos }) => ({ num, name, pos })), ref)
+      if (res.ok) { setDone(res.players); setStaged([]); setRef(''); onDone() }
+      else setFail(res.errors.map((e) => `${e.row ? 'سطر ' + e.row + ': ' : ''}${ERROR_TEXT[e.code] ?? e.code}`).join('، '))
+    } catch (e) {
+      setFail((e instanceof Error ? e.message : '') === 'dpa_required' ? 'الاتفاقية غير مسجّلة أو انسحبت. سجّلها بالخطوة 1 أول.' : 'ما انضافوا. تأكد من الاتصال وحاول مرة ثانية.')
+    } finally { setBusy(false) }
+  }
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <label htmlFor="rosterText" className="block text-sm font-bold">الصق القائمة (سطر لكل لاعب)</label>
+        <textarea id="rosterText" dir="rtl" rows={6} value={text} onChange={(e) => setText(e.target.value)} placeholder={'7 خالد المحمد مهاجم\n10 سالم العلي وسط\n1 يوسف حارس'} className={`${field} py-2`} />
+        <p className="text-xs text-mute">من واتساب أو إكسل أو ملف. يقرأ الرقم والاسم والمركز بأي فاصل. <b className="text-ink">عندك صورة أو PDF؟</b> حدّد النص منها بجوالك (Live Text بالآيفون، Google Lens بالأندرويد) وانسخه والصقه هنا: ما نرفع صور لأي سيرفر.</p>
+        <button type="button" onClick={read} disabled={!text.trim()} className={btn}>اقرأ القائمة</button>
+      </div>
+      {errors.length > 0 && (
+        <div role="alert" className="space-y-1 rounded-xl border border-warn/40 bg-warn/10 p-3 text-sm">
+          <p className="font-bold">بعض الأسطر ما انقرت. الباقي انضاف للمعاينة، وهذي بقيت بالمربع فوق عشان تصحّحها وتقرأها مرة ثانية:</p>
+          <ul className="space-y-0.5">{errors.map((e, i) => <li key={i}><bdi className="font-bold">{e.line}</bdi>: {ROSTER_ERROR_TEXT[e.code]}</li>)}</ul>
+        </div>
+      )}
+      <form onSubmit={addOne} className="space-y-2" aria-label="إضافة لاعب">
+        <p className="text-sm font-bold">أو أضف لاعباً</p>
+        <div className="grid grid-cols-[5rem_minmax(0,1fr)] gap-2 sm:grid-cols-[5rem_minmax(0,1fr)_10rem_auto]">
+          <input aria-label="رقم القميص" inputMode="numeric" dir="ltr" placeholder="رقم" value={one.num} onChange={(e) => setOne({ ...one, num: e.target.value.replace(/\D/g, '').slice(0, 2) })} className={field} />
+          <input aria-label="اسم اللاعب" placeholder="الاسم" value={one.name} onChange={(e) => setOne({ ...one, name: e.target.value })} className={field} />
+          <input aria-label="المركز" list="posList" placeholder="المركز" value={one.pos} onChange={(e) => setOne({ ...one, pos: e.target.value })} className={`${field} col-span-2 sm:col-span-1`} />
+          <button className={`${ghost} col-span-2 sm:col-span-1`}>أضف للمعاينة</button>
+        </div>
+        <datalist id="posList">{POSITION_SUGGESTIONS.map((p) => <option key={p} value={p} />)}</datalist>
+        {oneErr && <p role="alert" className="text-sm text-crimson-ink">{oneErr}</p>}
+      </form>
+      {staged.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-sm"><b className="num">{staged.length}</b> لاعب جاهزين للإضافة. راجع المعاينة: <span className="text-mute">«لاعب» يعني ما عرفنا المركز.</span></p>
+          <div className="max-h-64 overflow-auto rounded-xl border border-white/10">
+            <table className="w-full text-start text-sm">
+              <thead className="sticky top-0 bg-deep text-xs text-mute"><tr>{['الرقم', 'الاسم', 'المركز', ''].map((h, i) => <th key={i} scope="col" className="px-3 py-2 text-start font-normal">{h}</th>)}</tr></thead>
+              <tbody className="divide-y divide-white/10">
+                {staged.map((r) => (
+                  <tr key={r.num}><td className="num px-3 py-2">{r.num}</td><td className="px-3 py-2">{r.name}</td><td className={`px-3 py-2 ${r.guessed ? 'text-warn' : ''}`}>{r.pos}</td>
+                    <td className="px-3 py-1"><button type="button" onClick={() => setStaged((s) => s.filter((x) => x.num !== r.num))} aria-label={`احذف ${r.name} من المعاينة`} className="min-h-11 rounded-lg px-3 text-xs text-crimson-ink">احذف</button></td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <label className="block space-y-1"><span className="text-xs text-mute">مرجع الموافقة (تكتبه أنت: رقم نموذج الموافقة أو اسم ملفه)</span><input id="rosterRef" dir="ltr" value={ref} onChange={(e) => setRef(e.target.value)} className={field} /></label>
+          <p className="text-xs text-mute">نضيف الأسماء للتشكيلة ولا نحذف أحداً. بدون رواتب ولا عقود: تضيفها بعدين من الاستيراد.</p>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={send} disabled={busy || ref.trim().length < 3} className={btn}>أضف {staged.length} لاعب</button>
+            <button type="button" onClick={() => { setStaged([]); setErrors([]) }} className={ghost}>امسح المعاينة</button>
+          </div>
+        </div>
+      )}
+      {fail && <p role="alert" className="text-sm text-crimson-ink">{fail}</p>}
+      {done !== null && <p role="status" className="text-sm text-safe">انضاف <b className="num">{done}</b> لاعب. تلقاهم بالحضور والتشكيلة والتطوير.</p>}
+    </div>
+  )
+}
+
 /* Internal trail of what changed, never of what it contained. Collapsed: it is for the day something looks wrong. */
 function AuditPanel({ userId }: { userId: string }) {
   const load = useLoad(() => getAudit(userId), [userId])
@@ -206,6 +299,7 @@ export function DataCenter() {
   const { user } = useAuth()
   const load = useLoad<DC>(() => getDataCenter(user!.id), [user?.id])
   const [revoking, setRevoking] = useState(false)
+  const squad = useLoad(async () => (await getDevelopment(user!.id)).data.players.map((p) => p.num).filter((n): n is number => n !== null), [user?.id])
   if (load.error instanceof Error && load.error.message === 'no-club') {
     return <section className="space-y-4"><PageTitle>مركز البيانات</PageTitle><p className="glass p-5 text-mute">حسابك ما هو مربوط بنادي بعد.</p></section>
   }
@@ -265,6 +359,11 @@ export function DataCenter() {
           {dc.players > 0 && <p className="text-xs text-mute">التشكيلة الحالية: <span className="num">{dc.players}</span> لاعب{dc.real ? ' (بيانات حقيقية)' : ' (تجربة)'}{dc.withdrawals > 0 && <> · موافقات انسحبت: <span className="num">{dc.withdrawals}</span></>}</p>}
         </Step>
       </ol>
+
+      <article className="glass rise space-y-3 p-4 md:p-5" style={vars({ '--i': 4 })} aria-label="أضف لاعبين">
+        <h2 className="font-display text-2xl">أضف لاعبين</h2>
+        {dc.agreement ? <RosterPanel existing={squad.data ?? []} onDone={() => { load.reload(); squad.reload() }} /> : <p className="text-sm text-mute">سجّل الاتفاقية بالخطوة 1 أول، وبعدها تقدر تلصق قائمة لاعبينك أو تضيفهم واحد واحد.</p>}
+      </article>
 
       {dc.agreement && dc.players > 0 && <Withdraw userId={user!.id} onDone={load.reload} />}
       <AuditPanel userId={user!.id} />

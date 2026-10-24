@@ -113,6 +113,41 @@ test.describe('data center', () => {
     await expect(page.getByText('تجربة داخل متصفحك').first()).toBeVisible()
   })
 
+  test('adding players: locked until the agreement, then paste a list, check the preview, write the consent reference, and they reach attendance', async ({ page }) => {
+    const panel = page.getByRole('article', { name: 'أضف لاعبين' })
+    await expect(panel).toContainText('سجّل الاتفاقية بالخطوة 1 أول')
+    await expect(page.getByLabel('الصق القائمة (سطر لكل لاعب)')).toHaveCount(0)
+    await signAgreement(page)
+    await page.getByLabel('الصق القائمة (سطر لكل لاعب)').fill('41 خالد المحمد مهاجم\n٤٢، سالم العلي، وسط\n43 يوسف حارس\nناصر بلا رقم\n41 مكرر وسط')
+    await page.getByRole('button', { name: 'اقرأ القائمة' }).click()
+    await expect(panel.getByRole('row')).toHaveCount(4) // header + 3
+    await expect(panel.getByRole('alert').first()).toContainText('ناصر بلا رقم')
+    await expect(panel.getByRole('alert').first()).toContainText('41 مكرر وسط')
+    await expect(page.getByLabel('الصق القائمة (سطر لكل لاعب)')).toHaveValue('ناصر بلا رقم\n41 مكرر وسط') // only the unread lines stay to fix
+    await expect(panel.getByRole('row').filter({ hasText: 'يوسف' })).toContainText('حارس مرمى')
+    await expect(page.getByRole('button', { name: /^أضف 3 لاعب$/ })).toBeDisabled() // no consent reference yet
+    await page.locator('#rosterRef').fill('FORM-ADD-1')
+    await page.getByRole('button', { name: /^أضف 3 لاعب$/ }).click()
+    await expect(page.getByRole('status').filter({ hasText: 'انضاف' })).toContainText('3')
+    await page.goto('/attendance')
+    await expect(page.getByRole('radiogroup', { name: 'حضور خالد المحمد' })).toBeVisible()
+    await expect(page.getByRole('radiogroup', { name: 'حضور سالم العلي' })).toBeVisible()
+  })
+
+  test('adding one player at a time stages it, refuses a number already in the squad, and a staged row can be removed', async ({ page }) => {
+    await signAgreement(page)
+    const panel = page.getByRole('article', { name: 'أضف لاعبين' })
+    const one = panel.getByRole('form', { name: 'إضافة لاعب' })
+    await one.getByLabel('رقم القميص').fill('7'); await one.getByLabel('اسم اللاعب').fill('لاعب مكرر')
+    await one.getByRole('button', { name: 'أضف للمعاينة' }).click()
+    await expect(one.getByRole('alert')).toContainText('مكرر') // 7 is already in the sample squad
+    await one.getByLabel('رقم القميص').fill('77'); await one.getByLabel('اسم اللاعب').fill('فهد الجديد'); await one.getByLabel('المركز').fill('جناح')
+    await one.getByRole('button', { name: 'أضف للمعاينة' }).click()
+    await expect(panel.getByRole('row').filter({ hasText: 'فهد الجديد' })).toContainText('جناح')
+    await panel.getByRole('button', { name: 'احذف فهد الجديد من المعاينة' }).click()
+    await expect(panel.getByRole('row').filter({ hasText: 'فهد الجديد' })).toHaveCount(0)
+  })
+
   test('the agreement form asks for what is missing', async ({ page }) => {
     await page.getByRole('button', { name: 'سجّل الاتفاقية' }).click()
     await expect(page.getByRole('alert')).toContainText('اسم الموقّع')

@@ -3,7 +3,7 @@
 import { supabase } from '../lib/supabase'
 import type { Assessment, Goal, Log, SkillId } from '../lib/development'
 import type { PlayerStatus } from '../lib/squad'
-import { readDemoImport } from './datacenter'
+import { readDemoImport, readDemoRoster } from './datacenter'
 import { DEMO_SQUAD } from './demo'
 
 export type DevPlayer = { id: string; num: number | null; name: string; pos: string; status: PlayerStatus }
@@ -41,8 +41,11 @@ function seed(): Store {
 
 async function demoPlayers(): Promise<DevPlayer[]> {
   const trial = readDemoImport()
-  if (trial) return trial.map((r) => ({ id: `imp-${r.num}`, num: r.num, name: r.name, pos: r.pos, status: r.status }))
-  return DEMO_SQUAD.map((p) => ({ id: p.id, num: p.num, name: p.name, pos: p.pos, status: p.status }))
+  const base: DevPlayer[] = trial
+    ? trial.map((r) => ({ id: `imp-${r.num}`, num: r.num, name: r.name, pos: r.pos, status: r.status }))
+    : DEMO_SQUAD.map((p) => ({ id: p.id, num: p.num, name: p.name, pos: p.pos, status: p.status }))
+  const added: DevPlayer[] = readDemoRoster().filter((r) => !base.some((b) => b.num === r.num)).map((r) => ({ id: `add-${r.num}`, num: r.num, name: r.name, pos: r.pos, status: 'fit' as const }))
+  return [...base, ...added].sort((a, b) => (a.num ?? 99) - (b.num ?? 99))
 }
 const demoState = (): Store => read() ?? seed()
 
