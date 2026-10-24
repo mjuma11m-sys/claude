@@ -450,6 +450,53 @@ test.describe('match lineup', () => {
 
 test.describe('attendance', () => {
   test.beforeEach(async ({ page }) => { await as(page, 'إدارة النادي'); await page.goto('/attendance') })
+  test('a tap on the name cycles the status, and "copy the last session" brings back an earlier one', async ({ page }) => {
+    const summary = page.getByRole('status', { name: 'ملخص التسجيل' })
+    const name = page.getByRole('button', { name: /^بدّل حالة اللاعب 9$/ })
+    await name.click(); await expect(summary).toContainText('متأخر 1')
+    await name.click(); await expect(summary).toContainText('غائب بعذر 3')
+    await name.click(); await expect(summary).toContainText('غائب 1')
+    await name.click(); await expect(summary).toContainText('حاضر 14')
+    await mark(page, 11, 'غائب')
+    await page.getByRole('button', { name: 'احفظ التسجيل' }).click()
+    await expect(page.getByText('انحفظ التسجيل')).toBeVisible()
+    await page.getByLabel('اليوم').fill(new Date(Date.now() - 2 * 86_400_000).toISOString().slice(0, 10))
+    await page.getByRole('button', { name: /^انسخ آخر/ }).click()
+    await expect(summary).toContainText('غائب 1')
+  })
+
+  test('after saving, a group summary is offered: counts and shirt numbers, never an excuse reason', async ({ page }) => {
+    await mark(page, 3, 'متأخر'); await mark(page, 11, 'غائب')
+    await page.getByRole('button', { name: 'احفظ التسجيل' }).click()
+    const box = page.getByRole('textbox', { name: 'نص الملخص' })
+    await expect(box).toBeVisible()
+    const text = await box.inputValue()
+    expect(text).toContain('متأخر (1): 3')
+    expect(text).toContain('غياب بدون عذر (1): 11')
+    expect(text).toContain('غياب بعذر: 2')
+    expect(text).not.toMatch(/طبي|إصابة/)
+    await page.getByLabel('اكتب الأسماء بدل أرقام القمصان').check()
+    await expect(box).toHaveValue(/غياب بدون عذر \(1\): اللاعب 11/)
+    await expect(page.getByRole('link', { name: 'افتح بالواتساب' })).toHaveAttribute('href', /^https:\/\/wa\.me\/\?text=/)
+  })
+
+  test('the team rate card says what it needs, then the monthly table lists the sessions with each rate', async ({ page }) => {
+    await expect(page.getByRole('article', { name: 'نسبة الفريق' })).toBeVisible()
+    for (const back of [1, 2, 3]) {
+      await page.getByLabel('اليوم').fill(new Date(Date.now() - back * 86_400_000).toISOString().slice(0, 10))
+      await mark(page, 11, 'غائب')
+      await page.getByRole('button', { name: /^احفظ/ }).click()
+      await expect(page.getByText('انحفظ التسجيل')).toBeVisible()
+    }
+    await expect(page.getByRole('article', { name: 'نسبة الفريق' })).toContainText('%')
+    await page.getByRole('tab', { name: 'الجدول الشهري' }).click()
+    const table = page.getByRole('table', { name: 'حضور اللاعبين حسب الجلسة' })
+    await expect(table).toBeVisible()
+    await expect(table.getByRole('row').filter({ hasText: 'اللاعب 11' })).toContainText('✗')
+    await expect(page.getByRole('button', { name: 'اطبع أو احفظ PDF' })).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1)
+  })
+
   const sheet = (page: Page) => page.getByRole('article').filter({ has: page.getByRole('heading', { name: 'تسجيل جلسة' }) })
   const row = (page: Page, n: number) => sheet(page).getByRole('listitem').filter({ has: page.getByRole('radiogroup', { name: new RegExp(`حضور اللاعب ${n}$`) }) })
   const mark = (page: Page, n: number, s: string) => page.getByRole('radiogroup', { name: new RegExp(`حضور اللاعب ${n}$`) }).getByRole('radio', { name: s, exact: true }).click()
