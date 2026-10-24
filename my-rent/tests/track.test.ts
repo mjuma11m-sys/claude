@@ -6,6 +6,8 @@ import { demoData } from "../src/data/demo";
 import { exportSheets, planImport, trackerSheet, TRACK_HEAD } from "../src/data/excel";
 import type { Data, Unit } from "../src/data/types";
 import { onBack, handleBack } from "../src/back";
+import { reminderId, reminderAt } from "../src/notify";
+import { planReminders } from "../src/data/logic";
 
 let failed = 0;
 const ok = (c: boolean, name: string, extra = "") => { console.log(`${c ? "✅" : "❌"} ${name}${extra ? " — " + extra : ""}`); if (!c) failed++; };
@@ -197,6 +199,29 @@ ok(describeAction({ type: "cheque", cheque: { number: "000101", unitId: "u6", st
   ok(handleBack(true) === "closed" && closed.join() === "B,A", "بعدها النافذة اللي تحتها");
   offA(); offA();
   ok(handleBack(true) === "back" && handleBack(false) === "minimize", "بدون نوافذ: رجوع، وبالشاشة الأولى تصغير");
+}
+
+// 17) DW-042: تذكيرات الجوال — خلال 60 يوم، أقربها أول، بدون مبالغ ولا أسماء، والمدفوع مقدماً ما يتذكّر
+{
+  const plan = planReminders(d, now);
+  const today = "2026-10-15", end = "2026-12-14";
+  ok(plan.length > 0 && plan.length <= 60 && plan.every((r, i) => r.day >= today && r.day <= end && (i === 0 || plan[i - 1].day <= r.day)), "التذكيرات خلال 60 يوم ومرتبة", String(plan.length));
+  const names = d.units.flatMap((u) => u.tenant ? [u.tenant.name] : []);
+  const text = plan.map((r) => r.title + " " + r.body).join(" | ");
+  ok(!/د\.ب|\d+\.\d{3}/.test(text) && !names.some((n) => text.includes(n)), "شاشة القفل: بدون مبالغ ولا أسماء مستأجرين");
+  const u = d.units.find((x) => x.tenant && (!x.tenant.until || x.tenant.until > "2026-12-31"))!;
+  const nov = "2026-11", key = `rent-${u.id}-${nov}`;
+  ok(plan.some((r) => r.key === key && r.day === `${nov}-${String(Math.min(u.dueDay, 30)).padStart(2, "0")}`), "تذكير إيجار الشهر الجاي بيوم الاستحقاق");
+  const pre = reducer(d, { type: "pay", payment: { id: "pre-nov", unitId: u.id, month: nov, amount: rentAt(u, nov), method: "cash", date: "2026-10-15" } });
+  ok(!planReminders(pre, now).some((r) => r.key === key), "دفع مقدماً: تذكير الشهر ينشال");
+  const chq = { id: "c-rem", unitId: u.id, number: "777", bank: "BBK", amount: 100000, due: "2026-11-20", state: "held" as const };
+  const withChq = planReminders({ ...d, cheques: [...(d.cheques ?? []), chq] }, now).find((r) => r.key === "chq-c-rem");
+  ok(withChq?.day === "2026-11-19" && !withChq.body.includes("777"), "الشيك: قبل يوم، بدون رقم الشيك");
+  ok(planReminders(d, now, 3650, 60).length === 60, "الحد 60 (أبل تسمح 64 معلّق)");
+  const ids = plan.map((r) => reminderId(r.key));
+  ok(ids.every((x) => x > 0 && Number.isInteger(x)) && new Set(ids).size === ids.length && reminderId(plan[0].key) === ids[0], "رقم ثابت ومختلف لكل تذكير");
+  const at = reminderAt("2026-11-01");
+  ok(at.getHours() === 9 && at.getDate() === 1 && at.getMonth() === 10, "الساعة 9 الصبح بتوقيت الجوال");
 }
 
 console.log(failed ? `\n${failed} فشل` : "\nكل اختبارات المتابعة نجحت");

@@ -5,7 +5,7 @@ name: Idarati Android
 # DW-040: بعدها يشغّله على محاكي أندرويد 15 (edge-to-edge إجباري): يفتح، يصوّر، يفحص الهيدر وزر الرجوع.
 on:
   push:
-    paths: ['my-rent/src/**', 'my-rent/android/**', 'my-rent/scripts/android-*', 'my-rent/capacitor.config.json', 'my-rent/package.json', '.github/workflows/idarati-android.yml']
+    paths: ['my-rent/src/**', 'my-rent/android/**', 'my-rent/scripts/android-*', 'my-rent/scripts/raw2bmp.py', 'my-rent/scripts/screen-check.py', 'my-rent/capacitor.config.json', 'my-rent/package.json', '.github/workflows/idarati-android.yml']
   workflow_dispatch:
 
 concurrency:
@@ -35,6 +35,14 @@ jobs:
       - name: Build debug APK
         working-directory: my-rent/android
         run: ./gradlew assembleDebug --no-daemon
+      - name: Permissions in the built app (DW-042)
+        working-directory: my-rent/android
+        run: |
+          M=$(find app/build/intermediates -name AndroidManifest.xml -path '*merged_manifest*debug*' | head -1)
+          echo "manifest: $M"
+          grep -q 'android.permission.POST_NOTIFICATIONS' "$M" || { echo "❌ إذن الإشعارات ناقص"; exit 1; }
+          if grep -q 'SCHEDULE_EXACT_ALARM\|USE_EXACT_ALARM' "$M"; then echo "❌ إذن المنبّه الدقيق موجود — قوقل بلاي يقيّده"; exit 1; fi
+          echo "✅ إشعارات: نعم · منبّه دقيق: لا"
       - uses: actions/upload-artifact@v4
         with:
           name: idarati-android-apk
@@ -52,6 +60,7 @@ jobs:
           api-level: 35
           target: google_apis
           arch: x86_64
+          profile: pixel_6
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
           working-directory: my-rent

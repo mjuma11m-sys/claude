@@ -618,6 +618,7 @@ try {
     await q.keyboard.press("Escape"); await q.waitForTimeout(300);
     // التقويم
     await q.goto(URL + "#settings"); await q.waitForTimeout(600);
+    ok(await q.locator("#push-btn").count() === 0 && await q.locator("#ics-btn").count() === 1, "DW-042: تذكيرات الجوال بالتطبيق بس — المتصفح يعرض ملف التقويم");
     const dl = q.waitForEvent("download"); await q.locator("#ics-btn").click();
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "idarati-ics-")); const icsPath = path.join(tmp, "x.ics"); const d0 = await dl; await d0.saveAs(icsPath);
     const ics = fs.readFileSync(icsPath, "utf8");

@@ -20,11 +20,12 @@ echo "▶ الشاشة مو سودا ومو فاضية؟"
 ok=0
 for try in 1 2 3 4 5 6 7 8 9; do
   sleep 10
-  adb exec-out screencap -p > "$OUT/launch.png"
-  convert "$OUT/launch.png" -resize '120x240!' BMP3:"$OUT/launch.bmp"
+  adb exec-out screencap > "$OUT/launch.raw"
+  python3 scripts/raw2bmp.py "$OUT/launch.raw" "$OUT/launch.bmp"
   echo "   محاولة $try ($((try * 10)) ث)"
   if python3 scripts/screen-check.py "$OUT/launch.bmp"; then ok=1; break; fi
 done
+adb exec-out screencap -p > "$OUT/launch.png"   # الصورة للعين (Artifacts)
 [ "$ok" = 1 ] || { echo "❌ بعد 90 ثانية الواجهة ما انرسمت"; exit 1; }
 adb shell pidof "$PKG" >/dev/null || { echo "❌ التطبيق طاح بعد الفتح"; exit 1; }
 

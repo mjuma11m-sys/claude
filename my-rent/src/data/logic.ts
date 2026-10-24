@@ -495,3 +495,35 @@ export function vatSummary(d: Data, year: number) {
   return { rows, net: rows.reduce((t, r) => t + r.net, 0), vat: rows.reduce((t, r) => t + r.vat, 0) };
 }
 export const invoiceLabel = (no: number) => `INV-${String(no).padStart(6, "0")}`;
+
+// ── DW-042: تذكيرات الجوال المحلية ────────────────────────
+export type Reminder = { key: string; day: string; title: string; body: string };
+const shiftDay = (day: string, n: number) => { const [y, m, d] = day.split("-").map(Number); return isoDay(new Date(y, m - 1, d + n)); };
+/** تذكيرات الأيام الجاية، أقربها أول (أبل تسمح 64 معلّق بس).
+ *  شاشة القفل يشوفها أي أحد: اسم الوحدة بس — بدون مبالغ ولا أسماء مستأجرين ولا أرقام شيكات */
+export function planReminders(data: Data, now = new Date(), days = 60, max = 60): Reminder[] {
+  const today = isoDay(now), end = shiftDay(today, days);
+  const out: Reminder[] = [];
+  const add = (key: string, day: string, title: string, body: string) => { if (day >= today && day <= end) out.push({ key, day, title, body }); };
+  for (const u of data.units) {
+    if (!u.tenant) continue;
+    const start = data.trackFrom > u.tenant.since ? data.trackFrom : u.tenant.since;
+    let m = monthKey(now);
+    for (let i = 0; i <= Math.ceil(days / 28); i++, m = nextMonth(m)) {
+      const day = `${m}-` + String(Math.min(u.dueDay, new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)), 0).getDate())).padStart(2, "0");
+      if (m < start || (u.tenant.until && day > u.tenant.until)) continue;
+      if (paidFor(data, u.id, m) >= rentAt(u, m)) continue; // مدفوع مقدماً: ما نذكّر
+      add(`rent-${u.id}-${m}`, day, "موعد الإيجار", `إيجار ${u.name} مستحق اليوم`);
+    }
+    if (u.tenant.until) {
+      add(`lease30-${u.id}`, shiftDay(u.tenant.until, -30), "عقد قرب يخلص", `عقد ${u.name} يخلص بعد 30 يوم`);
+      add(`lease-${u.id}`, u.tenant.until, "نهاية عقد", `عقد ${u.name} يخلص اليوم`);
+    }
+  }
+  for (const doc of data.docs ?? []) if (doc.expires) add(`doc-${doc.id}`, shiftDay(doc.expires, -30), "وثيقة قربت تخلص", `«${doc.title}» تخلص بعد 30 يوم`);
+  for (const c of data.cheques ?? []) if (c.state === "held") {
+    const u = data.units.find((x) => x.id === c.unitId);
+    add(`chq-${c.id}`, shiftDay(c.due, -1), "شيك موعده بكرة", u ? `شيك ${u.name} موعده بكرة — جهّز الإيداع` : "شيك موعده بكرة — جهّز الإيداع");
+  }
+  return out.sort((a, b) => a.day.localeCompare(b.day) || a.key.localeCompare(b.key)).slice(0, max);
+}

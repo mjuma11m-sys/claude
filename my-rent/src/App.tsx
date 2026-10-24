@@ -18,6 +18,7 @@ import { ContractSheet } from "./pages/Contract";
 import { UnitForm } from "./pages/UnitForm";
 import { Reports } from "./pages/Reports";
 import { SearchSheet } from "./pages/Search";
+import { syncReminders } from "./notify";
 import { Privacy } from "./pages/Privacy";
 import { RenewSheet } from "./pages/Renew";
 import { DocSheet, Docs } from "./pages/Docs";
@@ -61,6 +62,12 @@ function Idarati() {
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
+
+  // DW-042: تذكيرات الجوال تتبع البيانات (دفعة جديدة = تذكير الشهر ينشال). بعد ثانيتين هدوء عشان الكتابة السريعة
+  useEffect(() => {
+    const t = window.setTimeout(() => { syncReminders(data).catch(() => { /* الإذن انسحب من الإعدادات: نكمّل عادي */ }); }, 2000);
+    return () => window.clearTimeout(t);
+  }, [data]);
 
   // DW-030: المشاهد حاول يعدّل
   const toastRO = useToast();
