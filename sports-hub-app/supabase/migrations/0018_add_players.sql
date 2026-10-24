@@ -36,7 +36,7 @@ begin
   end loop;
   if jsonb_array_length(v_errors) > 0 then return jsonb_build_object('ok', false, 'errors', v_errors); end if;
 
-  -- adds only: nothing is deleted or changed
+  -- adds only: nothing is removed or changed
   for r in select * from jsonb_array_elements(p_rows) loop
     insert into public.players (club_id, name, num, pos) values (v_club, btrim(r ->> 'name'), (r ->> 'num')::int, btrim(r ->> 'pos')) returning id into v_id;
     insert into public.player_status (player_id, club_id, status, is_demo) values (v_id, v_club, 'fit', false);
