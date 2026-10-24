@@ -2,8 +2,10 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import { applyPrefs, loadPrefs } from "./data/prefs";
+import { initNative } from "./native";
 
 applyPrefs(loadPrefs()); // قبل أول رسم عشان ما يرمش الخط أو الثيم
+void initNative();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

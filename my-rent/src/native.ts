@@ -1,10 +1,22 @@
 // DW-038: نسخة المتجر (Capacitor) — التنزيل والطباعة وفتح الملفات ما تشتغل داخل تطبيق الجوال،
 // فنحفظ الملف بالجوال ونفتح قائمة المشاركة. بالمتصفح نفس السلوك القديم. الإضافات تتحمّل وقت الحاجة بس.
 import { Capacitor } from "@capacitor/core";
+import { handleBack } from "./back";
 
 export const isNative = () => Capacitor.isNativePlatform();
 /** الطباعة: المتصفح بس (WKWebView وWebView الأندرويد ما يطبعون) */
 export const canPrint = () => !isNative();
+
+/** DW-040: زر الرجوع بأندرويد (بالآيفون ما فيه زر). الإضافة تلغي سلوك الرجوع الافتراضي، فنقرر نحن */
+export async function initNative() {
+  if (Capacitor.getPlatform() !== "android") return;
+  const { App } = await import("@capacitor/app");
+  await App.addListener("backButton", ({ canGoBack }) => {
+    const act = handleBack(canGoBack);
+    if (act === "back") history.back();
+    else if (act === "minimize") void App.minimizeApp();
+  });
+}
 
 const toBase64 = (blob: Blob) => new Promise<string>((res, rej) => {
   const r = new FileReader();

@@ -18,6 +18,7 @@ xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug \
   || { tail -40 "$OUT/build.log"; echo "❌ البناء فشل"; exit 1; }
 APP="$OUT/dd/Build/Products/Debug-iphonesimulator/App.app"
 [ -d "$APP" ] || { echo "❌ ما لقيت App.app"; exit 1; }
+[ -f "$APP/PrivacyInfo.xcprivacy" ] || { echo "❌ بيان الخصوصية (PrivacyInfo.xcprivacy) مو داخل التطبيق — أبل ترفض"; exit 1; }
 
 echo "▶ نشغّل آيفون سميوليتر"
 UDID=$(xcrun simctl list devices available -j | python3 -c '

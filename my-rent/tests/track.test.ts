@@ -5,6 +5,7 @@ import { creditable } from "../src/data/reducer";
 import { demoData } from "../src/data/demo";
 import { exportSheets, planImport, trackerSheet, TRACK_HEAD } from "../src/data/excel";
 import type { Data, Unit } from "../src/data/types";
+import { onBack, handleBack } from "../src/back";
 
 let failed = 0;
 const ok = (c: boolean, name: string, extra = "") => { console.log(`${c ? "✅" : "❌"} ${name}${extra ? " — " + extra : ""}`); if (!c) failed++; };
@@ -184,6 +185,18 @@ ok(describeAction({ type: "cheque", cheque: { number: "000101", unitId: "u6", st
   const q = vatSummary(v, yr); const qi = Math.floor((Number(m.slice(5, 7)) - 1) / 3);
   ok(q.rows[qi].credits === 2 && q.rows[qi].vat === 40909 - vatSplit(50000).vat - vatSplit(400000).vat, "ملخص الربع: الفاتورة ناقص الإشعارين", String(q.rows[qi].vat));
   ok(describeAction({ type: "credit", amount: 50000 }, d) === "إشعار دائن 50.000 د.ب", "سجل النشاط: الإشعار الدائن");
+}
+
+// 16) DW-040: زر الرجوع بأندرويد — آخر نافذة انفتحت تنسكّر أول، وبعدها رجوع، وبعدها تصغير
+{
+  const closed: string[] = [];
+  const offA = onBack(() => closed.push("A"));
+  const offB = onBack(() => closed.push("B"));
+  ok(handleBack(true) === "closed" && closed.join() === "B", "الرجوع يسكّر آخر نافذة انفتحت");
+  offB();
+  ok(handleBack(true) === "closed" && closed.join() === "B,A", "بعدها النافذة اللي تحتها");
+  offA(); offA();
+  ok(handleBack(true) === "back" && handleBack(false) === "minimize", "بدون نوافذ: رجوع، وبالشاشة الأولى تصغير");
 }
 
 console.log(failed ? `\n${failed} فشل` : "\nكل اختبارات المتابعة نجحت");

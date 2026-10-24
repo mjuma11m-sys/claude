@@ -2,6 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type PointerEvent as RPE, type ReactNode } from "react";
 import { usePresence, reducedMotion } from "../theme/motion";
 import { Icon } from "./icons";
+import { onBack } from "../back";
 import symbolUrl from "../../brand/symbol.svg";
 
 /* ---------- Sheet: نافذة من تحت بالجوال (تنسحب لتحت وتنسكّر)، ووسط الشاشة بالكمبيوتر ---------- */
@@ -18,6 +19,10 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
     panel.current?.focus();
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
+  // زر الرجوع: تسجيل وحدة لكل فتحة (مو كل رسم)، عشان النافذة اللي فوق تظل آخر وحدة بالسجل
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+  useEffect(() => (open ? onBack(() => closeRef.current()) : undefined), [open]);
 
   const mobile = () => window.matchMedia("(max-width: 767px)").matches;
   const setY = (dy: number, animate: boolean) => {

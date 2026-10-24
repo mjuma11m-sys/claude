@@ -6,6 +6,7 @@ import "./tokens.css";
 import "./AppShell.css";
 import "./motion.css";
 import symbolUrl from "../../brand/symbol.svg";
+import { onBack } from "../back";
 import { useCountUp, usePresence, usePulseOn, useReplayClass } from "./motion";
 
 export type NavItem = { id: string; label: string; icon: ReactNode; badge?: number };
@@ -67,7 +68,8 @@ export function AppShell({ items, active, onNavigate, title, actions, onAdd, chi
     if (!moreOpen) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMoreOpen(false);
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    const offBack = onBack(() => setMoreOpen(false));
+    return () => { window.removeEventListener("keydown", onKey); offBack(); };
   }, [moreOpen]);
 
   const go = (id: string) => {

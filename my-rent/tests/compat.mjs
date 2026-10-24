@@ -41,5 +41,13 @@ ok(/apple-mobile-web-app-capable/.test(html) && /apple-touch-icon/.test(html) &&
   const missing = items.filter((t) => !pubText.includes(t));
   ok(pub.includes(ver) && missing.length === 0 && items.length > 10, `privacy.html مطابقة للتطبيق (النسخة ${ver}، ${items.length} بند)`, missing.slice(0, 2).join(" | "));
 }
+// DW-040: نسخة المتجر — بيان خصوصية أبل داخل مشروع Xcode، وكل نافذة (role=dialog) تتسكّر بزر الرجوع بأندرويد
+{
+  const pi = "ios/App/App/PrivacyInfo.xcprivacy", pbx = fs.readFileSync("ios/App/App.xcodeproj/project.pbxproj", "utf8");
+  const x = fs.existsSync(pi) ? fs.readFileSync(pi, "utf8") : "";
+  ok(/<key>NSPrivacyTracking<\/key>\s*<false\/>/.test(x) && /UserDefaults[\s\S]*CA92\.1/.test(x) && /PrivacyInfo\.xcprivacy in Resources \*\/,/.test(pbx), "PrivacyInfo.xcprivacy موجود، بدون تتبّع، ومضاف لموارد التطبيق");
+  const dialogs = js.filter(([, s]) => /role="dialog"/.test(s) && !/onBack\(/.test(s)).map(([f]) => f);
+  ok(dialogs.length === 0, "كل نافذة تسجّل نفسها لزر الرجوع (onBack)", dialogs.join(", "));
+}
 console.log(failed ? `\n${failed} فشل` : "\nكل فحوصات التوافق نجحت");
 process.exit(failed ? 1 : 0);

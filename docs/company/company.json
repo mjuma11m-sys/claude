@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 40,
+  "next": 41,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -311,6 +311,14 @@
       "title": "تقييم المجلس: جاهزية إداراتي للمتاجر بعد DW-038",
       "owner": "CEO",
       "priority": "P2",
+      "status": "done",
+      "opened": "2026-10-24",
+      "updated": "2026-10-24"
+    },
+    "DW-040": {
+      "title": "سلبيات DW-039: Privacy manifest، زر الرجوع بأندرويد، محاكي أندرويد بالـ CI",
+      "owner": "CTO",
+      "priority": "P1",
       "status": "done",
       "opened": "2026-10-24",
       "updated": "2026-10-24"

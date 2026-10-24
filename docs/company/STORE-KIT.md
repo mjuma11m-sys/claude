@@ -12,7 +12,9 @@
 | الحفظ والمشاركة داخل التطبيق (نسخة احتياطية، Excel، CSV، تقويم، عقود، وثائق) | `src/native.ts` |
 | حذف الحساب من داخل التطبيق (شرط المتجرين) | الإعدادات ← المزامنة ← «احذف حسابي نهائياً» |
 | رابط سياسة الخصوصية العام | `…/idarati-app/privacy.html` |
-| اختبار آيفون سميوليتر (Safari الحقيقي) + بناء APK أندرويد | GitHub Actions: «Idarati iPhone» و«Idarati Android» |
+| اختبار آيفون سميوليتر (Safari الحقيقي) + APK أندرويد يشتغل على محاكي أندرويد 15 (الشاشة، الهيدر تحت شريط الساعة، زر الرجوع) | GitHub Actions: «Idarati iPhone» و«Idarati Android» |
+| بيان الخصوصية لأبل (Privacy manifest) — مطابق لجدول القسم 4 | `ios/App/App/PrivacyInfo.xcprivacy` (DW-040) |
+| زر الرجوع بأندرويد: يسكّر النافذة ← يرجع ← يصغّر التطبيق | `src/back.ts` (DW-040) |
 | التشفير (أبل) | `ITSAppUsesNonExemptEncryption = NO` (HTTPS بس) |
 
 ## 2. عليك (بالترتيب)
