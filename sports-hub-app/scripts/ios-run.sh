@@ -19,7 +19,7 @@ TEAM="${TEAM:-$(defaults read com.apple.dt.Xcode IDEProvisioningTeamByIdentifier
 [ -n "${TEAM:-}" ] || { echo "ما لقيت الـTeam. افتح Xcode ← Settings ← Accounts وسجّل Apple ID، أو شغّل: TEAM=XXXXXXXXXX bash scripts/ios-run.sh"; exit 1; }
 
 # The first connected, available iPhone.
-UDID="${UDID:-$(xcrun devicectl list devices 2>/dev/null | awk '/iPhone|iPad/ && /available|connected/ {for(i=1;i<=NF;i++) if ($i ~ /^[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}$/) {print $i; exit}}')}"
+UDID="${UDID:-$(xcrun devicectl list devices 2>/dev/null | grep -E 'iPhone|iPad' | grep -Eiv 'shutdown|simulator|unavailable' | grep -Eo '[0-9A-Fa-f]{8}-([0-9A-Fa-f]{4}-){3}[0-9A-Fa-f]{12}|[0-9A-Fa-f]{8}-[0-9A-Fa-f]{16}' | head -1)}"
 [ -n "${UDID:-}" ] || { echo "ما لقيت آيفون. وصّله بالكيبل، افتح قفله، وفعّل Developer Mode (الإعدادات ← الخصوصية والأمان)."; exit 1; }
 
 echo "▸ Team $TEAM · Bundle $BUNDLE · Device $UDID"
