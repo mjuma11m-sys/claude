@@ -59,3 +59,19 @@ export const cardFileName = (matchOn: string) => `match-card-${matchOn.replace(/
 
 /* The key for the opponent's logo: the same team typed with other spacing or case finds the same logo. */
 export const oppKey = (name: string) => name.trim().replace(/\s+/g, ' ').toLowerCase()
+
+/* The text that travels with the image (WhatsApp shows it as the caption): only what the players need; empty fields are left out. */
+export function cardCaption(m: { club: string; opponent: string; matchOn: string; league: string; venue: string; gather: string; kit: string }): string {
+  const kit = m.kit.trim()
+  const lines = [
+    `⚽ ${m.club.trim() || 'فريقنا'} × ${m.opponent.trim() || 'الخصم'}`,
+    cardDate(m.matchOn) && `📅 ${cardDate(m.matchOn)}`,
+    m.league.trim() && `🏆 ${m.league.trim()}`,
+    m.venue.trim() && `📍 ${m.venue.trim()}`,
+    m.gather.trim() && `⏰ التجمّع: ${m.gather.trim()}`,
+    kit && !/_{3,}/.test(kit) && `👕 ${kit}`,
+    '',
+    'القائمة بالصورة 👇',
+  ]
+  return lines.filter((l) => l !== false && l !== undefined && l !== null).join('\n')
+}

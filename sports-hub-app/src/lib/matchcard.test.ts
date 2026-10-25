@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cardDate, cardFileName, cardRows, fitLogo, inkOn, MAX_CARD_PLAYERS, oppKey, rowHeight, splitColumns, validColor } from './matchcard'
+import { cardCaption, cardDate, cardFileName, cardRows, fitLogo, inkOn, MAX_CARD_PLAYERS, oppKey, rowHeight, splitColumns, validColor } from './matchcard'
 import type { LPlayer, Lineup } from './lineup'
 
 const P = (num: number, pos: string): LPlayer => ({ id: `p${num}`, num, name: `لاعب ${num}`, pos, status: 'fit' })
@@ -50,5 +50,20 @@ describe('helpers', () => {
     expect(cardFileName('2026-10-31')).toBe('match-card-2026-10-31.png')
     expect(cardFileName('x/../2026')).toBe('match-card-..2026.png'.replace('..', ''))
     expect(oppKey('  Al  Ahli ')).toBe(oppKey('al ahli'))
+  })
+})
+
+describe('cardCaption', () => {
+  const full = { club: 'الأمل', opponent: 'الفجر', matchOn: '2026-10-31', league: 'الدوري · الجولة 3', venue: 'استاد المدينة', gather: '5:30 م', kit: 'أخضر' }
+  it('lists what the players need, one line each', () => {
+    const c = cardCaption(full).split('\n')
+    expect(c[0]).toBe('⚽ الأمل × الفجر')
+    expect(c).toContain('📍 استاد المدينة'); expect(c).toContain('⏰ التجمّع: 5:30 م'); expect(c).toContain('👕 أخضر')
+    expect(c.at(-1)).toBe('القائمة بالصورة 👇')
+  })
+  it('leaves out empty fields and the kit placeholder', () => {
+    const c = cardCaption({ ...full, league: '', venue: ' ', gather: '', kit: 'قميص: ____ · شورت: ____' })
+    expect(c).not.toMatch(/🏆|📍|⏰|👕/)
+    expect(cardCaption({ ...full, club: '', opponent: '' }).split('\n')[0]).toBe('⚽ فريقنا × الخصم')
   })
 })

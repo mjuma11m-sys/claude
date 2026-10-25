@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { bundledLogo, BH_CLUBS } from '../data/bhclubs'
 import { DEFAULT_PREFS, readLogos, readPrefs, saveLogo, shrinkLogo, writePrefs, type CardPrefs, type Logos } from '../data/matchcard'
 import type { Lineup, LPlayer } from '../lib/lineup'
-import { CARD_H, CARD_W, cardDate, cardFileName, cardRows, fitLogo, inkOn, oppKey, rowHeight, splitColumns, validColor } from '../lib/matchcard'
+import { CARD_H, CARD_W, cardCaption, cardDate, cardFileName, cardRows, fitLogo, inkOn, oppKey, rowHeight, splitColumns, validColor } from '../lib/matchcard'
 import { Segmented } from './Segmented'
 
 const field = 'min-h-11 w-full rounded-xl border border-white/15 bg-white/5 px-3 text-start'
@@ -106,6 +106,8 @@ export function MatchCard({ lineup, players, opponent, matchOn }: { lineup: Line
     if (!ownership) return setMsg({ ok: false, text: 'أكّد أولاً أن الشعار حقّك أو معك إذن باستخدامه.' })
     try { setLogos(saveLogo(which === 'own' ? 'own' : { opponent }, await shrinkLogo(f))); setMsg({ ok: true, text: 'انحفظ الشعار على هذا الجهاز فقط.' }) } catch (e) { setMsg({ ok: false, text: e instanceof Error && e.message === 'size' ? 'الصورة كبيرة (أقل من 8 ميغا).' : 'ما قدرنا نقرأ الصورة. استخدم PNG أو JPG.' }) }
   }
+  const caption = () => cardCaption({ club: prefs.club, opponent, matchOn, league: prefs.league, venue: prefs.venue, gather: prefs.gather, kit: prefs.kit })
+  async function copyCaption() { try { await navigator.clipboard.writeText(caption()); setMsg({ ok: true, text: 'اننسخ النص. الصقه مع الصورة بالقروب.' }) } catch { setMsg({ ok: false, text: 'ما قدرنا ننسخ. جرّب من متصفح ثاني.' }) } }
   const blob = () => new Promise<Blob | null>((r) => ref.current!.toBlob(r, 'image/png'))
   async function download() {
     const b = await blob(); if (!b) return setMsg({ ok: false, text: 'ما انرسمت البطاقة.' })
@@ -114,7 +116,7 @@ export function MatchCard({ lineup, players, opponent, matchOn }: { lineup: Line
   async function share() {
     const b = await blob(); if (!b) return
     const file = new File([b], cardFileName(matchOn), { type: 'image/png' })
-    try { if (navigator.canShare?.({ files: [file] })) await navigator.share({ files: [file], title: 'بطاقة المباراة' }); else await download() } catch { /* cancelled */ }
+    try { if (navigator.canShare?.({ files: [file] })) await navigator.share({ files: [file], title: 'بطاقة المباراة', text: caption() }); else await download() } catch { /* cancelled */ }
   }
 
   return (
@@ -150,10 +152,12 @@ export function MatchCard({ lineup, players, opponent, matchOn }: { lineup: Line
             <p className="text-xs text-mute">شعار الخصم ينحفظ باسمه، فإذا لعبتوا ضده مرة ثانية يطلع تلقائي.</p>
           </fieldset>
 
+          <details className="text-sm"><summary className="min-h-11 cursor-pointer py-2 text-mute">النص المرفق مع الصورة</summary><pre className="whitespace-pre-wrap rounded-xl bg-white/5 p-3 text-xs" dir="rtl">{caption()}</pre></details>
           <p className="text-xs text-mute">بتنرسل أسماء اللاعبين بالصورة: تأكد إن قروبكم للمعنيين فقط. ما فيها بيانات صحية ولا رواتب.</p>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={download} className={btn}>نزّل البطاقة (PNG)</button>
-            <button type="button" onClick={share} className={ghost}>شارك</button>
+            <button type="button" onClick={share} className={ghost}>شارك مع النص</button>
+            <button type="button" onClick={copyCaption} className={ghost}>انسخ النص</button>
           </div>
           {msg && <p role="status" className={`text-sm ${msg.ok ? 'text-safe' : 'text-crimson-ink'}`}>{msg.text}</p>}
         </>

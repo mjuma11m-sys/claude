@@ -389,6 +389,16 @@ test.describe('match card', () => {
     expect(await page.evaluate(() => localStorage.getItem('sh.cardLogos'))).not.toContain('data:image')
   })
 
+  test('the caption follows the fields and can be copied', async ({ page, context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']).catch(() => {})
+    await page.getByRole('button', { name: 'اقترح التشكيلة' }).click()
+    await card(page).locator('#cardVenue').fill('استاد المدينة')
+    await card(page).getByText('النص المرفق مع الصورة').click()
+    await expect(card(page).locator('pre')).toContainText('📍 استاد المدينة')
+    await card(page).getByRole('button', { name: 'انسخ النص' }).click()
+    await expect(card(page).getByText(/اننسخ النص|ما قدرنا ننسخ/)).toBeVisible()
+  })
+
   test('no horizontal scroll on the card section', async ({ page }) => {
     await page.getByRole('button', { name: 'اقترح التشكيلة' }).click()
     await card(page).scrollIntoViewIfNeeded()
