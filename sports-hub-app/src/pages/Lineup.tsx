@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { DemoNote } from '../components/DemoNote'
 import { Icon } from '../components/Icon'
+import { MatchCard } from '../components/MatchCard'
 import { PageTitle } from '../components/PageTitle'
 import { Segmented } from '../components/Segmented'
 import { Failed, Loading } from '../components/States'
@@ -211,6 +212,7 @@ export function Lineup() {
           </article>
         </div>
       </div>
+      <MatchCard lineup={lineup} players={players} opponent={opponent.trim()} matchOn={matchOn} />
       {load.data.dev.demo && <DemoNote text="* لاعبون وتشكيلات خيالية للعرض، مو بيانات حقيقية. الأندية خيالية." />}
     </section>
   )

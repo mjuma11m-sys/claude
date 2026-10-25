@@ -358,6 +358,44 @@ test.describe('layout', () => {
   })
 })
 
+test.describe('match card', () => {
+  test.beforeEach(async ({ page }) => { await as(page, 'إدارة النادي'); await page.goto('/lineup') })
+  const card = (page: Page) => page.getByRole('article', { name: 'بطاقة المباراة' })
+  const PNG_1X1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
+
+  test('an empty lineup explains what is needed; after the suggestion a 1080x1920 card can be downloaded', async ({ page }) => {
+    await expect(card(page).getByRole('status')).toContainText('اختر لاعبين')
+    await page.getByRole('button', { name: 'اقترح التشكيلة' }).click()
+    await expect(card(page).getByRole('img', { name: 'معاينة بطاقة المباراة' })).toBeVisible()
+    await card(page).locator('#cardClub').fill('نادي الأمل')
+    await page.locator('#opponent').fill('نادي الفجر')
+    const [dl] = await Promise.all([page.waitForEvent('download'), card(page).getByRole('button', { name: /نزّل البطاقة/ }).click()])
+    expect(dl.suggestedFilename()).toMatch(/\.png$/)
+    const buf = await (await import('node:fs/promises')).readFile(await dl.path())
+    expect(buf.readUInt32BE(16)).toBe(1080); expect(buf.readUInt32BE(20)).toBe(1920)
+    expect(buf.length).toBeGreaterThan(30_000) // not a blank canvas
+  })
+
+  test('a logo needs the ownership confirmation, then stays on this device and can be removed', async ({ page }) => {
+    await page.getByRole('button', { name: 'اقترح التشكيلة' }).click()
+    const up = card(page).getByLabel('ارفع شعار ناديك')
+    await up.setInputFiles({ name: 'logo.png', mimeType: 'image/png', buffer: PNG_1X1 })
+    await expect(card(page).getByText('أكّد أولاً')).toBeVisible()
+    await card(page).getByRole('checkbox', { name: /أقرّ/ }).check()
+    await up.setInputFiles({ name: 'logo.png', mimeType: 'image/png', buffer: PNG_1X1 })
+    await expect(card(page).getByText('انحفظ الشعار على هذا الجهاز فقط')).toBeVisible()
+    expect(await page.evaluate(() => localStorage.getItem('sh.cardLogos'))).toContain('data:image/png')
+    await card(page).getByRole('button', { name: 'أزل شعاري' }).click()
+    expect(await page.evaluate(() => localStorage.getItem('sh.cardLogos'))).not.toContain('data:image')
+  })
+
+  test('no horizontal scroll on the card section', async ({ page }) => {
+    await page.getByRole('button', { name: 'اقترح التشكيلة' }).click()
+    await card(page).scrollIntoViewIfNeeded()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
+  })
+})
+
 test.describe('match lineup', () => {
   test.beforeEach(async ({ page }) => { await as(page, 'إدارة النادي'); await page.goto('/lineup') })
   const pitch = (page: Page) => page.getByRole('group', { name: 'الملعب' })
