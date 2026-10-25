@@ -134,6 +134,25 @@ test.describe('data center', () => {
     await expect(page.getByRole('radiogroup', { name: 'حضور سالم العلي' })).toBeVisible()
   })
 
+  test('a player added with an injury arrives injured, with the note and return date, and is not picked for the lineup', async ({ page }) => {
+    await signAgreement(page)
+    const panel = page.getByRole('article', { name: 'أضف لاعبين' })
+    const one = panel.getByRole('form', { name: 'إضافة لاعب' })
+    await one.getByLabel('رقم القميص').fill('78'); await one.getByLabel('اسم اللاعب').fill('ماجد المصاب'); await one.getByLabel('المركز').fill('مهاجم')
+    await one.getByText('حالة اللاعب (اختياري)').click()
+    await one.getByRole('tab', { name: 'مصاب' }).click()
+    await one.locator('#addAvailNote').fill('كاحل')
+    await one.getByRole('group', { name: 'كروت صفراء' }).getByRole('button', { name: 'زد كروت صفراء' }).click()
+    await one.getByRole('button', { name: 'أضف للمعاينة' }).click()
+    await expect(panel.getByRole('row').filter({ hasText: 'ماجد المصاب' })).toContainText('مصاب')
+    await page.locator('#rosterRef').fill('FORM-INJ-1')
+    await page.getByRole('button', { name: /^أضف 1 لاعب$/ }).click()
+    await expect(page.getByRole('status').filter({ hasText: 'انضاف' })).toBeVisible()
+    await page.goto('/lineup')
+    const row = page.getByRole('article', { name: 'حالة اللاعبين' }).getByRole('button', { name: 'حالة ماجد المصاب' })
+    await expect(row).toContainText('مصاب'); await expect(row).toContainText('كاحل'); await expect(row).toContainText('1 أصفر')
+  })
+
   test('adding one player at a time stages it, refuses a number already in the squad, and a staged row can be removed', async ({ page }) => {
     await signAgreement(page)
     const panel = page.getByRole('article', { name: 'أضف لاعبين' })
@@ -355,6 +374,82 @@ test.describe('layout', () => {
       }
       await page.evaluate(() => localStorage.clear())
     }
+  })
+})
+
+test.describe('match card', () => {
+  test.beforeEach(async ({ page }) => { await as(page, 'إدارة النادي'); await page.goto('/lineup') })
+  const card = (page: Page) => page.getByRole('article', { name: 'بطاقة المباراة' })
+  const PNG_1X1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
+
+  test('an empty lineup explains what is needed; after the suggestion a 1080x1920 card can be downloaded', async ({ page }) => {
+    await expect(card(page).getByRole('status')).toContainText('اختر لاعبين')
+    await page.getByRole('button', { name: 'اقترح التشكيلة' }).click()
+    await expect(card(page).getByRole('img', { name: 'معاينة بطاقة المباراة' })).toBeVisible()
+    await card(page).locator('#cardClub').fill('نادي الأمل')
+    await page.locator('#opponent').fill('نادي الفجر')
+    const [dl] = await Promise.all([page.waitForEvent('download'), card(page).getByRole('button', { name: /نزّل البطاقة/ }).click()])
+    expect(dl.suggestedFilename()).toMatch(/\.png$/)
+    const buf = await (await import('node:fs/promises')).readFile(await dl.path())
+    expect(buf.readUInt32BE(16)).toBe(1080); expect(buf.readUInt32BE(20)).toBe(1920)
+    expect(buf.length).toBeGreaterThan(30_000) // not a blank canvas
+  })
+
+  test('a logo needs the ownership confirmation, then stays on this device and can be removed', async ({ page }) => {
+    await page.getByRole('button', { name: 'اقترح التشكيلة' }).click()
+    const up = card(page).getByLabel('ارفع شعار ناديك')
+    await up.setInputFiles({ name: 'logo.png', mimeType: 'image/png', buffer: PNG_1X1 })
+    await expect(card(page).getByText('أكّد أولاً')).toBeVisible()
+    await card(page).getByRole('checkbox', { name: /أقرّ/ }).check()
+    await up.setInputFiles({ name: 'logo.png', mimeType: 'image/png', buffer: PNG_1X1 })
+    await expect(card(page).getByText('انحفظ الشعار على هذا الجهاز فقط')).toBeVisible()
+    expect(await page.evaluate(() => localStorage.getItem('sh.cardLogos'))).toContain('data:image/png')
+    await card(page).getByRole('button', { name: 'أزل شعاري' }).click()
+    expect(await page.evaluate(() => localStorage.getItem('sh.cardLogos'))).not.toContain('data:image')
+  })
+
+  test('the caption follows the fields and can be copied', async ({ page, context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']).catch(() => {})
+    await page.getByRole('button', { name: 'اقترح التشكيلة' }).click()
+    await card(page).locator('#cardVenue').fill('استاد المدينة')
+    await card(page).getByText('النص المرفق مع الصورة').click()
+    await expect(card(page).locator('pre')).toContainText('📍 استاد المدينة')
+    await card(page).getByRole('button', { name: 'انسخ النص' }).click()
+    await expect(card(page).getByText(/اننسخ النص|ما قدرنا ننسخ/)).toBeVisible()
+  })
+
+  test('availability: an injured player is saved with note, date and cards, leaves the suggestion, and the card can list absentees by name only', async ({ page }) => {
+    const panel = page.getByRole('article', { name: 'حالة اللاعبين' })
+    await panel.getByRole('button', { name: 'حالة اللاعب 9' }).click()
+    await panel.getByRole('tab', { name: 'مصاب' }).click()
+    await panel.locator('#availNote').fill('شد عضلي')
+    await panel.locator('#availReturn').fill(new Date(Date.now() + 14 * 86_400_000).toISOString().slice(0, 10))
+    await panel.getByRole('button', { name: 'زد كروت حمراء' }).click()
+    await panel.getByRole('button', { name: 'احفظ الحالة' }).click()
+    await expect(panel.getByRole('status')).toContainText('انحفظت حالة')
+    const row = panel.getByRole('button', { name: 'حالة اللاعب 9' })
+    await expect(row).toContainText('مصاب'); await expect(row).toContainText('شد عضلي'); await expect(row).toContainText('يرجع'); await expect(row).toContainText('1 أحمر')
+    await page.getByRole('button', { name: 'اقترح التشكيلة' }).click()
+    await expect(page.getByRole('group', { name: 'الملعب' }).getByRole('button', { name: /: اللاعب 9$/ })).toHaveCount(0)
+    const card = page.getByRole('article', { name: 'بطاقة المباراة' })
+    await card.getByRole('checkbox', { name: /اعرض أسماء الغائبين/ }).check()
+    await expect(card.getByRole('img', { name: 'معاينة بطاقة المباراة' })).toBeVisible()
+    await expect(card.getByText(/بدون سبب ولا مدة/)).toBeVisible()
+  })
+
+  test('availability refuses a return date in the past', async ({ page }) => {
+    const panel = page.getByRole('article', { name: 'حالة اللاعبين' })
+    await panel.getByRole('button', { name: 'حالة اللاعب 8' }).click()
+    await panel.getByRole('tab', { name: 'مصاب' }).click()
+    await panel.locator('#availReturn').fill('2020-01-01')
+    await expect(panel.getByRole('alert')).toContainText('اليوم أو بعده')
+    await expect(panel.getByRole('button', { name: 'احفظ الحالة' })).toBeDisabled()
+  })
+
+  test('no horizontal scroll on the card section', async ({ page }) => {
+    await page.getByRole('button', { name: 'اقترح التشكيلة' }).click()
+    await card(page).scrollIntoViewIfNeeded()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
   })
 })
 

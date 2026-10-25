@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { DemoNote } from '../components/DemoNote'
+import { AvailabilityPanel } from '../components/AvailabilityPanel'
 import { Icon } from '../components/Icon'
+import { MatchCard } from '../components/MatchCard'
 import { PageTitle } from '../components/PageTitle'
 import { Segmented } from '../components/Segmented'
 import { Failed, Loading } from '../components/States'
@@ -126,7 +128,7 @@ export function Lineup() {
 
       <div className="glass rise space-y-3 p-4 md:p-5" style={vars({ '--i': 2 })}>
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block space-y-1"><span className="text-xs text-mute">الخصم</span><input id="opponent" maxLength={40} value={opponent} onChange={(e) => setOpponent(e.target.value)} className={field} placeholder="اسم الفريق الخصم" /></label>
+          <label className="block space-y-1"><span className="text-xs text-mute">الخصم</span><input id="opponent" list="bhClubs" maxLength={40} value={opponent} onChange={(e) => setOpponent(e.target.value)} className={field} placeholder="اسم الفريق الخصم" /></label>
           <label className="block space-y-1"><span className="text-xs text-mute">تاريخ المباراة</span><input id="lineupDate" type="date" dir="ltr" value={matchOn} onChange={(e) => setMatchOn(e.target.value)} className={field} /></label>
         </div>
         <Segmented label="التشكيل" value={formation} onChange={changeFormation} options={FORMATIONS.map((f) => ({ key: f, label: f }))} />
@@ -211,6 +213,8 @@ export function Lineup() {
           </article>
         </div>
       </div>
+      <AvailabilityPanel players={players} onChanged={load.reload} />
+      <MatchCard lineup={lineup} players={players} opponent={opponent.trim()} matchOn={matchOn} />
       {load.data.dev.demo && <DemoNote text="* لاعبون وتشكيلات خيالية للعرض، مو بيانات حقيقية. الأندية خيالية." />}
     </section>
   )

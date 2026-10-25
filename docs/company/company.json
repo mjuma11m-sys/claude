@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 76,
+  "next": 79,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -589,6 +589,30 @@
       "status": "review",
       "opened": "2026-10-24",
       "updated": "2026-10-24"
+    },
+    "DW-076": {
+      "title": "Sports Hub: بطاقة المباراة (صورة قائمة اللاعبين ليوم المباراة) بقالب قابل للتخصيص وشعار النادي من رفع الإداري",
+      "owner": "CEO",
+      "priority": "P2",
+      "status": "review",
+      "opened": "2026-10-25",
+      "updated": "2026-10-25"
+    },
+    "DW-077": {
+      "title": "Sports Hub: تجهيز TestFlight ثم App Store (وصف، خصوصية، خطوات الرفع)",
+      "owner": "CEO",
+      "priority": "P2",
+      "status": "review",
+      "opened": "2026-10-25",
+      "updated": "2026-10-25"
+    },
+    "DW-078": {
+      "title": "Sports Hub: حالة اللاعب (إصابة بنوعها وموعد العودة، كروت أصفر وأحمر) عند الإضافة وبزر سريع وأسماء الغائبين على البطاقة",
+      "owner": "CEO",
+      "priority": "P2",
+      "status": "review",
+      "opened": "2026-10-25",
+      "updated": "2026-10-25"
     }
   }
 }
