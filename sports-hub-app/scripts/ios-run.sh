@@ -23,9 +23,13 @@ UDID="${UDID:-$(xcrun devicectl list devices 2>/dev/null | grep -E 'iPhone|iPad'
 [ -n "${UDID:-}" ] || { echo "ما لقيت آيفون. وصّله بالكيبل، افتح قفله، وفعّل Developer Mode (الإعدادات ← الخصوصية والأمان)."; exit 1; }
 
 echo "▸ Team $TEAM · Bundle $BUNDLE · Device $UDID"
+# Put the bundle id in the app target only (a command-line override would also rename every pod framework and the install fails with DuplicateIdentifier).
+PBX=ios/App/App.xcodeproj/project.pbxproj
+cp "$PBX" "$PBX.bak"; trap 'mv -f "$PBX.bak" "$PBX"' EXIT
+sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = [^;]*;/PRODUCT_BUNDLE_IDENTIFIER = $BUNDLE;/" "$PBX"
 xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Debug -destination "id=$UDID" \
   -derivedDataPath ios/App/DerivedData -allowProvisioningUpdates \
-  DEVELOPMENT_TEAM="$TEAM" PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE" CODE_SIGN_STYLE=Automatic build | tail -5
+  DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Automatic build | tail -5
 APP="$(ls -d ios/App/DerivedData/Build/Products/Debug-iphoneos/App.app)"
 xcrun devicectl device install app --device "$UDID" "$APP"
 xcrun devicectl device process launch --device "$UDID" "$BUNDLE" || echo "إذا ما انفتح: الإعدادات ← عام ← VPN وإدارة الجهاز ← ثق بحسابك، ثم افتح التطبيق."
