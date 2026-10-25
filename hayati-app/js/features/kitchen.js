@@ -1,4 +1,4 @@
-// DW-052: «المطبخ» — وصفات خليجية بمقادير تتغيّر حسب عدد الأشخاص، خطوات تشطّبها، والناقص يروح للمشتريات
+// DW-052: «المطبخ» — وصفات خليجية (وDW-082: ومن العالم) بمقادير تتغيّر حسب عدد الأشخاص، خطوات تشطّبها، والناقص يروح للمشتريات
 // الوصفات بالجهاز (recipes.js)، والمفضلة بالإعدادات (settings.kitchen_fav)
 (function () {
   'use strict';
@@ -9,9 +9,9 @@
   const wrap = (name, fn) => { const prev = E[name]; E[name] = (...a) => fn(prev ? prev : () => '', ...a); };
   const all = () => window.HAYATI_RECIPES || [];
 
-  const CATS = [['all', 'الكل'], ['fav', '❤️ المفضلة'], ['main', 'الغدا'], ['breakfast', 'الفطور'], ['sweet', 'الحلا'], ['drink', 'المشروبات'], ['side', 'جانبي']];
+  const CATS = [['all', 'الكل'], ['fav', '❤️ المفضلة'], ['world', '🌍 من العالم'], ['main', 'الغدا'], ['breakfast', 'الفطور'], ['sweet', 'الحلا'], ['drink', 'المشروبات'], ['side', 'جانبي']];
   const LEVEL = ['', 'سهلة', 'متوسطة'];
-  const COUNT = ['حبة', 'فص', 'عود', 'علبة', 'شريحة'];
+  const COUNT = ['حبة', 'فص', 'عود', 'علبة', 'شريحة', 'ربطة'];
   const ui = { cat: 'all', q: '' };
   const favs = () => (Array.isArray(st.settings.kitchen_fav) ? st.settings.kitchen_fav : []);
 
@@ -37,15 +37,15 @@
   function list() {
     const q = ui.q.trim();
     const fv = favs();
-    return all().filter((r) => (ui.cat === 'all' || (ui.cat === 'fav' ? fv.includes(r.id) : r.cat === ui.cat)) &&
-      (!q || r.name.includes(q) || r.en.toLowerCase().includes(q.toLowerCase()) || r.ing.some((x) => x[2].includes(q))));
+    return all().filter((r) => (ui.cat === 'all' || (ui.cat === 'fav' ? fv.includes(r.id) : ui.cat === 'world' ? r.world : r.cat === ui.cat)) &&
+      (!q || r.name.includes(q) || (r.origin && r.origin.includes(q)) || r.en.toLowerCase().includes(q.toLowerCase()) || r.ing.some((x) => x[2].includes(q))));
   }
   function rows() {
     const items = list();
     if (!items.length) return '<div class="card">' + A.empty('utensils', ui.cat === 'fav' ? 'ما عندك مفضلة للحين' : 'ما لقينا وصفة', ui.cat === 'fav' ? 'اضغط ♡ بأي وصفة وتنحفظ هني' : 'جرّب اسم ثاني أو مكوّن مثل «دجاج»') + '</div>';
     return '<div class="card flush"><ul class="list">' + items.map((r) =>
       '<li class="row" data-recipe="' + r.id + '"><div class="ico" style="font-size:22px">' + r.icon + '</div><div class="main"><div class="title"><span class="t" data-noi18n>' + h(r.name) + '</span>' +
-      (favs().includes(r.id) ? ' <small>❤️</small>' : '') + '</div><div class="sub"><bdi>' + r.mins + '</bdi> د · ' + LEVEL[r.level] + ' · ' + r.ing.length + ' مكوّنات</div></div><span class="muted">' + I('chevL') + '</span></li>').join('') + '</ul></div>';
+      (favs().includes(r.id) ? ' <small>❤️</small>' : '') + '</div><div class="sub">' + (r.origin ? '<span data-noi18n>' + h(r.origin) + '</span> · ' : '') + '<bdi>' + r.mins + '</bdi> د · ' + LEVEL[r.level] + ' · ' + r.ing.length + ' مكوّنات</div></div><span class="muted">' + I('chevL') + '</span></li>').join('') + '</ul></div>';
   }
   const BASICS = [
     ['🥄', 'المقاسات', 'الكوب = 240 مل (كوب الشاي الكبير). م.ك = ملعقة كبيرة (ملعقة الأكل)، م.ص = ملعقة صغيرة (ملعقة الشاي).'],
@@ -98,7 +98,7 @@
       title: r.icon + ' ' + r.name,
       cancelLabel: 'تم',
       body: '<button type="button" class="link" id="kBack" style="margin:0 0 8px">' + I('chevR') + 'كل الوصفات</button>' +
-        '<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px"><span class="tag">⏱ <bdi>' + r.mins + '</bdi> د</span><span class="tag">' + LEVEL[r.level] + '</span>' +
+        '<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">' + (r.origin ? '<span class="tag" data-noi18n>' + h(r.origin) + '</span>' : '') + '<span class="tag">⏱ <bdi>' + r.mins + '</bdi> د</span><span class="tag">' + LEVEL[r.level] + '</span>' +
         '<button type="button" class="btn ghost" id="kFav" style="margin-inline-start:auto">' + (fav() ? '❤️ بالمفضلة' : '♡ احفظها') + '</button></div>' +
         '<div class="card" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><b>لكم شخص؟</b><div style="display:flex;align-items:center;gap:12px">' +
         '<button type="button" class="icon-btn" id="kMinus" aria-label="أقل">' + I('minus') + '</button><b class="num" id="kN" style="font-size:20px;min-width:28px;text-align:center">' + n + '</b>' +

@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 82,
+  "next": 83,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -650,6 +650,14 @@
       "status": "new",
       "opened": "2026-10-21",
       "updated": "2026-10-21"
+    },
+    "DW-082": {
+      "title": "المطبخ من العالم",
+      "owner": "CEO",
+      "priority": "P3",
+      "status": "new",
+      "opened": "2026-10-25",
+      "updated": "2026-10-25"
     }
   }
 }

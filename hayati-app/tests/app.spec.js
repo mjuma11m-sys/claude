@@ -259,6 +259,24 @@ test('timetable image without an account asks to sign in or paste text', async (
 });
 
 // DW-052: المطبخ ← المقادير تتغيّر حسب الأشخاص، والناقص للمشتريات
+test('kitchen «من العالم» (DW-082): world dishes filter, show their country, and scale like the rest', async ({ page }) => {
+  await open(page);
+  await page.click('#toolsBtn');
+  await page.click('[data-tool="kitchen"]');
+  const n = await store(page, () => window.HAYATI_RECIPES.filter((r) => r.world).length);
+  expect(n).toBeGreaterThanOrEqual(40);
+  await page.click('#sheetBody [data-k="world"], #sheetBody [data-cat="world"], #sheetBody button:has-text("من العالم")');
+  await expect(page.locator('#kList [data-recipe]')).toHaveCount(n);
+  await expect(page.locator('#kList [data-recipe="w-biryani"]')).toContainText('الهند');
+  await page.fill('#sheetBody [name=kq]', 'إيطاليا');
+  await expect(page.locator('#kList [data-recipe]')).toHaveCount(4);
+  await page.fill('#sheetBody [name=kq]', 'كشري');
+  await page.click('#kList [data-recipe="w-koshari"]');
+  await expect(page.locator('#kIng [data-ing="0"]')).toContainText('1 كوب');
+  await page.click('#kPlus'); await page.click('#kPlus');   // 4 ← 6
+  await expect(page.locator('#kIng [data-ing="0"]')).toContainText('1½ كوب');
+});
+
 test('kitchen: recipe scales with people and missing items go to shopping', async ({ page }) => {
   await open(page);
   await page.click('#toolsBtn');
@@ -277,11 +295,11 @@ test('kitchen: recipe scales with people and missing items go to shopping', asyn
   expect(q).toEqual(['1½ كغ', '250 غرام', '¼ م.ص', '1 حبة']);
   // DW-060: 50 وصفة، كل وحدة كاملة (مقادير بوحدات معروفة وخطوات ونصيحة)
   const bad = await page.evaluate(() => {
-    const U = ['حبة', 'فص', 'عود', 'علبة', 'شريحة', 'كوب', 'م.ك', 'م.ص', 'غرام', 'كغ', ''];
+    const U = ['حبة', 'فص', 'عود', 'علبة', 'شريحة', 'ربطة', 'كوب', 'م.ك', 'م.ص', 'غرام', 'كغ', ''];
     return window.HAYATI_RECIPES.filter((r) => !(r.name && r.steps.length >= 2 && r.ing.length >= 2 && r.tip && r.serves > 0 && r.ing.every((x) => U.includes(x[1]) && (x[0] == null || x[0] > 0)))).map((r) => r.id);
   });
   expect(bad).toEqual([]);
-  expect(await page.evaluate(() => window.HAYATI_RECIPES.length)).toBe(50);
+  expect(await page.evaluate(() => [window.HAYATI_RECIPES.filter((r) => !r.world).length, window.HAYATI_RECIPES.filter((r) => r.world).length])).toEqual([50, 42]);
 });
 
 // DW-057: الرسالة القديمة تنحفظ بتاريخها، وكذا رسالة مرة وحدة، ونفس الرسالة ما تنضاف مرتين
@@ -1990,7 +2008,7 @@ test('«جديد بحياتي»: an existing user sees what is new once after th
   await store(page, () => localStorage.setItem('hayati-seen-version', 'v26'));   // كان على النسخة اللي قبل
   await open(page);
   await expect(page.locator('#sheetTitle')).toHaveText('جديد بحياتي ✨', { timeout: 5000 });
-  await expect(page.locator('#sheetBody .news-item')).toHaveCount(2);
+  await expect(page.locator('#sheetBody .news-item')).toHaveCount(3);
   await page.click('#sheetCancel');
   expect(await store(page, () => localStorage.getItem('hayati-seen-version'))).toBe(await store(page, () => App.APP_VERSION));
   await open(page);

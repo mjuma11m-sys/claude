@@ -1988,6 +1988,11 @@ window.HAYATI_EN = {
 "من «حسابك» بضغطة، والإيميل وكلمة السر يظلون موجودين": "One tap from «Your account»; email and password still work",
 "رمز من جوالك مع كلمة السر: لو أحد عرفها ما يقدر يدخل حسابك": "A code from your phone with your password: someone who knows it still can't get in",
 // DW-081
+"🌍 من العالم": "🌍 World",
+"صحة ورياضة": "Health & fitness",
+"المطبخ من العالم": "World kitchen",
+"42 أكلة من 26 دولة: برياني، باستا، تاكو، كاري تايلندي، كشري… بنفس الخطوات والمقادير اللي تتغيّر": "42 dishes from 26 countries: biryani, pasta, tacos, Thai curry, koshari… same step-by-step style and scaling amounts",
+"ربطة": "bunch",
 "اكتب الإيميل وكلمة المرور فوق": "Enter your email and password above",
 "كلمة المرور 6 حروف أو أكثر": "Password must be 6 characters or more",
 "ندخلك…": "Signing you in…",
