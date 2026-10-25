@@ -1,5 +1,15 @@
 # تشغيل Sports Hub على الآيفون عبر Xcode (نسخة تجريبية)
 
+## الطريقة السريعة: أمر واحد
+افتح Xcode مرة وسجّل Apple ID (Settings ← Accounts)، وصّل الآيفون مفتوح القفل بوضع Developer Mode، ثم:
+```bash
+npm run ios:run                 # أو: bash scripts/ios-run.sh com.اسمك.sportshub
+```
+يبني ويوقّع ويثبّت ويشغّل التطبيق على الجوال تلقائياً. لو ما لقي الـTeam: `TEAM=XXXXXXXXXX npm run ios:run`.
+السكربت ما انجرّب على جهاز حقيقي بعد، فإذا وقف بخطأ، الطريقة اليدوية تحت تبقى شغالة.
+
+## الطريقة اليدوية
+
 غلاف iOS بسيط (Capacitor) حول نسخة التجربة. يحتاج ماك فيه Xcode و Node 20+ و CocoaPods، وآيفون بكيبل أو نفس الشبكة.
 
 ```bash
