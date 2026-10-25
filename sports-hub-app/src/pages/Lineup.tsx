@@ -127,7 +127,7 @@ export function Lineup() {
 
       <div className="glass rise space-y-3 p-4 md:p-5" style={vars({ '--i': 2 })}>
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block space-y-1"><span className="text-xs text-mute">الخصم</span><input id="opponent" maxLength={40} value={opponent} onChange={(e) => setOpponent(e.target.value)} className={field} placeholder="اسم الفريق الخصم" /></label>
+          <label className="block space-y-1"><span className="text-xs text-mute">الخصم</span><input id="opponent" list="bhClubs" maxLength={40} value={opponent} onChange={(e) => setOpponent(e.target.value)} className={field} placeholder="اسم الفريق الخصم" /></label>
           <label className="block space-y-1"><span className="text-xs text-mute">تاريخ المباراة</span><input id="lineupDate" type="date" dir="ltr" value={matchOn} onChange={(e) => setMatchOn(e.target.value)} className={field} /></label>
         </div>
         <Segmented label="التشكيل" value={formation} onChange={changeFormation} options={FORMATIONS.map((f) => ({ key: f, label: f }))} />

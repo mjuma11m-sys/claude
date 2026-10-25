@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { bundledLogo, BH_CLUBS } from '../data/bhclubs'
 import { DEFAULT_PREFS, readLogos, readPrefs, saveLogo, shrinkLogo, writePrefs, type CardPrefs, type Logos } from '../data/matchcard'
 import type { Lineup, LPlayer } from '../lib/lineup'
 import { CARD_H, CARD_W, cardDate, cardFileName, cardRows, fitLogo, inkOn, oppKey, rowHeight, splitColumns, validColor } from '../lib/matchcard'
@@ -33,7 +34,7 @@ export type CardInput = { lineup: Lineup; players: LPlayer[]; opponent: string; 
 export async function drawCard(canvas: HTMLCanvasElement, d: CardInput) {
   try { await Promise.all([document.fonts.load(`40px Lalezar`, 'ابتث0123'), document.fonts.load(`28px Tajawal`, 'ابتث0123')]) } catch { /* system font */ }
   const t = THEMES[d.prefs.theme]; const col = validColor(d.prefs.color) ? d.prefs.color : DEFAULT_PREFS.color; const onCol = inkOn(col)
-  const own = await loadImg(d.logos.own); const opp = await loadImg(d.logos.opp[oppKey(d.opponent)] ?? null)
+  const own = await loadImg(d.logos.own ?? bundledLogo(d.prefs.club)); const opp = await loadImg(d.logos.opp[oppKey(d.opponent)] ?? bundledLogo(d.opponent))
   canvas.width = CARD_W; canvas.height = CARD_H
   const c = canvas.getContext('2d')!
   const g = c.createLinearGradient(0, 0, 0, CARD_H); g.addColorStop(0, t.bg1); g.addColorStop(1, t.bg0); c.fillStyle = g; c.fillRect(0, 0, CARD_W, CARD_H)
@@ -119,12 +120,13 @@ export function MatchCard({ lineup, players, opponent, matchOn }: { lineup: Line
   return (
     <article className="glass rise space-y-4 p-4 md:p-5" aria-label="بطاقة المباراة">
       <h2 className="font-display text-2xl">بطاقة المباراة</h2>
+      <datalist id="bhClubs">{BH_CLUBS.map((c) => <option key={c.slug} value={c.ar} />)}</datalist>
       <p className="text-xs text-mute">صورة جاهزة لقروب اللاعبين: الشعار، الخصم، التاريخ، الزي، والقائمة بأرقامها. تنرسم على جهازك ولا ينرسل منها شي.</p>
       {rows.length === 0 ? <p className="text-sm text-mute" role="status">اختر لاعبين أولاً (أو اقترح التشكيلة) وتطلع البطاقة هنا.</p> : (
         <>
           <canvas ref={ref} role="img" aria-label="معاينة بطاقة المباراة" className="mx-auto block w-full max-w-xs rounded-2xl border border-white/10" style={{ aspectRatio: `${CARD_W} / ${CARD_H}` }} />
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="block space-y-1"><span className="text-xs text-mute">اسم ناديك</span><input id="cardClub" maxLength={30} value={prefs.club} onChange={(e) => set({ club: e.target.value })} className={field} /></label>
+            <label className="block space-y-1"><span className="text-xs text-mute">اسم ناديك</span><input id="cardClub" list="bhClubs" maxLength={30} value={prefs.club} onChange={(e) => set({ club: e.target.value })} className={field} /></label>
             <label className="block space-y-1"><span className="text-xs text-mute">البطولة والجولة</span><input id="cardLeague" maxLength={30} value={prefs.league} onChange={(e) => set({ league: e.target.value })} className={field} placeholder="مثال: الدوري · الجولة 3" /></label>
             <label className="block space-y-1"><span className="text-xs text-mute">الملعب</span><input id="cardVenue" maxLength={30} value={prefs.venue} onChange={(e) => set({ venue: e.target.value })} className={field} /></label>
             <label className="block space-y-1"><span className="text-xs text-mute">وقت التجمّع</span><input id="cardGather" maxLength={30} value={prefs.gather} onChange={(e) => set({ gather: e.target.value })} className={field} placeholder="مثال: 5:30 م" /></label>
