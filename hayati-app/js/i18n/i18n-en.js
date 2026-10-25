@@ -1989,9 +1989,11 @@ window.HAYATI_EN = {
 "رمز من جوالك مع كلمة السر: لو أحد عرفها ما يقدر يدخل حسابك": "A code from your phone with your password: someone who knows it still can't get in",
 // DW-081
 "🌍 من العالم": "🌍 World",
+"حلال": "Halal",
+"كل الوصفات حلال: بدون خنزير ولا كحول. الجيلاتين والفانيلا وأي منتج مستورد: اختار اللي مكتوب عليه حلال.": "All recipes are halal: no pork and no alcohol. For gelatin, vanilla or any imported product, pick one labelled halal.",
 "صحة ورياضة": "Health & fitness",
 "المطبخ من العالم": "World kitchen",
-"56 أكلة من أكثر من 25 دولة: منسف، مسخن، كبة، دولمة، برياني، باستا، تاكو… بنفس الخطوات والمقادير اللي تتغيّر": "56 dishes from 25+ countries: mansaf, musakhan, kibbeh, dolma, biryani, pasta, tacos… same step-by-step style and scaling amounts",
+"أكثر من 100 وصفة حلال من العالم: منسف، مسخن، دولمة، برياني، باستا… و35 مشروب وعصير، وحلا من كل مكان": "100+ halal recipes from around the world: mansaf, musakhan, dolma, biryani, pasta… plus 35 drinks and juices, and desserts from everywhere",
 "ربطة": "bunch",
 "اكتب الإيميل وكلمة المرور فوق": "Enter your email and password above",
 "كلمة المرور 6 حروف أو أكثر": "Password must be 6 characters or more",

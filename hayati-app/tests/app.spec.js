@@ -269,7 +269,7 @@ test('kitchen «من العالم» (DW-082): world dishes filter, show their co
   await expect(page.locator('#kList [data-recipe]')).toHaveCount(n);
   await expect(page.locator('#kList [data-recipe="w-biryani"]')).toContainText('الهند');
   await page.fill('#sheetBody [name=kq]', 'إيطاليا');
-  await expect(page.locator('#kList [data-recipe]')).toHaveCount(4);
+  await expect(page.locator('#kList [data-recipe]')).toHaveCount(5);
   await page.fill('#sheetBody [name=kq]', 'كشري');
   await page.click('#kList [data-recipe="w-koshari"]');
   await expect(page.locator('#kIng [data-ing="0"]')).toContainText('1 كوب');
@@ -299,7 +299,7 @@ test('kitchen: recipe scales with people and missing items go to shopping', asyn
     return window.HAYATI_RECIPES.filter((r) => !(r.name && r.steps.length >= 2 && r.ing.length >= 2 && r.tip && r.serves > 0 && r.ing.every((x) => U.includes(x[1]) && (x[0] == null || x[0] > 0)))).map((r) => r.id);
   });
   expect(bad).toEqual([]);
-  expect(await page.evaluate(() => [window.HAYATI_RECIPES.filter((r) => !r.world).length, window.HAYATI_RECIPES.filter((r) => r.world).length])).toEqual([50, 56]);
+  expect(await page.evaluate(() => [window.HAYATI_RECIPES.filter((r) => !r.world).length, window.HAYATI_RECIPES.filter((r) => r.world).length])).toEqual([61, 105]);
 });
 
 // DW-057: الرسالة القديمة تنحفظ بتاريخها، وكذا رسالة مرة وحدة، ونفس الرسالة ما تنضاف مرتين
