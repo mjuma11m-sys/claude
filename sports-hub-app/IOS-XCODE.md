@@ -10,7 +10,7 @@ npm run ios:run                 # أو: bash scripts/ios-run.sh com.اسمك.spo
 
 ## الطريقة اليدوية
 
-غلاف iOS بسيط (Capacitor) حول نسخة التجربة. يحتاج ماك فيه Xcode و Node 20+ و CocoaPods، وآيفون بكيبل أو نفس الشبكة.
+غلاف iOS بسيط (Capacitor) حول نسخة التجربة، يعمل على iOS 17 وأحدث. يحتاج ماك فيه Xcode و Node 20+ و CocoaPods، وآيفون بكيبل أو نفس الشبكة.
 
 ```bash
 cd sports-hub-app
