@@ -25,7 +25,7 @@ export function Segmented<T extends string>({ label, value, onChange, options, c
     <div ref={root} role="tablist" aria-label={label} className={`relative flex flex-wrap gap-1 rounded-2xl border border-white/10 p-1 ${className}`}>
       {box && <span aria-hidden className={`seg-pill absolute left-0 top-0 rounded-xl bg-pulse/15 ${ready ? 'seg-ready' : ''}`} style={{ width: box.w, height: box.h, transform: `translate(${box.x}px, ${box.y}px)` }} />}
       {options.map((o) => (
-        <button key={o.key} role="tab" aria-selected={value === o.key} onClick={() => onChange(o.key)} className={`relative z-[1] min-h-11 flex-1 rounded-xl px-3 text-sm transition-colors ${value === o.key ? 'text-pulse' : 'text-mute hover:text-ink'}`}>
+        <button key={o.key} type="button" role="tab" aria-selected={value === o.key} onClick={() => onChange(o.key)} className={`relative z-[1] min-h-11 flex-1 rounded-xl px-3 text-sm transition-colors ${value === o.key ? 'text-pulse' : 'text-mute hover:text-ink'}`}>
           {o.label}{o.count !== undefined && <> <span className="num text-xs">{o.count}</span></>}
         </button>
       ))}

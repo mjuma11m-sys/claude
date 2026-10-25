@@ -1,12 +1,12 @@
 /* Match-card settings and club logos. They stay in this browser only (localStorage): the club uploads its own logo and its opponents'; the app ships none. */
 import { DEFAULT_COLOR, LOGO_PX, oppKey } from '../lib/matchcard'
 
-export type CardPrefs = { theme: 'dark' | 'light'; color: string; club: string; league: string; venue: string; gather: string; kit: string; footer: boolean }
+export type CardPrefs = { theme: 'dark' | 'light'; color: string; club: string; league: string; venue: string; gather: string; kit: string; footer: boolean; absent: boolean }
 export type Logos = { own: string | null; opp: Record<string, string> }
 
 const PREFS = 'sh.cardPrefs'
 const LOGOS = 'sh.cardLogos'
-export const DEFAULT_PREFS: CardPrefs = { theme: 'dark', color: DEFAULT_COLOR, club: '', league: '', venue: '', gather: '', kit: 'قميص: ____ · شورت: ____ · شراب: ____', footer: true }
+export const DEFAULT_PREFS: CardPrefs = { theme: 'dark', color: DEFAULT_COLOR, club: '', league: '', venue: '', gather: '', kit: 'قميص: ____ · شورت: ____ · شراب: ____', footer: true, absent: false }
 
 export function readPrefs(): CardPrefs { try { const v = localStorage.getItem(PREFS); return v ? { ...DEFAULT_PREFS, ...(JSON.parse(v) as Partial<CardPrefs>) } : DEFAULT_PREFS } catch { return DEFAULT_PREFS } }
 export function writePrefs(p: CardPrefs): void { try { localStorage.setItem(PREFS, JSON.stringify(p)) } catch { /* session-only */ } }

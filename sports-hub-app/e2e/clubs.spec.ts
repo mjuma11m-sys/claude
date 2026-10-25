@@ -134,6 +134,25 @@ test.describe('data center', () => {
     await expect(page.getByRole('radiogroup', { name: 'حضور سالم العلي' })).toBeVisible()
   })
 
+  test('a player added with an injury arrives injured, with the note and return date, and is not picked for the lineup', async ({ page }) => {
+    await signAgreement(page)
+    const panel = page.getByRole('article', { name: 'أضف لاعبين' })
+    const one = panel.getByRole('form', { name: 'إضافة لاعب' })
+    await one.getByLabel('رقم القميص').fill('78'); await one.getByLabel('اسم اللاعب').fill('ماجد المصاب'); await one.getByLabel('المركز').fill('مهاجم')
+    await one.getByText('حالة اللاعب (اختياري)').click()
+    await one.getByRole('tab', { name: 'مصاب' }).click()
+    await one.locator('#addAvailNote').fill('كاحل')
+    await one.getByRole('group', { name: 'كروت صفراء' }).getByRole('button', { name: 'زد كروت صفراء' }).click()
+    await one.getByRole('button', { name: 'أضف للمعاينة' }).click()
+    await expect(panel.getByRole('row').filter({ hasText: 'ماجد المصاب' })).toContainText('مصاب')
+    await page.locator('#rosterRef').fill('FORM-INJ-1')
+    await page.getByRole('button', { name: /^أضف 1 لاعب$/ }).click()
+    await expect(page.getByRole('status').filter({ hasText: 'انضاف' })).toBeVisible()
+    await page.goto('/lineup')
+    const row = page.getByRole('article', { name: 'حالة اللاعبين' }).getByRole('button', { name: 'حالة ماجد المصاب' })
+    await expect(row).toContainText('مصاب'); await expect(row).toContainText('كاحل'); await expect(row).toContainText('1 أصفر')
+  })
+
   test('adding one player at a time stages it, refuses a number already in the squad, and a staged row can be removed', async ({ page }) => {
     await signAgreement(page)
     const panel = page.getByRole('article', { name: 'أضف لاعبين' })
@@ -397,6 +416,34 @@ test.describe('match card', () => {
     await expect(card(page).locator('pre')).toContainText('📍 استاد المدينة')
     await card(page).getByRole('button', { name: 'انسخ النص' }).click()
     await expect(card(page).getByText(/اننسخ النص|ما قدرنا ننسخ/)).toBeVisible()
+  })
+
+  test('availability: an injured player is saved with note, date and cards, leaves the suggestion, and the card can list absentees by name only', async ({ page }) => {
+    const panel = page.getByRole('article', { name: 'حالة اللاعبين' })
+    await panel.getByRole('button', { name: 'حالة اللاعب 9' }).click()
+    await panel.getByRole('tab', { name: 'مصاب' }).click()
+    await panel.locator('#availNote').fill('شد عضلي')
+    await panel.locator('#availReturn').fill(new Date(Date.now() + 14 * 86_400_000).toISOString().slice(0, 10))
+    await panel.getByRole('button', { name: 'زد كروت حمراء' }).click()
+    await panel.getByRole('button', { name: 'احفظ الحالة' }).click()
+    await expect(panel.getByRole('status')).toContainText('انحفظت حالة')
+    const row = panel.getByRole('button', { name: 'حالة اللاعب 9' })
+    await expect(row).toContainText('مصاب'); await expect(row).toContainText('شد عضلي'); await expect(row).toContainText('يرجع'); await expect(row).toContainText('1 أحمر')
+    await page.getByRole('button', { name: 'اقترح التشكيلة' }).click()
+    await expect(page.getByRole('group', { name: 'الملعب' }).getByRole('button', { name: /: اللاعب 9$/ })).toHaveCount(0)
+    const card = page.getByRole('article', { name: 'بطاقة المباراة' })
+    await card.getByRole('checkbox', { name: /اعرض أسماء الغائبين/ }).check()
+    await expect(card.getByRole('img', { name: 'معاينة بطاقة المباراة' })).toBeVisible()
+    await expect(card.getByText(/بدون سبب ولا مدة/)).toBeVisible()
+  })
+
+  test('availability refuses a return date in the past', async ({ page }) => {
+    const panel = page.getByRole('article', { name: 'حالة اللاعبين' })
+    await panel.getByRole('button', { name: 'حالة اللاعب 8' }).click()
+    await panel.getByRole('tab', { name: 'مصاب' }).click()
+    await panel.locator('#availReturn').fill('2020-01-01')
+    await expect(panel.getByRole('alert')).toContainText('اليوم أو بعده')
+    await expect(panel.getByRole('button', { name: 'احفظ الحالة' })).toBeDisabled()
   })
 
   test('no horizontal scroll on the card section', async ({ page }) => {

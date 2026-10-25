@@ -8,9 +8,13 @@ import { Failed, Loading } from '../components/States'
 import { getAudit, BY_TEXT, ENTITY_TEXT, OP_TEXT } from '../data/audit'
 import { getDevelopment } from '../data/development'
 import { getClubRoom } from '../data/source'
+import { AvailabilityEditor, editorOk } from '../components/AvailabilityEditor'
+import { setAvailabilityByNum } from '../data/availability'
+import { FIT, isDefault, normalise, type Availability } from '../lib/availability'
 import { addPlayers, getDataCenter, importSquad, recordAgreement, revokeAgreement, withdrawConsent, type DataCenter as DC } from '../data/datacenter'
 import { useLoad } from '../data/useLoad'
 import { vars } from '../lib/css'
+import { STATUS } from '../lib/squad'
 import { fmtDate, fmtDateTime, fmtMoney } from '../lib/format'
 import { DPA_TEMPLATE, DPA_VERSION } from '../lib/dpa-template'
 import { DEFAULT_POS, parseRoster, POSITION_SUGGESTIONS, ROSTER_ERROR_TEXT, validateRow, type RosterError, type RosterRow } from '../lib/roster-paste'
@@ -190,7 +194,8 @@ function Withdraw({ userId, onDone }: { userId: string; onDone: () => void }) {
 /* Adds players to the squad by pasting a list or one at a time: number, name, position. Nothing leaves the device until "add". The club writes the consent reference itself. */
 function RosterPanel({ existing, onDone }: { existing: number[]; onDone: () => void }) {
   const [text, setText] = useState('')
-  const [staged, setStaged] = useState<RosterRow[]>([])
+  const [staged, setStaged] = useState<(RosterRow & { avail?: Availability })[]>([])
+  const [avail, setAvail] = useState<Availability>(FIT)
   const [errors, setErrors] = useState<(RosterError & { line: string })[]>([])
   const [ref, setRef] = useState('')
   const [one, setOne] = useState({ num: '', name: '', pos: '' })
@@ -213,13 +218,19 @@ function RosterPanel({ existing, onDone }: { existing: number[]; onDone: () => v
     const row = { num: Number(one.num), name: one.name.replace(/\s+/g, ' ').trim(), pos: one.pos.trim() || DEFAULT_POS }
     const code = validateRow(row, taken()) ?? (staged.length + existing.length >= 60 ? 'too_many' : null)
     if (code) { setOneErr(ROSTER_ERROR_TEXT[code]); return }
-    setOneErr(null); setStaged((s) => [...s, { ...row, guessed: !one.pos.trim() }]); setOne({ num: '', name: '', pos: '' })
+    setOneErr(null); setStaged((s) => [...s, { ...row, guessed: !one.pos.trim(), avail: isDefault(avail) ? undefined : normalise(avail) }]); setOne({ num: '', name: '', pos: '' }); setAvail(FIT)
   }
   async function send() {
     setBusy(true); setFail(null)
     try {
       const res = await addPlayers(staged.map(({ num, name, pos }) => ({ num, name, pos })), ref)
-      if (res.ok) { setDone(res.players); setStaged([]); setRef(''); onDone() }
+      if (res.ok) {
+        const withAvail = staged.filter((r) => r.avail)
+        let lost = 0
+        for (const r of withAvail) { try { await setAvailabilityByNum(r.num, r.avail!) } catch { lost++ } }
+        if (lost) setFail(`انضاف اللاعبون، لكن حالة ${lost} منهم ما انحفظت. عدّلها من صفحة التشكيلة ← حالة اللاعبين.`)
+        setDone(res.players); setStaged([]); setRef(''); onDone()
+      }
       else setFail(res.errors.map((e) => `${e.row ? 'سطر ' + e.row + ': ' : ''}${ERROR_TEXT[e.code] ?? e.code}`).join('، '))
     } catch (e) {
       setFail((e instanceof Error ? e.message : '') === 'dpa_required' ? 'الاتفاقية غير مسجّلة أو انسحبت. سجّلها بالخطوة 1 أول.' : 'ما انضافوا. تأكد من الاتصال وحاول مرة ثانية.')
@@ -245,9 +256,13 @@ function RosterPanel({ existing, onDone }: { existing: number[]; onDone: () => v
           <input aria-label="رقم القميص" inputMode="numeric" dir="ltr" placeholder="رقم" value={one.num} onChange={(e) => setOne({ ...one, num: e.target.value.replace(/\D/g, '').slice(0, 2) })} className={field} />
           <input aria-label="اسم اللاعب" placeholder="الاسم" value={one.name} onChange={(e) => setOne({ ...one, name: e.target.value })} className={field} />
           <input aria-label="المركز" list="posList" placeholder="المركز" value={one.pos} onChange={(e) => setOne({ ...one, pos: e.target.value })} className={`${field} col-span-2 sm:col-span-1`} />
-          <button className={`${ghost} col-span-2 sm:col-span-1`}>أضف للمعاينة</button>
+          <button disabled={!editorOk(avail)} className={`${ghost} col-span-2 sm:col-span-1`}>أضف للمعاينة</button>
         </div>
         <datalist id="posList">{POSITION_SUGGESTIONS.map((p) => <option key={p} value={p} />)}</datalist>
+        <details className="rounded-xl border border-white/10 p-3">
+          <summary className="min-h-11 cursor-pointer py-2 text-sm">حالة اللاعب (اختياري): إصابة أو إيقاف أو كروت</summary>
+          <div className="pt-2"><AvailabilityEditor value={avail} onChange={setAvail} idPrefix="addAvail" /></div>
+        </details>
         {oneErr && <p role="alert" className="text-sm text-crimson-ink">{oneErr}</p>}
       </form>
       {staged.length > 0 && (
@@ -258,7 +273,7 @@ function RosterPanel({ existing, onDone }: { existing: number[]; onDone: () => v
               <thead className="sticky top-0 bg-deep text-xs text-mute"><tr>{['الرقم', 'الاسم', 'المركز', ''].map((h, i) => <th key={i} scope="col" className="px-3 py-2 text-start font-normal">{h}</th>)}</tr></thead>
               <tbody className="divide-y divide-white/10">
                 {staged.map((r) => (
-                  <tr key={r.num}><td className="num px-3 py-2">{r.num}</td><td className="px-3 py-2">{r.name}</td><td className={`px-3 py-2 ${r.guessed ? 'text-warn' : ''}`}>{r.pos}</td>
+                  <tr key={r.num}><td className="num px-3 py-2">{r.num}</td><td className="px-3 py-2">{r.name}</td><td className={`px-3 py-2 ${r.guessed ? 'text-warn' : ''}`}>{r.pos}{r.avail && r.avail.status !== 'fit' && <span className="ms-2 text-xs text-mute">· {STATUS[r.avail.status].label}</span>}</td>
                     <td className="px-3 py-1"><button type="button" onClick={() => setStaged((s) => s.filter((x) => x.num !== r.num))} aria-label={`احذف ${r.name} من المعاينة`} className="min-h-11 rounded-lg px-3 text-xs text-crimson-ink">احذف</button></td></tr>
                 ))}
               </tbody>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { bundledLogo, BH_CLUBS } from '../data/bhclubs'
 import { DEFAULT_PREFS, readLogos, readPrefs, saveLogo, shrinkLogo, writePrefs, type CardPrefs, type Logos } from '../data/matchcard'
+import { absentees } from '../lib/availability'
 import type { Lineup, LPlayer } from '../lib/lineup'
 import { CARD_H, CARD_W, cardCaption, cardDate, cardFileName, cardRows, fitLogo, inkOn, oppKey, rowHeight, splitColumns, validColor } from '../lib/matchcard'
 import { Segmented } from './Segmented'
@@ -67,7 +68,8 @@ export async function drawCard(canvas: HTMLCanvasElement, d: CardInput) {
   text(c, d.prefs.kit.trim() || '—', CARD_W / 2 - 100, 762, 27, t.ink, { max: 600 })
   // players
   const rows = cardRows(d.lineup, d.players, d.captainId)
-  const top = 836, bottom = d.prefs.footer ? 1810 : 1860
+  const out = d.prefs.absent ? absentees(d.players) : []
+  const top = 836, bottom = (d.prefs.footer ? 1810 : 1860) - (out.length ? 80 : 0)
   const h = rowHeight(rows.length, bottom - top - 40)
   const panelH = Math.min(bottom - top, Math.ceil(rows.length / 2) * h + 40)
   rr(c, 60, top, CARD_W - 120, panelH, 28); c.fillStyle = t.panel; c.fill()
@@ -84,6 +86,11 @@ export async function drawCard(canvas: HTMLCanvasElement, d: CardInput) {
       if (r.tag) { c.font = `${fs}px ${BODY}`; const nameW = Math.min(c.measureText(r.name).width, colW - 210); const tx = Math.max(x0 - colW + 40, bx - 50 - nameW - 46); rr(c, tx - 30, y - 17, 60, 34, 17); c.fillStyle = r.tag === 'C' ? '#f5b301' : t.line; c.fill(); text(c, r.tag, tx, y + 1, 22, r.tag === 'C' ? '#0b1220' : t.ink, { font: FONT }) }
     })
   })
+  if (out.length) {
+    const y = top + panelH + 44
+    text(c, 'الغيابات', CARD_W - 90, y, 28, col, { align: 'right' })
+    text(c, out.map((a) => `${a.num ?? '—'} ${a.name} (${a.tag})`).join(' · '), CARD_W - 230, y, 26, t.ink, { align: 'right', max: CARD_W - 400 })
+  }
   if (d.prefs.footer) text(c, 'Sports Hub · نسخة تجريبية', CARD_W / 2, 1865, 24, t.mute)
 }
 
@@ -138,6 +145,7 @@ export function MatchCard({ lineup, players, opponent, matchOn }: { lineup: Line
             <label className="block space-y-1"><span className="text-xs text-mute">لون النادي</span><input id="cardColor" type="color" value={validColor(prefs.color) ? prefs.color : DEFAULT_PREFS.color} onChange={(e) => set({ color: e.target.value })} className="h-11 w-full rounded-xl border border-white/15 bg-white/5 p-1" /></label>
           </div>
           <Segmented label="القالب" value={prefs.theme} onChange={(v) => set({ theme: v })} options={[{ key: 'dark', label: 'داكن' }, { key: 'light', label: 'فاتح' }]} />
+          <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={prefs.absent} onChange={(e) => set({ absent: e.target.checked })} className="size-5" /> اعرض أسماء الغائبين (مصاب أو موقوف) على البطاقة، بدون سبب ولا مدة</label>
           <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={prefs.footer} onChange={(e) => set({ footer: e.target.checked })} className="size-5" /> اذكر «Sports Hub» أسفل البطاقة</label>
 
           <fieldset className="space-y-2 rounded-xl border border-white/10 p-3">

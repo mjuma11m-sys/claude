@@ -4,9 +4,10 @@ import { supabase } from '../lib/supabase'
 import type { Assessment, Goal, Log, SkillId } from '../lib/development'
 import type { PlayerStatus } from '../lib/squad'
 import { readDemoImport, readDemoRoster } from './datacenter'
+import { readDemoAvail } from './availability'
 import { DEMO_SQUAD } from './demo'
 
-export type DevPlayer = { id: string; num: number | null; name: string; pos: string; status: PlayerStatus }
+export type DevPlayer = { id: string; num: number | null; name: string; pos: string; status: PlayerStatus; note?: string | null; returnOn?: string | null; yellow?: number; red?: number }
 export type DevData = { players: DevPlayer[]; assessments: Record<string, Assessment[]>; goals: Record<string, Goal[]>; logs: Record<string, Log[]> }
 
 const KEY = 'sh.demoDev'
@@ -45,7 +46,8 @@ async function demoPlayers(): Promise<DevPlayer[]> {
     ? trial.map((r) => ({ id: `imp-${r.num}`, num: r.num, name: r.name, pos: r.pos, status: r.status }))
     : DEMO_SQUAD.map((p) => ({ id: p.id, num: p.num, name: p.name, pos: p.pos, status: p.status }))
   const added: DevPlayer[] = readDemoRoster().filter((r) => !base.some((b) => b.num === r.num)).map((r) => ({ id: `add-${r.num}`, num: r.num, name: r.name, pos: r.pos, status: 'fit' as const }))
-  return [...base, ...added].sort((a, b) => (a.num ?? 99) - (b.num ?? 99))
+  const ov = readDemoAvail()
+  return [...base, ...added].map((p) => { const o = ov[p.id]; return o ? { ...p, status: o.status, note: o.note, returnOn: o.returnOn, yellow: o.yellow, red: o.red } : p }).sort((a, b) => (a.num ?? 99) - (b.num ?? 99))
 }
 const demoState = (): Store => read() ?? seed()
 
@@ -80,16 +82,16 @@ export async function getDevelopment(userId: string): Promise<{ data: DevData; d
   const clubId = await myClubId(userId)
   const [players, status, ass, goals, logs] = await Promise.all([
     supabase.from('players').select('id, name, num, pos').eq('club_id', clubId).order('num').returns<{ id: string; name: string; num: number | null; pos: string }[]>(),
-    supabase.from('player_status').select('player_id, status, is_demo').eq('club_id', clubId).returns<{ player_id: string; status: PlayerStatus; is_demo: boolean }[]>(),
+    supabase.from('player_status').select('player_id, status, note, return_on, yellow_cards, red_cards, is_demo').eq('club_id', clubId).returns<{ player_id: string; status: PlayerStatus; note: string | null; return_on: string | null; yellow_cards: number; red_cards: number; is_demo: boolean }[]>(),
     supabase.from('skill_assessments').select('player_id, assessed_on, skill, score, is_demo').eq('club_id', clubId).returns<{ player_id: string; assessed_on: string; skill: SkillId; score: number; is_demo: boolean }[]>(),
     supabase.from('dev_goals').select('id, player_id, skill, target, due_on, done_at').eq('club_id', clubId).returns<{ id: string; player_id: string; skill: SkillId; target: number; due_on: string; done_at: string | null }[]>(),
     supabase.from('training_logs').select('player_id, day, minutes, rpe, is_demo').eq('club_id', clubId).returns<{ player_id: string; day: string; minutes: number; rpe: number; is_demo: boolean }[]>(),
   ])
   for (const r of [players, status, ass, goals, logs]) if (r.error) throw r.error
-  const st = new Map(status.data!.map((s) => [s.player_id, s.status]))
+  const st = new Map(status.data!.map((s) => [s.player_id, s]))
   return {
     data: {
-      players: players.data!.map((p) => ({ ...p, status: st.get(p.id) ?? 'fit' })),
+      players: players.data!.map((p) => { const s = st.get(p.id); return { ...p, status: s?.status ?? 'fit', note: s?.note ?? null, returnOn: s?.return_on ?? null, yellow: s?.yellow_cards ?? 0, red: s?.red_cards ?? 0 } }),
       assessments: group(ass.data!, (r) => ({ day: r.assessed_on, skill: r.skill, score: r.score })),
       goals: group(goals.data!, (r) => ({ id: r.id, skill: r.skill, target: r.target, dueOn: r.due_on, done: r.done_at !== null })),
       logs: group(logs.data!, (r) => ({ day: r.day, minutes: r.minutes, rpe: r.rpe })),
