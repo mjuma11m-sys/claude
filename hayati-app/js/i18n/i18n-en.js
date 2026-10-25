@@ -1991,7 +1991,7 @@ window.HAYATI_EN = {
 "🌍 من العالم": "🌍 World",
 "صحة ورياضة": "Health & fitness",
 "المطبخ من العالم": "World kitchen",
-"42 أكلة من 26 دولة: برياني، باستا، تاكو، كاري تايلندي، كشري… بنفس الخطوات والمقادير اللي تتغيّر": "42 dishes from 26 countries: biryani, pasta, tacos, Thai curry, koshari… same step-by-step style and scaling amounts",
+"56 أكلة من أكثر من 25 دولة: منسف، مسخن، كبة، دولمة، برياني، باستا، تاكو… بنفس الخطوات والمقادير اللي تتغيّر": "56 dishes from 25+ countries: mansaf, musakhan, kibbeh, dolma, biryani, pasta, tacos… same step-by-step style and scaling amounts",
 "ربطة": "bunch",
 "اكتب الإيميل وكلمة المرور فوق": "Enter your email and password above",
 "كلمة المرور 6 حروف أو أكثر": "Password must be 6 characters or more",
