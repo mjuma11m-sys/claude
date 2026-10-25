@@ -17,7 +17,9 @@
     "import:standings": "node scripts/import-standings.mjs",
     "setup:supabase": "node scripts/supabase-setup.mjs",
     "test:login-real": "VITE_SUPABASE_URL=http://localhost:4400 VITE_SUPABASE_ANON_KEY=test-key VITE_PRIVACY_CONTACT=privacy@example.com VITE_AUTH_GOOGLE=true VITE_AUTH_APPLE=true vite build --outDir dist-real && node scripts/login-real.test.cjs",
-    "check:columns": "node scripts/check-columns.mjs"
+    "check:columns": "node scripts/check-columns.mjs",
+    "ios:sync": "VITE_SHARE=1 vite build && cap sync ios",
+    "ios:open": "cap open ios"
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",
@@ -29,6 +31,9 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
+    "@capacitor/cli": "^7.6.9",
+    "@capacitor/core": "^7.6.9",
+    "@capacitor/ios": "^7.6.9",
     "@playwright/test": "^1.56.1",
     "@tailwindcss/vite": "4.3.3",
     "@types/react": "19.3.0",
