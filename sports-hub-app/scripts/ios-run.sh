@@ -24,8 +24,8 @@ UDID="${UDID:-$(xcrun devicectl list devices 2>/dev/null | grep -E 'iPhone|iPad'
 
 echo "▸ Team $TEAM · Bundle $BUNDLE · Device $UDID"
 xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Debug -destination "id=$UDID" \
-  -derivedDataPath ios/App/build -allowProvisioningUpdates \
+  -derivedDataPath ios/App/DerivedData -allowProvisioningUpdates \
   DEVELOPMENT_TEAM="$TEAM" PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE" CODE_SIGN_STYLE=Automatic build | tail -5
-APP="$(ls -d ios/App/build/Build/Products/Debug-iphoneos/App.app)"
+APP="$(ls -d ios/App/DerivedData/Build/Products/Debug-iphoneos/App.app)"
 xcrun devicectl device install app --device "$UDID" "$APP"
 xcrun devicectl device process launch --device "$UDID" "$BUNDLE" || echo "إذا ما انفتح: الإعدادات ← عام ← VPN وإدارة الجهاز ← ثق بحسابك، ثم افتح التطبيق."
