@@ -13,7 +13,7 @@ const HOST = DOMAIN.replace(/^https:\/\//, '');
 // Google Search Console (DW-063): قيمة content من سطر google-site-verification (مو سر). null = ما ينضاف
 const GOOGLE_VERIFY = null;
 // الإيميل يطلع بالموقع بس لما يكون فيه صندوق حقيقي على دومين نملكه (DW-056). قبلها: نموذج التواصل
-const EMAIL = null;
+const EMAIL = 'wadqa.studio.bh@gmail.com';
 
 // المفتاح العام (anon) لمشروع Supabase «hayati» — الجدول محمي، والكتابة بس عبر wadqa_submit
 const { url: SUPA_URL, key: SUPA_KEY } = JSON.parse(fs.readFileSync(path.join(SRC, 'supabase/config.json'), 'utf8'));
