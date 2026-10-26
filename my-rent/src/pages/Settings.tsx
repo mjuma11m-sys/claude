@@ -4,6 +4,7 @@ import { backupDue, isoDay } from "../data/logic";
 import { Chips, useToast } from "../ui/kit";
 import { SyncPanel } from "./SyncPanel";
 import { Reminders } from "./Reminders";
+import { LockPanel } from "./LockPanel";
 import { Feedback } from "./Feedback";
 import { POLICY_VERSION } from "./Privacy";
 import { loadSyncConfig } from "../data/sync";
@@ -62,6 +63,7 @@ export function Settings() {
       <Feedback />
 
       <Reminders />
+      <LockPanel />
 
       <section className="card stack">
         <h2 className="set-title">النسخة الاحتياطية</h2>

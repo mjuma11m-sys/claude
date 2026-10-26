@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Method, Payment, Unit } from "../data/types";
 import { useStore } from "../data/store";
-import { arrears, billsDue, chequeHeld, contractAlerts, fmt, monthKey, rentAt, upcomingRent, monthLabel, monthName, nextUnpaid, owedMonths, paidThrough, parseBHD, prepaid, unitStatus } from "../data/logic";
+import { reminderUrl, arrears, billsDue, chequeHeld, contractAlerts, fmt, monthKey, rentAt, upcomingRent, monthLabel, monthName, nextUnpaid, owedMonths, paidThrough, parseBHD, prepaid, unitStatus } from "../data/logic";
 import { Chips, Sheet, useToast } from "../ui/kit";
 import { Money, StatusPill } from "../theme/AppShell";
 import { Icon } from "../ui/icons";
@@ -9,14 +9,6 @@ import { BillsBox } from "./Bills";
 import { ChequesBox } from "./Cheques";
 
 const METHODS: Method[] = ["BenefitPay", "تحويل", "نقد", "شيك"];
-
-/** رسالة تذكير صريحة: المبلغ والأشهر، بدون تهديد */
-function reminderUrl(unit: Unit, months: string[], amount: number) {
-  const text = `السلام عليكم ${unit.tenant?.name ?? ""}، تذكير بإيجار ${unit.name} (${months.map(monthName).join("، ")}): ${fmt(amount)} د.ب. إذا تم الدفع تجاهل الرسالة، وشكراً.`;
-  const digits = (unit.tenant?.phone ?? "").replace(/\D/g, "");
-  const to = digits.length === 8 ? `973${digits}` : ""; // رقم بحريني كامل، وإلا يختار المستخدم المحادثة
-  return `https://wa.me/${to}?text=${encodeURIComponent(text)}`;
-}
 
 /** تفاصيل الوحدة + المتأخرات + تسجيل دفعة + الإيصالات */
 export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onContract, onRenew }: { unit: Unit | null; onClose: () => void; onReceipt: (p: Payment, u: Unit) => void; onEdit: (u: Unit) => void; onStatement: (u: Unit) => void; onContract: (u: Unit) => void; onRenew: (u: Unit) => void }) {

@@ -19,6 +19,7 @@ import { UnitForm } from "./pages/UnitForm";
 import { Reports } from "./pages/Reports";
 import { SearchSheet } from "./pages/Search";
 import { syncReminders } from "./notify";
+import { LockGate } from "./pages/LockGate";
 import { Privacy } from "./pages/Privacy";
 import { RenewSheet } from "./pages/Renew";
 import { DocSheet, Docs } from "./pages/Docs";
@@ -153,7 +154,7 @@ export default function App() {
   return (
     <StoreProvider>
       <ToastProvider>
-        <Idarati />
+        <LockGate><Idarati /></LockGate>
       </ToastProvider>
     </StoreProvider>
   );

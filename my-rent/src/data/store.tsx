@@ -47,7 +47,7 @@ type Store = {
   unpay: (id: string) => void;
   /** DW-022: دفعة مقدمة n شهر بمبلغ الإيجار كامل؛ يرجّع دالة التراجع */
   payAhead: (unitId: string, n: number, method: Method) => { months: string[]; undo: () => void } | null;
-  addExpense: (catId: string, label: string, amount: number) => Expense;
+  addExpense: (catId: string, label: string, amount: number, building?: string) => Expense;
   unexpense: (id: string) => void;
   toggleTask: (id: string) => void;
   saveUnit: (unit: Omit<Unit, "id"> & { id?: string }) => Unit;
@@ -194,8 +194,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "pay", payment });
       return payment;
     },
-    addExpense: (catId, label, amount) => {
-      const expense = { id: uid(), catId, label, amount, date: isoDay(new Date()) };
+    addExpense: (catId, label, amount, building) => {
+      const expense = { id: uid(), catId, label, amount, date: isoDay(new Date()), ...(building ? { building } : {}) };
       dispatch({ type: "expense", expense });
       return expense;
     },

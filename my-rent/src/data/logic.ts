@@ -527,3 +527,47 @@ export function planReminders(data: Data, now = new Date(), days = 60, max = 60)
   }
   return out.sort((a, b) => a.day.localeCompare(b.day) || a.key.localeCompare(b.key)).slice(0, max);
 }
+
+// ── DW-043: تذكير المتأخرين (عربي/إنقليزي) والتقرير السنوي لكل عقار ────────────────
+const MONTHS_EN = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+/** رسالة تذكير صريحة: المبلغ والأشهر، بدون تهديد. بلغة المستأجر (عربي افتراضياً) */
+export function reminderText(unit: Unit, months: string[], amount: Fils) {
+  if (unit.tenant?.lang === "en") {
+    const ms = months.map((m) => `${MONTHS_EN[Number(m.slice(5, 7)) - 1]} ${m.slice(0, 4)}`).join(", ");
+    return `Hello ${unit.tenant?.name ?? ""}, a friendly reminder about the rent for ${unit.name} (${ms}): BHD ${fmt(amount)}. If you have already paid, please ignore this message. Thank you.`;
+  }
+  return `السلام عليكم ${unit.tenant?.name ?? ""}، تذكير بإيجار ${unit.name} (${months.map(monthName).join("، ")}): ${fmt(amount)} د.ب. إذا تم الدفع تجاهل الرسالة، وشكراً.`;
+}
+/** رابط واتساب: رقم بحريني من 8 أرقام يفتح محادثته، وإلا يختار المستخدم المحادثة */
+export function waLink(phone: string | undefined, text: string) {
+  const digits = (phone ?? "").replace(/\D/g, "");
+  const to = digits.length === 8 ? `973${digits}` : digits.length === 11 && digits.startsWith("973") ? digits : "";
+  return `https://wa.me/${to}?text=${encodeURIComponent(text)}`;
+}
+export const reminderUrl = (unit: Unit, months: string[], amount: Fils) => waLink(unit.tenant?.phone, reminderText(unit, months, amount));
+
+/** كل المتأخرين (بعد مهلة الاستحقاق)، الأكبر مبلغ أول */
+export function remindList(data: Data, now = new Date()) {
+  return data.units.filter((u) => u.tenant)
+    .map((unit) => { const a = arrears(data, unit, now); return { unit, months: a.months.map((m) => m.month), amount: a.amount }; })
+    .filter((x) => x.amount > 0)
+    .sort((a, b) => b.amount - a.amount || a.unit.name.localeCompare(b.unit.name));
+}
+
+/** سنة لكل عقار (مبنى): الدخل (ناقص الإشعارات الدائنة الجزئية)، المصروف المربوط بالعقار، الصافي، واللي ما اندفع من أشهر السنة لين اليوم */
+export function yearReport(data: Data, year: number, now = new Date()) {
+  const y = String(year);
+  const refundOf = (pid: string) => (data.credits ?? []).filter((c) => c.amount && c.payment.id === pid).reduce((s, c) => s + (c.amount ?? 0), 0);
+  const names = [...new Set(data.units.map((u) => u.building || "بدون مبنى"))];
+  const rows = names.map((building) => {
+    const units = data.units.filter((u) => (u.building || "بدون مبنى") === building);
+    const ids = new Set(units.map((u) => u.id));
+    const income = data.payments.filter((p) => ids.has(p.unitId) && p.month.startsWith(y)).reduce((s, p) => s + p.amount - refundOf(p.id), 0);
+    const expense = data.expenses.filter((e) => e.building === building && e.date.startsWith(y)).reduce((s, e) => s + e.amount, 0);
+    const owed = units.reduce((s, u) => s + owedMonths(data, u, now).filter((m) => m.month.startsWith(y)).reduce((a, m) => a + m.left, 0), 0);
+    return { building, units: units.length, rented: units.filter((u) => u.tenant).length, income, expense, net: income - expense, owed };
+  }).sort((a, b) => b.income - a.income || a.building.localeCompare(b.building));
+  const unassigned = data.expenses.filter((e) => !e.building && e.date.startsWith(y)).reduce((s, e) => s + e.amount, 0);
+  const sum = (k: "income" | "expense" | "net" | "owed") => rows.reduce((s, r) => s + r[k], 0);
+  return { year, rows, unassigned, income: sum("income"), expense: sum("expense"), net: sum("net"), owed: sum("owed") };
+}

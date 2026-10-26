@@ -11,6 +11,7 @@ export function UnitForm({ open, unit, onClose, onSaved }: Props) {
   const { saveUnit } = useStore();
   const toast = useToast();
   const [f, setF] = useState({ name: "", building: "", rent: "", dueDay: "1", tenant: "", phone: "", since: "", until: "", deposit: "", elec: "", water: "", notes: "", trn: "" });
+  const [lang, setLang] = useState<"ar" | "en">("ar"); // DW-043: لغة رسائل التذكير
   const [kind, setKind] = useState<Kind>("flat");
   const [error, setError] = useState("");
 
@@ -18,6 +19,7 @@ export function UnitForm({ open, unit, onClose, onSaved }: Props) {
     if (!open) return;
     setError("");
     setKind(unit ? kindOf(unit) : "flat");
+    setLang(unit?.tenant?.lang ?? "ar");
     setF({
       name: unit?.name ?? "",
       building: unit?.building ?? "",
@@ -61,7 +63,7 @@ export function UnitForm({ open, unit, onClose, onSaved }: Props) {
       ...(f.elec.trim() || f.water.trim() ? { meters: { ...(f.elec.trim() ? { elec: f.elec.trim() } : {}), ...(f.water.trim() ? { water: f.water.trim() } : {}) } } : {}),
       rent,
       dueDay: day,
-      tenant: f.tenant.trim() ? { name: f.tenant.trim(), phone: f.phone.trim(), since: f.since, until: f.until || undefined, ...(deposit ? { deposit } : {}), ...(f.trn.trim() && ["shop", "store", "nursery"].includes(kind) ? { trn: f.trn.trim() } : {}) } : undefined,
+      tenant: f.tenant.trim() ? { name: f.tenant.trim(), phone: f.phone.trim(), since: f.since, until: f.until || undefined, ...(deposit ? { deposit } : {}), ...(f.trn.trim() && ["shop", "store", "nursery"].includes(kind) ? { trn: f.trn.trim() } : {}), ...(lang === "en" ? { lang } : {}) } : undefined,
     });
     onClose();
     toast({ text: unit ? `انحفظ تعديل ${saved.name}` : `انضافت ${saved.name}` });
@@ -90,6 +92,7 @@ export function UnitForm({ open, unit, onClose, onSaved }: Props) {
           <label className="field"><span>الاسم</span><input id="u-tenant" className="input" value={f.tenant} onChange={set("tenant")} /></label>
           <label className="field"><span>الهاتف</span><input id="u-phone" className="input num" inputMode="tel" dir="ltr" value={f.phone} onChange={set("phone")} placeholder="3xxxxxxx" /></label>
         </div>
+        {f.tenant.trim() && <Chips<"ar" | "en"> label="لغة رسائل التذكير" value={lang} onChange={setLang} options={[{ id: "ar", label: "عربي" }, { id: "en", label: "English" }]} />}
         <div className="grid-2 dates">
           <label className="field"><span>بداية العقد (شهر)</span><input id="u-since" className="input num" type="month" dir="ltr" placeholder="2026-03" pattern="\d{4}-\d{2}" value={f.since} onChange={set("since")} /></label>
           <label className="field"><span>نهاية العقد</span><input id="u-until" className="input num" type="date" dir="ltr" value={f.until} onChange={set("until")} /></label>

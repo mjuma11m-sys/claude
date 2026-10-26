@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useStore } from "../data/store";
-import { arrears, chequesDue, monthKey, rentAt, backupDue, balances, budget, collection, contractAlerts, docAlerts, fmt, monthName, unitStatus } from "../data/logic";
+import { remindList, arrears, chequesDue, monthKey, rentAt, backupDue, balances, budget, collection, contractAlerts, docAlerts, fmt, monthName, unitStatus } from "../data/logic";
 import { DocPill } from "./Docs";
+import { RemindSheet } from "./Remind";
 import type { Unit } from "../data/types";
 import { Money, StatusPill } from "../theme/AppShell";
 import { useStagger } from "../theme/motion";
@@ -29,6 +30,7 @@ export function Home({ onOpenUnit, go, onQuick }: { onOpenUnit: (u: Unit) => voi
   const { data, loading, quickPay, unpay, eraseAll, sync } = useStore();
   const [welcome, setWelcome] = useState(() => !welcomed()); // DW-031
   const [setup, setSetupShown] = useState(setupOpen); // DW-035
+  const [reminding, setReminding] = useState(false); // DW-043
   const toast = useToast();
   const received = (u: Unit) => {
     const p = quickPay(u.id);
@@ -137,6 +139,10 @@ export function Home({ onOpenUnit, go, onQuick }: { onOpenUnit: (u: Unit) => voi
             })}
           </ul>
         )}
+        {!loading && remindList(data).length > 0 && (
+          <button className="btn btn-wa press remind-open" id="remind-open" onClick={() => setReminding(true)}>ذكّر المتأخرين بالواتساب ({remindList(data).length})</button>
+        )}
+        <RemindSheet open={reminding} onClose={() => setReminding(false)} />
         {nudge && (
           <div className="nudge" role="status">
             <span>{last ? <>آخر نسخة احتياطية <span className="num">{last}</span></> : "ما فيه نسخة احتياطية للبيانات"} · البيانات على هالجهاز بس</span>

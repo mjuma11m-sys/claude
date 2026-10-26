@@ -7,7 +7,7 @@ import { exportSheets, planImport, trackerSheet, TRACK_HEAD } from "../src/data/
 import type { Data, Unit } from "../src/data/types";
 import { onBack, handleBack } from "../src/back";
 import { reminderId, reminderAt } from "../src/notify";
-import { planReminders } from "../src/data/logic";
+import { planReminders, remindList, reminderText, waLink, yearReport } from "../src/data/logic";
 
 let failed = 0;
 const ok = (c: boolean, name: string, extra = "") => { console.log(`${c ? "✅" : "❌"} ${name}${extra ? " — " + extra : ""}`); if (!c) failed++; };
@@ -222,6 +222,30 @@ ok(describeAction({ type: "cheque", cheque: { number: "000101", unitId: "u6", st
   ok(ids.every((x) => x > 0 && Number.isInteger(x)) && new Set(ids).size === ids.length && reminderId(plan[0].key) === ids[0], "رقم ثابت ومختلف لكل تذكير");
   const at = reminderAt("2026-11-01");
   ok(at.getHours() === 9 && at.getDate() === 1 && at.getMonth() === 10, "الساعة 9 الصبح بتوقيت الجوال");
+}
+
+// 18) DW-043: ذكّر المتأخرين + بالإنقليزي + التقرير السنوي لكل عقار
+{
+  const list = remindList(d, now);
+  ok(list.length > 0 && list.every((x, i) => x.amount > 0 && (i === 0 || list[i - 1].amount >= x.amount)), "قائمة المتأخرين: كلهم عليهم مبلغ، الأكبر أول", String(list.length));
+  ok(list.every((x) => x.months.length > 0 && (!x.months.includes(cur) || now.getDate() > x.unit.dueDay + 5)), "الشهر الحالي ما يدخل قبل المهلة");
+  const u = list[0].unit;
+  const ar = reminderText(u, list[0].months, list[0].amount);
+  const en = reminderText({ ...u, tenant: { ...u.tenant!, lang: "en" } }, list[0].months, list[0].amount);
+  ok(ar.startsWith("السلام عليكم") && ar.includes("د.ب"), "التذكير بالعربي افتراضياً");
+  ok(en.startsWith("Hello") && en.includes("BHD") && !/[\u0600-\u06FF]/.test(en.replace(u.name, "").replace(u.tenant!.name, "")), "التذكير بالإنقليزي: بدون عربي غير الأسماء");
+  ok(waLink("3600 1122", "x").startsWith("https://wa.me/97336001122?") && waLink("+973 3600 1122", "x").startsWith("https://wa.me/97336001122?") && waLink("", "x").startsWith("https://wa.me/?"), "رابط واتساب: 8 أرقام أو 973 + 8، وإلا يختار المحادثة");
+  const yr = 2026;
+  const r = yearReport(d, yr, now);
+  const inc = d.payments.filter((p) => p.month.startsWith("2026")).reduce((s2, p) => s2 + p.amount, 0);
+  ok(r.income === inc && r.rows.reduce((s2, x) => s2 + x.income, 0) === inc, "دخل السنة = مجموع دفعات السنة، موزّع على العقارات", `${r.income}/${inc}`);
+  const b = d.units[0].building;
+  const withExp = { ...d, expenses: [...d.expenses, { id: "yx", catId: d.cats[0].id, label: "صيانة", amount: 30000, date: "2026-05-02", building: b }] };
+  const r2 = yearReport(withExp, yr, now);
+  ok(r2.rows.find((x) => x.building === b)!.expense === r.rows.find((x) => x.building === b)!.expense + 30000 && r2.unassigned === r.unassigned, "مصروف مربوط بعقار يدخل صفّه بس");
+  ok(r.unassigned === d.expenses.filter((e) => !e.building && e.date.startsWith("2026")).reduce((s2, e) => s2 + e.amount, 0), "المصروف غير المربوط ينعرض لحاله");
+  ok(r.owed === d.units.reduce((s2, x) => s2 + owedMonths(d, x, now).filter((m) => m.month.startsWith("2026")).reduce((a, m) => a + m.left, 0), 0), "ما اندفع = المتبقي من أشهر السنة");
+  ok(yearReport(d, 2019, now).income === 0, "سنة بدون بيانات = صفر");
 }
 
 console.log(failed ? `\n${failed} فشل` : "\nكل اختبارات المتابعة نجحت");

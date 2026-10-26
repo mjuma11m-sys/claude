@@ -6,6 +6,7 @@ import { Money } from "../theme/AppShell";
 import { DemoNote, SectionHead, useToast } from "../ui/kit";
 import { ExcelPanel } from "./ExcelPanel";
 import { VatSummary } from "./VatSummary";
+import { YearReport } from "./YearReport";
 import { saveFile } from "../native";
 
 /** الدخل مقابل المصروف لآخر 6 أشهر + تصدير CSV للمحاسب */
@@ -23,7 +24,7 @@ export function Reports() {
     const cat = (id: string) => data.cats.find((c) => c.id === id)?.name ?? id;
     const rows: (string | number)[][] = [["النوع", "التاريخ", "الشهر", "البيان", "المبلغ (د.ب)", "الطريقة"]];
     for (const p of data.payments) rows.push(["إيجار", p.date, p.month, name(p.unitId), fmt(p.amount), p.method]);
-    for (const e of data.expenses) rows.push(["مصروف", e.date, e.date.slice(0, 7), `${e.label} · ${cat(e.catId)}`, "-" + fmt(e.amount), ""]);
+    for (const e of data.expenses) rows.push(["مصروف", e.date, e.date.slice(0, 7), `${e.label} · ${cat(e.catId)}${e.building ? ` · ${e.building}` : ""}`, "-" + fmt(e.amount), ""]);
     const blob = new Blob([toCSV(rows)], { type: "text/csv;charset=utf-8" });
     try { await saveFile(`idarati-${isoDay(new Date())}.csv`, blob); } catch { return; }
     toast({ text: `انحفظ ملف CSV (${rows.length - 1} سطر)` });
@@ -67,6 +68,7 @@ export function Reports() {
         </table>
       </section>
 
+      <YearReport />
       <button className="btn press" id="month-report-btn" onClick={() => setReport(true)}>تقرير الشهر للطباعة</button>
       <MonthReportSheet open={report} onClose={() => setReport(false)} />
       <VatSummary />

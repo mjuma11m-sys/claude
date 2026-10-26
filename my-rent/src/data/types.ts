@@ -15,7 +15,7 @@ export type Unit = {
   rent: Fils;              // الإيجار الحالي (وما بعده)
   rentBefore?: { until: string; rent: Fils }[]; // DW-024: إيجارات سابقة — كل شهر <= until (YYYY-MM) ياخذ أقرب واحد
   dueDay: number; // يوم الاستحقاق بالشهر
-  tenant?: { name: string; phone: string; since: string; until?: string; deposit?: Fils; trn?: string }; // trn = الرقم الضريبي للمستأجر التجاري (DW-035)
+  tenant?: { name: string; phone: string; since: string; until?: string; deposit?: Fils; trn?: string; lang?: "ar" | "en" }; // trn = الرقم الضريبي للمستأجر التجاري (DW-035) · lang = لغة رسائل التذكير (DW-043)
   contractFile?: ContractFile; // DW-020: العقد الموقّع (الملف نفسه بالجهاز أو بالسحابة، هني بس وصفه) // since = YYYY-MM · until = YYYY-MM-DD نهاية العقد · deposit = مبلغ التأمين
 };
 
@@ -28,7 +28,7 @@ export type CreditNote = { id: string; no: number; date: string; payment: Paymen
 export type Method = "BenefitPay" | "تحويل" | "نقد" | "شيك";
 
 export type BudgetCat = { id: string; name: string; limit: Fils };
-export type Expense = { id: string; catId: string; label: string; amount: Fils; date: string };
+export type Expense = { id: string; catId: string; label: string; amount: Fils; date: string; building?: string }; // building = العقار (DW-043، اختياري) للتقرير السنوي
 
 export type Member = { id: string; name: string };
 export type BankTxn = { id: string; memberId: string; amount: Fils; label: string; date: string };

@@ -135,7 +135,7 @@ try {
   await p.goto(URL + "#home"); await p.waitForTimeout(700);
   ok(await p.getByRole("heading", { name: "عقود تنتهي قريب" }).isVisible(), "تنبيه العقد اللي ينتهي خلال 30 يوم");
   await p.goto(URL + "#reports"); await p.waitForTimeout(1200);
-  ok(await p.locator(".chart rect").count() === 12 && await p.locator(".tbl tbody tr").count() === 6, "التقارير: 6 أشهر × دخل/مصروف");
+  ok(await p.locator(".chart rect").count() === 12 && await p.locator("section.card", { has: p.locator(".chart") }).locator(".tbl tbody tr").count() === 6, "التقارير: 6 أشهر × دخل/مصروف");
   const [dl] = await Promise.all([p.waitForEvent("download"), p.getByRole("button", { name: "تصدير CSV للمحاسب" }).click()]);
   const csv = (await (await import("node:fs")).promises.readFile(await dl.path(), "utf8"));
   ok(csv.charCodeAt(0) === 0xFEFF && csv.includes("إيجار") && csv.includes("مصروف"), "CSV فيه BOM وعربي", dl.suggestedFilename());
@@ -871,6 +871,56 @@ try {
     await sc.setOffline(true); await sp.goto(URL); await sp.waitForTimeout(1000);
     ok(await sp.locator(".hero-card").isVisible(), "بعد فتح صفحة التعريف: التطبيق يفتح بدون نت (مو صفحة التعريف)");
     await sc.close();
+  }
+
+  // 27) DW-043: ذكّر المتأخرين + تذكير بالإنقليزي + التقرير السنوي لكل عقار + المصروف مربوط بعقار + القفل بالجوال بس
+  {
+    const w = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const wErr = []; w.on("pageerror", (e) => wErr.push(e.message));
+    await w.goto(URL + "#home"); await w.evaluate(() => localStorage.clear()); await w.reload(); await w.waitForTimeout(1100);
+    ok(await w.locator("#remind-open").isVisible() && /\(\d+\)/.test(await w.locator("#remind-open").innerText()), "الرئيسية: زر «ذكّر المتأخرين» بالعدد");
+    await w.locator("#remind-open").click(); await w.waitForTimeout(450);
+    const links = w.locator("#remind a[href^='https://wa.me/']");
+    const n = await links.count();
+    const first = decodeURIComponent((await links.first().getAttribute("href")).split("text=")[1]);
+    ok(n > 0 && first.startsWith("السلام عليكم") && first.includes("د.ب"), "كل متأخر له رسالة واتساب جاهزة", String(n));
+    await w.addScriptTag({ content: fs.readFileSync("node_modules/axe-core/axe.min.js", "utf8") });
+    const ra = await w.evaluate(async () => (await axe.run(document.querySelector(".dlg"), { resultTypes: ["violations"] })).violations.filter((x) => x.impact === "serious" || x.impact === "critical").map((x) => `${x.id}×${x.nodes.length}`));
+    ok(ra.length === 0, "شاشة التذكير: axe بدون مخالفات خطيرة", ra.join(","));
+    const uid0 = (await links.first().getAttribute("id")).replace("remind-", "");
+    await w.evaluate(() => { window.open = () => null; });
+    await w.locator(`#remind-${uid0}`).evaluate((a) => { a.addEventListener("click", (e) => e.preventDefault(), { once: true }); a.click(); });
+    await w.waitForTimeout(250);
+    ok((await w.locator(`#remind-${uid0}`).innerText()).includes("أُرسل") && await w.evaluate((id) => Object.keys(localStorage).some((k) => k.startsWith("idarati-reminded:") && localStorage.getItem(k).includes(id)), uid0), "بعد الضغط: «أُرسل ✓» وينحفظ للشهر");
+    // المستأجر بالإنقليزي
+    await w.evaluate((id) => { const d = JSON.parse(localStorage.getItem("idarati:v2")); d.units.find((u) => u.id === id).tenant.lang = "en"; localStorage.setItem("idarati:v2", JSON.stringify(d)); }, uid0);
+    await w.reload(); await w.waitForTimeout(1000); await w.locator("#remind-open").click(); await w.waitForTimeout(400);
+    const en = decodeURIComponent((await w.locator(`#remind-${uid0}`).getAttribute("href")).split("text=")[1]);
+    ok(en.startsWith("Hello") && en.includes("BHD"), "مستأجر لغته English: التذكير بالإنقليزي");
+    await w.keyboard.press("Escape"); await w.waitForTimeout(300);
+    // المصروف مربوط بعقار
+    await w.locator(".quick-btn", { hasText: "مصروف" }).click(); await w.waitForTimeout(450);
+    const bchips = w.locator(".dlg [role=radiogroup][aria-label='العقار (اختياري)'] [role=radio]");
+    ok(await bchips.count() >= 2, "نموذج المصروف: العقار اختياري", String(await bchips.count()));
+    const bname = (await bchips.nth(1).innerText()).trim();
+    await bchips.nth(1).click(); await w.locator("#exp-label").fill("صيانة مكيف"); await w.locator("#exp-amount").fill("25");
+    await w.locator(".dlg button[type=submit]").click(); await w.waitForTimeout(400);
+    ok(await w.evaluate((b) => JSON.parse(localStorage.getItem("idarati:v2")).expenses.some((e) => e.label === "صيانة مكيف" && e.building === b && e.amount === 25000), bname), "المصروف انحفظ مع العقار");
+    // التقرير السنوي
+    await w.goto(URL + "#reports"); await w.waitForTimeout(900);
+    ok(await w.locator("#year-report").isVisible() && await w.locator("#year-report tbody tr").count() >= 2, "التقارير: سنة لكل عقار");
+    ok((await w.locator("#year-report .sec-head").innerText()).includes(String(new Date().getFullYear())), "التقرير السنوي يفتح على السنة الحالية (مو سنة الدفعات المقدمة)");
+    ok((await w.locator("#year-report tbody tr", { hasText: bname }).innerText()).includes("25.000"), "مصروف العقار يطلع بصفّه بالتقرير السنوي");
+    const dl = w.waitForEvent("download"); await w.locator("#year-csv").click();
+    ok((await dl).suggestedFilename().endsWith("-year.csv"), "تصدير التقرير السنوي CSV");
+    await w.addScriptTag({ content: fs.readFileSync("node_modules/axe-core/axe.min.js", "utf8") });
+    const ya = await w.evaluate(async () => (await axe.run(document.querySelector("#year-report"), { resultTypes: ["violations"] })).violations.filter((x) => x.impact === "serious" || x.impact === "critical").map((x) => `${x.id}×${x.nodes.length}`));
+    ok(ya.length === 0, "التقرير السنوي: axe بدون مخالفات خطيرة", ya.join(","));
+    // القفل بتطبيق الجوال بس
+    await w.goto(URL + "#settings"); await w.waitForTimeout(700);
+    ok(await w.locator("#lock-btn").count() === 0 && await w.locator("#lock-screen").count() === 0, "المتصفح: ما فيه قفل بصمة (تطبيق الجوال بس)");
+    ok(wErr.length === 0, "DW-043: بدون أخطاء بالصفحة", wErr.join(" | "));
+    await w.close();
   }
 
   if (process.env.SHOTS) {

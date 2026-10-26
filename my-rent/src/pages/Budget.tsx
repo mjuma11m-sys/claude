@@ -93,15 +93,17 @@ export function ExpenseSheet({ open, onClose }: { open: boolean; onClose: () => 
   const toast = useToast();
   const [cat, setCat] = useState(data.cats[0]?.id ?? "");
   const [label, setLabel] = useState("");
+  const [building, setBuilding] = useState(""); // DW-043: العقار (اختياري) للتقرير السنوي
+  const buildings = [...new Set(data.units.map((u) => u.building).filter(Boolean))];
   const [amount, setAmount] = useState("");
   const [error, setError] = useState("");
-  useEffect(() => { if (open) { setLabel(""); setAmount(""); setError(""); setRepeat(false); } }, [open]);
+  useEffect(() => { if (open) { setLabel(""); setAmount(""); setError(""); setRepeat(false); setBuilding(""); } }, [open]);
 
   const submit = () => {
     const fils = parseBHD(amount);
     if (!label.trim()) { setError("اكتب وصف المصروف"); return; }
     if (fils === null) { setError("اكتب المبلغ بالدينار، مثل 12.500"); return; }
-    const e = addExpense(cat, label.trim(), fils);
+    const e = addExpense(cat, label.trim(), fils, building || undefined);
     const r = repeat ? addRecurring(cat, label.trim(), fils) : null;
     onClose();
     toast({ text: `انضاف مصروف ${fmt(fils)} د.ب${r ? " · يتكرر كل شهر" : ""}`, undo: () => { unexpense(e.id); if (r) removeRecurring(r.id); } });
@@ -118,6 +120,7 @@ export function ExpenseSheet({ open, onClose }: { open: boolean; onClose: () => 
           <span>د.ب</span>
         </div>
         <Chips label="الفئة" value={cat} onChange={setCat} options={data.cats.map((c) => ({ id: c.id, label: c.name }))} />
+        {buildings.length > 0 && <Chips label="العقار (اختياري)" value={building} onChange={setBuilding} options={[{ id: "", label: "بدون" }, ...buildings.map((b) => ({ id: b, label: b }))]} />}
         <label className="check-row"><input type="checkbox" checked={repeat} onChange={(e) => setRepeat(e.target.checked)} /> يتكرر كل شهر (فاتورة، إنترنت…)</label>
         {error && <div className="field-error">{error}</div>}
         <button type="submit" className="btn btn-block press">أضف المصروف</button>

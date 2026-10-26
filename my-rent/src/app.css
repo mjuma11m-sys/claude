@@ -500,3 +500,18 @@ select.input { appearance: auto; }
 .vs-table td.num { text-align: end; }
 .table-scroll { overflow-x: auto; }
 .inv-warn { color: var(--due); }
+
+/* DW-043: ذكّر المتأخرين */
+.remind-open { width: 100%; margin-top: 12px; }
+.remind-list { list-style: none; margin: 0; padding: 0; }
+.remind-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.remind-row:last-child { border-bottom: 0; }
+.remind-who { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.remind-row[data-sent] .remind-who { opacity: .6; }
+.remind-row .btn { flex: none; min-width: 96px; }
+.tbl-total td { border-top: 2px solid var(--line); font-weight: 700; }
+
+/* DW-043: قفل التطبيق */
+.lock-screen { position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: #14213A; color: #F5F2EB; padding: 24px; }
+.lock-title { font-size: 22px; font-weight: 700; margin: 0; }
+.lock-screen .btn { min-width: 200px; }
