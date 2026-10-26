@@ -1447,9 +1447,11 @@ const fakeSupabase = () => {
         // DW-078: تحقق بخطوتين وهمي: الرمز الصح 123456
         mfa: {
           getAuthenticatorAssuranceLevel: async () => ({ data: { currentLevel: srv.aal || 'aal1', nextLevel: (srv.factors || []).some((f) => f.status === 'verified') ? 'aal2' : 'aal1' }, error: null }),
-          listFactors: async () => ({ data: { totp: (srv.factors || []).slice() }, error: null }),
-          enroll: async () => { srv.factors = (srv.factors || []).concat([{ id: 'f1', status: 'unverified' }]); return { data: { id: 'f1', totp: { qr_code: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"/>', secret: 'JBSWY3DPEHPK3PXP' } }, error: null }; },
+          listFactors: async () => ({ data: { totp: (srv.factors || []).filter((f) => f.factor_type !== 'phone'), phone: (srv.factors || []).filter((f) => f.factor_type === 'phone') }, error: null }),
+          enroll: async (o) => { if (o && o.factorType === 'phone') { srv.factors = (srv.factors || []).concat([{ id: 'p1', factor_type: 'phone', phone: o.phone, status: 'unverified' }]); srv.calls.push(['enroll-phone', o.phone]); return { data: { id: 'p1' }, error: null }; } srv.factors = (srv.factors || []).concat([{ id: 'f1', factor_type: 'totp', status: 'unverified' }]); return { data: { id: 'f1', totp: { qr_code: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"/>', secret: 'JBSWY3DPEHPK3PXP' } }, error: null }; },
           challengeAndVerify: async ({ factorId, code }) => { if (code !== '123456') return { error: { message: 'Invalid TOTP code entered' } }; srv.factors.find((f) => f.id === factorId).status = 'verified'; srv.aal = 'aal2'; srv.calls.push(['mfa-ok']); srv.cb && srv.cb('MFA_CHALLENGE_VERIFIED', srv.session); return { error: null }; },
+          challenge: async ({ factorId }) => { srv.calls.push(['sms', factorId]); return { data: { id: 'c-' + factorId }, error: null }; },
+          verify: async ({ factorId, challengeId, code }) => { if (code !== '654321' || challengeId !== 'c-' + factorId) return { error: { message: 'Invalid code' } }; srv.factors.find((f) => f.id === factorId).status = 'verified'; srv.aal = 'aal2'; srv.cb && srv.cb('MFA_CHALLENGE_VERIFIED', srv.session); return { error: null }; },
           unenroll: async ({ factorId }) => { srv.factors = srv.factors.filter((f) => f.id !== factorId); srv.aal = 'aal1'; return { error: null }; },
         },
       },
@@ -2939,6 +2941,30 @@ test('new account on iPad (DW-081): the button always answers on the page itself
   await expect(page.locator('#accMsg')).toContainText('أرسلنا إيميل تأكيد لـ new@example.com');
   await page.waitForTimeout(800);
   await expect(page.locator('#accMsg')).toContainText('أرسلنا إيميل تأكيد');   // ما تختفي
+});
+
+test('two-step by SMS (DW-085): hidden until MFA_SMS is on; then a Bahraini number gets a code, and sign-in sends a new one', async ({ page }) => {
+  await useFakeSupabase(page);
+  await open(page);
+  await store(page, () => { App.S.setSettings({ onboarded: true }); window.__srv.aal = 'aal1'; window.__signInAs('u-sara', 'sara@example.com'); });
+  await store(page, () => App.accountSheet());
+  await expect(page.locator('[data-set="mfa-on"]')).toBeVisible();
+  await expect(page.locator('[data-set="mfa-sms-on"]')).toHaveCount(0);            // مخفي افتراضياً
+  await store(page, () => { window.HAYATI_CONFIG.MFA_SMS = true; App.closeSheet(); });
+  await page.waitForTimeout(300);
+  await store(page, () => App.accountSheet());
+  await page.click('[data-set="mfa-sms-on"]');
+  await page.fill('[name=mfa_phone]', '36123412'); await page.click('#sheetSave');
+  await expect(page.locator('#sheetTitle')).toHaveText('اكتب الرمز', { timeout: 5000 });
+  expect(await store(page, () => window.__srv.calls.filter((c) => c[0] === 'enroll-phone').map((c) => c[1]))).toEqual(['+97336123412']);
+  await page.fill('[name=mfa_code]', '654321'); await page.click('#sheetSave');
+  await expect(page.locator('#toast')).toContainText('انفعّل');
+  // دخول جديد ← يرسل SMS ويطلب الرمز
+  await store(page, () => { window.__signInAs(null); window.__srv.aal = 'aal1'; window.__srv.calls = []; window.__signInAs('u-sara', 'sara@example.com'); });
+  await expect(page.locator('#mfaHint')).toContainText('ينتهي بـ 12', { timeout: 5000 });
+  expect(await store(page, () => window.__srv.calls.filter((c) => c[0] === 'sms').length)).toBe(1);
+  await page.fill('[name=mfa_code]', '654321'); await page.click('#sheetSave');
+  await expect.poll(() => store(page, () => App.S.status.signedIn)).toBe(true);
 });
 
 test('account page (DW-035): Google shows up once Supabase enables it, trips follow the account to another device, Umrah stays on the device', async ({ page }) => {

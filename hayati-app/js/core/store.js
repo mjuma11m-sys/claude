@@ -301,7 +301,50 @@
     const { data } = await sb.auth.getSession();
     await gate(data.session);
   }
+  // DW-085: الرمز برسالة SMS (يحتاج Twilio مربوط بـ Supabase؛ مخفي بـ MFA_SMS لين يتجهّز)
+  let pendingSms = null;
+  const smsError = (e) => new Error(/rate|too many|seconds/i.test((e && e.message) || '') ? 'انتظر شوي قبل لا تطلب رمز جديد' : /phone|invalid/i.test((e && e.message) || '') ? 'رقم الجوال مو صحيح' : 'ما قدرنا نرسل الرسالة · جرّب بعدين');
+  function normPhone(raw) {
+    let p = String(raw || '').replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[^\d+]/g, '');
+    if (/^00/.test(p)) p = '+' + p.slice(2);
+    if (/^\d{8}$/.test(p)) p = '+973' + p;   // رقم بحريني بدون مفتاح
+    if (!/^\+\d{8,15}$/.test(p)) throw new Error('رقم الجوال مو صحيح');
+    return p;
+  }
+  async function mfaAll() {
+    const { data, error } = await sb.auth.mfa.listFactors();
+    if (error) throw mfaError(error);
+    const ok = (l) => (l || []).filter((f) => f.status === 'verified');
+    return { totp: ok(data && data.totp), phone: ok(data && data.phone) };
+  }
+  async function mfaSmsSend(factorId) {
+    const { data, error } = await sb.auth.mfa.challenge({ factorId });
+    if (error) throw smsError(error);
+    pendingSms = { factorId, challengeId: data.id };
+  }
+  async function mfaEnrollPhone(phone) {
+    const { data, error } = await sb.auth.mfa.enroll({ factorType: 'phone', phone: normPhone(phone) });
+    if (error) throw smsError(error);
+    await mfaSmsSend(data.id);
+    return { id: data.id };
+  }
+  async function mfaVerifySms(code) {
+    if (!pendingSms) throw new Error('اطلب رمز أول');
+    const { error } = await sb.auth.mfa.verify({ factorId: pendingSms.factorId, challengeId: pendingSms.challengeId, code: String(code).replace(/\D/g, '') });
+    if (error) throw mfaError(error);
+    pendingSms = null;
+    const { data } = await sb.auth.getSession();
+    await gate(data.session);
+  }
+  // الدخول: تطبيق التحقق أول؛ لو بس SMS، نرسل الرمز
+  async function mfaStart() {
+    const all = await mfaAll();
+    if (all.totp.length) return { type: 'totp' };
+    if (all.phone.length) { await mfaSmsSend(all.phone[0].id); return { type: 'sms', phone: String(all.phone[0].phone || '').slice(-2) }; }
+    return { type: 'none' };
+  }
   async function mfaLogin(code) {
+    if (pendingSms) return mfaVerifySms(code);
     const f = (await mfaFactors())[0];
     if (!f) throw new Error('ما فيه تطبيق تحقق مربوط');
     await mfaVerify(f.id, code);
@@ -755,7 +798,7 @@
     subscribe: (fn) => { listeners.add(fn); return () => listeners.delete(fn); },
     upsert, remove, setSettings,
     init, getConfig, saveConfig, clearConfig,
-    signIn, signUp, signOut, mfaFactors, mfaEnroll, mfaVerify, mfaLogin, mfaDisable, mfaCancel, sync, resolveMerge, signInWithProvider, exchangeCode, resetPassword, updatePassword, providers, checkProviders, localCount, getSeed, processInbox, smsToTransaction,
+    signIn, signUp, signOut, mfaFactors, mfaEnroll, mfaVerify, mfaLogin, mfaDisable, mfaCancel, mfaAll, mfaEnrollPhone, mfaVerifySms, mfaSmsSend, mfaStart, sync, resolveMerge, signInWithProvider, exchangeCode, resetPassword, updatePassword, providers, checkProviders, localCount, getSeed, processInbox, smsToTransaction,
     ensureIngestToken, rotateIngestToken, exportJSON, importJSON, wipeAll,
   };
 })(window);

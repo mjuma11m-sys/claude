@@ -15,4 +15,6 @@ window.HAYATI_CONFIG = {
   // أزرار مخفية حتى لو مفعّلة بـ Supabase (DW-067). DW-079: شاشة موافقة Google انتشرت وApple انفعّل، فما فيه شي مخفي.
   //   (بالآيفون Google ما يطلع إلا ومعاه Apple: إرشاد 4.8، بـ store.js)
   HIDE_PROVIDERS: [],
+  // DW-085: التحقق بخطوتين برسالة SMS. خله false لين تربط Twilio بـ Supabase (Authentication ← Providers ← Phone + Multi-Factor ← Phone)
+  MFA_SMS: false,
 };

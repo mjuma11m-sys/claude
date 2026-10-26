@@ -2747,6 +2747,23 @@ window.HAYATI_EN = {
 "ادخل بـ Google أو Apple": "Sign in with Google or Apple",
 "من «حسابك» بضغطة، والإيميل وكلمة السر يظلون موجودين": "One tap from «Your account»; email and password still work",
 "رمز من جوالك مع كلمة السر: لو أحد عرفها ما يقدر يدخل حسابك": "A code from your phone with your password: someone who knows it still can't get in",
+// DW-085
+"💬 أو برسالة SMS": "💬 Or by SMS",
+"فعّله بتطبيق التحقق": "Turn on with an authenticator app",
+"التحقق برسالة SMS": "Verification by SMS",
+"أرسل الرمز": "Send code",
+"رقم الجوال": "Mobile number",
+"اكتب الرمز": "Enter the code",
+"أرسلنا رمز من 6 أرقام لجوالك.": "We sent a 6-digit code to your phone.",
+"انفعّل ✓ الدخول الجاي يطلب رمز SMS": "Turned on ✓ Your next sign-in will ask for an SMS code",
+"بتطبيق التحقق": "with an authenticator app",
+"برسالة SMS": "by SMS",
+"أي دخول جديد لحسابك يطلب الرمز.": "Every new sign-in to your account asks for the code.",
+"رقم الجوال مو صحيح": "That mobile number isn't valid",
+"انتظر شوي قبل لا تطلب رمز جديد": "Wait a moment before asking for a new code",
+"ما قدرنا نرسل الرسالة · جرّب بعدين": "Couldn't send the message · try later",
+"اطلب رمز أول": "Ask for a code first",
+"نرسل رمز لجوالك كل ما تدخل حسابك من جهاز جديد. تطبيق التحقق أأمن، بس هذا أسهل.": "We text a code to your phone each time you sign in on a new device. An authenticator app is safer, but this is easier.",
 // DW-081
 "🌍 من العالم": "🌍 World",
 "حلال": "Halal",
@@ -3133,6 +3150,8 @@ window.HAYATI_CONFIG = {
   // أزرار مخفية حتى لو مفعّلة بـ Supabase (DW-067). DW-079: شاشة موافقة Google انتشرت وApple انفعّل، فما فيه شي مخفي.
   //   (بالآيفون Google ما يطلع إلا ومعاه Apple: إرشاد 4.8، بـ store.js)
   HIDE_PROVIDERS: [],
+  // DW-085: التحقق بخطوتين برسالة SMS. خله false لين تربط Twilio بـ Supabase (Authentication ← Providers ← Phone + Multi-Factor ← Phone)
+  MFA_SMS: false,
 };
 
 </script>
@@ -3788,7 +3807,50 @@ window.HAYATI_CONFIG = {
     const { data } = await sb.auth.getSession();
     await gate(data.session);
   }
+  // DW-085: الرمز برسالة SMS (يحتاج Twilio مربوط بـ Supabase؛ مخفي بـ MFA_SMS لين يتجهّز)
+  let pendingSms = null;
+  const smsError = (e) => new Error(/rate|too many|seconds/i.test((e && e.message) || '') ? 'انتظر شوي قبل لا تطلب رمز جديد' : /phone|invalid/i.test((e && e.message) || '') ? 'رقم الجوال مو صحيح' : 'ما قدرنا نرسل الرسالة · جرّب بعدين');
+  function normPhone(raw) {
+    let p = String(raw || '').replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[^\d+]/g, '');
+    if (/^00/.test(p)) p = '+' + p.slice(2);
+    if (/^\d{8}$/.test(p)) p = '+973' + p;   // رقم بحريني بدون مفتاح
+    if (!/^\+\d{8,15}$/.test(p)) throw new Error('رقم الجوال مو صحيح');
+    return p;
+  }
+  async function mfaAll() {
+    const { data, error } = await sb.auth.mfa.listFactors();
+    if (error) throw mfaError(error);
+    const ok = (l) => (l || []).filter((f) => f.status === 'verified');
+    return { totp: ok(data && data.totp), phone: ok(data && data.phone) };
+  }
+  async function mfaSmsSend(factorId) {
+    const { data, error } = await sb.auth.mfa.challenge({ factorId });
+    if (error) throw smsError(error);
+    pendingSms = { factorId, challengeId: data.id };
+  }
+  async function mfaEnrollPhone(phone) {
+    const { data, error } = await sb.auth.mfa.enroll({ factorType: 'phone', phone: normPhone(phone) });
+    if (error) throw smsError(error);
+    await mfaSmsSend(data.id);
+    return { id: data.id };
+  }
+  async function mfaVerifySms(code) {
+    if (!pendingSms) throw new Error('اطلب رمز أول');
+    const { error } = await sb.auth.mfa.verify({ factorId: pendingSms.factorId, challengeId: pendingSms.challengeId, code: String(code).replace(/\D/g, '') });
+    if (error) throw mfaError(error);
+    pendingSms = null;
+    const { data } = await sb.auth.getSession();
+    await gate(data.session);
+  }
+  // الدخول: تطبيق التحقق أول؛ لو بس SMS، نرسل الرمز
+  async function mfaStart() {
+    const all = await mfaAll();
+    if (all.totp.length) return { type: 'totp' };
+    if (all.phone.length) { await mfaSmsSend(all.phone[0].id); return { type: 'sms', phone: String(all.phone[0].phone || '').slice(-2) }; }
+    return { type: 'none' };
+  }
   async function mfaLogin(code) {
+    if (pendingSms) return mfaVerifySms(code);
     const f = (await mfaFactors())[0];
     if (!f) throw new Error('ما فيه تطبيق تحقق مربوط');
     await mfaVerify(f.id, code);
@@ -4242,7 +4304,7 @@ window.HAYATI_CONFIG = {
     subscribe: (fn) => { listeners.add(fn); return () => listeners.delete(fn); },
     upsert, remove, setSettings,
     init, getConfig, saveConfig, clearConfig,
-    signIn, signUp, signOut, mfaFactors, mfaEnroll, mfaVerify, mfaLogin, mfaDisable, mfaCancel, sync, resolveMerge, signInWithProvider, exchangeCode, resetPassword, updatePassword, providers, checkProviders, localCount, getSeed, processInbox, smsToTransaction,
+    signIn, signUp, signOut, mfaFactors, mfaEnroll, mfaVerify, mfaLogin, mfaDisable, mfaCancel, mfaAll, mfaEnrollPhone, mfaVerifySms, mfaSmsSend, mfaStart, sync, resolveMerge, signInWithProvider, exchangeCode, resetPassword, updatePassword, providers, checkProviders, localCount, getSeed, processInbox, smsToTransaction,
     ensureIngestToken, rotateIngestToken, exportJSON, importJSON, wipeAll,
   };
 })(window);
@@ -14067,19 +14129,22 @@ window.HAYATI_CONFIG = {
   if (!A || !E) return;
   const { S, I, h } = A;
   const on = () => !!(S.status && S.status.signedIn && S.mfaFactors);
+  const smsOn = () => !!((window.HAYATI_CONFIG || {}).MFA_SMS && S.mfaEnrollPhone);   // DW-085: مخفي لين يتربط Twilio
 
   // ---------- بصفحة «حسابك» ----------
   const box = () => '<div class="group-title">' + I('key') + 'التحقق بخطوتين</div><div class="card" id="mfaBox"><p class="small muted" style="margin:0">…</p></div>';
   async function fill() {
     const el = document.getElementById('mfaBox');
     if (!el) return;
-    let list;
-    try { list = await S.mfaFactors(); } catch (e) { el.innerHTML = '<p class="small muted" style="margin:0">ما قدرنا نشيّك الحين · جرّب بعدين</p>'; return; }
-    el.innerHTML = list.length
-      ? '<p style="margin:0 0 10px"><b>مفعّل ✓</b></p><p class="small muted" style="margin:0 0 12px">أي دخول جديد لحسابك يطلب الرمز من تطبيق التحقق.</p>' +
-        '<button class="btn ghost block" data-set="mfa-off" data-id="' + h(list[0].id) + '">وقّف التحقق بخطوتين</button>'
+    let all;
+    try { all = S.mfaAll ? await S.mfaAll() : { totp: await S.mfaFactors(), phone: [] }; } catch (e) { el.innerHTML = '<p class="small muted" style="margin:0">ما قدرنا نشيّك الحين · جرّب بعدين</p>'; return; }
+    const f = all.totp[0] || all.phone[0];
+    el.innerHTML = f
+      ? '<p style="margin:0 0 10px"><b>مفعّل ✓</b> <span class="small muted">' + (all.totp.length ? 'بتطبيق التحقق' : 'برسالة SMS') + '</span></p><p class="small muted" style="margin:0 0 12px">أي دخول جديد لحسابك يطلب الرمز.</p>' +
+        '<button class="btn ghost block" data-set="mfa-off" data-id="' + h(f.id) + '">وقّف التحقق بخطوتين</button>'
       : '<p class="small muted" style="margin:0 0 12px">لو أحد عرف كلمة سرك، ما يقدر يدخل بدون رمز من جوالك.</p>' +
-        '<button class="btn primary block" data-set="mfa-on">' + I('key') + 'فعّله</button>';
+        '<button class="btn primary block" data-set="mfa-on">' + I('key') + 'فعّله بتطبيق التحقق</button>' +
+        (smsOn() ? '<button class="btn ghost block" style="margin-top:8px" data-set="mfa-sms-on">💬 أو برسالة SMS</button>' : '');
   }
   const prevExtra = E.accountExtra;
   E.accountExtra = (...a) => (prevExtra ? prevExtra(...a) : '') + (on() ? (setTimeout(fill, 0), box()) : '');
@@ -14087,6 +14152,7 @@ window.HAYATI_CONFIG = {
   const prevAct = E.settingsAction;
   E.settingsAction = async (act, root, b) => {
     if (act === 'mfa-on') { enroll(); return true; }
+    if (act === 'mfa-sms-on' && smsOn()) { enrollSms(); return true; }
     if (act === 'mfa-off') {
       if (!(await A.ask('توقف التحقق بخطوتين؟ الدخول يصير بكلمة السر بس.', 'وقّفه'))) return true;
       try { await S.mfaDisable(b.dataset.id); A.toast('توقّف'); fill(); } catch (e) { A.toast(e.message); }
@@ -14120,6 +14186,33 @@ window.HAYATI_CONFIG = {
     }), 280);
   }
 
+  // ---------- التفعيل برسالة SMS: الرقم ← الرمز ----------
+  const codeField = '<div class="field" style="margin-top:12px"><label>الرمز</label><input name="mfa_code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" style="direction:ltr;text-align:center;font-size:22px;letter-spacing:6px"></div>';
+  function enrollSms() {
+    A.closeSheet();
+    setTimeout(() => A.openSheet({
+      title: 'التحقق برسالة SMS', saveLabel: 'أرسل الرمز',
+      body: '<p class="small muted" style="margin:0 4px 12px">نرسل رمز لجوالك كل ما تدخل حسابك من جهاز جديد. تطبيق التحقق أأمن، بس هذا أسهل.</p>' +
+        '<div class="field"><label>رقم الجوال</label><input name="mfa_phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="3xxxxxxx" style="direction:ltr;text-align:left"></div>',
+      async onSave(root) {
+        await S.mfaEnrollPhone(A.val(root, 'mfa_phone'));
+        setTimeout(confirmSms, 280);
+      },
+    }), 280);
+  }
+  function confirmSms() {
+    A.openSheet({
+      title: 'اكتب الرمز', saveLabel: 'تأكيد',
+      body: '<p class="small muted" style="margin:0 4px 6px">أرسلنا رمز من 6 أرقام لجوالك.</p>' + codeField,
+      async onSave(root) {
+        const code = A.val(root, 'mfa_code');
+        if (!/^\d{6}$/.test(code)) throw new Error('اكتب الرمز (6 أرقام)');
+        await S.mfaVerifySms(code);
+        A.toast('انفعّل ✓ الدخول الجاي يطلب رمز SMS');
+      },
+    });
+  }
+
   // ---------- الدخول: الرمز قبل البيانات ----------
   let asking = false;
   function askCode() {
@@ -14128,7 +14221,7 @@ window.HAYATI_CONFIG = {
     let done = false;
     A.openSheet({
       title: 'رمز التحقق', saveLabel: 'دخول',
-      body: '<p class="small muted" style="margin:0 4px 12px">حسابك عليه تحقق بخطوتين. اكتب الرمز من تطبيق التحقق.</p>' +
+      body: '<p class="small muted" id="mfaHint" style="margin:0 4px 12px">حسابك عليه تحقق بخطوتين. اكتب الرمز من تطبيق التحقق.</p>' +
         '<div class="field"><input name="mfa_code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" style="direction:ltr;text-align:center;font-size:24px;letter-spacing:8px"></div>',
       async onSave(root) {
         const code = A.val(root, 'mfa_code');
@@ -14138,6 +14231,11 @@ window.HAYATI_CONFIG = {
         A.toast('أهلاً 👋');
       },
     });
+    // SMS: نرسل الرمز أول ما تنفتح النافذة
+    if (S.mfaStart) S.mfaStart().then((r) => {
+      const el = document.getElementById('mfaHint');
+      if (el && r && r.type === 'sms') el.textContent = 'أرسلنا رمز SMS للرقم اللي ينتهي بـ ' + r.phone + '. اكتبه هني.';
+    }).catch((e) => { const el = document.getElementById('mfaHint'); if (el) el.textContent = e.message; });
     // سكّر النافذة بدون رمز ← نطلع من الحساب (ما يبقى نص دخول)
     document.getElementById('sheet').addEventListener('close', () => { asking = false; if (!done && S.status.mfaNeeded) S.mfaCancel(); }, { once: true });
   }

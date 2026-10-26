@@ -64,3 +64,11 @@
 4. بعد شهر، كم واحد وصل الحد؟ (عدد بس، بدون أي محتوى):
    `select feature, count(*) filter (where calls >= 3) as hit, count(*) as users from ai_quota where month = date_trunc('month', current_date)::date group by feature;`
    لو 15% أو أكثر وصلوا الحد ← نفتح نقاش «حياتي بلس».
+
+## 3.6) التحقق بخطوتين برسالة SMS (DW-085، مخفي لين تسوي هذا)
+> يكلّف فلوس على كل رسالة (تقريباً 0.05–0.10$ للبحرين، تقدير: تأكد من أسعار Twilio). مفاتيح Twilio **بلوحة Supabase بس**، لا بالكود ولا بالشات.
+1. **twilio.com** ← حساب ← اشحن رصيد ← **Messaging Service** (أو رقم مرسل) ← انسخ Account SID و Auth Token و Messaging Service SID.
+2. Supabase ← **Authentication** ← **Sign In / Providers** ← **Phone** ← Provider: **Twilio** ← الصق المفاتيح ← Save.
+3. Supabase ← **Authentication** ← **Multi-Factor** ← فعّل **Phone** (Enroll + Verify).
+4. `js/core/config.js` ← `MFA_SMS: true` (أو قل لـ Claude يقلبها) ← نسخة جديدة.
+5. **سياسة الخصوصية:** ضف سطر إن رقم الجوال ينحفظ عند Supabase ويمر على Twilio لإرسال الرمز بس.
