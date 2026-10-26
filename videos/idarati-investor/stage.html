@@ -25,11 +25,11 @@ body{font-family:Plex,sans-serif;color:var(--sand)}
 .paper{background:#FBF6E8;color:#3A3226;border:2px dashed #C8BBA0}
 .xl{background:#fff;color:#1E5E3A;font-family:Plex,monospace}
 /* الجوال */
-.phone{position:absolute;width:400px;height:866px;border-radius:58px;background:#0A1120;padding:12px;box-shadow:0 50px 100px rgba(0,0,0,.45),0 0 0 2px #26344F}
-.phone img{width:100%;height:100%;object-fit:cover;object-position:top;border-radius:46px;display:block}
+.phone{position:absolute;width:470px;height:1018px;border-radius:64px;overflow:hidden;background:#0A1120;padding:12px;box-shadow:0 50px 100px rgba(0,0,0,.45),0 0 0 2px #26344F}
+.phone img{width:100%;height:100%;object-fit:cover;object-position:top;border-radius:52px;display:block;will-change:transform}
 .feat{position:absolute;display:flex;align-items:center;gap:22px;background:var(--night2);border:1px solid #2A3D63;border-radius:26px;padding:28px 36px;font-size:42px;font-weight:700;white-space:nowrap}
 .feat i{width:22px;height:22px;border-radius:50%;background:var(--gold);flex:none}
-.note{position:absolute;left:60px;bottom:40px;font-size:26px;color:#9AA4B6;opacity:0}
+.note{position:absolute;right:60px;bottom:40px;font-size:26px;color:#9AA4B6;opacity:0}
 .pill{border:2px solid var(--gold);color:var(--gold);border-radius:999px;padding:10px 30px;font-size:34px;display:inline-block}
 </style>
 </head>
@@ -65,7 +65,7 @@ body{font-family:Plex,sans-serif;color:var(--sand)}
 
   <!-- 3–5) المنتج -->
   <div class="scene" id="s3">
-    <div class="phone" id="ph"><img id="shot" src="../../docs/company/store/iphone-1-home.png" alt=""></div>
+    <div class="phone" id="ph"><div style="width:100%;height:100%;overflow:hidden;border-radius:52px"><img id="shot" src="../../docs/company/store/iphone-1-home.png" alt=""></div></div>
     <div class="abs" id="t3" style="right:150px;top:330px;width:1000px">
       <div class="gold" id="t3e" style="font-size:36px;margin-bottom:18px">التحصيل الشهري</div>
       <div class="h" id="t3h" style="font-size:96px">مين دفع ومين تأخر</div>
@@ -93,12 +93,13 @@ body{font-family:Plex,sans-serif;color:var(--sand)}
 
   <!-- 8) الختام -->
   <div class="scene" id="s8">
-    <svg class="abs" id="logo2" viewBox="72 72 368 368" style="left:885px;top:110px;width:150px;height:150px"><g transform="translate(256 256) scale(1.1) translate(-256 -265)"><rect x="178" y="112" width="156" height="30" rx="6" fill="#C9963A"/><rect x="194" y="142" width="124" height="256" fill="#C9963A"/><rect x="212" y="164" width="18" height="96" rx="5" fill="#14213A"/><rect x="247" y="164" width="18" height="96" rx="5" fill="#14213A"/><rect x="282" y="164" width="18" height="96" rx="5" fill="#14213A"/><path d="M234 398 V344 Q234 316 256 308 Q278 316 278 344 V398 Z" fill="#14213A"/><rect x="146" y="394" width="220" height="24" rx="10" fill="#C9963A"/></g></svg>
-    <div class="abs muted" id="t8a" style="left:0;right:0;top:300px;text-align:center;font-size:44px">ويب · آيفون · أندرويد</div>
-    <div class="abs h" id="t8b" style="left:0;right:0;top:390px;text-align:center;font-size:96px">نبحث عن شريك لأول 10 عائلات</div>
-    <div class="abs" id="t8c" style="left:0;right:0;top:560px;text-align:center"><span class="pill">قيد التطوير · نسخة تجريبية</span></div>
-    <div class="abs" id="t8d" style="left:0;right:0;top:690px;text-align:center;font-size:50px">محمد جمعة · مؤسس WADQA</div>
-    <div class="abs gold" id="t8e" style="left:0;right:0;top:790px;text-align:center;font-size:30px;letter-spacing:8px;direction:ltr">IDARATI · BY WADQA</div>
+    <svg class="abs" id="logo2" viewBox="72 72 368 368" style="left:1165px;top:110px;width:150px;height:150px"><g transform="translate(256 256) scale(1.1) translate(-256 -265)"><rect x="178" y="112" width="156" height="30" rx="6" fill="#C9963A"/><rect x="194" y="142" width="124" height="256" fill="#C9963A"/><rect x="212" y="164" width="18" height="96" rx="5" fill="#14213A"/><rect x="247" y="164" width="18" height="96" rx="5" fill="#14213A"/><rect x="282" y="164" width="18" height="96" rx="5" fill="#14213A"/><path d="M234 398 V344 Q234 316 256 308 Q278 316 278 344 V398 Z" fill="#14213A"/><rect x="146" y="394" width="220" height="24" rx="10" fill="#C9963A"/></g></svg>
+    <div class="abs" id="qr" style="left:150px;top:300px;width:380px;padding:28px;border-radius:30px;background:#F5F2EB;text-align:center;color:#14213A;font-size:30px;font-weight:700"><img src="qr-demo.png" alt="" style="width:324px;height:324px;display:block;margin:0 auto 14px">امسح وجرّب<br><span style="font-weight:400;font-size:24px">ببيانات تجريبية</span></div>
+    <div class="abs muted" id="t8a" style="left:560px;right:0;top:300px;text-align:center;font-size:44px">ويب · آيفون · أندرويد</div>
+    <div class="abs h" id="t8b" style="left:560px;right:0;top:390px;text-align:center;font-size:84px">نبحث عن شريك لأول 10 عائلات</div>
+    <div class="abs" id="t8c" style="left:560px;right:0;top:560px;text-align:center"><span class="pill">قيد التطوير · نسخة تجريبية</span></div>
+    <div class="abs" id="t8d" style="left:560px;right:0;top:690px;text-align:center;font-size:50px">محمد جمعة · مؤسس WADQA</div>
+    <div class="abs gold" id="t8e" style="left:560px;right:0;top:790px;text-align:center;font-size:30px;letter-spacing:8px;direction:ltr">IDARATI · BY WADQA</div>
   </div>
 
   <div class="note" id="note">* لقطات ببيانات تجريبية</div>
@@ -151,7 +152,11 @@ window.render = (t) => {
     const swap = idx > 0 ? 1 - Math.abs(1 - 2 * clamp((t - st + .35) / .7)) : 0; // غمزة التبديل
     const drift = Math.sin(t * .5) * 8;
     set($("ph"), 1 - .7 * swap, `translate(${(1 - enter) * -500}px, ${drift}px) rotate(${(1 - enter) * -8 + Math.sin(t * .4) * 1.2}deg) scale(${1 - .04 * swap})`);
-    $("ph").style.left = "190px"; $("ph").style.top = "107px";
+    $("ph").style.left = "170px"; $("ph").style.top = "31px";
+    // زووم على الأرقام: يدخل بعد ثانيتين ويطلع قبل التبديل
+    const zIn = inout(k(t, st + 2.2, st + 3)), zOut = inout(k(t, st + 5.3, st + 6.1));
+    const z = idx === 2 ? zIn * (1 - k(t, 30.2, 30.9)) : zIn * (1 - zOut);
+    const img = $("shot"); img.style.transformOrigin = ["62% 10%", "50% 18%", "55% 8%"][idx]; img.style.transform = `scale(${1 + .35 * z})`;
     const [e, h, pp] = COPY[idx];
     if ($("t3h").textContent !== h) { $("t3e").textContent = e; $("t3h").textContent = h; $("t3p").textContent = pp; }
     rise($("t3e"), t, st + .4, .6, 30); rise($("t3h"), t, st + .6); rise($("t3p"), t, st + .9);
@@ -177,6 +182,7 @@ window.render = (t) => {
   $("s8").style.opacity = k(t, 43.9, 44.4) * (1 - k(t, 49.4, 50));
   { const p = back(k(t, 44.2, 45)); set($("logo2"), clamp(k(t, 44.2, 44.5)), `scale(${.6 + .4 * p})`); }
   rise($("t8a"), t, 44.6, .6, 30); rise($("t8b"), t, 45); rise($("t8c"), t, 45.7, .6, 30); rise($("t8d"), t, 46.3); rise($("t8e"), t, 46.9, .6, 20);
+  { const p = back(k(t, 47.3, 48.1)); set($("qr"), clamp(k(t, 47.3, 47.6)), `scale(${.7 + .3 * p})`); }
 };
 window.render(0);
 </script>
