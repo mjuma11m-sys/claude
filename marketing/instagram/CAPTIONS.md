@@ -3,7 +3,7 @@
 ## الحساب
 | الخانة | القيمة |
 |---|---|
-| اسم المستخدم | `@idarati.bh` ← لو محجوز: `@idarati.app` ← `@idarati_wadqa` |
+| اسم المستخدم | `@idarati.app` ✅ (المربوط بـ Business Suite) |
 | الاسم الظاهر | إداراتي \| إدارة الإيجارات |
 | نوع الحساب | Business (أو Creator) — الفئة: App Page / Software |
 | الصورة | `out/avatar.png` |
