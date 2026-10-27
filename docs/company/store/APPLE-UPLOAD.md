@@ -6,7 +6,7 @@
 ## 0. قبل أي شي (مانع)
 | البند | ليش | الحالة |
 |---|---|---|
-| Supabase → SQL Editor → الصق `docs/company/store/supabase-delete-account.sql` → Run | أبل ترفض أي تطبيق فيه حساب بدون «حذف الحساب من داخل التطبيق» (5.1.1(v)) | ❌ ما انطبق للحين |
+| Supabase → SQL Editor → الصق `docs/company/store/supabase-delete-account.sql` → Run | أبل ترفض أي تطبيق فيه حساب بدون «حذف الحساب من داخل التطبيق» (5.1.1(v)) | ✅ انطبق 2026-10-27 (security definer، authenticated بس) |
 
 ## 1. حساب Apple Developer (99$ بالسنة ≈ 37.3 د.ب)
 1. افتح developer.apple.com/programs/enroll بحساب Apple ID عليه التحقق بخطوتين.
