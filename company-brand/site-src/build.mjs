@@ -14,6 +14,7 @@ const HOST = DOMAIN.replace(/^https:\/\//, '');
 const GOOGLE_VERIFY = null;
 // الإيميل يطلع بالموقع بس لما يكون فيه صندوق حقيقي على دومين نملكه (DW-056). قبلها: نموذج التواصل
 const EMAIL = 'wadqa.studio.bh@gmail.com';
+const INSTAGRAM = 'wadqa.bh';   // حساب الشركة (2026-10-27)
 
 // المفتاح العام (anon) لمشروع Supabase «hayati» — الجدول محمي، والكتابة بس عبر wadqa_submit
 const { url: SUPA_URL, key: SUPA_KEY } = JSON.parse(fs.readFileSync(path.join(SRC, 'supabase/config.json'), 'utf8'));
@@ -81,7 +82,7 @@ ${body.replaceAll('IMG/', pre + 'img/').replaceAll('PRIV', 'privacy.html')}
 </main>
 <footer class="site"><div class="wrap">
   <span>${t('footer_rights')}</span>
-  <span><a href="support.html">${t('footer_support')}</a> · <a href="privacy.html">${t('footer_privacy')}</a> · ${t('footer_status')}</span>
+  <span><a href="support.html">${t('footer_support')}</a> · <a href="privacy.html">${t('footer_privacy')}</a> · <a href="https://instagram.com/${INSTAGRAM}" rel="noopener" dir="ltr">@${INSTAGRAM}</a> · ${t('footer_status')}</span>
 </div></footer>
 <script src="${pre}config.js"></script>
 <script src="${pre}app.js" defer></script>
@@ -157,7 +158,7 @@ P.index = (L) => ({
   <h2>${L === 0 ? 'تواصل' : 'Contact'}</h2>
   <p class="h-sub">${L === 0 ? 'ملاحظة، فكرة، أو شغل مشترك؟' : 'A note, an idea, or work together?'}</p>
   ${form(L, 'contact', 'general', { btn: T.send[L], msgLabel: L === 0 ? 'رسالتك' : 'Your message' })}
-  ${EMAIL ? `<p class="note">${L === 0 ? 'أو راسلنا مباشرة:' : 'Or email us directly:'} <span dir="ltr">${EMAIL}</span></p>` : ''}
+  ${EMAIL ? `<p class="note">${L === 0 ? 'أو راسلنا مباشرة:' : 'Or email us directly:'} <span dir="ltr">${EMAIL}</span>${INSTAGRAM ? ` · ${L === 0 ? 'إنستقرام' : 'Instagram'} <a href="https://instagram.com/${INSTAGRAM}" rel="noopener" dir="ltr">@${INSTAGRAM}</a>` : ''}</p>` : ''}
 </div></section>`,
 });
 
