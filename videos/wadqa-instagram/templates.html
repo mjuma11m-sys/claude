@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>قوالب إنستقرام ودقة</title>
+<style>
+/* هوية إنستقرام ودقة (ديوانية 2026-10-27): نفس ألوان الموقع وخطوطه. كل إطار يتصوّر لحاله بـ render.cjs */
+@font-face { font-family: Display; src: url("../../.claude/skills/video-ad-editor/motion/fonts/Tajawal-Black.ttf"); }
+@font-face { font-family: Body; src: url("../../.claude/skills/video-ad-editor/motion/fonts/IBMPlexSansArabic-Regular.ttf"); }
+@font-face { font-family: Body; font-weight: 700; src: url("../../.claude/skills/video-ad-editor/motion/fonts/IBMPlexSansArabic-Bold.ttf"); }
+:root { --ink: #0B1514; --slate: #1C2B2A; --line: #2c403e; --bone: #F2EBDD; --mist: #8FA09C; --gold: #C8A04A; --coral: #FF6B4A; --teal: #13636B; }
+* { box-sizing: border-box; margin: 0; }
+body { background: #444; display: flex; flex-wrap: wrap; gap: 40px; padding: 40px; font-family: Body, sans-serif; }
+.f { position: relative; overflow: hidden; }
+.post { width: 1080px; height: 1350px; }
+.story { width: 1080px; height: 1920px; }
+.dark { background: var(--ink); color: var(--bone); }
+.light { background: var(--bone); color: var(--ink); }
+.logo { position: absolute; top: 70px; right: 80px; display: flex; gap: 16px; align-items: center; font: 900 40px Display; }
+.logo svg { width: 54px; height: 54px; }
+.foot { position: absolute; bottom: 64px; right: 80px; left: 80px; display: flex; justify-content: space-between; align-items: center; font: 700 28px Body; color: var(--mist); }
+.light .foot { color: #6b6455; }
+.pill { background: var(--gold); color: var(--ink); border-radius: 99px; padding: 8px 24px; font: 700 26px Body; }
+.eyebrow { font: 700 36px Body; color: var(--gold); }
+.light .eyebrow { color: #7A5A12; }
+h1 { font: 900 96px/1.15 Display; }
+h2 { font: 900 78px/1.2 Display; }
+p.lead { font: 400 42px/1.6 Body; }
+.dark p.lead { color: #D9D2C2; }
+.content { position: absolute; top: 200px; right: 80px; left: 80px; display: flex; flex-direction: column; gap: 34px; }
+.phone { width: 380px; height: 640px; border-radius: 52px; border: 12px solid #26302f; overflow: hidden; align-self: center; box-shadow: 0 30px 90px #0009; }
+.phone img { width: 100%; display: block; }
+.demo { font: 400 26px Body; color: var(--mist); text-align: center; }
+.story h1 { font-size: 150px; }
+.story p.lead { font-size: 60px; }
+.story .eyebrow { font-size: 52px; }
+.story .logo { top: 220px; }
+.big { font: 900 300px/1 Display; color: var(--gold); direction: ltr; text-align: right; }
+.light .big { color: var(--teal); }
+.rows { display: grid; gap: 20px; }
+.r { display: flex; justify-content: space-between; align-items: center; background: var(--slate); border-radius: 28px; padding: 30px 40px; font: 700 44px Body; }
+.r b { font: 900 76px Display; direction: ltr; color: var(--coral); }
+.r b.ok { color: #4FC79E; }
+.center { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+.hl { width: 1080px; height: 1920px; background: var(--ink); }
+.hl .ring { width: 640px; height: 640px; border-radius: 50%; background: var(--slate); border: 10px solid var(--gold); display: grid; place-items: center; font: 900 260px Display; color: var(--bone); }
+.hl .ring img { width: 70%; border-radius: 22%; }
+.num { direction: ltr; unicode-bidi: isolate; }
+</style></head><body>
+<!-- الشعار: نفس SVG الموقع -->
+<template id="logo"><svg viewBox="0 0 512 512"><path d="M256 104C256 104 160 228 160 310A96 96 0 0 0 352 310C352 228 256 104 256 104Z" fill="none" stroke="currentColor" stroke-width="28"/><circle cx="256" cy="316" r="38" fill="#C8A04A"/></svg></template>
+
+<!-- T1 ميزة: داكن + لقطة تجريبية -->
+<div class="f post dark" id="t1-feature">
+  <div class="logo"><i data-logo></i>ودقة</div>
+  <div class="content"><div class="eyebrow">حياتي · ميزة</div><h2>الصق رسالة البنك،<br>والمصروف ينسجّل</h2>
+    <div class="phone"><img src="hayati-money-raw.jpg" alt=""></div><div class="demo">* لقطات ببيانات تجريبية</div></div>
+  <div class="foot"><span class="pill">قيد التطوير · نسخة تجريبية</span><span class="num">@wadqa.studio</span></div>
+</div>
+
+<!-- T2 نصيحة/رقم: فاتح -->
+<div class="f post light" id="t2-tip">
+  <div class="logo"><i data-logo></i>ودقة</div>
+  <div class="content" style="top:260px"><div class="eyebrow">نصيحة مال · للطلاب</div>
+    <div class="big">4</div><h2>أسئلة تسألها نفسك<br>قبل آخر الشهر</h2>
+    <p class="lead">اسحب ← وجاوب بصراحة. ما يحتاج تطبيق.</p></div>
+  <div class="foot"><span>حفظ 🔖 للشهر الجاي</span><span class="num">@wadqa.studio</span></div>
+</div>
+
+<!-- T3 بصراحة (بناء بالعلن): داكن + أرقام حقيقية -->
+<div class="f post dark" id="t3-honest">
+  <div class="logo"><i data-logo></i>ودقة</div>
+  <div class="content"><div class="eyebrow">بصراحة · أرقامنا</div><h2>هذي أرقامنا<br>بدون تجميل:</h2>
+    <div class="rows"><div class="r">زيارات الموقع<b>34</b></div><div class="r">مختبرين<b>0 / 12</b></div><div class="r">اختبارات خضرا<b class="ok">150</b></div></div>
+    <p class="lead">نبي أول 12 مختبر. الرابط بالبايو.</p></div>
+  <div class="foot"><span class="pill">قيد التطوير · نسخة تجريبية</span><span class="num">@wadqa.studio</span></div>
+</div>
+
+<!-- S1 ستوري «قريباً 👀» -->
+<div class="f story dark" id="s1-soon">
+  <div class="logo"><i data-logo></i>ودقة</div>
+  <div class="center"><div style="display:grid;gap:40px;justify-items:center;padding:0 90px">
+    <img src="hayati-icon.png" alt="" style="width:260px;border-radius:60px">
+    <h1>حياتي</h1><p class="lead">يومك بمكان واحد: فلوسك، دراستك، عبادتك.</p>
+    <div style="font:900 120px Display;color:var(--gold)">قريباً 👀</div></div></div>
+</div>
+
+<!-- S2 ستوري «كن مختبر» -->
+<div class="f story light" id="s2-testers">
+  <div class="logo"><i data-logo></i>ودقة</div>
+  <div class="center"><div style="display:grid;gap:44px;justify-items:center;padding:0 90px">
+    <div class="eyebrow">نبيك 🫵</div><h1>جرّب «حياتي»<br>قبل الكل</h1>
+    <p class="lead">14 يوم على جوالك، وتقول لنا وش ما اشتغل. بدون فلوس.</p>
+    <div style="font:700 44px Body;background:var(--ink);color:var(--bone);border-radius:30px;padding:30px 50px" class="num">myrent-sigma.vercel.app/testers</div>
+    <p class="demo" style="color:#6b6455">ضيف ملصق الرابط هني ⬆️</p></div></div>
+</div>
+
+<!-- أغلفة الهايلايت -->
+<div class="f hl" id="h1-testers"><div class="center"><div class="ring">🧪</div></div></div>
+<div class="f hl" id="h2-hayati"><div class="center"><div class="ring"><img src="hayati-icon.png" alt=""></div></div></div>
+<div class="f hl" id="h3-idarati"><div class="center"><div class="ring"><img src="idarati-icon.png" alt=""></div></div></div>
+<div class="f hl" id="h4-behind"><div class="center"><div class="ring">🧤</div></div></div>
+<div class="f hl" id="h5-support"><div class="center"><div class="ring">✉️</div></div></div>
+<script>
+const svg = document.getElementById('logo').innerHTML;
+document.querySelectorAll('[data-logo]').forEach((el) => { el.outerHTML = svg; });
+</script>
+</body></html>
