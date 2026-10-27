@@ -104,3 +104,67 @@ export async function myFamily(sb: SupabaseClient): Promise<{ id: string; name: 
   const row = data?.[0] as unknown as { role: "owner" | "member"; can_edit?: boolean; families: { id: string; name: string } } | undefined;
   return row ? { id: row.families.id, name: row.families.name, role: row.role, canEdit: row.role === "owner" || row.can_edit !== false } : null;
 }
+
+// ── DW-045: الدخول بقوقل/أبل، «نسيت كلمة السر»، والتحقق بخطوتين (TOTP) ─────────────
+const APP_SCHEME = "bh.wadqa.idarati://auth"; // رابط الرجوع لتطبيق الجوال (مسجّل بـ Info.plist وAndroidManifest)
+const native = () => (window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.() === true;
+/** وين يرجع رابط الإيميل/الدخول: التطبيق نفسه بالجوال، أو نفس الصفحة بالمتصفح */
+export const authReturnUrl = (extra = "") => (native() ? APP_SCHEME : location.origin + location.pathname) + extra;
+
+/** دخول بقوقل أو أبل: بالمتصفح تحويل عادي، وبالجوال متصفح داخلي ويرجع للتطبيق برابط bh.wadqa.idarati:// */
+export async function oauthSignIn(sb: SupabaseClient, provider: "google" | "apple") {
+  if (!native()) {
+    const { error } = await sb.auth.signInWithOAuth({ provider, options: { redirectTo: authReturnUrl() } });
+    if (error) throw error;
+    return;
+  }
+  const { data, error } = await sb.auth.signInWithOAuth({ provider, options: { redirectTo: APP_SCHEME, skipBrowserRedirect: true } });
+  if (error || !data.url) throw error ?? new Error("ما قدرنا نفتح صفحة الدخول");
+  const { Browser } = await import("@capacitor/browser");
+  await Browser.open({ url: data.url, presentationStyle: "popover" });
+}
+
+/** تطبيق الجوال: لما يرجع رابط الدخول أو الإيميل (bh.wadqa.idarati://auth?code=…) نبدّله بجلسة. يرجّع true لو كان استرجاع كلمة سر */
+export async function handleAuthDeepLink(sb: SupabaseClient, link: string) {
+  if (!link.startsWith(APP_SCHEME)) return false;
+  const u = new URL(link.replace(APP_SCHEME, "https://app.local/auth"));
+  const code = u.searchParams.get("code");
+  try { const { Browser } = await import("@capacitor/browser"); await Browser.close(); } catch { /* مو مفتوح */ }
+  if (!code) throw new Error(u.searchParams.get("error_description") ?? "رابط الدخول ناقص");
+  const { error } = await sb.auth.exchangeCodeForSession(code);
+  if (error) throw error;
+  return u.searchParams.get("recover") === "1";
+}
+
+/** «نسيت كلمة السر»: رابط بالإيميل يرجّعه لشاشة كلمة سر جديدة */
+export async function sendPasswordReset(sb: SupabaseClient, email: string) {
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: authReturnUrl("?recover=1") });
+  if (error) throw error;
+}
+export async function setNewPassword(sb: SupabaseClient, password: string) {
+  const { error } = await sb.auth.updateUser({ password });
+  if (error) throw error;
+}
+
+/** التحقق بخطوتين: الحالة الحالية. needCode = مفعّل والجلسة للحين بكلمة السر بس */
+export async function mfaStatus(sb: SupabaseClient) {
+  const [{ data: aal }, { data: f }] = await Promise.all([sb.auth.mfa.getAuthenticatorAssuranceLevel(), sb.auth.mfa.listFactors()]);
+  const verified = (f?.totp ?? []).filter((x) => x.status === "verified");
+  return { enabled: verified.length > 0, factorId: verified[0]?.id, needCode: aal?.currentLevel === "aal1" && aal?.nextLevel === "aal2" };
+}
+/** تفعيل: يرجّع QR (SVG) والمفتاح السري للنسخ اليدوي. ما يصير فعّال إلا بعد أول رمز صحيح */
+export async function mfaEnroll(sb: SupabaseClient) {
+  const { data: f } = await sb.auth.mfa.listFactors();
+  for (const x of f?.all ?? []) if (x.status !== "verified") await sb.auth.mfa.unenroll({ factorId: x.id }); // محاولات قديمة ما اكتملت
+  const { data, error } = await sb.auth.mfa.enroll({ factorType: "totp", friendlyName: "إداراتي", issuer: "Idarati" });
+  if (error) throw error;
+  return { factorId: data.id, qr: data.totp.qr_code, secret: data.totp.secret };
+}
+export async function mfaVerify(sb: SupabaseClient, factorId: string, code: string) {
+  const { error } = await sb.auth.mfa.challengeAndVerify({ factorId, code: code.replace(/\D/g, "") });
+  if (error) throw new Error(/invalid|expired/i.test(error.message) ? "الرمز غلط أو انتهى — اكتب الرمز اللي ظاهر الحين" : error.message);
+}
+export async function mfaDisable(sb: SupabaseClient, factorId: string) {
+  const { error } = await sb.auth.mfa.unenroll({ factorId });
+  if (error) throw error;
+}

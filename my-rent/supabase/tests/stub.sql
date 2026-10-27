@@ -16,3 +16,6 @@ grant usage on sequence storage.objects_id_seq to authenticated;
 create function storage.foldername(name text) returns text[] language sql immutable as $$ select (string_to_array(name, '/'))[1:array_length(string_to_array(name, '/'), 1) - 1] $$;
 create policy "test: insert any" on storage.objects for insert to authenticated with check (true);
 create policy "test: read any" on storage.objects for select to authenticated using (true);
+-- DW-045: auth.jwt() (الـ aal من الجلسة) + عوامل التحقق بخطوتين
+create function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb $$;
+create table auth.mfa_factors (id uuid primary key default gen_random_uuid(), user_id uuid not null, status text not null);

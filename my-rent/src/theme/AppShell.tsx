@@ -8,6 +8,7 @@ import "./motion.css";
 import symbolUrl from "../../brand/symbol.svg";
 import { onBack } from "../back";
 import { useCountUp, usePresence, usePulseOn, useReplayClass } from "./motion";
+import { dir, t } from "../i18n";
 
 export type NavItem = { id: string; label: string; icon: ReactNode; badge?: number };
 
@@ -78,11 +79,11 @@ export function AppShell({ items, active, onNavigate, title, actions, onAdd, chi
   };
 
   return (
-    <div className="shell" dir="rtl">
-      <aside className="shell-side" aria-label="الأقسام">
+    <div className="shell" dir={dir()}>
+      <aside className="shell-side" aria-label={t("الأقسام")}>
         <div className="shell-logo">
           <img src={symbolUrl} alt="" width={32} height={32} />
-          <span>إداراتي</span>
+          <span>{t("إداراتي")}</span>
         </div>
         <nav ref={sideNav} className="side-nav">
           <span className="nav-ind side-ind" ref={sideInd} aria-hidden="true" />
@@ -111,14 +112,14 @@ export function AppShell({ items, active, onNavigate, title, actions, onAdd, chi
       </div>
 
       {onAdd && (
-        <button className="fab" onClick={onAdd} aria-label="إضافة" data-hidden={moreOpen}>
+        <button className="fab" onClick={onAdd} aria-label={t("إضافة")} data-hidden={moreOpen}>
           <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
             <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
           </svg>
         </button>
       )}
 
-      <nav className="shell-bottom" aria-label="الأقسام" ref={botNav}>
+      <nav className="shell-bottom" aria-label={t("الأقسام")} ref={botNav}>
         <span className="nav-ind bottom-ind" ref={botInd} aria-hidden="true" />
         {primary.map((i) => (
           <button key={i.id} className="bottom-item" aria-current={i.id === active ? "page" : undefined} onClick={() => go(i.id)}>
@@ -134,7 +135,7 @@ export function AppShell({ items, active, onNavigate, title, actions, onAdd, chi
               <circle cx="12" cy="12" r="2" fill="currentColor" />
               <circle cx="19" cy="12" r="2" fill="currentColor" />
             </svg>
-            <span>المزيد</span>
+            <span>{t("المزيد")}</span>
           </button>
         )}
       </nav>
@@ -142,7 +143,7 @@ export function AppShell({ items, active, onNavigate, title, actions, onAdd, chi
       {sheet && (
         <>
           <div className="sheet-backdrop" data-state={sheet} onClick={() => setMoreOpen(false)} />
-          <div className="sheet" data-state={sheet} role="dialog" aria-modal="true" aria-label="باقي الأقسام">
+          <div className="sheet" data-state={sheet} role="dialog" aria-modal="true" aria-label={t("باقي الأقسام")}>
             <div className="sheet-grip" />
             {overflow.map((i) => (
               <button key={i.id} className="sheet-item hoverable" aria-current={i.id === active ? "page" : undefined} onClick={() => go(i.id)}>
@@ -159,7 +160,7 @@ export function AppShell({ items, active, onNavigate, title, actions, onAdd, chi
 
 // شارة حالة موحدة: نفس الألوان بالمستأجرين والميزانية والبنك
 export function StatusPill({ status }: { status: "paid" | "due" | "late" }) {
-  const label = { paid: "مدفوع", due: "مستحق", late: "متأخر" }[status];
+  const label = { paid: t("مدفوع"), due: t("مستحق"), late: t("متأخر") }[status];
   const pulse = usePulseOn(status, "paid");
   return <span className={`pill pill-${status}${pulse ? " pill-pulse" : ""}`}>{label}</span>;
 }

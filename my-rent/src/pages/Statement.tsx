@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Unit } from "../data/types";
 import { useStore } from "../data/store";
-import { fmt, isoDay, monthKey, monthLabel, monthName, rentAt, statement, upcomingRent } from "../data/logic";
+import { fmt, isoDay, monthKey, monthLabel, monthAr, rentAt, statement, upcomingRent } from "../data/logic";
 import { Sheet, useToast } from "../ui/kit";
 import logoUrl from "../../brand/logo-horizontal.svg";
 import { canPrint, shareText } from "../native";
@@ -22,7 +22,7 @@ export function StatementSheet({ unit, onClose }: { unit: Unit | null; onClose: 
     return [
       `كشف حساب إيجار · ${u.name} · ${u.building}`,
       `المستأجر: ${u.tenant?.name ?? "—"}`,
-      ...st.rows.map((r) => `${monthName(r.month)} ${r.month.slice(0, 4)}: ${STATE[r.state]}${r.paid ? ` · دفع ${fmt(r.paid)}` : ""}${r.left ? ` · باقي ${fmt(r.left)}` : ""}`),
+      ...st.rows.map((r) => `${monthAr(r.month)} ${r.month.slice(0, 4)}: ${STATE[r.state]}${r.paid ? ` · دفع ${fmt(r.paid)}` : ""}${r.left ? ` · باقي ${fmt(r.left)}` : ""}`),
       `مجموع المدفوع: ${fmt(st.paid)} د.ب`,
       st.late ? `متأخرات: ${fmt(st.late)} د.ب` : "ما عليه متأخرات",
       ...(u.tenant?.deposit ? [`التأمين المحفوظ: ${fmt(u.tenant.deposit)} د.ب`] : []),
@@ -59,7 +59,7 @@ export function StatementSheet({ unit, onClose }: { unit: Unit | null; onClose: 
               <tbody>
                 {[...st.rows].reverse().map((r) => (
                   <tr key={r.month} className={`st-${r.state}`}>
-                    <td>{monthName(r.month)} <span className="num muted">{r.month.slice(0, 4)}</span></td>
+                    <td>{monthAr(r.month)} <span className="num muted">{r.month.slice(0, 4)}</span></td>
                     <td className="num">{r.paid ? fmt(r.paid) : "—"}</td>
                     <td className="num">{r.left ? fmt(r.left) : "—"}</td>
                     <td><span className={`pill pill-${r.state}`}>{STATE[r.state]}</span></td>

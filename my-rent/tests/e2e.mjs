@@ -923,6 +923,51 @@ try {
     await w.close();
   }
 
+  // 28) DW-045: «نسيت كلمة السر» + أزرار أبل/قوقل مخفية لين تنفعّل + ولا طلب للسحابة قبل الدخول
+  {
+    const a = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const aErr = []; a.on("pageerror", (e) => aErr.push(e.message));
+    const calls = []; a.on("request", (r) => { if (/supabase\.(co|in)/.test(r.url())) calls.push(r.url()); });
+    await a.goto(URL + "#settings"); await a.evaluate(() => localStorage.clear()); await a.reload(); await a.waitForTimeout(1200);
+    ok(await a.locator("#forgot").isVisible(), "الدخول: «نسيت كلمة السر؟» موجودة");
+    await a.locator("#forgot").click(); await a.waitForTimeout(200);
+    ok((await a.locator(".field-error").first().innerText()).includes("إيميل"), "نسيت كلمة السر بدون إيميل: يطلب الإيميل أول");
+    ok(await a.locator("#oauth").count() === 0, "أبل/قوقل مخفية لين تنفعّل بالمشروع");
+    ok(await a.locator("#two-factor").count() === 0 && await a.locator("#otp-step").count() === 0, "التحقق بخطوتين ما يطلع قبل الدخول");
+    await a.getByRole("radio", { name: "حساب جديد" }).click(); await a.waitForTimeout(150);
+    ok(await a.locator("#forgot").count() === 0, "«نسيت كلمة السر» بوضع الدخول بس");
+    ok(calls.length === 0, "DW-045: ولا طلب للسحابة قبل الدخول", calls.join(" "));
+    ok(aErr.length === 0, "DW-045: بدون أخطاء", aErr.join(" | "));
+    await a.close();
+  }
+
+  // 29) DW-045: الإنقليزية — التبديل من الإعدادات، الاتجاه LTR، والواجهة الأساسية بدون عربي (غير بيانات المستخدم)
+  {
+    const g = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const gErr = []; g.on("pageerror", (e) => gErr.push(e.message));
+    await g.goto(URL + "#settings"); await g.evaluate(() => localStorage.clear()); await g.reload(); await g.waitForTimeout(1000);
+    await Promise.all([g.waitForEvent("load"), g.getByRole("radio", { name: "English (beta)" }).click()]); await g.waitForTimeout(900);
+    ok(await g.evaluate(() => document.documentElement.dir === "ltr" && document.documentElement.lang === "en"), "English: الصفحة LTR وlang=en");
+    const chromeAr = async () => g.evaluate(() => [...document.querySelectorAll(".shell-header h1, .shell-side, .shell-bottom, .sec-head h2, .set-title, .quick-btn, .chip, .hero-label, .btn, label > span")]
+      .filter((e) => !e.closest("[aria-labelledby=ct-h]")) // محرر نموذج العقد: العقد مستند عربي للمستأجر، واسم الوحدة بيانات
+      .map((e) => e.textContent.trim()).filter((x) => /[\u0600-\u06FF]/.test(x) && !/اللغة|العربية/.test(x)));
+    ok((await chromeAr()).length === 0, "English: الإعدادات بدون عربي بالواجهة", (await chromeAr()).slice(0, 5).join(" | "));
+    await g.goto(URL + "#home"); await g.waitForTimeout(900);
+    ok((await chromeAr()).length === 0, "English: الرئيسية بدون عربي بالواجهة", (await chromeAr()).slice(0, 5).join(" | "));
+    ok((await g.locator(".hero-label").innerText()).includes("collection") && await g.getByRole("button", { name: "Start with my data" }).isVisible(), "English: النصوص مترجمة");
+    ok(await g.evaluate(() => getComputedStyle(document.querySelector(".hero-amount .bhd, .bhd"), "::after").content.includes("BHD")), "English: العملة BHD");
+    await g.goto(URL + "#tenants"); await g.waitForTimeout(900);
+    ok((await chromeAr()).length === 0, "English: المستأجرين بدون عربي بالواجهة", (await chromeAr()).slice(0, 5).join(" | "));
+    await g.addScriptTag({ content: fs.readFileSync("node_modules/axe-core/axe.min.js", "utf8") });
+    const ea = await g.evaluate(async () => (await axe.run(document, { resultTypes: ["violations"] })).violations.filter((x) => x.impact === "serious" || x.impact === "critical").map((x) => `${x.id}×${x.nodes.length}`));
+    ok(ea.length === 0, "English: axe بدون مخالفات خطيرة", ea.join(","));
+    await g.goto(URL + "#settings"); await g.waitForTimeout(800);
+    await Promise.all([g.waitForEvent("load"), g.getByRole("radio", { name: "العربية" }).click()]); await g.waitForTimeout(900);
+    ok(await g.evaluate(() => document.documentElement.dir === "rtl") && await g.getByRole("heading", { name: "العرض" }).isVisible(), "رجوع للعربي: RTL والنصوص عربي");
+    ok(gErr.length === 0, "DW-045 اللغة: بدون أخطاء", gErr.join(" | "));
+    await g.close();
+  }
+
   if (process.env.SHOTS) {
     for (const [n, w, h, s] of [["home-phone", 390, 844, "light"], ["home-dark", 390, 844, "dark"], ["home-desk", 1280, 800, "light"], ["tenants-tab", 820, 1180, "light"], ["budget-phone", 390, 844, "light"]]) {
       const q = await browser.newPage({ viewport: { width: w, height: h }, colorScheme: s });

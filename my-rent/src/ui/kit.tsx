@@ -4,6 +4,7 @@ import { usePresence, reducedMotion } from "../theme/motion";
 import { Icon } from "./icons";
 import { onBack } from "../back";
 import symbolUrl from "../../brand/symbol.svg";
+import { t } from "../i18n";
 
 /* ---------- Sheet: نافذة من تحت بالجوال (تنسحب لتحت وتنسكّر)، ووسط الشاشة بالكمبيوتر ---------- */
 export function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ReactNode }) {
@@ -66,7 +67,7 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
         <div className="sheet-grip" />
         <div className="dlg-head">
           <h2>{title}</h2>
-          <button className="icon-btn press" onClick={onClose} aria-label="إغلاق">{Icon.close}</button>
+          <button className="icon-btn press" onClick={onClose} aria-label={t("إغلاق")}>{Icon.close}</button>
         </div>
         <div className="dlg-body">{children}</div>
       </div>
@@ -109,7 +110,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <span className="toast-ok">{Icon.check}</span>
             <span>{toast.text}</span>
             {toast.undo && (
-              <button className="toast-undo press" onClick={() => { toast.undo?.(); hide(); }}>تراجع</button>
+              <button className="toast-undo press" onClick={() => { toast.undo?.(); hide(); }}>{t("تراجع")}</button>
             )}
           </div>
         )}
@@ -123,7 +124,7 @@ function Stamp({ onDone }: { onDone: () => void }) {
   return (
     <div className="stamp" aria-hidden="true">
       <img src={symbolUrl} alt="" />
-      <span>مستلم</span>
+      <span>{t("مستلم")}</span>
     </div>
   );
 }
@@ -152,7 +153,7 @@ export function Chips<T extends string>({ value, options, onChange, label }: { v
 }
 
 /** شريط تقدّم: يكبر من الصفر أول ما يظهر (scaleX)، ويحمر لو تعدّى 100% */
-export function Bar({ value, max, tone, label = "نسبة المصروف من الميزانية" }: { value: number; max: number; tone?: "late" | "paid" | "brand"; label?: string }) {
+export function Bar({ value, max, tone, label = t("نسبة المصروف من الميزانية") }: { value: number; max: number; tone?: "late" | "paid" | "brand"; label?: string }) {
   const pct = max > 0 ? Math.min(1, value / max) : 0;
   const over = value > max;
   return (
@@ -173,7 +174,7 @@ export function SectionHead({ title, action }: { title: string; action?: ReactNo
 
 export function SkeletonCards({ n = 4 }: { n?: number }) {
   return (
-    <div className="grid-cards" aria-busy="true" aria-label="جاري التحميل">
+    <div className="grid-cards" aria-busy="true" aria-label={t("جاري التحميل")}>
       {Array.from({ length: n }, (_, i) => (
         <div className="card" key={i}>
           <span className="skeleton" style={{ display: "block", width: "55%", height: 18 }} />
@@ -185,4 +186,4 @@ export function SkeletonCards({ n = 4 }: { n?: number }) {
   );
 }
 
-export const DemoNote = () => <p className="demo-note">* بيانات تجريبية · قيد التطوير</p>;
+export const DemoNote = () => <p className="demo-note">{t("* بيانات تجريبية · قيد التطوير")}</p>;

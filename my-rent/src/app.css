@@ -392,7 +392,7 @@ html[data-size="xl"] .hero-owed { flex-wrap: wrap; }
 .doc-row { gap: 10px; }
 .doc-main { display: grid; gap: 2px; min-width: 0; flex: 1; text-align: start; }
 .doc-main > span { overflow-wrap: anywhere; }
-.pill.doc-active { background: rgba(31, 138, 91, 0.14); background: color-mix(in srgb, #1f8a5b 14%, transparent); color: #1f7a52; }
+.pill.doc-active { background: rgba(31, 138, 91, 0.14); background: color-mix(in srgb, #1f8a5b 14%, transparent); color: #1a6a47; } /* DW-045: تباين 4.5+ (كان 4.46) */
 .pill.doc-soon { background: rgba(217, 164, 0, 0.2); background: color-mix(in srgb, #d9a400 20%, transparent); color: #8a6400; }
 .pill.doc-ended { background: rgba(196, 61, 61, 0.14); background: color-mix(in srgb, #c43d3d 14%, transparent); color: #b23434; }
 .pill.doc-open { background: var(--surface-2); background: color-mix(in srgb, currentColor 8%, transparent); color: var(--muted); }
@@ -515,3 +515,16 @@ select.input { appearance: auto; }
 .lock-screen { position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: #14213A; color: #F5F2EB; padding: 24px; }
 .lock-title { font-size: 22px; font-weight: 700; margin: 0; }
 .lock-screen .btn { min-width: 200px; }
+
+/* DW-045: الدخول بأبل/قوقل والتحقق بخطوتين */
+.btn-apple { background: #000; color: #fff; }
+.or-sep { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; }
+.or-sep::before, .or-sep::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.otp { letter-spacing: 6px; font-size: 22px; text-align: center; }
+.mfa-qr { background: #fff; border-radius: 12px; padding: 8px; justify-self: center; }
+.mfa-secret { word-break: break-all; font-size: 13px; background: var(--bg); padding: 8px 10px; border-radius: 8px; }
+.pill-ok { font-size: 12px; font-weight: 600; color: var(--paid, #1E7A4C); border: 1px solid currentColor; border-radius: 999px; padding: 1px 8px; margin-inline-start: 6px; }
+
+/* DW-045: الإنقليزية (LTR) — العملة BHD، والأشرطة تنملي من اليسار */
+:root[lang="en"] .bhd::after { content: " BHD"; }
+[dir="ltr"] .hero-bar span, [dir="ltr"] .bar-fill, [dir="ltr"] .setup-bar span { transform-origin: left; }

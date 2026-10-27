@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 45,
+  "next": 46,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -352,6 +352,14 @@
       "owner": "COO",
       "priority": "P1",
       "status": "review",
+      "opened": "2026-10-27",
+      "updated": "2026-10-27"
+    },
+    "DW-045": {
+      "title": "قبل الرفع: التحقق بخطوتين + «نسيت كلمة السر» + الإنقليزية",
+      "owner": "CTO",
+      "priority": "P1",
+      "status": "done",
       "opened": "2026-10-27",
       "updated": "2026-10-27"
     }

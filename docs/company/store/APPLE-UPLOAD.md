@@ -70,3 +70,13 @@ TestFlight ← Internal Testing ← **+** ← أضف إيميلات العائل
 | السعر | مجاني |
 
 **قبل «Submit for Review»:** SQL حذف الحساب ✅ · المحامي راجع السياسة ✅ · تجربة عائلة وحدة على الأقل ✅.
+
+## 8. الدخول بأبل وقوقل + التحقق بخطوتين (DW-045)
+الكود جاهز، والأزرار مخفية لين تفعّلها. **قاعدة أبل 4.8:** لو فيه قوقل، لازم أبل معاه.
+1. **Supabase → Authentication → URL Configuration → Redirect URLs:** أضف
+   `bh.wadqa.idarati://auth` و`https://myrent-git-claude-vibrant-mccarthy-56fs79-ads-5ce6.vercel.app/idarati-app/` (والدومين لما يصير).
+2. **أبل:** developer.apple.com ← Identifiers ← **Services IDs** ← + (مثلاً `bh.wadqa.idarati.signin`) ← فعّل Sign in with Apple ← Return URL: `https://zqnitovbkgvbeuzzglzc.supabase.co/auth/v1/callback`. وKeys ← + ← Sign in with Apple ← نزّل ‎.p8.
+   ثم Supabase ← Authentication ← Providers ← **Apple**: Client IDs = `bh.wadqa.idarati,bh.wadqa.idarati.signin` + Team ID + Key ID + الـ ‎.p8.
+3. **قوقل:** console.cloud.google.com ← APIs & Services ← Credentials ← OAuth client ID (Web) ← Authorized redirect URI: نفس رابط الـ callback فوق. ثم Supabase ← Providers ← **Google**: Client ID + Secret.
+4. قل لي «فعّلت أبل وقوقل» — أشغّل الأزرار (`VITE_AUTH_PROVIDERS=apple,google`) وأختبرها.
+5. **التحقق بخطوتين:** شغّال من الحين (Supabase يدعم TOTP افتراضياً، وسياسة القاعدة انطبقت). كل مستخدم يفعّله بنفسه من الإعدادات ← الحساب.

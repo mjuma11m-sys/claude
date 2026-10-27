@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useStore } from "../data/store";
 import { fmt, monthKey, monthName, remindList, reminderUrl } from "../data/logic";
 import { Sheet } from "../ui/kit";
+import { t } from "../i18n";
 
 /** DW-043: كل المتأخرين بشاشة وحدة. ما فيه إرسال جماعي (واتساب يقفل الرقم): كل واحد زره يفتح محادثته،
  *  والمالك يضغط إرسال بنفسه. «أُرسل» تنحفظ بالجهاز لكل شهر عشان ما يكرر */
@@ -17,10 +18,10 @@ export function RemindSheet({ open, onClose }: { open: boolean; onClose: () => v
   const mark = (id: string) => { const next = [...new Set([...sent, id])]; setSent(next); writeSent(month, next); };
   const total = list.reduce((s, x) => s + x.amount, 0);
   return (
-    <Sheet open={open} onClose={onClose} title="ذكّر المتأخرين">
+    <Sheet open={open} onClose={onClose} title={t("ذكّر المتأخرين")}>
       <div className="stack" id="remind">
-        {list.length === 0 ? <p className="muted">ما فيه أحد متأخر. 👌</p> : <>
-          <p className="muted small" style={{ margin: 0 }}>{list.length} متأخرين · المجموع <span className="num">{fmt(total)}</span> د.ب. كل زر يفتح محادثة المستأجر برسالة جاهزة، وأنت تضغط إرسال.</p>
+        {list.length === 0 ? <p className="muted">{t("ما فيه أحد متأخر. 👌")}</p> : <>
+          <p className="muted small" style={{ margin: 0 }}>{t("{n} متأخرين · المجموع", { n: list.length })} <span className="num">{fmt(total)}</span> {t("د.ب. كل زر يفتح محادثة المستأجر برسالة جاهزة، وأنت تضغط إرسال.")}</p>
           <ul className="rows remind-list">
             {list.map(({ unit, months, amount }) => {
               const done = sent.includes(unit.id);
@@ -28,10 +29,10 @@ export function RemindSheet({ open, onClose }: { open: boolean; onClose: () => v
                 <li key={unit.id} className="remind-row" data-sent={done || undefined}>
                   <span className="remind-who">
                     <span className="strong">{unit.name}</span> <span className="muted small">· {unit.tenant?.name}{unit.tenant?.lang === "en" ? " · EN" : ""}</span>
-                    <span className="muted small remind-months">{months.map(monthName).join("، ")} · <span className="num">{fmt(amount)}</span> د.ب</span>
+                    <span className="muted small remind-months">{months.map(monthName).join(t("، "))} · <span className="num">{fmt(amount)}</span> {t("د.ب")}</span>
                   </span>
                   <a className={`btn ${done ? "btn-ghost" : "btn-wa"} press`} id={`remind-${unit.id}`} href={reminderUrl(unit, months, amount)} target="_blank" rel="noreferrer" onClick={() => mark(unit.id)}>
-                    {done ? "أُرسل ✓" : "ذكّره"}
+                    {done ? t("أُرسل ✓") : t("ذكّره")}
                   </a>
                 </li>
               );

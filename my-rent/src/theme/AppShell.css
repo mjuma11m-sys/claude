@@ -38,7 +38,7 @@
 
 .fab {
   position: fixed; z-index: 21;
-  inset-inline-start: 16px;               /* RTL: يطلع يمين الشاشة تحت إبهام اليد اليمنى */
+  right: 16px;                            /* يمين الشاشة تحت إبهام اليد اليمنى — بالعربي والإنقليزي (DW-045) */
   bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);
   width: 56px; height: 56px; border-radius: 50%; border: 0;
   display: grid; place-items: center;
@@ -107,7 +107,7 @@
   .side-item .badge { position: absolute; top: 4px; inset-inline-start: 4px; }
   .shell-header { background: var(--bg); color: var(--text); padding: 20px 24px 12px; border-bottom: 1px solid var(--line); }
   .shell-content { padding: 24px; padding-bottom: 104px; }
-  .fab { bottom: 24px; inset-inline-start: auto; inset-inline-end: 24px; }
+  .fab { bottom: 24px; right: auto; inset-inline-end: 24px; }
   .grid-cards { grid-template-columns: repeat(2, 1fr); }
 }
 

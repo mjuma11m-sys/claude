@@ -27,6 +27,7 @@ import type { Doc } from "./data/types";
 import { PaySheet, PickUnitSheet } from "./pages/PaySheet";
 import "./app.css";
 import symbolUrl from "../brand/symbol.svg";
+import { t } from "./i18n";
 
 // DW-031: 8 أقسام — «متابعة الإيجار» عرض «جدول» داخل المستأجرين، و«الموردين» داخل الصيانة (الروابط القديمة تشتغل)
 const PAGES = ["home", "tenants", "docs", "budget", "bank", "reports", "house", "settings"] as const;
@@ -34,9 +35,9 @@ const HIDDEN = ["privacy", "track", "vendors"] as const; // صفحات بدون 
 const NAV_OF: Partial<Record<string, string>> = { privacy: "settings", track: "tenants", vendors: "house" };
 type Page = (typeof PAGES)[number] | (typeof HIDDEN)[number];
 const TITLES: Record<Page, string> = {
-  privacy: "الخصوصية والشروط",
-  home: "الرئيسية", tenants: "المستأجرين", budget: "الميزانية", bank: "بنك العائلة",
-  reports: "التقارير", track: "متابعة الإيجار", docs: "الوثائق", house: "الصيانة", vendors: "الموردين", settings: "الإعدادات",
+  privacy: t("الخصوصية والشروط"),
+  home: t("الرئيسية"), tenants: t("المستأجرين"), budget: t("الميزانية"), bank: t("بنك العائلة"),
+  reports: t("التقارير"), track: t("متابعة الإيجار"), docs: t("الوثائق"), house: t("الصيانة"), vendors: t("الموردين"), settings: t("الإعدادات"),
 };
 
 const fromHash = (): Page => {
@@ -66,15 +67,15 @@ function Idarati() {
 
   // DW-042: تذكيرات الجوال تتبع البيانات (دفعة جديدة = تذكير الشهر ينشال). بعد ثانيتين هدوء عشان الكتابة السريعة
   useEffect(() => {
-    const t = window.setTimeout(() => { syncReminders(data).catch(() => { /* الإذن انسحب من الإعدادات: نكمّل عادي */ }); }, 2000);
-    return () => window.clearTimeout(t);
+    const tm = window.setTimeout(() => { syncReminders(data).catch(() => { /* الإذن انسحب من الإعدادات: نكمّل عادي */ }); }, 2000);
+    return () => window.clearTimeout(tm);
   }, [data]);
 
   // DW-030: المشاهد حاول يعدّل
   const toastRO = useToast();
   useEffect(() => {
     // بعد تنبيه الشاشة نفسها («انضافت…») عشان يحل محله — ما انحفظ شي
-    const on = () => window.setTimeout(() => toastRO({ text: "ما انحفظ: صلاحيتك مشاهدة بس — اطلب من المالك يغيّرها" }), 0);
+    const on = () => window.setTimeout(() => toastRO({ text: t("ما انحفظ: صلاحيتك مشاهدة بس — اطلب من المالك يغيّرها") }), 0);
     window.addEventListener(READONLY_EVENT, on);
     return () => window.removeEventListener(READONLY_EVENT, on);
   }, [toastRO]);
@@ -114,11 +115,11 @@ function Idarati() {
       items={items}
       active={NAV_OF[page] ?? page}
       onNavigate={go}
-      title={page === "home" ? <span className="brand-title"><img src={symbolUrl} alt="" width={28} height={28} />إداراتي</span> : TITLES[page]}
+      title={page === "home" ? <span className="brand-title"><img src={symbolUrl} alt="" width={28} height={28} />{t("إداراتي")}</span> : TITLES[page]}
       onAdd={onAdd}
-      actions={<button className="hdr-btn press" onClick={() => setSearching(true)} aria-label="بحث">{Icon.search}</button>}
+      actions={<button className="hdr-btn press" onClick={() => setSearching(true)} aria-label={t("بحث")}>{Icon.search}</button>}
     >
-      {sync && !sync.canEdit && <div className="ro-banner" id="ro-banner" role="status">مشاهدة بس — تشوف كل شي، والتعديل للمالك واللي يعطيهم صلاحية</div>}
+      {sync && !sync.canEdit && <div className="ro-banner" id="ro-banner" role="status">{t("مشاهدة بس — تشوف كل شي، والتعديل للمالك واللي يعطيهم صلاحية")}</div>}
       {page === "home" && (
         <Home onOpenUnit={setUnit} go={go} onQuick={(a) => {
           if (a === "pay") setPicking(true);

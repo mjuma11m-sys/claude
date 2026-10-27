@@ -7,10 +7,12 @@ export const isNative = () => Capacitor.isNativePlatform();
 /** الطباعة: المتصفح بس (WKWebView وWebView الأندرويد ما يطبعون) */
 export const canPrint = () => !isNative();
 
-/** DW-040: زر الرجوع بأندرويد (بالآيفون ما فيه زر). الإضافة تلغي سلوك الرجوع الافتراضي، فنقرر نحن */
+/** DW-040: زر الرجوع بأندرويد (بالآيفون ما فيه زر) — الإضافة تلغي سلوك الرجوع الافتراضي، فنقرر نحن. DW-045: وروابط الدخول */
 export async function initNative() {
-  if (Capacitor.getPlatform() !== "android") return;
+  if (!isNative()) return;
   const { App } = await import("@capacitor/app");
+  await App.addListener("appUrlOpen", ({ url }) => void handleAuthLink(url)); // DW-045
+  if (Capacitor.getPlatform() !== "android") return; // زر الرجوع: أندرويد بس
   await App.addListener("backButton", ({ canGoBack }) => {
     const act = handleBack(canGoBack);
     if (act === "back") history.back();
@@ -62,4 +64,23 @@ export async function shareText(title: string, text: string): Promise<"shared" |
   if (navigator.share) { await navigator.share({ title, text }); return "shared"; }
   await navigator.clipboard.writeText(text);
   return "copied";
+}
+
+/** DW-045: رجوع رابط الدخول بقوقل/أبل أو رابط الإيميل (bh.wadqa.idarati://auth?code=…) ← جلسة، ونفتح الإعدادات.
+ *  النتيجة تطلع كحدث «idarati:auth» عشان شاشة الحساب تعرض «كلمة سر جديدة» أو الخطأ */
+async function handleAuthLink(url: string) {
+  if (!url.startsWith("bh.wadqa.idarati://auth")) return;
+  try {
+    const { loadSyncConfig } = await import("./data/sync");
+    const env = import.meta.env;
+    const cfg = loadSyncConfig() ?? (env.VITE_SUPABASE_URL && env.VITE_SUPABASE_KEY ? { url: String(env.VITE_SUPABASE_URL), key: String(env.VITE_SUPABASE_KEY) } : null);
+    if (!cfg) return;
+    const { getClient, handleAuthDeepLink } = await import("./data/supabase");
+    const recover = await handleAuthDeepLink(await getClient(cfg.url, cfg.key), url);
+    location.hash = "settings";
+    window.dispatchEvent(new CustomEvent("idarati:auth", { detail: { recover } }));
+  } catch (e) {
+    location.hash = "settings";
+    window.dispatchEvent(new CustomEvent("idarati:auth", { detail: { error: e instanceof Error ? e.message : String(e) } }));
+  }
 }

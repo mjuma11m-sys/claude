@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Payment, Unit } from "../data/types";
-import { creditLabel, fmt, invoiceLabel, isCommercial, monthName, parseBHD, vatSplit } from "../data/logic";
+import { creditLabel, fmt, invoiceLabel, isCommercial, monthAr, parseBHD, vatSplit } from "../data/logic";
 import { useStore } from "../data/store";
 import { creditable } from "../data/reducer";
 import { canPrint, shareText } from "../native";
@@ -17,7 +17,7 @@ function receiptText(p: Payment, u: Unit) {
     `إيصال استلام إيجار · ${receiptNo(p)}`,
     `المستأجر: ${u.tenant?.name ?? "—"}`,
     `العقار: ${u.name} · ${u.building}`,
-    `عن شهر: ${monthName(p.month)} ${p.month.slice(0, 4)}`,
+    `عن شهر: ${monthAr(p.month)} ${p.month.slice(0, 4)}`,
     `المبلغ: ${fmt(p.amount)} د.ب (${p.method})`,
     `التاريخ: ${p.date}`,
     `— إداراتي`,
@@ -31,7 +31,7 @@ function invoiceText(p: Payment, u: Unit, no: number, seller: { name: string; tr
     `فاتورة ضريبية · Tax Invoice · ${invoiceLabel(no)}`,
     `المؤجر: ${seller.name} · الرقم الضريبي ${seller.trn}`,
     `المستأجر: ${u.tenant?.name ?? "—"}${u.tenant?.trn ? ` · الرقم الضريبي ${u.tenant.trn}` : ""}`,
-    `إيجار ${u.name} · ${u.building} عن ${monthName(p.month)} ${p.month.slice(0, 4)}`,
+    `إيجار ${u.name} · ${u.building} عن ${monthAr(p.month)} ${p.month.slice(0, 4)}`,
     `الصافي: ${fmt(net)} د.ب · الضريبة 10%: ${fmt(vat)} د.ب · الإجمالي: ${fmt(gross)} د.ب`,
     `التاريخ: ${p.date}`,
   ].join("\n");
@@ -79,7 +79,7 @@ export function ReceiptSheet({ value, onClose }: { value: ReceiptRef; onClose: (
             </div>
             <dl>
               <dt>تاريخ الفاتورة</dt><dd className="num">{live.date}</dd>
-              <dt>الوصف</dt><dd>إيجار {shown.unit.name} · {shown.unit.building} عن {monthName(live.month)} <span className="num">{live.month.slice(0, 4)}</span></dd>
+              <dt>الوصف</dt><dd>إيجار {shown.unit.name} · {shown.unit.building} عن {monthAr(live.month)} <span className="num">{live.month.slice(0, 4)}</span></dd>
             </dl>
             {(() => { const gross = live.invAmount ?? live.amount; const { net, vat: tax } = vatSplit(gross); return (
               <table className="inv-table">
@@ -133,7 +133,7 @@ export function ReceiptSheet({ value, onClose }: { value: ReceiptRef; onClose: (
             <dl>
               <dt>المستأجر</dt><dd>{shown.unit.tenant?.name ?? "—"}</dd>
               <dt>العقار</dt><dd>{shown.unit.name} · {shown.unit.building}</dd>
-              <dt>عن شهر</dt><dd>{monthName(shown.payment.month)} <span className="num">{shown.payment.month.slice(0, 4)}</span></dd>
+              <dt>عن شهر</dt><dd>{monthAr(shown.payment.month)} <span className="num">{shown.payment.month.slice(0, 4)}</span></dd>
               <dt>الطريقة</dt><dd>{shown.payment.method}</dd>
               <dt>التاريخ</dt><dd className="num">{shown.payment.date}</dd>
             </dl>

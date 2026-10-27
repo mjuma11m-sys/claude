@@ -2,6 +2,17 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>bh.wadqa.idarati</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>bh.wadqa.idarati</string>
+			</array>
+		</dict>
+	</array>
 	<key>NSFaceIDUsageDescription</key>
 	<string>إداراتي يستخدم Face ID لقفل التطبيق وحماية بياناتك. التحقق من جوالك، وما يوصلنا شي.</string>
   <key>CAPACITOR_DEBUG</key>

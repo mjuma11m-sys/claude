@@ -1,10 +1,14 @@
+import { isEn, t } from "../i18n";
 import type { Bill, BillKind, ChequeState, Data, Doc, DocKind, Fils, Kind, Payment, Status, Unit } from "./types";
 
 export const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 export const isoDay = (d: Date) => `${monthKey(d)}-${String(d.getDate()).padStart(2, "0")}`;
 
 const MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
-export const monthName = (key: string) => MONTHS[Number(key.slice(5, 7)) - 1];
+const MONTHS_UI_EN = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+export const monthName = (key: string) => (isEn() ? MONTHS_UI_EN : MONTHS)[Number(key.slice(5, 7)) - 1]; // DW-045: بلغة الواجهة
+/** اسم الشهر بالعربي دايماً — للرسائل والمستندات اللي تروح للمستأجر بالعربي */
+export const monthAr = (key: string) => MONTHS[Number(key.slice(5, 7)) - 1];
 
 export const GRACE_DAYS = 5;
 
@@ -227,8 +231,8 @@ export function fillContract(template: string, unit: Unit, owner: string, now = 
 // ── DW-022: ملف متابعة حالة الإيجار ─────────────────────
 
 export const KINDS: { id: Kind; label: string }[] = [
-  { id: "flat", label: "شقة" }, { id: "shop", label: "محل تجاري" }, { id: "store", label: "ستور" },
-  { id: "house", label: "بيت" }, { id: "nursery", label: "روضة" },
+  { id: "flat", label: t("شقة") }, { id: "shop", label: t("محل تجاري") }, { id: "store", label: t("ستور") },
+  { id: "house", label: t("بيت") }, { id: "nursery", label: t("روضة") },
 ];
 export const kindLabel = (k: Kind) => KINDS.find((x) => x.id === k)!.label;
 /** النوع المحفوظ، وإلا من الاسم (محل/ستور/بيت/فيلا/روضة)، وإلا شقة */
@@ -320,7 +324,7 @@ export const DOC_KINDS: { id: DocKind; label: string }[] = [
 export const docKindLabel = (k: DocKind) => DOC_KINDS.find((x) => x.id === k)?.label ?? "أخرى";
 export const DOC_SOON = 30;
 export type DocState = "active" | "soon" | "ended" | "open";
-export const DOC_LABEL: Record<DocState, string> = { active: "سارية", soon: "قريبة الانتهاء", ended: "منتهية", open: "بدون انتهاء" };
+export const DOC_LABEL: Record<DocState, string> = { active: t("سارية"), soon: t("قريبة الانتهاء"), ended: t("منتهية"), open: t("بدون انتهاء") };
 
 export function docStatus(doc: Doc, now = new Date()) {
   if (!doc.expires) return { state: "open" as DocState, left: null };
@@ -536,7 +540,7 @@ export function reminderText(unit: Unit, months: string[], amount: Fils) {
     const ms = months.map((m) => `${MONTHS_EN[Number(m.slice(5, 7)) - 1]} ${m.slice(0, 4)}`).join(", ");
     return `Hello ${unit.tenant?.name ?? ""}, a friendly reminder about the rent for ${unit.name} (${ms}): BHD ${fmt(amount)}. If you have already paid, please ignore this message. Thank you.`;
   }
-  return `السلام عليكم ${unit.tenant?.name ?? ""}، تذكير بإيجار ${unit.name} (${months.map(monthName).join("، ")}): ${fmt(amount)} د.ب. إذا تم الدفع تجاهل الرسالة، وشكراً.`;
+  return `السلام عليكم ${unit.tenant?.name ?? ""}، تذكير بإيجار ${unit.name} (${months.map(monthAr).join("، ")}): ${fmt(amount)} د.ب. إذا تم الدفع تجاهل الرسالة، وشكراً.`;
 }
 /** رابط واتساب: رقم بحريني من 8 أرقام يفتح محادثته، وإلا يختار المستخدم المحادثة */
 export function waLink(phone: string | undefined, text: string) {

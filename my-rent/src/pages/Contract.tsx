@@ -6,6 +6,7 @@ import { ACCEPT, checkFile, fetchFile, putLocal, removeFile, uploadCloud } from 
 import { Sheet, useToast } from "../ui/kit";
 import logoUrl from "../../brand/logo-horizontal.svg";
 import { canPrint, openFile, shareText } from "../native";
+import { isEn, t } from "../i18n";
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const kb = (n: number) => (n > 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)}MB` : `${Math.ceil(n / 1024)}KB`);
@@ -128,21 +129,21 @@ export function ContractTemplateEditor() {
 
   return (
     <section className="card stack" aria-labelledby="ct-h">
-      <h2 className="set-title" id="ct-h">نموذج العقد</h2>
-      <p className="muted small" style={{ margin: 0 }}>تكتبه مرة وحدة. مع كل مستأجر جديد تتعبّى الخانات بروحها من بيانات الوحدة. نموذج عام، راجعه مع محامي.</p>
-      <label className="field"><span>اسم المؤجر (يطلع بالعقد)</span><input id="ct-owner" className="input" value={owner} onChange={(e) => setOwner(e.target.value)} /></label>
-      <div className="ct-fields" aria-label="الخانات">
+      <h2 className="set-title" id="ct-h">{t("نموذج العقد")}</h2>
+      <p className="muted small" style={{ margin: 0 }}>{t("تكتبه مرة وحدة. مع كل مستأجر جديد تتعبّى الخانات بروحها من بيانات الوحدة. نموذج عام، راجعه مع محامي.")}{isEn() && " The contract itself is an Arabic document for the tenant."}</p>
+      <label className="field"><span>{t("اسم المؤجر (يطلع بالعقد)")}</span><input id="ct-owner" className="input" value={owner} onChange={(e) => setOwner(e.target.value)} /></label>
+      <div className="ct-fields" aria-label={t("الخانات")}>
         {["المستأجر", "هاتف المستأجر", "الوحدة", "المبنى", "الإيجار", "يوم الاستحقاق", "بداية العقد", "نهاية العقد", "التأمين", "المالك", "تاريخ اليوم"].map((f) => (
           <button key={f} type="button" className="chip press" onClick={() => insert(f)}>{`{${f}}`}</button>
         ))}
       </div>
-      <textarea id="ct-text" aria-label="نص نموذج العقد" ref={area} className="input ct-area" value={tpl} onChange={(e) => setTpl(e.target.value)} rows={12} />
+      <textarea id="ct-text" aria-label={t("نص نموذج العقد")} ref={area} className="input ct-area" value={tpl} onChange={(e) => setTpl(e.target.value)} rows={12} />
       {preview && sample && <pre className="contract-text ct-preview">{fillContract(tpl, sample, owner)}</pre>}
       <div className="grid-2">
-        <button className="btn press" disabled={!dirty} onClick={() => { setContract(tpl, owner); toast({ text: "انحفظ نموذج العقد" }); }}>احفظ النموذج</button>
-        <button className="btn btn-ghost press" disabled={!sample} onClick={() => setPreview((p) => !p)}>{preview ? "سكّر المعاينة" : `معاينة (${sample?.name ?? "—"})`}</button>
+        <button className="btn press" disabled={!dirty} onClick={() => { setContract(tpl, owner); toast({ text: t("انحفظ نموذج العقد") }); }}>{t("احفظ النموذج")}</button>
+        <button className="btn btn-ghost press" disabled={!sample} onClick={() => setPreview((p) => !p)}>{preview ? t("سكّر المعاينة") : t("معاينة ({name})", { name: sample?.name ?? "—" })}</button>
       </div>
-      <button className="link press" style={{ justifySelf: "start" }} onClick={() => setTpl(DEFAULT_CONTRACT)}>رجّع النموذج الافتراضي</button>
+      <button className="link press" style={{ justifySelf: "start" }} onClick={() => setTpl(DEFAULT_CONTRACT)}>{t("رجّع النموذج الافتراضي")}</button>
     </section>
   );
 }

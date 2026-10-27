@@ -6,6 +6,7 @@ import type { Doc, DocKind } from "../data/types";
 import { useStagger } from "../theme/motion";
 import { Chips, DemoNote, EmptyState, Sheet, useToast } from "../ui/kit";
 import { openFile } from "../native";
+import { t } from "../i18n";
 
 type KindF = "all" | DocKind;
 type StateF = "all" | DocState;
@@ -14,7 +15,7 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 export function DocPill({ state, left }: { state: DocState; left: number | null }) {
   return (
     <span className={`pill doc-${state}`}>
-      {state === "open" ? DOC_LABEL.open : state === "ended" ? <>منتهية من <span className="num">{-left!}</span> يوم</> : left === 0 ? "تنتهي اليوم" : <>باقي <span className="num">{left}</span> يوم</>}
+      {state === "open" ? DOC_LABEL.open : state === "ended" ? <>{t("منتهية من")} <span className="num">{-left!}</span> {t("يوم")}</> : left === 0 ? t("تنتهي اليوم") : <>{t("باقي")} <span className="num">{left}</span> {t("يوم")}</>}
     </span>
   );
 }

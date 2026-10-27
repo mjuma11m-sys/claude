@@ -6,6 +6,7 @@ import { Money, StatusPill } from "../theme/AppShell";
 import { useStagger } from "../theme/motion";
 import { Chips, DemoNote, EmptyState, SkeletonCards } from "../ui/kit";
 import { Tracker } from "./Tracker";
+import { t } from "../i18n";
 
 type Filter = "all" | Status | "vacant";
 
@@ -21,8 +22,8 @@ export function Tenants({ onOpenUnit, table = false, onView }: { onOpenUnit: (u:
     .sort((a, b) => (order[a.s ?? ""] ?? 3) - (order[b.s ?? ""] ?? 3));
 
   const viewToggle = (
-    <Chips<"cards" | "table"> label="العرض" value={table ? "table" : "cards"} onChange={(v) => onView?.(v === "table")}
-      options={[{ id: "cards", label: "بطاقات" }, { id: "table", label: "جدول المتابعة" }]} />
+    <Chips<"cards" | "table"> label={t("العرض")} value={table ? "table" : "cards"} onChange={(v) => onView?.(v === "table")}
+      options={[{ id: "cards", label: t("بطاقات") }, { id: "table", label: t("جدول المتابعة") }]} />
   );
   if (table) return <div className="stack-lg"><div className="view-toggle">{viewToggle}</div><Tracker onOpenUnit={onOpenUnit} /></div>;
 
@@ -30,19 +31,19 @@ export function Tenants({ onOpenUnit, table = false, onView }: { onOpenUnit: (u:
     <div className="stack-lg">
       <div className="view-toggle">{viewToggle}</div>
       <Chips<Filter>
-        label="تصفية"
+        label={t("تصفية")}
         value={filter}
         onChange={setFilter}
         options={[
-          { id: "all", label: "الكل", count: count("all") },
-          { id: "late", label: "متأخر", count: count("late") },
-          { id: "due", label: "مستحق", count: count("due") },
-          { id: "paid", label: "مدفوع", count: count("paid") },
-          { id: "vacant", label: "شاغر", count: count("vacant") },
+          { id: "all", label: t("الكل"), count: count("all") },
+          { id: "late", label: t("متأخر"), count: count("late") },
+          { id: "due", label: t("مستحق"), count: count("due") },
+          { id: "paid", label: t("مدفوع"), count: count("paid") },
+          { id: "vacant", label: t("شاغر"), count: count("vacant") },
         ]}
       />
       {loading ? <SkeletonCards n={6} /> : list.length === 0 ? (
-        <EmptyState text="ما فيه وحدات بهالتصفية." />
+        <EmptyState text={t("ما فيه وحدات بهالتصفية.")} />
       ) : (
         <div className="grid-cards">
           {list.map(({ u, s }, i) => {
@@ -51,18 +52,18 @@ export function Tenants({ onOpenUnit, table = false, onView }: { onOpenUnit: (u:
               <button key={u.id} className={`card tappable press unit-card ${st.className}`} style={st.style} onClick={() => onOpenUnit(u)}>
                 <div className="unit-top">
                   <span className="strong">{u.name} <span className="muted small">· {u.building}</span></span>
-                  {s ? <StatusPill status={s} /> : <span className="pill pill-vacant">شاغر</span>}
+                  {s ? <StatusPill status={s} /> : <span className="pill pill-vacant">{t("شاغر")}</span>}
                 </div>
-                <div className="muted">{u.tenant?.name ?? "بدون مستأجر"}</div>
-                {s === "late" && (() => { const a = arrears(data, u); return <div className="owed-line">متأخر: {a.months.map((m) => monthName(m.month)).join("، ")} · <Money fils={a.amount} /></div>; })()}
+                <div className="muted">{u.tenant?.name ?? t("بدون مستأجر")}</div>
+                {s === "late" && (() => { const a = arrears(data, u); return <div className="owed-line">{t("متأخر:")} {a.months.map((m) => monthName(m.month)).join(t("، "))} · <Money fils={a.amount} /></div>; })()}
                 {u.tenant && (
-                  <div className="trail" aria-label="آخر 6 أشهر">
+                  <div className="trail" aria-label={t("آخر 6 أشهر")}>
                     {monthTrail(data, u).map((m) => (
-                      <i key={m.month} className={`dot dot-${m.state}`} title={`${monthName(m.month)}: ${{ paid: "مدفوع", late: "متأخر", due: "مستحق", none: "قبل العقد" }[m.state]}`} />
+                      <i key={m.month} className={`dot dot-${m.state}`} title={`${monthName(m.month)}: ${{ paid: t("مدفوع"), late: t("متأخر"), due: t("مستحق"), none: t("قبل العقد") }[m.state]}`} />
                     ))}
                   </div>
                 )}
-                <div className="unit-foot"><Money fils={rentAt(u, monthKey(new Date()))} /><span className="muted small">يستحق يوم <span className="num">{u.dueDay}</span></span></div>
+                <div className="unit-foot"><Money fils={rentAt(u, monthKey(new Date()))} /><span className="muted small">{t("يستحق يوم")} <span className="num">{u.dueDay}</span></span></div>
               </button>
             );
           })}
