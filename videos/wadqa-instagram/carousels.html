@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>قوالب إنستقرام ودقة</title>
+<style>
+/* هوية إنستقرام ودقة (ديوانية 2026-10-27): نفس ألوان الموقع وخطوطه. كل إطار يتصوّر لحاله بـ render.cjs */
+@font-face { font-family: Display; src: url("../../.claude/skills/video-ad-editor/motion/fonts/Tajawal-Black.ttf"); }
+@font-face { font-family: Body; src: url("../../.claude/skills/video-ad-editor/motion/fonts/IBMPlexSansArabic-Regular.ttf"); }
+@font-face { font-family: Body; font-weight: 700; src: url("../../.claude/skills/video-ad-editor/motion/fonts/IBMPlexSansArabic-Bold.ttf"); }
+:root { --ink: #0B1514; --slate: #1C2B2A; --line: #2c403e; --bone: #F2EBDD; --mist: #8FA09C; --gold: #C8A04A; --coral: #FF6B4A; --teal: #13636B; }
+* { box-sizing: border-box; margin: 0; }
+body { background: #444; display: flex; flex-wrap: wrap; gap: 40px; padding: 40px; font-family: Body, sans-serif; }
+.f { position: relative; overflow: hidden; }
+.post { width: 1080px; height: 1350px; }
+.story { width: 1080px; height: 1920px; }
+.dark { background: var(--ink); color: var(--bone); }
+.light { background: var(--bone); color: var(--ink); }
+.logo { position: absolute; top: 70px; right: 80px; display: flex; gap: 16px; align-items: center; font: 900 40px Display; }
+.logo svg { width: 54px; height: 54px; }
+.foot { position: absolute; bottom: 64px; right: 80px; left: 80px; display: flex; justify-content: space-between; align-items: center; font: 700 28px Body; color: var(--mist); }
+.light .foot { color: #6b6455; }
+.pill { background: var(--gold); color: var(--ink); border-radius: 99px; padding: 8px 24px; font: 700 26px Body; }
+.eyebrow { font: 700 36px Body; color: var(--gold); }
+.light .eyebrow { color: #7A5A12; }
+h1 { font: 900 96px/1.15 Display; }
+h2 { font: 900 78px/1.2 Display; }
+p.lead { font: 400 42px/1.6 Body; }
+.dark p.lead { color: #D9D2C2; }
+.content { position: absolute; top: 200px; right: 80px; left: 80px; display: flex; flex-direction: column; gap: 34px; }
+.phone { width: 380px; height: 640px; border-radius: 52px; border: 12px solid #26302f; overflow: hidden; align-self: center; box-shadow: 0 30px 90px #0009; }
+.phone img { width: 100%; display: block; }
+.demo { font: 400 26px Body; color: var(--mist); text-align: center; }
+.story h1 { font-size: 150px; }
+.story p.lead { font-size: 60px; }
+.story .eyebrow { font-size: 52px; }
+.story .logo { top: 220px; }
+.big { font: 900 300px/1 Display; color: var(--gold); direction: ltr; text-align: right; }
+.light .big { color: var(--teal); }
+.rows { display: grid; gap: 20px; }
+.r { display: flex; justify-content: space-between; align-items: center; background: var(--slate); border-radius: 28px; padding: 30px 40px; font: 700 44px Body; }
+.r b { font: 900 76px Display; direction: ltr; color: var(--coral); }
+.r b.ok { color: #4FC79E; }
+.center { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+.hl { width: 1080px; height: 1920px; background: var(--ink); }
+.hl .ring { width: 640px; height: 640px; border-radius: 50%; background: var(--slate); border: 10px solid var(--gold); display: grid; place-items: center; font: 900 260px Display; color: var(--bone); }
+.hl .ring img { width: 70%; border-radius: 22%; }
+.num { direction: ltr; unicode-bidi: isolate; }
+</style><style>
+.slide .k { position:absolute; top:70px; left:80px; font:700 30px Body; color:var(--mist); direction:ltr; }
+.slide .content { top:300px; gap:44px; }
+.slide h2 { font-size:92px; }
+.slide p.lead { font-size:50px; }
+.slide .q { font:900 210px/1 Display; color:var(--gold); }
+.light .q { color:var(--teal); }
+.swipe { position:absolute; bottom:150px; left:80px; font:700 34px Body; color:var(--gold); }
+.light .swipe { color:#7A5A12; }
+</style></head><body>
+<template id="logo"><svg viewBox="0 0 512 512"><path d="M256 104C256 104 160 228 160 310A96 96 0 0 0 352 310C352 228 256 104 256 104Z" fill="none" stroke="currentColor" stroke-width="28"/><circle cx="256" cy="316" r="38" fill="#C8A04A"/></svg></template><div class="f post dark slide" id="w1c-1"><div class="logo"><i data-logo></i>ودقة</div><div class="k">1/5</div>
+<div class="content"><div class="eyebrow">ودقة · ليش؟</div><h2>ليش تطبيق<br>بالعربي أول؟</h2><p class="lead">مو ترجمة. من أول سطر.</p></div><div class="swipe">اسحب ←</div>
+<div class="foot"><span class="pill">قيد التطوير · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div><div class="f post light slide" id="w1c-2"><div class="logo"><i data-logo></i>ودقة</div><div class="k">2/5</div>
+<div class="content"><div class="q">1</div><h2>الأرقام تنقرا صح</h2><p class="lead">25.450 د.ب بثلاث خانات، مثل ما يطلع ببنكك.</p></div><div class="swipe">اسحب ←</div>
+<div class="foot"><span class="pill">قيد التطوير · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div><div class="f post light slide" id="w1c-3"><div class="logo"><i data-logo></i>ودقة</div><div class="k">3/5</div>
+<div class="content"><div class="q">2</div><h2>الاتجاه من اليمين</h2><p class="lead">الأسهم والقوائم والجداول تمشي مثل ما تقرا.</p></div><div class="swipe">اسحب ←</div>
+<div class="foot"><span class="pill">قيد التطوير · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div><div class="f post light slide" id="w1c-4"><div class="logo"><i data-logo></i>ودقة</div><div class="k">4/5</div>
+<div class="content"><div class="q">3</div><h2>التقويم الهجري<br>ومناسباتنا</h2><p class="lead">رمضان والأعياد ومناسبات البحرين والخليج بمكانها.</p></div><div class="swipe">اسحب ←</div>
+<div class="foot"><span class="pill">قيد التطوير · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div><div class="f post dark slide" id="w1c-5"><div class="logo"><i data-logo></i>ودقة</div><div class="k">5/5</div>
+<div class="content"><div class="eyebrow">ودقة · WADQA Studio</div><h2>حياتي وإداراتي<br>ينبنون الحين</h2><p class="lead">نبي أول 12 مختبر.<br>الرابط بالبايو.</p></div>
+<div class="foot"><span class="pill">قيد التطوير · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div><div class="f post dark slide" id="w2c-1"><div class="logo"><i data-logo></i>ودقة</div><div class="k">1/6</div>
+<div class="content"><div class="eyebrow">نصيحة مال · للطلاب</div><div class="q" style="color:var(--gold)">4</div><h2>أسئلة قبل<br>آخر الشهر</h2></div><div class="swipe">اسحب ←</div>
+<div class="foot"><span class="pill">قيد التطوير · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div><div class="f post light slide" id="w2c-2"><div class="logo"><i data-logo></i>ودقة</div><div class="k">2/6</div>
+<div class="content"><div class="q">1</div><h2>كم صرفت على<br>الأكل برا؟</h2><p class="lead">ارجع لرسايل البنك آخر 30 يوم وجمّعها.</p></div><div class="swipe">اسحب ←</div>
+<div class="foot"><span class="pill">قيد التطوير · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div><div class="f post light slide" id="w2c-3"><div class="logo"><i data-logo></i>ودقة</div><div class="k">3/6</div>
+<div class="content"><div class="q">2</div><h2>أي اشتراك<br>ما استخدمته؟</h2><p class="lead">اللي ما فتحته هالشهر، ألغه قبل التجديد.</p></div><div class="swipe">اسحب ←</div>
+<div class="foot"><span class="pill">قيد التطوير · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div><div class="f post light slide" id="w2c-4"><div class="logo"><i data-logo></i>ودقة</div><div class="k">4/6</div>
+<div class="content"><div class="q">3</div><h2>كم باقي<br>لين الراتب؟</h2><p class="lead">الباقي ÷ الأيام = اللي تقدر تصرفه باليوم.</p></div><div class="swipe">اسحب ←</div>
+<div class="foot"><span class="pill">قيد التطوير · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div><div class="f post light slide" id="w2c-5"><div class="logo"><i data-logo></i>ودقة</div><div class="k">5/6</div>
+<div class="content"><div class="q">4</div><h2>وش تأجّله<br>للشهر الجاي؟</h2><p class="lead">اكتبه. اللي ينكتب ما ينشرى بالغلط.</p></div><div class="swipe">اسحب ←</div>
+<div class="foot"><span class="pill">قيد التطوير · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div><div class="f post dark slide" id="w2c-6"><div class="logo"><i data-logo></i>ودقة</div><div class="k">6/6</div>
+<div class="content"><div class="eyebrow">حياتي يسويها لك</div><h2>رسايل البنك ←<br>مصروف وميزانية</h2><p class="lead">بدون ما تكتب شي. كن مختبر، الرابط بالبايو.</p><div class="demo">مثال للتوضيح، مو نصيحة مالية</div></div>
+<div class="foot"><span class="pill">قيد التطوير · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div><script>
+const svg = document.getElementById('logo').innerHTML;
+document.querySelectorAll('[data-logo]').forEach((el) => { el.outerHTML = svg; });
+</script></body></html>
