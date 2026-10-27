@@ -62,6 +62,13 @@ const V = {
   budget:   { shot: 'money', hook: 'بتكفيك <span class="c">الميزانية</span>؟', num: 18.12, unit: 'د.ب', sub: 'تقدر تصرف باليوم لين آخر الشهر', tip: '📈 وتقدير لوين بتوصل', fy: 0.15 },
   kitchen:  { shot: 'kitchen', hook: 'وش <span class="c">نطبخ</span> اليوم؟', num: 166, dec: 0, unit: 'وصفة', sub: 'خليجي وعربي وعالمي · كلها حلال', tip: '🍲 المقادير تتغير حسب عدد الأشخاص', fy: 0.05 },
   zakat:    { shot: 'zakat', hook: 'كم <span class="c">زكاتك</span>؟', big: 'احسبها', sub: 'تقدير يساعدك تحسب، مو فتوى', tip: '🧮 الذهب والفضة والمدخرات', fy: 0.05 },
+  subs:     { shot: 'subs', hook: 'كم <span class="c">اشتراكاتك</span> بالشهر؟', num: 39.6, unit: 'د.ب', sub: 'كل اشتراكاتك ومصاريفك الثابتة بمكان واحد', tip: '🔔 تذكير قبل التجديد', fy: 0.15 },
+  goals:    { shot: 'goals', hook: 'توفّر لشي <span class="c">معيّن</span>؟', num: 530, unit: 'د.ب', sub: 'اللي وفّرته لأهدافك، وكم باقي', tip: '🎯 وكم توفّر بالشهر عشان توصل', fy: 0.15 },
+  debts:    { shot: 'debts', hook: 'أحد <span class="c">عليه لك</span> فلوس؟', num: 22.25, unit: 'د.ب', sub: 'اللي لك عند الناس، واللي عليك', tip: '✅ وتسكّرها لما يردّها', fy: 0.1 },
+  exams:    { shot: 'tasks', hook: 'عندك <span class="c">اختبار</span> قريب؟', big: 'بعد 6 أيام', sub: 'اختباراتك وواجباتك بمواعيدها', tip: '📝 وخطة مراجعة لكل اختبار', fy: 0.1 },
+  day:      { shot: 'day', hook: 'محاضراتك <span class="c">وصلاتك</span>؟', big: 'بيوم واحد', sub: 'جدولك وأوقات الصلاة مع بعض', tip: '📅 تشوف يومك كله من الفجر', fy: 0.12 },
+  split:    { shot: 'masked', hook: 'طلعتوا و<span class="c">واحد دفع</span>؟', big: 'قسّمها', sub: 'بالتساوي أو كل واحد حصته', tip: '📤 وأرسل لكل واحد حصته', fy: 0.25 },
+  card:     { shot: 'masked', hook: 'رقم <span class="c">بطاقتك</span> ينحفظ؟', big: '••21', sub: 'يبقى آخر رقمين بس', tip: '🔒 الرقم ينخفى قبل الحفظ', fy: 0.12 },
 };
 const C = V[(location.hash || '#bank').slice(1)];
 $('shot').src = 'shots/' + C.shot + '.png';

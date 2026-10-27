@@ -18,6 +18,6 @@ while read f t g; do
 done <<< "$EV"
 IN="$IN -i music.wav"; FC="$FC[$i:a]volume=0.6[a$i];"; i=$((i+1))
 MIX=""; for j in $(seq 0 $((i-1))); do MIX="$MIX[a$j]"; done
-ffmpeg -y -v error $IN -filter_complex "${FC}${MIX}amix=inputs=$i:normalize=0,apad,atrim=0:10,loudnorm=I=-16:TP=-1.5:LRA=11[out]" -map "[out]" -ar 48000 sfx.wav
-ffmpeg -y -v error -i ${V}_video.mp4 -i sfx.wav -map 0:v -map 1:a -c:v copy -c:a aac -b:a 192k -shortest -movflags +faststart out/${V}.mp4
+ffmpeg -y -v error $IN -filter_complex "${FC}${MIX}amix=inputs=$i:normalize=0,apad,atrim=0:10,loudnorm=I=-16:TP=-1.5:LRA=11[out]" -map "[out]" -ar 48000 sfx_${V}.wav
+ffmpeg -y -v error -i ${V}_video.mp4 -i sfx_${V}.wav -map 0:v -map 1:a -c:v copy -c:a aac -b:a 192k -shortest -movflags +faststart out/${V}.mp4
 echo "→ out/${V}.mp4"
