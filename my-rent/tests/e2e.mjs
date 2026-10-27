@@ -941,7 +941,17 @@ try {
     ok(await a.locator("#forgot").isVisible(), "الدخول: «نسيت كلمة السر؟» موجودة");
     await a.locator("#forgot").click(); await a.waitForTimeout(200);
     ok((await a.locator(".field-error").first().innerText()).includes("إيميل"), "نسيت كلمة السر بدون إيميل: يطلب الإيميل أول");
-    ok(await a.locator("#oauth").count() === 0, "أبل/قوقل مخفية لين تنفعّل بالمشروع");
+    {
+      const env = process.env.VITE_AUTH_PROVIDERS ?? (await import("node:fs")).readFileSync(new globalThis.URL("../.env", import.meta.url), "utf8").match(/^VITE_AUTH_PROVIDERS=(.*)$/m)?.[1] ?? "";
+      if (!env.trim()) ok(await a.locator("#oauth").count() === 0, "أبل/قوقل مخفية لين تنفعّل بالمشروع");
+      else {
+        const ids = await a.locator("#oauth button").evaluateAll((b) => b.map((x) => x.id));
+        ok(ids[0] === "oauth-apple" && ids.includes("oauth-google"), "أبل وقوقل ظاهرين، وأبل أول (شرط أبل 4.8)", ids.join(","));
+        const [wa, wg] = await Promise.all(["#oauth-apple", "#oauth-google"].map(async (q) => (await a.locator(q).boundingBox()).width));
+        ok(Math.abs(wa - wg) <= 1, "زر أبل بنفس حجم قوقل", `${wa}/${wg}`);
+        ok(await a.locator("#oauth-apple").isDisabled(), "أبل/قوقل مقفلة لين يوافق على الحفظ بالسحابة");
+      }
+    }
     ok(await a.locator("#two-factor").count() === 0 && await a.locator("#otp-step").count() === 0, "التحقق بخطوتين ما يطلع قبل الدخول");
     await a.getByRole("radio", { name: "حساب جديد" }).click(); await a.waitForTimeout(150);
     ok(await a.locator("#forgot").count() === 0, "«نسيت كلمة السر» بوضع الدخول بس");

@@ -78,5 +78,6 @@ TestFlight ← Internal Testing ← **+** ← أضف إيميلات العائل
 2. **أبل:** developer.apple.com ← Identifiers ← **Services IDs** ← + (مثلاً `bh.wadqa.idarati.signin`) ← فعّل Sign in with Apple ← Return URL: `https://zqnitovbkgvbeuzzglzc.supabase.co/auth/v1/callback`. وKeys ← + ← Sign in with Apple ← نزّل ‎.p8.
    ثم Supabase ← Authentication ← Providers ← **Apple**: Client IDs = `bh.wadqa.idarati,bh.wadqa.idarati.signin` + Team ID + Key ID + الـ ‎.p8.
 3. **قوقل:** console.cloud.google.com ← APIs & Services ← Credentials ← OAuth client ID (Web) ← Authorized redirect URI: نفس رابط الـ callback فوق. ثم Supabase ← Providers ← **Google**: Client ID + Secret.
-4. قل لي «فعّلت أبل وقوقل» — أشغّل الأزرار (`VITE_AUTH_PROVIDERS=apple,google`) وأختبرها.
+4. ✅ 2026-10-27: انفعّلوا، والأزرار شغّالة (`VITE_AUTH_PROVIDERS=apple,google` في `my-rent/.env`).
+   ⚠️ **مفتاح أبل بـ Supabase (JWT) ينتهي بعد 180 يوم (≈ أبريل 2027).** جدّده بنفس أمر `node` (Key ID `TP2DU27L7X`، Services ID `bh.wadqa.idarati.signin`) من ملف ‎.p8 المحفوظ، والصقه بـ Supabase ← Apple ← Secret Key.
 5. **التحقق بخطوتين:** شغّال من الحين (Supabase يدعم TOTP افتراضياً، وسياسة القاعدة انطبقت). كل مستخدم يفعّله بنفسه من الإعدادات ← الحساب.
