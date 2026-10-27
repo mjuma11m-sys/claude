@@ -43,6 +43,15 @@ try {
   // 2) متأخرات + واتساب + تسجيل دفعة + تراجع + إيصال
   const p = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await p.goto(URL + "#tenants"); await p.evaluate(() => localStorage.clear()); await p.reload(); await p.waitForTimeout(700);
+  for (const hash of ["#home", "#tenants", "#budget"]) {
+    await p.goto(URL + hash); await p.waitForTimeout(300);
+    for (const y of [0, 99999]) {
+      await p.evaluate((v) => scrollTo(0, v), y); await p.waitForTimeout(80);
+      const nb = await p.locator(".shell-bottom").boundingBox(), fb = await p.locator(".fab").boundingBox();
+      ok(nb && Math.abs(nb.y + nb.height - 844) <= 1 && fb && fb.y + fb.height < nb.y, `الشريط السفلي ثابت تحت الشاشة وزر + فوقه (${hash} scroll=${y})`, nb && `${Math.round(nb.y)}+${Math.round(nb.height)}`);
+    }
+  }
+  await p.goto(URL + "#tenants"); await p.waitForTimeout(300);
   await p.getByRole("radio", { name: /متأخر/ }).click();
   ok(await p.locator(".unit-card").count() >= 1, "فيه وحدات متأخرة من أشهر سابقة");
   await p.locator(".unit-card").first().click(); await p.waitForTimeout(350);

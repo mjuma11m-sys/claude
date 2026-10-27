@@ -232,7 +232,7 @@ a.icon-btn { color: var(--brand); }
 .stagger .dot:nth-child(2) { animation-delay: 30ms; } .stagger .dot:nth-child(3) { animation-delay: 60ms; } .stagger .dot:nth-child(4) { animation-delay: 90ms; } .stagger .dot:nth-child(5) { animation-delay: 120ms; } .stagger .dot:nth-child(6) { animation-delay: 150ms; }
 
 /* المؤشر المنزلق */
-.shell-bottom, .side-nav { position: relative; }
+.side-nav { position: relative; } /* .shell-bottom fixed أصلاً (AppShell.css) — relative هني كان يطيّحه لآخر الصفحة على الجوال */
 .nav-ind { position: absolute; top: 0; left: 0; pointer-events: none; opacity: 0; transition: transform 340ms var(--ease-drawer), width 340ms var(--ease-drawer), height 340ms var(--ease-drawer), opacity 200ms; }
 .bottom-ind { z-index: 0; }
 .bottom-ind::after { content: ""; position: absolute; top: 6px; left: 50%; width: 56px; height: 30px; margin-left: -28px; border-radius: 15px; background: var(--surface-2); background: color-mix(in srgb, var(--brand) 13%, transparent); }
