@@ -1,0 +1,110 @@
+<!doctype html>
+<html dir="rtl" lang="ar"><head><meta charset="utf-8">
+<!-- ريل «كوستا» A · 10 ث · 1080×1920 · الجواب من الثانية 1 وبلا ترانزيشن قبل 3 ث · كل فريم من setT(t) -->
+<style>
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Bold.ttf);font-weight:700}
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Regular.ttf);font-weight:400}
+:root{--sea:#0E3B43;--deep:#0A1A1E;--pearl:#E8DCC4;--coral:#FF6B4A}
+*{box-sizing:border-box}
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:var(--deep);font-family:P;color:var(--pearl)}
+#stage{position:absolute;inset:0;overflow:hidden;background:radial-gradient(120% 75% at 50% 38%,#145a62 0%,var(--sea) 42%,var(--deep) 100%)}
+#hook{position:absolute;left:50px;right:50px;top:120px;text-align:center;font-weight:700;font-size:100px;line-height:1.18}
+#hook .c{color:var(--coral)}
+#big{position:absolute;left:0;right:0;top:395px;text-align:center;font-weight:700;font-size:150px;line-height:1;color:var(--coral);direction:ltr}
+#big small{font-size:64px;color:var(--pearl);margin-left:18px}
+#sub{position:absolute;left:0;right:0;top:575px;text-align:center;font-size:52px}
+#phoneWrap{position:absolute;left:50%;top:690px;width:540px;height:1168px;margin-left:-270px}
+#phone{position:absolute;inset:0;border-radius:84px;background:#0b1416;padding:18px;box-shadow:0 70px 120px -40px rgba(0,0,0,.75),inset 0 0 0 3px #2a4a50,inset 0 0 0 7px #0b1416}
+#screen{position:relative;width:100%;height:100%;border-radius:68px;overflow:hidden;background:#F6F2EA}
+#screen img{position:absolute;left:0;top:0;width:100%}
+.ov{position:absolute;background:#fff}
+#typed{position:absolute;font:400 22px P;color:#1b2b2e;white-space:nowrap}
+#caret{display:inline-block;width:2px;height:24px;background:#13636B;vertical-align:middle;margin-left:2px}
+#tot{position:absolute;font:700 21px P;color:#1b2b2e;direction:ltr;white-space:nowrap}
+#wipe{position:absolute;left:0;right:0;bottom:0;background:#F6F2EA}
+#tip{position:absolute;left:90px;right:90px;top:1690px;text-align:center;font-size:46px;padding:22px 26px;border-radius:30px;background:rgba(10,26,30,.82);border:2px solid rgba(232,220,196,.2)}
+#logo{position:absolute;left:50%;top:560px;width:360px;height:360px;margin-left:-180px}
+#brand{position:absolute;left:0;right:0;top:960px;text-align:center}
+#brand h1{margin:0;font-size:160px;line-height:1}
+#brand p{margin:24px 0 0;font-size:54px;font-weight:400;opacity:.85}
+#beta{position:absolute;left:0;right:0;top:1290px;text-align:center;font-size:44px}
+#beta span{display:inline-block;padding:14px 34px;border-radius:999px;background:rgba(255,107,74,.16);border:2px solid rgba(255,107,74,.5)}
+#demo{position:absolute;left:0;right:0;bottom:34px;text-align:center;font-size:30px;opacity:.7}
+</style></head><body><div id="stage">
+  <div id="hook">كم صرفت على <span class="c">كوستا</span> هالشهر؟</div>
+  <div id="big"><span id="bigN">0.000</span><small>د.ب</small></div>
+  <div id="sub">8 مرات بـ 9 أيام ☕</div>
+  <div id="phoneWrap"><div id="phone"><div id="screen">
+    <img id="shot" src="search.png">
+    <div class="ov" id="ovQ"></div><div id="typed"><span id="tq"></span><span id="caret"></span></div>
+    <div class="ov" id="ovT"></div><div id="tot"></div>
+    <div id="wipe"></div>
+  </div></div></div>
+  <div id="tip">🔎 اكتب اسم أي محل ← يطلع لك المجموع</div>
+  <svg id="logo" viewBox="0 0 512 512">
+    <rect width="512" height="512" rx="116" fill="#0E3B43" stroke="#E8DCC4" stroke-opacity=".15" stroke-width="4"/>
+    <path id="arc" d="M 383.3 172.7 A 160 160 0 1 1 300 102.2" fill="none" stroke="#E8DCC4" stroke-opacity=".28" stroke-width="22" stroke-linecap="round" pathLength="1" stroke-dasharray="1"/>
+    <path id="ha" d="M 304 166 L 196 166 L 264 222 C 204 222 168 254 168 292 C 168 336 206 360 256 360 C 292 360 318 348 338 332" fill="none" stroke="#E8DCC4" stroke-width="38" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1"/>
+    <circle id="dot" cx="352" cy="128" r="30" fill="#FF6B4A"/>
+  </svg>
+  <div id="brand"><h1>حياتي</h1><p>مصاريفك ودراستك وصلاتك بمكان واحد</p></div>
+  <div id="beta"><span>قيد التطوير · نسخة تجريبية</span></div>
+  <div id="demo">* لقطات ببيانات تجريبية</div>
+</div>
+<script>
+const $ = (i) => document.getElementById(i);
+const cl = (x) => Math.max(0, Math.min(1, x));
+const p = (t, a, b) => cl((t - a) / (b - a));
+const eo = (x) => 1 - Math.pow(1 - x, 3);
+const eb = (x) => { const c = 1.7; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+// إحداثيات اللقطة الأصلية (1170 عرض) ← الشاشة
+const SW = 504, k = SW / 1170;
+const box = (el, x1, y1, x2, y2) => Object.assign(el.style, { left: x1 * k + 'px', top: y1 * k + 'px', width: (x2 - x1) * k + 'px', height: (y2 - y1) * k + 'px' });
+box($('ovQ'), 900, 462, 1110, 530);
+Object.assign($('typed').style, { right: (1170 - 1080) * k + 'px', top: 478 * k + 'px' });
+box($('ovT'), 90, 752, 370, 832);
+Object.assign($('tot').style, { left: 100 * k + 'px', top: 766 * k + 'px' });
+const WORD = 'كوستا', TOTAL = 26.9;
+function setT(t) {
+  // الهوك ظاهر من الفريم 0
+  const h = eo(p(t, 0, 0.45));
+  $('hook').style.transform = `scale(${1.06 - 0.06 * h})`;
+  // الكتابة 0.3 ← 1.0
+  const n = Math.min(WORD.length, Math.floor(p(t, 0.3, 1.0) * WORD.length + (t >= 1.0 ? 1 : 0)));
+  $('tq').textContent = WORD.slice(0, n);
+  $('caret').style.opacity = (t < 1.1 && Math.floor(t * 3) % 2 === 0) || (t > 0.3 && t < 1.0) ? 1 : 0;
+  // العداد 1.0 ← 2.6
+  const c = eo(p(t, 1.0, 2.6)), v = (TOTAL * c).toFixed(3);
+  $('bigN').textContent = v; $('tot').textContent = v + ' د.ب';
+  const pop = t > 2.6 ? 1 + 0.1 * Math.sin(Math.PI * p(t, 2.6, 2.95)) : 1;
+  $('big').style.opacity = t < 1.0 ? 0.25 : 1;
+  $('big').style.transform = `scale(${pop})`;
+  // الكروت تنكشف 1.0 ← 2.3
+  const w = eo(p(t, 1.0, 2.3)), top0 = 885 * k;
+  $('wipe').style.top = (top0 + w * (1130 - top0)) + 'px';
+  // 8 مرات
+  const s = eb(p(t, 2.8, 3.3));
+  $('sub').style.opacity = cl(s); $('sub').style.transform = `translateY(${(1 - s) * 30}px)`;
+  // نصيحة البحث 4.0
+  const tp = eb(p(t, 4.0, 4.5));
+  $('tip').style.opacity = cl(tp) * (1 - p(t, 6.6, 6.9)); $('tip').style.transform = `translateY(${(1 - tp) * 40}px)`;
+  // الجوال يقرّب شوي 3 ← 6.5 (بلا تبديل خلفية)
+  const z = eo(p(t, 3.0, 6.5));
+  const out = eo(p(t, 6.6, 7.2));
+  $('phoneWrap').style.transform = `translateY(${-z * 20 + out * 900}px) scale(${1 + z * 0.04})`; $("phoneWrap").style.opacity = 1 - out;
+  ['hook', 'big', 'sub'].forEach((id) => { $(id).style.opacity = (id === 'big' ? +$(id).style.opacity : +($(id).style.opacity || 1)) * (1 - p(t, 6.6, 7.0)); });
+  if (t < 2.8) $('sub').style.opacity = 0;
+  // الشعار 7.0 ←
+  const L = p(t, 7.0, 7.9);
+  $('logo').style.opacity = cl(L * 3); $('logo').style.transform = `scale(${0.85 + 0.15 * eo(L)})`;
+  $('arc').style.strokeDashoffset = 1 - eo(p(t, 7.0, 7.8));
+  $('ha').style.strokeDashoffset = 1 - eo(p(t, 7.2, 8.0));
+  $('dot').style.transform = `scale(${eb(p(t, 7.8, 8.2))})`; $('dot').style.transformOrigin = '352px 128px';
+  const B = eo(p(t, 7.6, 8.2));
+  $('brand').style.opacity = B; $('brand').style.transform = `translateY(${(1 - B) * 30}px)`;
+  const be = eb(p(t, 8.3, 8.8));
+  $('beta').style.opacity = cl(be); $('beta').style.transform = `scale(${0.9 + 0.1 * be})`;
+}
+window.setT = setT;
+window.READY = Promise.all([document.fonts.ready, new Promise((r) => { const i = $('shot'); i.complete ? r() : i.onload = r; })]).then(() => setT(0));
+</script></body></html>
