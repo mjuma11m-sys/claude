@@ -3018,6 +3018,43 @@ window.HAYATI_EN = {
 "مثال:\nالأحد – الخميس 7:00 - 3:00\nالسبت 8 - 12 دوام نص يوم\nأو سكرين شوت من جدول المناوبات": "Example:\nSun – Thu 7:00 - 3:00\nSat 8 - 12 half day\nor a screenshot of the shift roster",
 "مثال:\nالأحد والثلاثاء 6 - 8 جيم صدر وتراي\nالاثنين والأربعاء 5:30 - 7 جري\nالخميس 7 - 8:30 م كورة": "Example:\nSun & Tue 6 - 8 gym chest and triceps\nMon & Wed 5:30 - 7 running\nThu 7 - 8:30 pm football",
 "حوّل": "Convert",
+"احسب احتياجك": "Calculate your needs",
+"كم سعرة وكم بروتين تحتاج باليوم": "How many calories and how much protein you need a day",
+"احسبه": "Calculate",
+"🔥 احسب احتياجك": "🔥 Calculate your needs",
+"الأرقام تبقى على جهازك بس.": "These numbers stay on your device only.",
+"الجنس": "Sex",
+"أنثى": "Female",
+"العمر": "Age",
+"الطول (سم)": "Height (cm)",
+"الوزن (كغ)": "Weight (kg)",
+"نشاطك": "Your activity",
+"قليل الحركة (مكتب، بدون رياضة)": "Sedentary (desk, no exercise)",
+"خفيف (رياضة 1–3 أيام)": "Light (exercise 1–3 days)",
+"متوسط (رياضة 3–5 أيام)": "Moderate (exercise 3–5 days)",
+"عالي (رياضة 6–7 أيام)": "High (exercise 6–7 days)",
+"رياضي (تمرينين باليوم أو شغل بدني)": "Athlete (2 sessions a day or physical work)",
+"هدفك": "Your goal",
+"أنزّل وزن": "Lose weight",
+"أثبّت وزني": "Keep my weight",
+"أزيد عضل": "Build muscle",
+"معادلة Mifflin-St Jeor. لو عندك حالة صحية أو حمل، راجع طبيب أو أخصائي تغذية.": "Mifflin-St Jeor equation. If you have a health condition or are pregnant, see a doctor or dietitian.",
+"احسب": "Calculate",
+"🔥 احتياجك اليومي": "🔥 Your daily needs",
+"السعرات": "Calories",
+"البروتين": "Protein",
+"سعرة": "kcal",
+"غم": "g",
+"حرق جسمك بالراحة ≈": "Resting burn ≈",
+"تقدير، مو نصيحة طبية": "An estimate, not medical advice",
+"🔥 ≈": "🔥 ≈",
+"سعرة للحصة": "kcal per serving",
+"للكل": "for everyone",
+"تقدير من المقادير": "estimated from the ingredients",
+"العمر بين 14 و 90": "Age must be between 14 and 90",
+"الطول بالسنتيمتر (120–230)": "Height in centimetres (120–230)",
+"الوزن بالكيلو (30–250)": "Weight in kilograms (30–250)",
+"غم بروتين": "g protein",
 };
 
 </script>
@@ -3514,7 +3551,7 @@ window.HAYATI_CONFIG = {
   const SETTINGS_FIELDS = ['budget', 'ingest_token', 'prior_gpa', 'prior_credits', 'focus_minutes', 'cat_budgets', 'save_pct', 'prayer_on', 'prayer_method', 'water_goal', 'sleep_goal', 'challenges', 'name', 'roles', 'onboarded', 'payday', 'gold_price', 'today_hide', 'study_level', 'kitchen_fav', 'currency', 'accounts'];
   // على الجهاز بس (ما تروح لجدول settings بالسيرفر) بس تدخل بالنسخة الاحتياطية (DW-012)
   //   DW-035: يوم الراتب وسعر الذهب وترتيب «اليوم» صارت تتزامن؛ إعدادات العبادة تظل على الجهاز (خصوصية)
-  const LOCAL_SETTINGS = ['madhhab', 'khums_start', 'wird', 'hijri_offset', 'tasbih'];
+  const LOCAL_SETTINGS = ['madhhab', 'khums_start', 'wird', 'hijri_offset', 'tasbih', 'body_needs'];
   const NUMERIC = ['amount', 'target', 'saved', 'credits', 'minutes', 'day', 'month', 'duration', 'remind_days', 'weight', 'waist', 'water', 'sleep', 'absence_limit', 'score'];
 
   const listeners = new Set();
@@ -9263,6 +9300,77 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
+  <script>/* js/features/needs.js */
+// DW-086: «احسب احتياجك» — كم سعرة وكم بروتين تحتاج باليوم (معادلة Mifflin-St Jeor)
+// بيانات الجسم على الجهاز بس (LOCAL_SETTINGS: body_needs)، ما تروح للسيرفر. تقدير، مو نصيحة طبية.
+(function () {
+  'use strict';
+
+  const A = window.App, E = window.Extras;
+  if (!A || !E) return;
+  const { S, st, I, h } = A;
+  const wrap = (name, fn) => { const prev = E[name]; E[name] = (...a) => fn(prev ? prev : () => '', ...a); };
+
+  const ACT = [[1.2, 'قليل الحركة (مكتب، بدون رياضة)'], [1.375, 'خفيف (رياضة 1–3 أيام)'], [1.55, 'متوسط (رياضة 3–5 أيام)'], [1.725, 'عالي (رياضة 6–7 أيام)'], [1.9, 'رياضي (تمرينين باليوم أو شغل بدني)']];
+  const GOALS = [['cut', 'أنزّل وزن', -0.15], ['keep', 'أثبّت وزني', 0], ['bulk', 'أزيد عضل', 0.1]];
+  const r10 = (x) => Math.round(x / 10) * 10;
+
+  function calc(p) {
+    if (!p || !(p.w > 0 && p.h > 0 && p.age > 0)) return null;
+    const bmr = 10 * p.w + 6.25 * p.h - 5 * p.age + (p.sex === 'f' ? -161 : 5);
+    const tdee = bmr * (p.act || 1.2);
+    const g = GOALS.find((x) => x[0] === p.goal) || GOALS[1];
+    const kcal = r10(tdee * (1 + g[2]));
+    // البروتين غم لكل كغ: النشيط يحتاج أكثر، والتنزيل يحافظ على العضل
+    const per = ((p.act || 1.2) >= 1.55 ? 1.8 : 1.4) + (p.goal === 'cut' ? 0.2 : 0);
+    return { bmr: r10(bmr), tdee: r10(tdee), kcal, protein: Math.round(p.w * per / 5) * 5, goal: g[1] };
+  }
+
+  const prof = () => (st.settings && st.settings.body_needs) || null;
+
+  function card() {
+    const p = prof(), c = calc(p);
+    if (!c) return '<div class="card" style="margin-bottom:12px"><div style="display:flex;align-items:center;gap:12px"><div style="font-size:30px">🔥</div><div style="flex:1"><b>احسب احتياجك</b><p class="small muted" style="margin:2px 0 0">كم سعرة وكم بروتين تحتاج باليوم</p></div>' +
+      '<button class="btn primary" data-action="needs">احسبه</button></div></div>';
+    return '<div class="card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:center"><b>🔥 احتياجك اليومي</b><button class="link" data-action="needs">عدّل</button></div>' +
+      '<div class="two" style="margin-top:10px"><div><small class="muted">السعرات</small><br><b class="num" style="font-size:24px"><bdi>' + c.kcal.toLocaleString('en') + '</bdi></b> <small>سعرة</small></div>' +
+      '<div><small class="muted">البروتين</small><br><b class="num" style="font-size:24px"><bdi>' + c.protein + '</bdi></b> <small>غم</small></div></div>' +
+      '<p class="small muted" style="margin:8px 0 0">' + h(c.goal) + ' · حرق جسمك بالراحة ≈ <bdi>' + c.bmr.toLocaleString('en') + '</bdi> · تقدير، مو نصيحة طبية</p></div>';
+  }
+
+  function sheet() {
+    const p = Object.assign({ sex: 'm', act: 1.55, goal: 'keep' }, prof() || {});
+    A.openSheet({
+      title: '🔥 احسب احتياجك',
+      saveLabel: 'احسب',
+      body: '<p class="small muted" style="margin:0 4px 12px">الأرقام تبقى على جهازك بس.</p>' +
+        '<div class="field"><label>الجنس</label><select name="sex"><option value="m"' + (p.sex === 'm' ? ' selected' : '') + '>ذكر</option><option value="f"' + (p.sex === 'f' ? ' selected' : '') + '>أنثى</option></select></div>' +
+        '<div class="two"><div class="field"><label>العمر</label><input name="age" type="number" inputmode="numeric" min="14" max="90" value="' + h(p.age || '') + '" placeholder="22"></div>' +
+        '<div class="field"><label>الطول (سم)</label><input name="h" type="number" inputmode="numeric" min="120" max="230" value="' + h(p.h || '') + '" placeholder="175"></div></div>' +
+        '<div class="field"><label>الوزن (كغ)</label><input name="w" type="number" inputmode="decimal" min="30" max="250" step="0.1" value="' + h(p.w || '') + '" placeholder="72"></div>' +
+        '<div class="field"><label>نشاطك</label><select name="act">' + ACT.map(([v, l]) => '<option value="' + v + '"' + (Number(p.act) === v ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></div>' +
+        '<div class="field"><label>هدفك</label><select name="goal">' + GOALS.map(([v, l]) => '<option value="' + v + '"' + (p.goal === v ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></div>' +
+        '<p class="small muted" style="margin:4px">معادلة Mifflin-St Jeor. لو عندك حالة صحية أو حمل، راجع طبيب أو أخصائي تغذية.</p>',
+      onSave(root) {
+        const v = (n) => A.val(root, n);
+        const rec = { sex: v('sex') === 'f' ? 'f' : 'm', age: Number(v('age')), h: Number(v('h')), w: Number(v('w')), act: Number(v('act')), goal: v('goal') };
+        if (!(rec.age >= 14 && rec.age <= 90)) throw new Error('العمر بين 14 و 90');
+        if (!(rec.h >= 120 && rec.h <= 230)) throw new Error('الطول بالسنتيمتر (120–230)');
+        if (!(rec.w >= 30 && rec.w <= 250)) throw new Error('الوزن بالكيلو (30–250)');
+        S.setSettings({ body_needs: rec });
+        const c = calc(rec);
+        A.toast('≈ ' + c.kcal.toLocaleString('en') + ' سعرة · ' + c.protein + ' غم بروتين');
+      },
+    });
+  }
+
+  wrap('viewHealth', (prev) => card() + prev());
+  wrap('action', (prev, name, el, e) => { if (name === 'needs') { sheet(); return; } return prev(name, el, e); });
+  E._needsCalc = calc; // للاختبار
+  A.render();
+})();
+
+</script>
   <script>/* js/features/pdfreader.js */
 // DW-065: قارئ PDF بالمواقع — يقرا كل كلمة بمكانها (x, y) بدال ما يقرا سطر سطر، عشان:
 //  • جداول الجامعة اللي تطلع من المواقع (يمين ← يسار، خلايا ملفوفة على سطرين، وخطوط أرقامها مكسورة)
@@ -11175,6 +11283,160 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
+  <script>/* js/features/calories.js */
+// DW-086: سعرات وصفات المطبخ (تقدير) — تنحسب من المقادير نفسها، على الجهاز، بدون نت
+// القيم من جداول USDA FoodData Central (مقرّبة). كل قاعدة: [نمط الاسم، سعرات لكل وحدة]. «g» = لكل غرام (للغرام والكغ).
+// الترتيب مهم: الأدق أول (حليب جوز هند قبل حليب، رز مطبوخ قبل رز). اللي ما له قاعدة = 0 (بهارات، ماي، ملح…).
+(function () {
+  'use strict';
+
+  const R = [
+    // صفر أو قريب منه
+    [/^(ماي|ماء|ثلج|ملح|رشة|بهارات|بزار|كمون|كركم|هيل|قرفة|قرنفل|زعفران|فلفل أسود|ورق غار|لومي|كاري|جارام|بابريكا|سماق|زعتر ناشف|أوريغانو|كزبرة ناشفة|كراوية|زنجبيل|بودرة ثوم|خردل|فانيلا|بيكنج|خميرة|نعناع|ريحان|كزبرة|بقدونس|شطة|هالبينو|ليمون|عصير ليمون|خل|شاي|بن |قهوة|شوت|كركديه|صبغة|قطعة فحم|تمر هندي|عمبة|صلصة سمك|صلصة تمر هندي)/, { any: 0 }],
+    [/^ثوم/, { 'فص': 4, 'م.ك': 12 }],
+    [/^(خس|خيار|فجل|بصل أخضر|سبانخ|فول نابت|ملفوف)/, { 'حبة': 15, 'كوب': 15 }],
+    [/^بصل/, { 'حبة': 44 }],
+    [/^طماط مهروس/, { 'علبة': 80 }],
+    [/^(طماط|صلصة طماط)/, { 'حبة': 22, 'كوب': 60 }],
+    [/^معجون طماط/, { 'م.ك': 13 }],
+    [/^معجون كاري/, { 'م.ك': 30 }],
+    [/^(جزر|فلفل|كوسا)/, { 'حبة': 30 }],
+    [/^باذنجان صغير/, { 'حبة': 40 }],
+    [/^باذنجان/, { 'حبة': 110 }],
+    [/^زهرة/, { 'حبة': 140 }],
+    [/^بامية/, { g: 0.33 }],
+    [/^فطر/, { g: 0.22 }],
+    [/^(خضار|بازلاء)/, { 'كوب': 90 }],
+    [/^بطاط/, { 'حبة': 160 }],
+    [/^أفوكادو/, { 'حبة': 240 }],
+    // نشويات
+    [/^طحين رز/, { 'كوب': 580 }],
+    [/^رز مطبوخ/, { 'كوب': 205 }],
+    [/^رز أو برغل/, { 'كوب': 600 }],
+    [/^رز/, { 'كوب': 680 }],
+    [/^طحين \+ ماي/, { any: 0 }],
+    [/^طحين/, { 'كوب': 455, 'م.ك': 28 }],
+    [/^سميد/, { 'كوب': 600 }],
+    [/^برغل/, { 'كوب': 480 }],
+    [/^(جريش|حب هريس|مفتول)/, { 'كوب': 640 }],
+    [/^شوفان/, { 'كوب': 300 }],
+    [/^ساقو/, { 'كوب': 540 }],
+    [/^معكرونة/, { 'كوب': 400 }],
+    [/^(سباغيتي|مكرونة|فيتوتشيني|نودلز|شعيرية)/, { g: 3.6 }],
+    [/^(عدس|ماش)/, { 'كوب': 680 }],
+    [/^حمص (ناشف|يابس)/, { 'كوب': 730 }],
+    [/^حمص/, { 'علبة': 380 }],
+    [/^(فول مدمس|باجلا)/, { 'علبة': 300 }],
+    [/^خبز (رقاق|بُر)/, { 'حبة': 60 }],
+    [/^خبز شراك/, { 'حبة': 250 }],
+    [/^خبز طابون/, { 'حبة': 300 }],
+    [/^خبز محمّص/, { 'كوب': 120 }],
+    [/^باغيت/, { 'حبة': 700 }],
+    [/^خبز/, { 'حبة': 170 }],
+    [/^(عجينة فيلو)/, { g: 3.0 }],
+    [/^عجينة كنافة/, { g: 3.8 }],
+    [/^رقائق عجينة/, { g: 5.4 }],
+    [/^(ورق سمبوسة|رقائق سبرنق)/, { 'حبة': 32 }],
+    [/^ورق عنب/, { 'حبة': 3 }],
+    [/^بسكويت دايجستف/, { g: 4.8 }],
+    [/^بسكويت ليدي/, { 'حبة': 40 }],
+    [/^نشا/, { 'م.ك': 30, 'م.ص': 10 }],
+    // بروتين
+    [/^(دجاجة|دجاج أو لحم|لحم أو دجاج)/, { 'حبة': 1900, g: 2.0 }],
+    [/^(روبيان أو دجاج|دجاج أو روبيان)/, { g: 1.2 }],
+    [/^صدر دجاج مشوي/, { 'حبة': 280 }],
+    [/^(صدر دجاج|صدر أو فخذ)/, { g: 1.3 }],
+    [/^(فخذ دجاج|دجاج)/, { g: 1.6 }],
+    [/^لحم غنم.*(بالعظم|كتف)/, { g: 1.9 }],
+    [/^(لحم غنم|لحم مفروم|لحم بقر مفروم)/, { g: 2.5 }],
+    [/^لحم بقر/, { g: 1.8 }],
+    [/^ضلوع/, { g: 2.9 }],
+    [/^(سمك|فيليه سمك)/, { g: 1.0 }],
+    [/^روبيان/, { g: 0.85 }],
+    [/^صفار بيض/, { 'حبة': 55 }],
+    [/^بيض/, { 'حبة': 72 }],
+    // ألبان
+    [/^حليب جوز هند/, { 'علبة': 800 }],
+    [/^حليب مكثف/, { 'علبة': 1300, 'م.ك': 60 }],
+    [/^حليب مبخ/, { 'كوب': 340, 'م.ك': 21 }],
+    [/^حليب بودرة/, { 'كوب': 640 }],
+    [/^(حليب|ماي بارد أو حليب)/, { 'كوب': 150 }],
+    [/^(كريمة طبخ)/, { 'كوب': 480 }],
+    [/^(كريمة|قشطة حامضة)/, { 'كوب': 800 }],
+    [/^قشطة/, { 'م.ك': 50, 'كوب': 800 }],
+    [/^(زبادي|روب|لبن)/, { 'كوب': 150 }],
+    [/^جميد/, { 'حبة': 600 }],
+    [/^جبن/, { 'شريحة': 70, g: 3.0 }],
+    [/^(موزاريلا)/, { g: 3.0 }],
+    [/^بارميزان/, { 'كوب': 430 }],
+    [/^ماسكاربوني/, { g: 4.3 }],
+    // دهون
+    [/^(زيت للقلي|سمن للمقلاة)/, { any: 0 }],
+    [/^(زيت|سمن)/, { 'م.ك': 120, 'كوب': 1900 }],
+    [/^زبدة/, { 'م.ك': 102, 'م.ص': 34, 'كوب': 1630, g: 7.2 }],
+    [/^طحينة/, { 'م.ك': 90, 'كوب': 1400 }],
+    [/^مايونيز/, { 'م.ك': 94 }],
+    // سكريات
+    [/^(سكر وقرفة)/, { 'كوب': 770 }],
+    [/^سكر بودرة/, { 'كوب': 470 }],
+    [/^سكر/, { 'م.ص': 16, 'م.ك': 48, 'كوب': 770 }],
+    [/^(عسل|دبس رمان)/, { 'م.ك': 60, 'م.ص': 20 }],
+    [/^دبس تمر/, { 'كوب': 900 }],
+    [/^شيرة/, { 'كوب': 800 }],
+    [/^شراب فيمتو/, { 'كوب': 500 }],
+    [/^شراب جلاب/, { 'م.ك': 50 }],
+    [/^(شوكولاتة)/, { g: 5.5, 'كوب': 800 }],
+    [/^كاكاو/, { 'م.ك': 12 }],
+    [/^بودرة ماتشا/, { 'م.ص': 6 }],
+    [/^(قمر الدين|لفة قمر الدين|معجون تمر)/, { g: 3.1 }],
+    [/^صوص فراولة/, { 'كوب': 300 }],
+    [/^(صويا حلوة)/, { 'م.ك': 45 }],
+    [/^صويا صوص/, { 'م.ك': 9, 'كوب': 140 }],
+    // مكسرات وفواكه
+    [/^تمر كبير/, { 'حبة': 66 }],
+    [/^تمر/, { 'كوب': 415 }],
+    [/^زبيب/, { 'كوب': 430 }],
+    [/^(فول سوداني)/, { 'كوب': 830 }],
+    [/^(لوز|جوز|فستق|صنوبر|مكسرات)/, { 'كوب': 820, 'م.ك': 55, 'حبة': 10 }],
+    [/^زيتون/, { 'كوب': 150 }],
+    [/^موز/, { 'حبة': 105 }],
+    [/^(برتقال|كمثرى|تفاحة)/, { 'حبة': 80 }],
+    [/^مانجو ناضج/, { 'حبة': 200 }],
+    [/^(مانجو|أناناس)/, { 'كوب': 100 }],
+    [/^(فراولة|توت|بطيخ)/, { 'كوب': 60 }],
+    [/^رمان/, { 'حبة': 230 }],
+    [/^(مرق)/, { 'كوب': 15 }],
+    [/^(صوص|صلصة)/, { 'م.ك': 20 }],
+  ];
+
+  function ingKcal(x) {
+    const [q, unit, name] = x;
+    if (q == null || !(q > 0)) return 0;
+    for (const [re, k] of R) {
+      if (!re.test(name)) continue;
+      if ('any' in k) return 0;
+      if (unit === 'غرام' && k.g != null) return q * k.g;
+      if (unit === 'كغ' && k.g != null) return q * 1000 * k.g;
+      if (k[unit] != null) return q * k[unit];
+      return 0;
+    }
+    return 0;
+  }
+
+  // السعرات للحصة الوحدة (تقريب لأقرب 10). الوصفة لـ serves أشخاص.
+  function recipeKcal(r) {
+    if (!r || !r.ing) return null;
+    let total = r.ing.reduce((s, x) => s + ingKcal(x), 0);
+    if (!total) return null;
+    // القلي: الزيت ما ينكتب بكمية، نحسب اللي يتشربه الأكل تقريباً (≈ 1.2 م.ك للحصة)
+    if (r.ing.some((x) => /^(زيت للقلي|سمن للمقلاة)/.test(x[2]))) total += 150 * (r.serves || 1);
+    return Math.round(total / (r.serves || 1) / 10) * 10;
+  }
+
+  window.HayatiCalories = { recipeKcal, ingKcal, _rules: R };
+})();
+
+</script>
   <script>/* js/features/kitchen.js */
 // DW-052: «المطبخ» — وصفات خليجية (وDW-082: ومن العالم) بمقادير تتغيّر حسب عدد الأشخاص، خطوات تشطّبها، والناقص يروح للمشتريات
 // الوصفات بالجهاز (recipes.js)، والمفضلة بالإعدادات (settings.kitchen_fav)
@@ -11273,6 +11535,9 @@ window.HAYATI_CONFIG = {
     };
     const note = () => n === r.serves ? '' : '<p class="small" style="margin:0 4px 8px;color:var(--brand)">الكميات بالخطوات مكتوبة لـ <bdi>' + r.serves + '</bdi>؛ استخدم المقادير اللي فوق (×<bdi>' + frac(Math.round(n / r.serves * 4) / 4) + '</bdi>).</p>';
     const fav = () => favs().includes(r.id);
+    // DW-086: السعرات (تقدير من المقادير)
+    const kc = window.HayatiCalories ? window.HayatiCalories.recipeKcal(r) : null;
+    const kcal = () => kc ? '<p class="small muted" id="kKcal" style="margin:-4px 4px 10px">🔥 ≈ <bdi>' + kc.toLocaleString('en') + '</bdi> سعرة للحصة' + (n > 1 ? ' · ≈ <bdi>' + (kc * n).toLocaleString('en') + '</bdi> للكل' : '') + ' · تقدير من المقادير</p>' : '';
     A.openSheet({
       title: r.icon + ' ' + r.name,
       cancelLabel: 'تم',
@@ -11281,14 +11546,14 @@ window.HAYATI_CONFIG = {
         '<button type="button" class="btn ghost" id="kFav" style="margin-inline-start:auto">' + (fav() ? '❤️ بالمفضلة' : '♡ احفظها') + '</button></div>' +
         '<div class="card" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><b>لكم شخص؟</b><div style="display:flex;align-items:center;gap:12px">' +
         '<button type="button" class="icon-btn" id="kMinus" aria-label="أقل">' + I('minus') + '</button><b class="num" id="kN" style="font-size:20px;min-width:28px;text-align:center">' + n + '</b>' +
-        '<button type="button" class="icon-btn" id="kPlus" aria-label="أكثر">' + I('plus') + '</button></div></div>' +
+        '<button type="button" class="icon-btn" id="kPlus" aria-label="أكثر">' + I('plus') + '</button></div></div>' + kcal() +
         '<div class="group-title">🧺 المقادير · اضغط على اللي ناقصك</div><div class="card flush" id="kIng">' + ingHtml() + '</div>' +
         '<button type="button" class="btn block" id="kShop" style="margin:8px 0 14px">' + I('cart') + 'أضف الناقص للمشتريات</button>' +
         '<div class="group-title">👣 الخطوات · اضغط على اللي خلصته</div><div id="kNote">' + note() + '</div><div class="card flush"><ol class="list" id="kSteps" style="margin:0;padding:0" data-noi18n>' +
         r.steps.map((s, i) => '<li class="row" data-step="' + i + '" style="cursor:pointer;align-items:flex-start"><b class="num" style="min-width:24px;color:var(--brand)">' + (i + 1) + '</b><div class="main" style="white-space:normal;line-height:1.7">' + h(s) + '</div></li>').join('') + '</ol></div>' +
         (r.tip ? '<div class="card" style="margin-top:10px"><b>💡 نصيحة:</b> <span data-noi18n>' + h(r.tip) + '</span></div>' : ''),
       mount(root) {
-        const setN = (v) => { n = Math.max(1, Math.min(30, v)); root.querySelector('#kN').textContent = n; root.querySelector('#kIng').innerHTML = ingHtml(); root.querySelector('#kNote').innerHTML = note(); };
+        const setN = (v) => { n = Math.max(1, Math.min(30, v)); root.querySelector('#kN').textContent = n; root.querySelector('#kIng').innerHTML = ingHtml(); root.querySelector('#kNote').innerHTML = note(); const kk = root.querySelector('#kKcal'); if (kk) kk.outerHTML = kcal(); };
         root.querySelector('#kBack').onclick = () => { A.closeSheet(); setTimeout(sheet, 280); };
         root.querySelector('#kMinus').onclick = () => setN(n - 1);
         root.querySelector('#kPlus').onclick = () => setN(n + 1);

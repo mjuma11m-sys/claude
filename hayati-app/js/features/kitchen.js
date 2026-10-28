@@ -95,6 +95,9 @@
     };
     const note = () => n === r.serves ? '' : '<p class="small" style="margin:0 4px 8px;color:var(--brand)">الكميات بالخطوات مكتوبة لـ <bdi>' + r.serves + '</bdi>؛ استخدم المقادير اللي فوق (×<bdi>' + frac(Math.round(n / r.serves * 4) / 4) + '</bdi>).</p>';
     const fav = () => favs().includes(r.id);
+    // DW-086: السعرات (تقدير من المقادير)
+    const kc = window.HayatiCalories ? window.HayatiCalories.recipeKcal(r) : null;
+    const kcal = () => kc ? '<p class="small muted" id="kKcal" style="margin:-4px 4px 10px">🔥 ≈ <bdi>' + kc.toLocaleString('en') + '</bdi> سعرة للحصة' + (n > 1 ? ' · ≈ <bdi>' + (kc * n).toLocaleString('en') + '</bdi> للكل' : '') + ' · تقدير من المقادير</p>' : '';
     A.openSheet({
       title: r.icon + ' ' + r.name,
       cancelLabel: 'تم',
@@ -103,14 +106,14 @@
         '<button type="button" class="btn ghost" id="kFav" style="margin-inline-start:auto">' + (fav() ? '❤️ بالمفضلة' : '♡ احفظها') + '</button></div>' +
         '<div class="card" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><b>لكم شخص؟</b><div style="display:flex;align-items:center;gap:12px">' +
         '<button type="button" class="icon-btn" id="kMinus" aria-label="أقل">' + I('minus') + '</button><b class="num" id="kN" style="font-size:20px;min-width:28px;text-align:center">' + n + '</b>' +
-        '<button type="button" class="icon-btn" id="kPlus" aria-label="أكثر">' + I('plus') + '</button></div></div>' +
+        '<button type="button" class="icon-btn" id="kPlus" aria-label="أكثر">' + I('plus') + '</button></div></div>' + kcal() +
         '<div class="group-title">🧺 المقادير · اضغط على اللي ناقصك</div><div class="card flush" id="kIng">' + ingHtml() + '</div>' +
         '<button type="button" class="btn block" id="kShop" style="margin:8px 0 14px">' + I('cart') + 'أضف الناقص للمشتريات</button>' +
         '<div class="group-title">👣 الخطوات · اضغط على اللي خلصته</div><div id="kNote">' + note() + '</div><div class="card flush"><ol class="list" id="kSteps" style="margin:0;padding:0" data-noi18n>' +
         r.steps.map((s, i) => '<li class="row" data-step="' + i + '" style="cursor:pointer;align-items:flex-start"><b class="num" style="min-width:24px;color:var(--brand)">' + (i + 1) + '</b><div class="main" style="white-space:normal;line-height:1.7">' + h(s) + '</div></li>').join('') + '</ol></div>' +
         (r.tip ? '<div class="card" style="margin-top:10px"><b>💡 نصيحة:</b> <span data-noi18n>' + h(r.tip) + '</span></div>' : ''),
       mount(root) {
-        const setN = (v) => { n = Math.max(1, Math.min(30, v)); root.querySelector('#kN').textContent = n; root.querySelector('#kIng').innerHTML = ingHtml(); root.querySelector('#kNote').innerHTML = note(); };
+        const setN = (v) => { n = Math.max(1, Math.min(30, v)); root.querySelector('#kN').textContent = n; root.querySelector('#kIng').innerHTML = ingHtml(); root.querySelector('#kNote').innerHTML = note(); const kk = root.querySelector('#kKcal'); if (kk) kk.outerHTML = kcal(); };
         root.querySelector('#kBack').onclick = () => { A.closeSheet(); setTimeout(sheet, 280); };
         root.querySelector('#kMinus').onclick = () => setN(n - 1);
         root.querySelector('#kPlus').onclick = () => setN(n + 1);

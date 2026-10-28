@@ -3327,3 +3327,34 @@ test('sign-up catches email typos before the server (.con, gmial) and says it in
   await page.click('#sheetBody [data-set="signin"]');
   await expect(page.locator('#toast')).toContainText('.com');
 });
+
+// DW-086: سعرات وصفات المطبخ (تقدير من المقادير) + «احسب احتياجك» على الجهاز
+test('calories (DW-086): recipe kcal per serving shows and scales, needs calculator stays on device', async ({ page }) => {
+  await open(page);
+  const k = await page.evaluate(() => {
+    const C = window.HayatiCalories, R = window.HAYATI_RECIPES;
+    const vals = R.map((r) => C.recipeKcal(r)).filter((x) => x != null);
+    return { n: vals.length, all: R.length, min: Math.min(...vals), max: Math.max(...vals), majboos: C.recipeKcal(R.find((r) => r.id === 'majboos-chicken')) };
+  });
+  expect(k.n).toBeGreaterThan(k.all - 3);                 // تقريباً كل الوصفات لها رقم
+  expect(k.max).toBeLessThan(1600);                        // ولا حصة خيالية
+  expect(k.majboos).toBeGreaterThan(800); expect(k.majboos).toBeLessThan(1400);
+  await page.click('#toolsBtn');
+  await page.click('[data-tool="kitchen"]');
+  await page.fill('#sheetBody [name=kq]', 'مجبوس دجاج');
+  await page.click('#kList [data-recipe="majboos-chicken"]');
+  await expect(page.locator('#kKcal')).toContainText('سعرة للحصة');
+  await expect(page.locator('#kKcal')).toContainText(String(k.majboos * 4).replace(/\B(?=(\d{3})+(?!\d))/g, ','));
+  await page.click('#kPlus');
+  await expect(page.locator('#kKcal')).toContainText(String(k.majboos * 5).replace(/\B(?=(\d{3})+(?!\d))/g, ','));
+  await page.click('#sheetCancel').catch(() => page.evaluate(() => App.closeSheet()));
+  // احسب احتياجك: ذكر 22 سنة 175 سم 72 كغ، نشاط متوسط، تثبيت ← BMR 1,709 × 1.55 ≈ 2,650
+  const c = await page.evaluate(() => Extras._needsCalc({ sex: 'm', age: 22, h: 175, w: 72, act: 1.55, goal: 'keep' }));
+  expect(c.kcal).toBe(2650); expect(c.protein).toBe(130);
+  await page.evaluate(() => { App.ui.studySeg = 'health'; App.go('schedule'); });
+  await page.click('[data-action="needs"]');
+  await page.fill('#sheetBody [name=age]', '22'); await page.fill('#sheetBody [name=h]', '175'); await page.fill('#sheetBody [name=w]', '72');
+  await page.click('#sheetSave');
+  await expect(page.locator('#view')).toContainText('2,650');
+  expect(await store(page, () => App.st.settings.body_needs.w)).toBe(72);
+});
