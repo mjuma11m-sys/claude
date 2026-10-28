@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { ContractFile, Unit } from "../data/types";
 import { useStore } from "../data/store";
-import { DEFAULT_CONTRACT, activeContract, contractChanges, fillContract, isoDay, pastContracts } from "../data/logic";
+import { DEFAULT_CONTRACT, activeContract, contractChanges, fillContract, isoDay, pastContracts, templatize } from "../data/logic";
+import { IMPORT_ACCEPT, readContractFile } from "../data/docimport";
 import { ACCEPT, checkFile, fetchFile, putLocal, removeFile, uploadCloud } from "../data/files";
 import { Sheet, useToast } from "../ui/kit";
 import logoUrl from "../../brand/logo-horizontal.svg";
@@ -164,7 +165,31 @@ export function ContractTemplateEditor() {
   const [owner, setOwner] = useState(data.contractOwner ?? "");
   const [preview, setPreview] = useState(false);
   const area = useRef<HTMLTextAreaElement>(null);
+  const imp = useRef<HTMLInputElement>(null);
   const sample = data.units.find((x) => x.tenant);
+  // DW-048: استيراد عقد المالك + تحويل القيم القديمة لخانات
+  const [mapping, setMapping] = useState(false);
+  const [vals, setVals] = useState<Record<string, string>>({});
+  const [impErr, setImpErr] = useState("");
+  const [result, setResult] = useState("");
+  const MAP_FIELDS = ["المستأجر", "هاتف المستأجر", "الوحدة", "المبنى", "الإيجار", "يوم الاستحقاق", "بداية العقد", "نهاية العقد", "التأمين", "المالك"];
+  const importFile = async (f: File) => {
+    setImpErr(""); setResult("");
+    const r = await readContractFile(f);
+    if ("error" in r) return setImpErr(r.error);
+    if (!r.text) return setImpErr("الملف فاضي");
+    setTpl(r.text); setMapping(true); setVals({});
+    toast({ text: "انقرا عقدك. الحين حوّل بياناته لخانات" });
+  };
+  const applyMap = () => {
+    const r = templatize(tpl, MAP_FIELDS.map((field) => ({ field, value: vals[field] ?? "" })));
+    setTpl(r.text);
+    if (vals["المالك"]?.trim() && !owner.trim()) setOwner(vals["المالك"].trim()); // اسم المؤجر من عقده
+    const done = Object.entries(r.counts);
+    const miss = done.filter(([, n]) => !n).map(([f]) => f);
+    setResult(done.filter(([, n]) => n).map(([f, n]) => `{${f}} × ${n}`).join(" · ") + (miss.length ? ` — ما لقينا: ${miss.join("، ")}` : ""));
+    if (!miss.length) setMapping(false);
+  };
   const dirty = tpl !== (data.contractTemplate ?? DEFAULT_CONTRACT) || owner !== (data.contractOwner ?? "");
 
   const insert = (field: string) => {
@@ -181,6 +206,24 @@ export function ContractTemplateEditor() {
       <h2 className="set-title" id="ct-h">{t("نموذج العقد")}</h2>
       <p className="muted small" style={{ margin: 0 }}>{t("تكتبه مرة وحدة. مع كل مستأجر جديد تتعبّى الخانات بروحها من بيانات الوحدة. نموذج عام، راجعه مع محامي.")}{isEn() && " The contract itself is an Arabic document for the tenant."}</p>
       <label className="field"><span>{t("اسم المؤجر (يطلع بالعقد)")}</span><input id="ct-owner" className="input" value={owner} onChange={(e) => setOwner(e.target.value)} /></label>
+      <div className="sync-box stack" id="ct-import-box">
+        <div className="strong">عندك عقدك الخاص؟</div>
+        <p className="muted small" style={{ margin: 0 }}>ارفعه Word (.docx) — ينقرا على جهازك بس، وبنوده تصير نموذجك. بعدها تكتب بياناته القديمة (اسم المستأجر، الإيجار…) وتتبدّل بخانات تتعبّى مع كل مستأجر.</p>
+        <button type="button" className="btn btn-ghost press" onClick={() => imp.current?.click()}>استورد عقدك (Word)</button>
+        <input ref={imp} id="ct-import" type="file" accept={IMPORT_ACCEPT} hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void importFile(f); e.target.value = ""; }} />
+        {impErr && <div className="field-error" role="alert">{impErr}</div>}
+        {mapping && (
+          <div className="stack" id="ct-map">
+            <div className="strong">حوّل البيانات لخانات</div>
+            <p className="muted small" style={{ margin: 0 }}>اكتب كل قيمة مثل ما هي مكتوبة بعقدك بالضبط. اللي ما بعقدك خلّه فاضي.</p>
+            {MAP_FIELDS.map((f) => (
+              <label key={f} className="field"><span>{f}</span><input className="input" data-map={f} value={vals[f] ?? ""} onChange={(e) => setVals({ ...vals, [f]: e.target.value })} /></label>
+            ))}
+            <button type="button" className="btn press" id="ct-map-apply" onClick={applyMap}>حوّل لخانات</button>
+          </div>
+        )}
+        {result && <div className="small" id="ct-map-result" role="status">{result}. راجع النص تحت واحفظ.</div>}
+      </div>
       <div className="ct-fields" aria-label={t("الخانات")}>
         {["المستأجر", "هاتف المستأجر", "الوحدة", "المبنى", "الإيجار", "يوم الاستحقاق", "بداية العقد", "نهاية العقد", "التأمين", "المالك", "تاريخ اليوم"].map((f) => (
           <button key={f} type="button" className="chip press" onClick={() => insert(f)}>{`{${f}}`}</button>

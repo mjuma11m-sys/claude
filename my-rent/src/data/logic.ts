@@ -228,6 +228,21 @@ export function fillContract(template: string, unit: Unit, owner: string, now = 
   return template.replace(/\{([^{}]+)\}/g, (m, k: string) => (k.trim() in v ? v[k.trim()] : m));
 }
 
+// ── DW-048: عقد المالك ← نموذج بخانات ─────────────────
+
+/** يبدّل القيم المكتوبة بعقد المالك (اسم المستأجر القديم، الإيجار…) بخانات {…}. الأطول أول عشان ما تنقص قيمة داخل قيمة. يرجّع كم مرة لكل خانة */
+export function templatize(text: string, pairs: { field: string; value: string }[]) {
+  const counts: Record<string, number> = {};
+  let out = text;
+  for (const { field, value } of [...pairs].filter((p) => p.value.trim()).sort((a, b) => b.value.trim().length - a.value.trim().length)) {
+    const v = value.trim();
+    const re = new RegExp(v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g");
+    counts[field] = (out.match(re) ?? []).length;
+    out = out.replace(re, `{${field}}`);
+  }
+  return { text: out, counts };
+}
+
 // ── DW-047: العقد المعتمد (نسخة ثابتة) والأرشيف ─────────
 
 /** نسخة ثابتة من العقد ببيانات الوحدة والمستأجر الحين */

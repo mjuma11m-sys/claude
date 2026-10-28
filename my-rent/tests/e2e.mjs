@@ -1034,6 +1034,39 @@ try {
     await k.close();
   }
 
+  // 31) DW-048: استيراد عقد المالك من Word ← خانات ← عقد مستأجر ثاني ببنود المالك
+  {
+    const { zipSync, strToU8 } = await import("fflate");
+    const para = (t) => `<w:p><w:r><w:t xml:space="preserve">${t}</w:t></w:r></w:p>`;
+    const docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${[
+      "عقد إيجار — عمارة النخيل", "المؤجر: خالد يوسف", "المستأجر: محمد علي — هاتف 33445566", "الإيجار الشهري 250.000 دينار",
+      "بند خاص: يمنع تربية الحيوانات الأليفة.", "يلتزم محمد علي بدفع الإيجار مقدماً."].map(para).join("")}</w:body></w:document>`;
+    const docx = Buffer.from(zipSync({ "[Content_Types].xml": strToU8("<Types/>"), "word/document.xml": strToU8(docXml) }));
+    const m = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const mErr = []; m.on("pageerror", (e) => mErr.push(e.message));
+    const ext = []; m.on("request", (r) => { if (!r.url().startsWith(URL) && !r.url().startsWith("data:") && !r.url().includes("fonts.g")) ext.push(r.url()); });
+    await m.goto(URL + "#settings"); await m.evaluate(() => localStorage.clear()); await m.reload(); await m.waitForTimeout(900);
+    await m.locator("#ct-import").setInputFiles({ name: "عقدي.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF") }); await m.waitForTimeout(300);
+    ok((await m.locator("#ct-import-box .field-error").innerText()).includes("Word"), "DW-048: PDF ← رسالة «صدّره Word»");
+    await m.locator("#ct-import").setInputFiles({ name: "عقدي.docx", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", buffer: docx }); await m.waitForTimeout(500);
+    const raw = await m.locator("#ct-text").inputValue();
+    ok(raw.includes("بند خاص: يمنع تربية الحيوانات الأليفة.") && raw.split("\n").length >= 6, "Word عربي ← النص كامل بالمحرر، كل فقرة بسطر");
+    await m.locator('[data-map="المستأجر"]').fill("محمد علي"); await m.locator('[data-map="هاتف المستأجر"]').fill("33445566");
+    await m.locator('[data-map="الإيجار"]').fill("250.000"); await m.locator('[data-map="المالك"]').fill("خالد يوسف");
+    await m.locator("#ct-map-apply").click(); await m.waitForTimeout(200);
+    ok((await m.locator("#ct-map-result").innerText()).includes("{المستأجر} × 2"), "التحويل: اسم المستأجر القديم صار خانة بكل مكان + العدّاد");
+    await m.getByRole("button", { name: "احفظ النموذج" }).click(); await m.waitForTimeout(300);
+    await m.goto(URL + "#tenants"); await m.waitForTimeout(600);
+    await m.locator(".unit-card", { hasText: "شقة 3 " }).first().click(); await m.waitForTimeout(450);
+    await m.getByRole("button", { name: /^العقد/ }).click(); await m.waitForTimeout(450);
+    const out = await m.locator(".contract-text").first().innerText();
+    ok(out.includes("المؤجر: خالد يوسف"), "اسم المؤجر من عقده يتعبّى بخانة المؤجر");
+    ok(out.includes("بند خاص") && out.includes("عائلة سلمان") && out.includes("200.000") && !out.includes("محمد علي") && !out.includes("33445566"), "عقد مستأجر ثاني: بنود المالك + بيانات المستأجر الحالي");
+    ok(ext.length === 0, "DW-048: القراءة على الجهاز — ولا طلب للنت", ext.join(" "));
+    ok(mErr.length === 0, "DW-048: بدون أخطاء", mErr.join(" | "));
+    await m.close();
+  }
+
   if (process.env.SHOTS) {
     for (const [n, w, h, s] of [["home-phone", 390, 844, "light"], ["home-dark", 390, 844, "dark"], ["home-desk", 1280, 800, "light"], ["tenants-tab", 820, 1180, "light"], ["budget-phone", 390, 844, "light"]]) {
       const q = await browser.newPage({ viewport: { width: w, height: h }, colorScheme: s });
