@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 46,
+  "next": 47,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -362,6 +362,14 @@
       "status": "done",
       "opened": "2026-10-27",
       "updated": "2026-10-27"
+    },
+    "DW-046": {
+      "title": "تسعير إداراتي: اشتراك أو دفعة وحدة؟",
+      "owner": "CFO",
+      "priority": "P2",
+      "status": "blocked",
+      "opened": "2026-10-28",
+      "updated": "2026-10-28"
     }
   }
 }
