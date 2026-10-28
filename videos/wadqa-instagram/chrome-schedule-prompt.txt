@@ -1,0 +1,21 @@
+In Meta Business Suite (business.facebook.com), schedule 9 Instagram posts for @wadqa.bh.
+Don't type any password. If it asks to sign in, connect an account, or for a code, stop and tell me.
+
+Images + captions: https://claude.ai/artifact/8TtiYcaKgmEgCtDVPxGy45 → section "أول 9 منشورات".
+
+For each post N from 1 to 9:
+1. On the artifact page: right-click image N → Save image as… → Downloads → wadqa-N.png
+   (post 7 = 5 images: 7-1 … 7-5, save all 5).
+2. Business Suite → Planner → Create post.
+3. Post to: Instagram @wadqa.bh only (untick Facebook).
+4. Add media → upload wadqa-N.png (post 7: all 5 in order = carousel).
+5. Caption: copy the text under image N exactly, then add these two lines at the end:
+
+🔗 الرابط بالبايو
+myrent-sigma.vercel.app/testers
+
+6. Schedule, Bahrain time, tomorrow:
+   1=6:00PM · 2=6:30 · 3=7:00 · 4=7:30 · 5=8:00 · 6=8:30 · 7=9:00 · 8=9:30 · 9=10:00PM
+7. Stop before the final "Schedule" button and show me the preview. I'll confirm it myself.
+
+At the end, give me a table: N | time | number of images | first 5 words of the caption.
