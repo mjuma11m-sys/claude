@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<!-- فيديو شرح العقود (الديوانية 2026-10-28): 1080×1920، render(t) يرسم أي لحظة -->
+<style>
+@font-face{font-family:Plex;src:url(../hayati-promo-v2/IBMPlexSansArabic-Bold.ttf);font-weight:700}
+@font-face{font-family:Plex;src:url(../hayati-promo-v2/IBMPlexSansArabic-Regular.ttf);font-weight:400}
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#14213A;font-family:Plex,sans-serif;color:#F5F2EB}
+#bg{position:absolute;inset:0;background:radial-gradient(circle at 80% 10%,#22345A,#14213A 60%)}
+.pat{position:absolute;inset:0;opacity:.06;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Cpath d='M48 10 L56 40 L86 48 L56 56 L48 86 L40 56 L10 48 L40 40Z' fill='none' stroke='%23C9963A' stroke-width='2'/%3E%3C/svg%3E")}
+.cap{position:absolute;top:110px;left:80px;right:80px;text-align:right}
+.cap .n{display:inline-block;background:#C9963A;color:#14213A;font-weight:700;font-size:40px;border-radius:999px;padding:6px 26px}
+.cap h2{font-size:72px;line-height:1.2;margin-top:22px}
+.cap p{font-size:40px;line-height:1.45;margin-top:14px;opacity:.85}
+.phone{position:absolute;left:50%;top:560px;width:620px;height:1300px;margin-left:-310px;border-radius:70px;background:#0A1120;padding:14px;box-shadow:0 50px 120px rgba(0,0,0,.45)}
+.phone img{width:100%;height:100%;object-fit:cover;object-position:top;border-radius:58px;display:block}
+.note{position:absolute;bottom:30px;left:0;right:0;text-align:center;font-size:28px;opacity:.7}
+.card{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 90px}
+.card h1{font-size:120px;line-height:1.15}.card .sub{font-size:52px;margin-top:30px;opacity:.9}.card .gold{color:#C9963A}
+.pill{display:inline-block;margin-top:50px;border:4px solid #C9963A;color:#C9963A;border-radius:999px;padding:14px 40px;font-size:40px;font-weight:700}
+.sc{position:absolute;inset:0}
+</style></head><body>
+<div id="bg"></div><div class="pat"></div>
+<div id="root"></div>
+<div class="note" id="note">* لقطات ببيانات تجريبية</div>
+<script>
+const S=[
+ {t:0,d:4,card:'<h1>جديد بالعقود</h1><div class="sub">عقدك أنت، <span class="gold">ببنودك أنت</span></div>'},
+ {t:4,d:6.5,img:'1-box',n:'1',h:'استورد عقدك (Word)',p:'الإعدادات ← نموذج العقد. ينقرا على جوالك بس.'},
+ {t:10.5,d:6.5,img:'2-map',n:'2',h:'اكتب بيانات عقدك القديم',p:'اسم المستأجر، الإيجار، الهاتف… مثل ما هي مكتوبة.'},
+ {t:17,d:6,img:'3-fields',n:'3',h:'تتبدّل بخانات',p:'«حوّل لخانات» ← راجع النص ← احفظ النموذج.'},
+ {t:23,d:6,img:'4-contract',n:'4',h:'كل مستأجر: عقدك وباسمه',p:'نفس بنودك، والبيانات تتعبّى من الوحدة.'},
+ {t:29,d:6,img:'5-sign',n:'5',h:'اعتمد العقد',p:'يثبت بهالبيانات — ورفع العقد الموقّع يعتمده بعد.'},
+ {t:35,d:6.5,img:'6-changed',n:'6',h:'تغيّرت البيانات؟',p:'العقد المعتمد ما يتغيّر. وعقد جديد بضغطة.'},
+ {t:41.5,d:6.5,img:'7-archive',n:'7',h:'العقود السابقة',p:'تنحفظ مع ملفها الموقّع، وتحذفها لما تبي.',pos:'bottom'},
+ {t:48,d:4.5,card:'<h1 style="font-size:96px">Word بس الحين</h1><div class="sub">PDF؟ صدّره Word من برنامج العقد</div><div class="pill">قيد التطوير · نسخة تجريبية</div>'},
+];
+const LEN=52.5;
+const root=document.getElementById('root');
+S.forEach((s,i)=>{const e=document.createElement('div');e.className='sc';e.id='s'+i;
+ e.innerHTML=s.card?`<div class="card">${s.card}</div>`:`<div class="cap"><span class="n">${s.n}</span><h2>${s.h}</h2><p>${s.p}</p></div><div class="phone"><img src="shots/${s.img}.png" style="object-position:${s.pos||'top'}"></div>`;
+ root.appendChild(e);});
+const ease=x=>1-Math.pow(1-Math.min(1,Math.max(0,x)),3);
+window.render=t=>{S.forEach((s,i)=>{const e=document.getElementById('s'+i);const a=(t-s.t)/0.45,b=(s.t+s.d-t)/0.35;const o=Math.max(0,Math.min(1,a,b));e.style.opacity=o;e.style.display=o>0?'block':'none';
+ const ph=e.querySelector('.phone');if(ph)ph.style.transform=`translateY(${(1-ease(a))*80}px) scale(${1+0.02*Math.min(1,(t-s.t)/s.d)})`;
+ const c=e.querySelector('.cap,.card');if(c)c.style.transform=`translateY(${(1-ease(a*1.3))*30}px)`;});
+ document.getElementById('note').style.opacity=S.some(s=>s.img&&t>=s.t&&t<s.t+s.d)?.7:0;};
+window.LEN=LEN;render(0);
+</script></body></html>
