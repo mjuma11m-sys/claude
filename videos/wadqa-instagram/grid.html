@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>قوالب إنستقرام ودقة</title>
+<style>
+/* هوية إنستقرام ودقة (ديوانية 2026-10-27): نفس ألوان الموقع وخطوطه. كل إطار يتصوّر لحاله بـ render.cjs */
+@font-face { font-family: Display; src: url("../../.claude/skills/video-ad-editor/motion/fonts/Tajawal-Black.ttf"); }
+@font-face { font-family: Body; src: url("../../.claude/skills/video-ad-editor/motion/fonts/IBMPlexSansArabic-Regular.ttf"); }
+@font-face { font-family: Body; font-weight: 700; src: url("../../.claude/skills/video-ad-editor/motion/fonts/IBMPlexSansArabic-Bold.ttf"); }
+:root { --ink: #0B1514; --slate: #1C2B2A; --line: #2c403e; --bone: #F2EBDD; --mist: #8FA09C; --gold: #C8A04A; --coral: #FF6B4A; --teal: #13636B; }
+* { box-sizing: border-box; margin: 0; }
+body { background: #444; display: flex; flex-wrap: wrap; gap: 40px; padding: 40px; font-family: Body, sans-serif; }
+.f { position: relative; overflow: hidden; }
+.post { width: 1080px; height: 1350px; }
+.story { width: 1080px; height: 1920px; }
+.dark { background: var(--ink); color: var(--bone); }
+.light { background: var(--bone); color: var(--ink); }
+.logo { position: absolute; top: 70px; right: 80px; display: flex; gap: 16px; align-items: center; font: 900 40px Display; }
+.logo svg { width: 54px; height: 54px; }
+.foot { position: absolute; bottom: 64px; right: 80px; left: 80px; display: flex; justify-content: space-between; align-items: center; font: 700 28px Body; color: var(--mist); }
+.light .foot { color: #6b6455; }
+.pill { background: var(--gold); color: var(--ink); border-radius: 99px; padding: 8px 24px; font: 700 26px Body; }
+.eyebrow { font: 700 36px Body; color: var(--gold); }
+.light .eyebrow { color: #7A5A12; }
+h1 { font: 900 96px/1.15 Display; }
+h2 { font: 900 78px/1.2 Display; }
+p.lead { font: 400 42px/1.6 Body; }
+.dark p.lead { color: #D9D2C2; }
+.content { position: absolute; top: 200px; right: 80px; left: 80px; display: flex; flex-direction: column; gap: 34px; }
+.phone { width: 380px; height: 640px; border-radius: 52px; border: 12px solid #26302f; overflow: hidden; align-self: center; box-shadow: 0 30px 90px #0009; }
+.phone img { width: 100%; display: block; }
+.demo { font: 400 26px Body; color: var(--mist); text-align: center; }
+.story h1 { font-size: 150px; }
+.story p.lead { font-size: 60px; }
+.story .eyebrow { font-size: 52px; }
+.story .logo { top: 220px; }
+.big { font: 900 300px/1 Display; color: var(--gold); direction: ltr; text-align: right; }
+.light .big { color: var(--teal); }
+.rows { display: grid; gap: 20px; }
+.r { display: flex; justify-content: space-between; align-items: center; background: var(--slate); border-radius: 28px; padding: 30px 40px; font: 700 44px Body; }
+.r b { font: 900 76px Display; direction: ltr; color: var(--coral); }
+.r b.ok { color: #4FC79E; }
+.center { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+.hl { width: 1080px; height: 1920px; background: var(--ink); }
+.hl .ring { width: 640px; height: 640px; border-radius: 50%; background: var(--slate); border: 10px solid var(--gold); display: grid; place-items: center; font: 900 260px Display; color: var(--bone); }
+.hl .ring img { width: 70%; border-radius: 22%; }
+.num { direction: ltr; unicode-bidi: isolate; }
+</style><style>
+.g .content { top:260px; gap:40px; }
+.g h1 { font-size:120px; } .g h2 { font-size:92px; } .g p.lead { font-size:48px; }
+.bigdrop { position:absolute; top:150px; left:0; right:0; height:640px; display:grid; place-items:center; }
+.bigdrop svg { width:440px; height:440px; color:var(--bone); }
+.vals { display:grid; gap:26px; }
+.v { display:flex; gap:28px; align-items:center; background:#fff8; border-radius:28px; padding:28px 36px; font:700 46px Body; }
+.v i { font-style:normal; font-size:60px; }
+.app { display:flex; gap:30px; align-items:center; }
+.app img.ic { width:150px; border-radius:36px; }
+.shot { width:290px; height:500px; border-radius:46px; border:11px solid #26302f; overflow:hidden; align-self:center; box-shadow:0 26px 80px #0007; }
+.shot img { width:100%; display:block; }
+.apps6 { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+.apps6 span { background:#fff9; border-radius:30px; padding:26px 10px; text-align:center; font:700 36px Body; text-decoration:line-through; color:#8a8172; }
+.arrow { font:900 90px Display; color:var(--teal); text-align:center; }
+.one { display:flex; gap:24px; align-items:center; justify-content:center; font:900 70px Display; }
+.one img { width:130px; border-radius:30px; }
+</style></head><body>
+<template id="logo"><svg viewBox="0 0 512 512"><path d="M256 104C256 104 160 228 160 310A96 96 0 0 0 352 310C352 228 256 104 256 104Z" fill="none" stroke="currentColor" stroke-width="28"/><circle cx="256" cy="316" r="38" fill="#C8A04A"/></svg></template><div class="f post dark g" id="g1-intro"><div class="bigdrop"><i data-logo></i></div><div class="content" style="top:auto;bottom:250px"><h1>مرحبا،<br>إحنا ودقة.</h1><p class="lead">نبني تطبيقات بحرينية بالعربي أول.</p></div><div class="foot"><span class="pill">قيد التطوير · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div><div class="f post light g" id="g2-values"><div class="logo"><i data-logo></i>ودقة</div><div class="content"><div class="eyebrow">ودقة · وش نأمن فيه</div><h2>ثلاث قواعد<br>ما نكسرها</h2><div class="vals"><div class="v"><i>ع</i>العربي أول، مو ترجمة</div><div class="v"><i>🤝</i>صراحة: لا وعود ولا تجميل</div><div class="v"><i>🔒</i>بياناتك بجهازك أول</div></div></div><div class="foot"><span class="pill">قيد التطوير · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div><div class="f post dark g" id="g3-idarati"><div class="logo"><i data-logo></i>ودقة</div><div class="content"><div class="app"><img class="ic" src="idarati-icon.png" alt=""><div><div class="eyebrow">تطبيقنا الثاني</div><h2>إداراتي</h2></div></div><p class="lead">إيجارات العائلة وميزانيتها بمكان واحد. تنجرّب على الويب.</p><div class="shot"><img src="idarati-tenants.jpg" alt=""></div><div class="demo">* لقطات ببيانات تجريبية</div></div><div class="foot"><span class="pill">قيد التطوير · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div><div class="f post light g" id="g4-hayati"><div class="logo"><i data-logo></i>ودقة</div><div class="content"><div class="app"><img class="ic" src="hayati-icon.png" alt=""><div><div class="eyebrow">تطبيقنا الأول</div><h2>حياتي</h2></div></div><p class="lead">يومك بمكان واحد: فلوسك، دراستك، عبادتك، ومهامك.</p><div class="shot"><img src="hayati-today.jpg" alt=""></div><div class="demo" style="color:#6b6455">* لقطات ببيانات تجريبية</div></div><div class="foot"><span class="pill">قيد التطوير · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div><div class="f post light g" id="g6-sixtoone"><div class="logo"><i data-logo></i>ودقة</div><div class="content"><div class="eyebrow">حياتي · ليش؟</div><h2>من 6 تطبيقات<br>لتطبيق واحد</h2><div class="apps6"><span>البنك</span><span>الملاحظات</span><span>التقويم</span><span>المهام</span><span>المسبحة</span><span>الجدول</span></div><div class="arrow">↓</div><div class="one"><img src="hayati-icon.png" alt="">حياتي</div></div><div class="foot"><span class="pill">قيد التطوير · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div><div class="f post light g" id="g8-testers"><div class="logo"><i data-logo></i>ودقة</div><div class="content"><div class="eyebrow">نبيك 🫵</div><h1 style="font-size:130px">كن مختبر<br>«حياتي»</h1><p class="lead">12 شخص يجربونه على جوالاتهم 14 يوم قبل الكل، ويقولون لنا وش ما اشتغل. بدون فلوس.</p><div style="font:700 46px Body;background:var(--ink);color:var(--bone);border-radius:28px;padding:28px 40px;text-align:center">الرابط بالبايو 👆</div></div><div class="foot"><span class="pill">قيد التطوير · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div><script>
+const svg = document.getElementById('logo').innerHTML;
+document.querySelectorAll('[data-logo]').forEach((el) => { el.outerHTML = svg; });
+</script></body></html>
