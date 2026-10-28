@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 88,
+  "next": 89,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -696,6 +696,14 @@
       "owner": "CEO",
       "priority": "P3",
       "status": "blocked",
+      "opened": "2026-10-28",
+      "updated": "2026-10-28"
+    },
+    "DW-088": {
+      "title": "حساب منظمة لحياتي: سجل تجاري + D-U-N-S + Google Play/Apple باسم الشركة",
+      "owner": "CEO",
+      "priority": "P1",
+      "status": "new",
       "opened": "2026-10-28",
       "updated": "2026-10-28"
     }
