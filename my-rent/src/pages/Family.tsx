@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 import { useEffect, useState } from "react";
 import { useStore } from "../data/store";
 import { loadSyncConfig } from "../data/sync";
@@ -30,34 +31,34 @@ export function FamilyMembers() {
   };
   useEffect(() => { void load(); }, [s.familyId]);
 
-  const label = (id: string) => { const x = members?.find((m) => m.user_id === id); return id === me ? "أنت" : x?.display_name || (x?.role === "owner" ? "المالك" : "عضو"); };
+  const label = (id: string) => { const x = members?.find((m) => m.user_id === id); return id === me ? t("أنت") : x?.display_name || (x?.role === "owner" ? t("المالك") : t("عضو")); };
 
   return (
     <div className="stack family-box" id="family-box">
       <div className="sync-box stack">
-        <label className="field"><span>اسمك داخل العائلة <span className="muted small">يشوفه أعضاء العائلة بس</span></span>
-          <div className="bill-add"><input id="my-name" className="input" maxLength={40} value={name} onChange={(e) => setName(e.target.value)} placeholder="أبو جعفر" />
-            <button type="button" className="btn btn-ghost press" onClick={async () => { try { const { m, sb } = await client(); await m.setMyName(sb, s.familyId, name); toast({ text: "انحفظ اسمك" }); void load(); } catch (e) { setError(e instanceof Error ? e.message : String(e)); } }}>احفظ</button></div>
+        <label className="field"><span>{t("اسمك داخل العائلة")} <span className="muted small">{t("يشوفه أعضاء العائلة بس")}</span></span>
+          <div className="bill-add"><input id="my-name" className="input" maxLength={40} value={name} onChange={(e) => setName(e.target.value)} placeholder={t("أبو جعفر")} />
+            <button type="button" className="btn btn-ghost press" onClick={async () => { try { const { m, sb } = await client(); await m.setMyName(sb, s.familyId, name); toast({ text: t("انحفظ اسمك") }); void load(); } catch (e) { setError(e instanceof Error ? e.message : String(e)); } }}>{t("احفظ")}</button></div>
         </label>
       </div>
       {members && members.length > 0 && (
-        <ul className="rows card-list" id="members-list" aria-label="الأعضاء">
+        <ul className="rows card-list" id="members-list" aria-label={t("الأعضاء")}>
           {members.map((x) => (
             <li key={x.user_id} className="bill-row">
-              <span>{x.user_id === me ? "أنت" : x.display_name || "عضو"} <span className="muted small">· {x.role === "owner" ? "المالك" : x.can_edit ? "يعدّل" : "مشاهدة بس"}</span></span>
+              <span>{x.user_id === me ? t("أنت") : x.display_name || t("عضو")} <span className="muted small">· {x.role === "owner" ? t("المالك") : x.can_edit ? t("يعدّل") : t("مشاهدة بس")}</span></span>
               {s.role === "owner" && x.role !== "owner" && (
                 <button type="button" className="link press" onClick={async () => {
-                  try { const { m, sb } = await client(); await m.setMemberAccess(sb, s.familyId, x.user_id, !x.can_edit); toast({ text: x.can_edit ? "صار مشاهدة بس" : "صار يقدر يعدّل" }); void load(); }
+                  try { const { m, sb } = await client(); await m.setMemberAccess(sb, s.familyId, x.user_id, !x.can_edit); toast({ text: x.can_edit ? t("صار مشاهدة بس") : t("صار يقدر يعدّل") }); void load(); }
                   catch (e) { setError(e instanceof Error ? e.message : String(e)); }
-                }}>{x.can_edit ? "خلّه مشاهدة بس" : "خلّه يعدّل"}</button>
+                }}>{x.can_edit ? t("خلّه مشاهدة بس") : t("خلّه يعدّل")}</button>
               )}
             </li>
           ))}
         </ul>
       )}
       <details className="activity" onToggle={(e) => { if ((e.target as HTMLDetailsElement).open && !log) void client().then(({ m, sb }) => m.recentEvents(sb, s.familyId)).then(setLog).catch((err) => setError(String(err?.message ?? err))); }}>
-        <summary className="strong">سجل النشاط <span className="muted small">· مين سجّل شنو</span></summary>
-        {!log ? <p className="muted small">يحمّل…</p> : log.length === 0 ? <p className="muted small">ما فيه نشاط للحين.</p> : (
+        <summary className="strong">{t("سجل النشاط")} <span className="muted small">{t("· مين سجّل شنو")}</span></summary>
+        {!log ? <p className="muted small">{t("يحمّل…")}</p> : log.length === 0 ? <p className="muted small">{t("ما فيه نشاط للحين.")}</p> : (
           <ul className="rows card-list" id="activity-list">
             {log.map((r) => (
               <li key={r.id} className="bill-row"><span>{describeAction(r.action, data)}</span><span className="muted small">{label(r.user_id)} · <span className="num">{when(r.created_at)}</span></span></li>

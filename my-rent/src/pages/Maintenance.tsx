@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 import { useStore } from "../data/store";
 import { useStagger } from "../theme/motion";
 import { DemoNote, SkeletonCards } from "../ui/kit";
@@ -11,7 +12,7 @@ export function Maintenance() {
   const done = data.tasks.filter((t) => t.done);
   return (
     <div className="stack-lg">
-      <p className="muted" style={{ margin: 0 }}><span className="num">{open.length}</span> مهام مفتوحة</p>
+      <p className="muted" style={{ margin: 0 }}><span className="num">{open.length}</span> {t("مهام مفتوحة")}</p>
       {loading ? <SkeletonCards n={3} /> : (
         <ul className="rows rows-tap card-list">
           {[...open, ...done].map((t, i) => {

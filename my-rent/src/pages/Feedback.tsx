@@ -8,7 +8,7 @@ export function Feedback() {
   const [ease, setEase] = useState<number | null>(null);
   const [bad, setBad] = useState("");
   const [missing, setMissing] = useState("");
-  const text = `رأيي بإداراتي (نسخة تجريبية):\n• سهل الاستخدام: ${ease ?? "—"} من 5\n• شنو ضايقني: ${bad.trim() || "—"}\n• شنو ناقص: ${missing.trim() || "—"}`;
+  const text = t("رأيي بإداراتي (نسخة تجريبية):\n• سهل الاستخدام: {v1} من 5\n• شنو ضايقني: {v2}\n• شنو ناقص: {v3}", { v1: ease ?? "—", v2: bad.trim() || "—", v3: missing.trim() || "—" });
   const url = `https://wa.me/${TO}?text=${encodeURIComponent(text)}`;
   return (
     <section className="card stack" aria-labelledby="fb-h" id="feedback">

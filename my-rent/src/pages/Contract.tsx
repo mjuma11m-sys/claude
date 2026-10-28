@@ -35,12 +35,12 @@ export function ContractSheet({ unit, onClose }: { unit: Unit | null; onClose: (
   const sign = (fresh: boolean) => {
     if (!u) return;
     signContract(u.id);
-    toast({ text: fresh ? "انعتمد عقد جديد، والقديم راح «العقود السابقة»" : "انعتمد العقد — يظل بهالبيانات حتى لو تعدّلت" });
+    toast({ text: fresh ? t("انعتمد عقد جديد، والقديم راح «العقود السابقة»") : t("انعتمد العقد — يظل بهالبيانات حتى لو تعدّلت") });
   };
 
   const share = async () => {
     try {
-      if ((await shareText("عقد إيجار", text)) === "copied") toast({ text: "انسخ العقد، الصقه وين ما تبي" });
+      if ((await shareText("عقد إيجار", text)) === "copied") toast({ text: t("انسخ العقد، الصقه وين ما تبي") });
     } catch { /* سكّر المشاركة */ }
   };
 
@@ -59,16 +59,16 @@ export function ContractSheet({ unit, onClose }: { unit: Unit | null; onClose: (
       if (!act && u.tenant) signContract(u.id); // الرفع = توقيع: يعتمد العقد لو ما انعتمد
       saveUnit({ ...u, contractFile: { id, name: f.name, type: f.type, size: f.size, tenant: u.tenant?.name ?? "", uploadedAt: isoDay(new Date()), path } });
       if (before && !moved) void removeFile(before.id, before.path); // نفس العقد: الملف القديم ينبدل
-      toast({ text: path ? "انحفظ العقد الموقّع بالسحابة" : "انحفظ العقد الموقّع على هالجهاز" });
+      toast({ text: path ? t("انحفظ العقد الموقّع بالسحابة") : t("انحفظ العقد الموقّع على هالجهاز") });
     } catch {
-      setError("ما قدرنا نحفظ الملف على هالجهاز");
+      setError(t("ما قدرنا نحفظ الملف على هالجهاز"));
     } finally { setBusy(false); }
   };
 
   const view = async (f: ContractFile | undefined = cf) => {
     if (!f) return;
     const blob = await fetchFile(f.id, f.path);
-    if (!blob) return setError(f.path ? "ما قدرنا نجيب الملف من السحابة. تأكد من النت" : "الملف محفوظ على جهاز ثاني");
+    if (!blob) return setError(f.path ? t("ما قدرنا نجيب الملف من السحابة. تأكد من النت") : t("الملف محفوظ على جهاز ثاني"));
     await openFile(f.name, blob);
   };
 
@@ -77,74 +77,74 @@ export function ContractSheet({ unit, onClose }: { unit: Unit | null; onClose: (
     const { contractFile: _drop, ...rest } = u;
     saveUnit(rest);
     await removeFile(cf.id, cf.path);
-    toast({ text: "انحذف ملف العقد" });
+    toast({ text: t("انحذف ملف العقد") });
   };
 
   return (
-    <Sheet open={!!unit} onClose={onClose} title="العقد">
+    <Sheet open={!!unit} onClose={onClose} title={t("العقد")}>
       {u && (
         <div className="stack">
           {u.tenant && (act ? (
             <div className="sync-box stack" id="contract-status">
-              <div className="strong">✓ العقد المعتمد <span className="muted small">· <bdi className="num">{act.signedAt}</bdi></span></div>
+              <div className="strong">{t("✓ العقد المعتمد")} <span className="muted small">· <bdi className="num">{act.signedAt}</bdi></span></div>
               {changes.length ? (
                 <>
-                  <div className="field-error" id="contract-changed">تغيّرت بعد الاعتماد: {changes.join("، ")}. العقد المعتمد يظل بالبيانات القديمة.</div>
-                  <button className="btn press" id="contract-renew" onClick={() => sign(true)}>عقد جديد بالبيانات الحالية</button>
+                  <div className="field-error" id="contract-changed">{t("تغيّرت بعد الاعتماد:")} {changes.join(t("، "))}{t(". العقد المعتمد يظل بالبيانات القديمة.")}</div>
+                  <button className="btn press" id="contract-renew" onClick={() => sign(true)}>{t("عقد جديد بالبيانات الحالية")}</button>
                 </>
-              ) : <p className="muted small" style={{ margin: 0 }}>نسخة ثابتة: لو عدّلت بيانات المستأجر بعدين، هالعقد ما يتغيّر.</p>}
+              ) : <p className="muted small" style={{ margin: 0 }}>{t("نسخة ثابتة: لو عدّلت بيانات المستأجر بعدين، هالعقد ما يتغيّر.")}</p>}
             </div>
           ) : (
             <div className="sync-box stack" id="contract-status">
-              <div className="strong">مسودة — ما انعتمدت</div>
-              <p className="muted small" style={{ margin: 0 }}>تتعبّى من بيانات الوحدة الحين. لما توقّعون، اعتمدها عشان تثبت بهالبيانات.</p>
-              <button className="btn press" id="contract-sign" onClick={() => sign(false)}>اعتمد العقد</button>
+              <div className="strong">{t("مسودة — ما انعتمدت")}</div>
+              <p className="muted small" style={{ margin: 0 }}>{t("تتعبّى من بيانات الوحدة الحين. لما توقّعون، اعتمدها عشان تثبت بهالبيانات.")}</p>
+              <button className="btn press" id="contract-sign" onClick={() => sign(false)}>{t("اعتمد العقد")}</button>
             </div>
           ))}
           {u.tenant && (<>
           <div className="sync-box stack contract-file">
-            <div className="strong">العقد الموقّع</div>
+            <div className="strong">{t("العقد الموقّع")}</div>
             {cf ? (
               <>
-                <div className="small">{cf.name} <span className="muted num">· {kb(cf.size)} · {cf.uploadedAt}</span> <span className="muted">· {cf.path ? "بالسحابة" : "على هالجهاز"}</span></div>
-                {oldTenant && <div className="field-error">هالملف لمستأجر سابق ({cf.tenant}). ارفع عقد {u.tenant?.name}.</div>}
+                <div className="small">{cf.name} <span className="muted num">· {kb(cf.size)} · {cf.uploadedAt}</span> <span className="muted">· {cf.path ? t("بالسحابة") : t("على هالجهاز")}</span></div>
+                {oldTenant && <div className="field-error">{t("هالملف لمستأجر سابق (")}{cf.tenant}{t("). ارفع عقد")} {u.tenant?.name}.</div>}
                 <div className="grid-2">
-                  <button className="btn press" onClick={() => void view()}>افتح الملف</button>
-                  <button className="btn btn-ghost press danger-text" onClick={remove}>احذفه</button>
+                  <button className="btn press" onClick={() => void view()}>{t("افتح الملف")}</button>
+                  <button className="btn btn-ghost press danger-text" onClick={remove}>{t("احذفه")}</button>
                 </div>
               </>
-            ) : <p className="muted small" style={{ margin: 0 }}>ما فيه ملف. بعد التوقيع صوّر العقد أو ارفعه PDF.</p>}
-            <button className="btn btn-ghost press" disabled={busy} onClick={() => file.current?.click()}>{busy ? "يرفع…" : cf ? "بدّل الملف" : "ارفع العقد الموقّع"}</button>
-            <p className="muted small" style={{ margin: 0 }}>الملف فيه بيانات شخصية (مثل الـ CPR والتوقيع): ينحفظ بشكل خاص ويشوفه بس أنت واللي تدعيهم. PDF أو صورة، 10MB كحد أقصى.</p>
+            ) : <p className="muted small" style={{ margin: 0 }}>{t("ما فيه ملف. بعد التوقيع صوّر العقد أو ارفعه PDF.")}</p>}
+            <button className="btn btn-ghost press" disabled={busy} onClick={() => file.current?.click()}>{busy ? t("يرفع…") : cf ? t("بدّل الملف") : t("ارفع العقد الموقّع")}</button>
+            <p className="muted small" style={{ margin: 0 }}>{t("الملف فيه بيانات شخصية (مثل الـ CPR والتوقيع): ينحفظ بشكل خاص ويشوفه بس أنت واللي تدعيهم. PDF أو صورة، 10MB كحد أقصى.")}</p>
             <input ref={file} id="contract-file" type="file" accept={ACCEPT} hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void upload(f); e.target.value = ""; }} />
             {error && <div className="field-error" role="alert">{error}</div>}
           </div>
 
           <div className="receipt contract" id="contract">
             <div className="receipt-top">
-              <img src={logoUrl} alt="إداراتي" height={30} />
+              <img src={logoUrl} alt={t("إداراتي")} height={30} />
               <div className="num muted small">{act?.signedAt ?? isoDay(new Date())}</div>
             </div>
             <pre className="contract-text">{text}</pre>
           </div>
-          <p className="muted small" style={{ margin: 0 }}>نموذج عام من نصك بالإعدادات، مو استشارة قانونية. راجعه مع محامي، وسجّل العقد بالجهة الرسمية المختصة.</p>
+          <p className="muted small" style={{ margin: 0 }}>{t("نموذج عام من نصك بالإعدادات، مو استشارة قانونية. راجعه مع محامي، وسجّل العقد بالجهة الرسمية المختصة.")}</p>
           <div className="grid-2">
-            {canPrint() && <button className="btn press" onClick={() => window.print()}>طباعة / PDF</button>}
-            <button className="btn btn-ghost press" onClick={share}>مشاركة النص</button>
+            {canPrint() && <button className="btn press" onClick={() => window.print()}>{t("طباعة / PDF")}</button>}
+            <button className="btn btn-ghost press" onClick={share}>{t("مشاركة النص")}</button>
           </div>
           </>)}
 
           {past.length > 0 && (
             <div className="stack" id="contract-archive">
-              <div className="strong">العقود السابقة ({past.length})</div>
+              <div className="strong">{t("العقود السابقة (")}{past.length})</div>
               {past.map((c) => (
                 <details key={c.id} className="sync-box archive-item">
-                  <summary><span className="strong">{c.tenant || "—"}</span> <span className="muted small">· من <bdi className="num">{c.signedAt}</bdi> لين <bdi className="num">{c.endedAt}</bdi></span></summary>
+                  <summary><span className="strong">{c.tenant || "—"}</span> <span className="muted small">{t("· من")} <bdi className="num">{c.signedAt}</bdi> {t("لين")} <bdi className="num">{c.endedAt}</bdi></span></summary>
                   <div className="stack" style={{ marginTop: 10 }}>
-                    {c.text ? <pre className="contract-text">{c.text}</pre> : <p className="muted small" style={{ margin: 0 }}>عقد قبل الأرشيف: الملف الموقّع بس.</p>}
+                    {c.text ? <pre className="contract-text">{c.text}</pre> : <p className="muted small" style={{ margin: 0 }}>{t("عقد قبل الأرشيف: الملف الموقّع بس.")}</p>}
                     <div className="grid-2">
-                      {c.file && <button className="btn press" onClick={() => void view(c.file)}>افتح الملف الموقّع</button>}
-                      <button className="btn btn-ghost press danger-text" onClick={() => { removeContract(c.id); toast({ text: "انحذف العقد من الأرشيف" }); }}>احذفه من الأرشيف</button>
+                      {c.file && <button className="btn press" onClick={() => void view(c.file)}>{t("افتح الملف الموقّع")}</button>}
+                      <button className="btn btn-ghost press danger-text" onClick={() => { removeContract(c.id); toast({ text: t("انحذف العقد من الأرشيف") }); }}>{t("احذفه من الأرشيف")}</button>
                     </div>
                   </div>
                 </details>
@@ -177,17 +177,17 @@ export function ContractTemplateEditor() {
     setImpErr(""); setResult("");
     const r = await readContractFile(f);
     if ("error" in r) return setImpErr(r.error);
-    if (!r.text) return setImpErr("الملف فاضي");
+    if (!r.text) return setImpErr(t("الملف فاضي"));
     setTpl(r.text); setMapping(true); setVals({});
-    toast({ text: "انقرا عقدك. الحين حوّل بياناته لخانات" });
+    toast({ text: t("انقرا عقدك. الحين حوّل بياناته لخانات") });
   };
   const applyMap = () => {
     const r = templatize(tpl, MAP_FIELDS.map((field) => ({ field, value: vals[field] ?? "" })));
     setTpl(r.text);
-    if (vals["المالك"]?.trim() && !owner.trim()) setOwner(vals["المالك"].trim()); // اسم المؤجر من عقده
+    if (vals[t("المالك")]?.trim() && !owner.trim()) setOwner(vals[t("المالك")].trim()); // اسم المؤجر من عقده
     const done = Object.entries(r.counts);
     const miss = done.filter(([, n]) => !n).map(([f]) => f);
-    setResult(done.filter(([, n]) => n).map(([f, n]) => `{${f}} × ${n}`).join(" · ") + (miss.length ? ` — ما لقينا: ${miss.join("، ")}` : ""));
+    setResult(done.filter(([, n]) => n).map(([f, n]) => `{${f}} × ${n}`).join(" · ") + (miss.length ? t(" — ما لقينا: {v1}", { v1: miss.join(t("، ")) }) : ""));
     if (!miss.length) setMapping(false);
   };
   const dirty = tpl !== (data.contractTemplate ?? DEFAULT_CONTRACT) || owner !== (data.contractOwner ?? "");
@@ -207,22 +207,22 @@ export function ContractTemplateEditor() {
       <p className="muted small" style={{ margin: 0 }}>{t("تكتبه مرة وحدة. مع كل مستأجر جديد تتعبّى الخانات بروحها من بيانات الوحدة. نموذج عام، راجعه مع محامي.")}{isEn() && " The contract itself is an Arabic document for the tenant."}</p>
       <label className="field"><span>{t("اسم المؤجر (يطلع بالعقد)")}</span><input id="ct-owner" className="input" value={owner} onChange={(e) => setOwner(e.target.value)} /></label>
       <div className="sync-box stack" id="ct-import-box">
-        <div className="strong">عندك عقدك الخاص؟</div>
-        <p className="muted small" style={{ margin: 0 }}>ارفعه Word (.docx) — ينقرا على جهازك بس، وبنوده تصير نموذجك. بعدها تكتب بياناته القديمة (اسم المستأجر، الإيجار…) وتتبدّل بخانات تتعبّى مع كل مستأجر.</p>
-        <button type="button" className="btn btn-ghost press" onClick={() => imp.current?.click()}>استورد عقدك (Word)</button>
+        <div className="strong">{t("عندك عقدك الخاص؟")}</div>
+        <p className="muted small" style={{ margin: 0 }}>{t("ارفعه Word (.docx) — ينقرا على جهازك بس، وبنوده تصير نموذجك. بعدها تكتب بياناته القديمة (اسم المستأجر، الإيجار…) وتتبدّل بخانات تتعبّى مع كل مستأجر.")}</p>
+        <button type="button" className="btn btn-ghost press" onClick={() => imp.current?.click()}>{t("استورد عقدك (Word)")}</button>
         <input ref={imp} id="ct-import" type="file" accept={IMPORT_ACCEPT} hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void importFile(f); e.target.value = ""; }} />
         {impErr && <div className="field-error" role="alert">{impErr}</div>}
         {mapping && (
           <div className="stack" id="ct-map">
-            <div className="strong">حوّل البيانات لخانات</div>
-            <p className="muted small" style={{ margin: 0 }}>اكتب كل قيمة مثل ما هي مكتوبة بعقدك بالضبط. اللي ما بعقدك خلّه فاضي.</p>
+            <div className="strong">{t("حوّل البيانات لخانات")}</div>
+            <p className="muted small" style={{ margin: 0 }}>{t("اكتب كل قيمة مثل ما هي مكتوبة بعقدك بالضبط. اللي ما بعقدك خلّه فاضي.")}</p>
             {MAP_FIELDS.map((f) => (
-              <label key={f} className="field"><span>{f}</span><input className="input" data-map={f} value={vals[f] ?? ""} onChange={(e) => setVals({ ...vals, [f]: e.target.value })} /></label>
+              <label key={f} className="field"><span>{t(f)}</span><input className="input" data-map={f} value={vals[f] ?? ""} onChange={(e) => setVals({ ...vals, [f]: e.target.value })} /></label>
             ))}
-            <button type="button" className="btn press" id="ct-map-apply" onClick={applyMap}>حوّل لخانات</button>
+            <button type="button" className="btn press" id="ct-map-apply" onClick={applyMap}>{t("حوّل لخانات")}</button>
           </div>
         )}
-        {result && <div className="small" id="ct-map-result" role="status">{result}. راجع النص تحت واحفظ.</div>}
+        {result && <div className="small" id="ct-map-result" role="status">{result}{t(". راجع النص تحت واحفظ.")}</div>}
       </div>
       <div className="ct-fields" aria-label={t("الخانات")}>
         {["المستأجر", "هاتف المستأجر", "الوحدة", "المبنى", "الإيجار", "يوم الاستحقاق", "بداية العقد", "نهاية العقد", "التأمين", "المالك", "تاريخ اليوم"].map((f) => (

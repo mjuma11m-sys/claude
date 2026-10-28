@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { LOCK_AFTER_MS, lockOn, unlock } from "../lock";
 import symbolUrl from "../../brand/symbol.svg";
@@ -34,10 +35,10 @@ export function LockGate({ children }: { children: ReactNode }) {
     <>
       {children}
       {(locked || hidden) && (
-        <div className="lock-screen" id="lock-screen" role="alertdialog" aria-modal="true" aria-label="إداراتي مقفل">
+        <div className="lock-screen" id="lock-screen" role="alertdialog" aria-modal="true" aria-label={t("إداراتي مقفل")}>
           <img src={symbolUrl} alt="" width={72} height={72} />
-          <p className="lock-title">إداراتي مقفل</p>
-          {locked && <button className="btn press" id="lock-open" onClick={() => void tryUnlock()}>افتح بالبصمة</button>}
+          <p className="lock-title">{t("إداراتي مقفل")}</p>
+          {locked && <button className="btn press" id="lock-open" onClick={() => void tryUnlock()}>{t("افتح بالبصمة")}</button>}
         </div>
       )}
     </>

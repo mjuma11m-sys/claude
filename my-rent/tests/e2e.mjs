@@ -1067,6 +1067,39 @@ try {
     await m.close();
   }
 
+  // 32) DW-049: الإنقليزية بكل الشاشات — أي نص عربي ظاهر لازم يكون من بيانات المستخدم (أو مستند للمستأجر)
+  {
+    const e = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const eErr = []; e.on("pageerror", (x) => eErr.push(x.message));
+    await e.goto(URL + "#home"); await e.evaluate(() => { localStorage.clear(); localStorage.setItem("idarati-lang", "en"); }); await e.reload(); await e.waitForTimeout(900);
+    const leftover = () => e.evaluate(() => {
+      const ds = new Set(); const walk = (v) => { if (typeof v === "string") { if (v.length > 1) ds.add(v); } else if (v && typeof v === "object") Object.values(v).forEach(walk); };
+      walk(JSON.parse(localStorage.getItem("idarati:v2") || "{}")); const list = [...ds].sort((a, b) => b.length - a.length);
+      const bad = new Set(); const tw = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      for (let n; (n = tw.nextNode());) {
+        const el = n.parentElement; if (!el || (!el.offsetParent && getComputedStyle(el).position !== "fixed")) continue;
+        if (el.closest(".contract-text, #contract, .receipt, [aria-labelledby=ct-h], .avatar, .member-ini")) continue; // مستندات المستأجر وأحرف أسماء الأعضاء
+        let s = n.textContent; if (!/[؀-ۿ]/.test(s)) continue;
+        for (const d of list) if (s.includes(d)) s = s.split(d).join(" ");
+        if (/[؀-ۿ]{2,}/.test(s) && !/اللغة|العربية/.test(s)) bad.add(s.trim().slice(0, 50));
+      }
+      return [...bad];
+    });
+    for (const h of ["home", "tenants", "track", "budget", "bank", "reports", "docs", "house", "settings", "vendors", "privacy"]) {
+      await e.goto(URL + "#" + h); await e.reload(); await e.waitForTimeout(700);
+      const l = await leftover(); ok(l.length === 0, `DW-049 English: ${h} بدون عربي بالواجهة`, l.slice(0, 4).join(" | "));
+    }
+    ok(await e.locator("#pv-en-note").isVisible(), "DW-049: السياسة بالإنقليزي فيها «العربي هو المعتمد»");
+    await e.goto(URL + "#tenants"); await e.reload(); await e.waitForTimeout(700);
+    await e.locator(".unit-card").first().click(); await e.waitForTimeout(450);
+    let l = await leftover(); ok(l.length === 0, "DW-049 English: نافذة الوحدة", l.slice(0, 4).join(" | "));
+    await e.getByRole("button", { name: /^Contract/ }).click(); await e.waitForTimeout(450);
+    l = await leftover(); ok(l.length === 0, "DW-049 English: نافذة العقد (غير نص العقد)", l.slice(0, 4).join(" | "));
+    ok((await e.locator(".contract-text").first().innerText()).includes("عقد"), "DW-049: نص العقد نفسه يظل عربي (مستند للمستأجر)");
+    ok(eErr.length === 0, "DW-049: بدون أخطاء", eErr.join(" | "));
+    await e.close();
+  }
+
   if (process.env.SHOTS) {
     for (const [n, w, h, s] of [["home-phone", 390, 844, "light"], ["home-dark", 390, 844, "dark"], ["home-desk", 1280, 800, "light"], ["tenants-tab", 820, 1180, "light"], ["budget-phone", 390, 844, "light"]]) {
       const q = await browser.newPage({ viewport: { width: w, height: h }, colorScheme: s });

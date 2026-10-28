@@ -33,7 +33,7 @@ export function Docs({ onOpen }: { onOpen: (d: Doc) => void }) {
 
   return (
     <div className="stack-lg docs">
-      <div className="doc-kpis" role="group" aria-label="حالة الوثائق">
+      <div className="doc-kpis" role="group" aria-label={t("حالة الوثائق")}>
         {(["ended", "soon", "active"] as DocState[]).map((s) => (
           <button key={s} className={`card kpi doc-kpi doc-kpi-${s} press`} aria-pressed={state === s} onClick={() => setState(state === s ? "all" : s)}>
             <b className="num">{n(s)}</b><span className="small">{DOC_LABEL[s]}</span>
@@ -41,9 +41,9 @@ export function Docs({ onOpen }: { onOpen: (d: Doc) => void }) {
         ))}
       </div>
       {all.length > 0 && (
-        <Chips<KindF> label="النوع" value={kind} onChange={setKind} options={[{ id: "all", label: "الكل", count: all.length }, ...DOC_KINDS.map((k) => ({ ...k, count: all.filter((d) => d.doc.kind === k.id).length })).filter((k) => k.count)]} />
+        <Chips<KindF> label={t("النوع")} value={kind} onChange={setKind} options={[{ id: "all", label: t("الكل"), count: all.length }, ...DOC_KINDS.map((k) => ({ ...k, count: all.filter((d) => d.doc.kind === k.id).length })).filter((k) => k.count)]} />
       )}
-      {all.length === 0 ? <EmptyState text="ما فيه وثائق. أضف السجل التجاري أو التأمين من زر +" /> : list.length === 0 ? <EmptyState text="ما فيه وثائق بهالتصفية." /> : (
+      {all.length === 0 ? <EmptyState text={t("ما فيه وثائق. أضف السجل التجاري أو التأمين من زر +")} /> : list.length === 0 ? <EmptyState text={t("ما فيه وثائق بهالتصفية.")} /> : (
         <ul className="rows rows-tap card-list" id="doc-list">
           {list.map(({ doc, state: s, left }, i) => {
             const st = stagger(i);
@@ -61,7 +61,7 @@ export function Docs({ onOpen }: { onOpen: (d: Doc) => void }) {
           })}
         </ul>
       )}
-      <p className="muted small" style={{ margin: 0 }}>للعقار والنشاط بس: سجلات، تأمين، رخص، شهادات. لا تحفظ هويات أو جوازات.</p>
+      <p className="muted small" style={{ margin: 0 }}>{t("للعقار والنشاط بس: سجلات، تأمين، رخص، شهادات. لا تحفظ هويات أو جوازات.")}</p>
       <DemoNote />
     </div>
   );
@@ -86,8 +86,8 @@ export function DocSheet({ value, onClose }: { value: { doc: Doc | null } | null
   }, [value]);
 
   const submit = async () => {
-    if (!f.title.trim()) return setError("اكتب اسم الوثيقة، مثل «سجل تجاري — محل 1»");
-    if (f.expires && !/^\d{4}-\d{2}-\d{2}$/.test(f.expires)) return setError("تاريخ الانتهاء مو صحيح");
+    if (!f.title.trim()) return setError(t("اكتب اسم الوثيقة، مثل «سجل تجاري — محل 1»"));
+    if (f.expires && !/^\d{4}-\d{2}-\d{2}$/.test(f.expires)) return setError(t("تاريخ الانتهاء مو صحيح"));
     let docFile = doc?.file;
     if (picked) {
       setBusy(true);
@@ -98,7 +98,7 @@ export function DocSheet({ value, onClose }: { value: { doc: Doc | null } | null
         try { path = await uploadCloud(id, picked, picked.name); } catch { /* يبقى محلي */ }
         if (doc?.file) void removeFile(doc.file.id, doc.file.path);
         docFile = { id, name: picked.name, type: picked.type, size: picked.size, uploadedAt: isoDay(new Date()), path };
-      } catch { setBusy(false); return setError("ما قدرنا نحفظ الملف على هالجهاز"); }
+      } catch { setBusy(false); return setError(t("ما قدرنا نحفظ الملف على هالجهاز")); }
       setBusy(false);
     }
     const saved = saveDoc({
@@ -107,50 +107,50 @@ export function DocSheet({ value, onClose }: { value: { doc: Doc | null } | null
       ...(f.expires ? { expires: f.expires } : {}), ...(docFile ? { file: docFile } : {}),
     });
     onClose();
-    toast({ text: doc ? `انحفظ تعديل ${saved.title}` : `انضافت ${saved.title}` });
+    toast({ text: doc ? t("انحفظ تعديل {v1}", { v1: saved.title }) : t("انضافت {v1}", { v1: saved.title }) });
   };
 
   const del = () => {
     if (!doc) return;
     const gone = removeDoc(doc.id);
     onClose();
-    if (gone) toast({ text: `انحذفت ${gone.title}`, undo: () => saveDoc(gone) });
+    if (gone) toast({ text: t("انحذفت {v1}", { v1: gone.title }), undo: () => saveDoc(gone) });
   };
 
   const view = async () => {
     if (!doc?.file) return;
     const blob = await fetchFile(doc.file.id, doc.file.path);
-    if (!blob) return setError(doc.file.path ? "ما قدرنا نجيب الملف من السحابة. تأكد من النت" : "الملف محفوظ على جهاز ثاني");
+    if (!blob) return setError(doc.file.path ? t("ما قدرنا نجيب الملف من السحابة. تأكد من النت") : t("الملف محفوظ على جهاز ثاني"));
     await openFile(doc.file.name, blob);
   };
 
   return (
-    <Sheet open={!!value} onClose={onClose} title={doc ? "تعديل الوثيقة" : "وثيقة جديدة"}>
+    <Sheet open={!!value} onClose={onClose} title={doc ? t("تعديل الوثيقة") : t("وثيقة جديدة")}>
       <form className="pay-form doc-form" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
-        <Chips<DocKind> label="النوع" value={f.kind} onChange={(kind) => setF({ ...f, kind })} options={DOC_KINDS} />
-        <label className="field"><span>اسم الوثيقة</span><input id="d-title" className="input" value={f.title} onChange={(e) => { setF({ ...f, title: e.target.value }); setError(""); }} placeholder="تأمين عمارة المالكية" /></label>
+        <Chips<DocKind> label={t("النوع")} value={f.kind} onChange={(kind) => setF({ ...f, kind })} options={DOC_KINDS} />
+        <label className="field"><span>{t("اسم الوثيقة")}</span><input id="d-title" className="input" value={f.title} onChange={(e) => { setF({ ...f, title: e.target.value }); setError(""); }} placeholder={t("تأمين عمارة المالكية")} /></label>
         <div className="grid-2 dates">
-          <label className="field"><span>تاريخ الانتهاء <span className="muted small">(فاضي = بدون)</span></span><input id="d-expires" className="input num" type="date" dir="ltr" value={f.expires} onChange={(e) => setF({ ...f, expires: e.target.value })} /></label>
-          <label className="field"><span>الرقم <span className="muted small">اختياري</span></span><input id="d-ref" className="input num" dir="ltr" value={f.ref} onChange={(e) => setF({ ...f, ref: e.target.value })} /></label>
+          <label className="field"><span>{t("تاريخ الانتهاء")} <span className="muted small">{t("(فاضي = بدون)")}</span></span><input id="d-expires" className="input num" type="date" dir="ltr" value={f.expires} onChange={(e) => setF({ ...f, expires: e.target.value })} /></label>
+          <label className="field"><span>{t("الرقم")} <span className="muted small">{t("اختياري")}</span></span><input id="d-ref" className="input num" dir="ltr" value={f.ref} onChange={(e) => setF({ ...f, ref: e.target.value })} /></label>
         </div>
-        <label className="field"><span>الوحدة <span className="muted small">اختياري</span></span>
+        <label className="field"><span>{t("الوحدة")} <span className="muted small">{t("اختياري")}</span></span>
           <select id="d-unit" className="input" value={f.unitId} onChange={(e) => setF({ ...f, unitId: e.target.value })}>
-            <option value="">العقار كله</option>
+            <option value="">{t("العقار كله")}</option>
             {data.units.map((u) => <option key={u.id} value={u.id}>{u.name} · {u.building}</option>)}
           </select>
         </label>
         <div className="sync-box stack">
-          <div className="small">{picked ? <>ملف جديد: {picked.name}</> : doc?.file ? <>📎 {doc.file.name} <span className="muted">· {doc.file.path ? "بالسحابة" : "على هالجهاز"}</span></> : <span className="muted">بدون ملف (PDF أو صورة، 10MB)</span>}</div>
+          <div className="small">{picked ? <>{t("ملف جديد:")} {picked.name}</> : doc?.file ? <>📎 {doc.file.name} <span className="muted">· {doc.file.path ? t("بالسحابة") : t("على هالجهاز")}</span></> : <span className="muted">{t("بدون ملف (PDF أو صورة، 10MB)")}</span>}</div>
           <div className="grid-2">
-            <button type="button" className="btn btn-ghost press" onClick={() => file.current?.click()}>{doc?.file || picked ? "بدّل الملف" : "أرفق ملف"}</button>
-            {doc?.file && !picked && <button type="button" className="btn btn-ghost press" onClick={view}>افتح الملف</button>}
+            <button type="button" className="btn btn-ghost press" onClick={() => file.current?.click()}>{doc?.file || picked ? t("بدّل الملف") : t("أرفق ملف")}</button>
+            {doc?.file && !picked && <button type="button" className="btn btn-ghost press" onClick={view}>{t("افتح الملف")}</button>}
           </div>
           <input ref={file} id="doc-file" type="file" accept={ACCEPT} hidden onChange={(e) => { const x = e.target.files?.[0]; e.target.value = ""; if (!x) return; const err = checkFile(x); if (err) return setError(err); setError(""); setPicked(x); }} />
         </div>
-        <p className="muted small" style={{ margin: 0 }}>لا تحفظ هويات أو جوازات أو بطاقات شخصية.</p>
+        <p className="muted small" style={{ margin: 0 }}>{t("لا تحفظ هويات أو جوازات أو بطاقات شخصية.")}</p>
         {error && <div className="field-error" role="alert">{error}</div>}
-        <button type="submit" className="btn btn-block press" disabled={busy}>{busy ? "يحفظ…" : doc ? "احفظ التعديل" : "أضف الوثيقة"}</button>
-        {doc && <button type="button" className="btn btn-ghost btn-block press danger-text" onClick={del}>احذف الوثيقة</button>}
+        <button type="submit" className="btn btn-block press" disabled={busy}>{busy ? t("يحفظ…") : doc ? t("احفظ التعديل") : t("أضف الوثيقة")}</button>
+        {doc && <button type="button" className="btn btn-ghost btn-block press danger-text" onClick={del}>{t("احذف الوثيقة")}</button>}
       </form>
     </Sheet>
   );

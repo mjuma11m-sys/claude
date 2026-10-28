@@ -58,8 +58,8 @@ export function Settings() {
         <div className="set-row"><span>{t("المظهر")}</span>
           <Chips<Theme> label={t("المظهر")} value={prefs.theme} onChange={(theme) => update({ theme })} options={[{ id: "auto", label: t("تلقائي") }, { id: "light", label: t("فاتح") }, { id: "dark", label: t("داكن") }]} />
         </div>
-        <div className="set-row"><span>Language · اللغة</span>
-          <Chips<Lang> label="Language · اللغة" value={getLang()} onChange={(l) => { if (l !== getLang()) setLang(l); }} options={[{ id: "ar", label: "العربية" }, { id: "en", label: "English (beta)" }]} />
+        <div className="set-row"><span>{t("Language · اللغة")}</span>
+          <Chips<Lang> label={t("Language · اللغة")} value={getLang()} onChange={(l) => { if (l !== getLang()) setLang(l); }} options={[{ id: "ar", label: "العربية" }, { id: "en", label: "English (beta)" }]} />
         </div>
         <p className="muted small" style={{ margin: 0 }}>{t("«تلقائي» يمشي على إعداد الجوال.")}</p>
       </section>

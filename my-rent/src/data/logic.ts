@@ -293,7 +293,7 @@ export function kindOf(u: Unit): Kind {
 
 export const SOON_DAYS = 60;
 export type LeaseState = "active" | "soon" | "ended" | "open" | "vacant";
-export const LEASE_LABEL: Record<LeaseState, string> = { active: "سارية", soon: "قريبة الانتهاء", ended: "منتهية", open: "بدون نهاية", vacant: "شاغرة" };
+export const LEASE_LABEL: Record<LeaseState, string> = { active: t("سارية"), soon: t("قريبة الانتهاء"), ended: t("منتهية"), open: t("بدون نهاية"), vacant: t("شاغرة") };
 export const monthLabel = (key: string) => `${monthName(key)} ${key.slice(0, 4)}`;
 
 /** الأشهر المدفوعة كامل بعد هالشهر (الإيجار المقدم) */
@@ -363,10 +363,10 @@ export function trackerTotals(rows: TrackRow[]) {
 // ── DW-023: الوثائق والمستندات ──────────────────────────
 
 export const DOC_KINDS: { id: DocKind; label: string }[] = [
-  { id: "cr", label: "سجل تجاري" }, { id: "insurance", label: "تأمين" }, { id: "license", label: "رخصة بلدية" },
-  { id: "civil", label: "الدفاع المدني" }, { id: "service", label: "عقد صيانة" }, { id: "other", label: "أخرى" },
+  { id: "cr", label: t("سجل تجاري") }, { id: "insurance", label: t("تأمين") }, { id: "license", label: t("رخصة بلدية") },
+  { id: "civil", label: t("الدفاع المدني") }, { id: "service", label: t("عقد صيانة") }, { id: "other", label: t("أخرى") },
 ];
-export const docKindLabel = (k: DocKind) => DOC_KINDS.find((x) => x.id === k)?.label ?? "أخرى";
+export const docKindLabel = (k: DocKind) => DOC_KINDS.find((x) => x.id === k)?.label ?? t("أخرى");
 export const DOC_SOON = 30;
 export type DocState = "active" | "soon" | "ended" | "open";
 export const DOC_LABEL: Record<DocState, string> = { active: t("سارية"), soon: t("قريبة الانتهاء"), ended: t("منتهية"), open: t("بدون انتهاء") };
@@ -416,8 +416,8 @@ export function upcomingRent(unit: Unit, now = new Date()) {
 
 // ── DW-026: فواتير الكهرباء والماء (على المستأجر) ───────
 
-export const BILL_KINDS: { id: BillKind; label: string }[] = [{ id: "ewa", label: "كهرباء وماء" }, { id: "elec", label: "كهرباء" }, { id: "water", label: "ماء" }];
-export const billKindLabel = (k: BillKind) => BILL_KINDS.find((x) => x.id === k)?.label ?? "كهرباء وماء";
+export const BILL_KINDS: { id: BillKind; label: string }[] = [{ id: "ewa", label: t("كهرباء وماء") }, { id: "elec", label: t("كهرباء") }, { id: "water", label: t("ماء") }];
+export const billKindLabel = (k: BillKind) => BILL_KINDS.find((x) => x.id === k)?.label ?? t("كهرباء وماء");
 export const unitBills = (data: Data, unitId: string) =>
   (data.bills ?? []).filter((b) => b.unitId === unitId).sort((a, b) => b.month.localeCompare(a.month) || a.kind.localeCompare(b.kind));
 /** الفواتير غير المسددة للوحدة (للمستأجر الحالي: من بداية عقده) */

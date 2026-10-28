@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 import { useEffect, useRef } from "react";
 import { useStore } from "../data/store";
 import { DemoNote } from "../ui/kit";
@@ -12,7 +13,7 @@ export function Vendors({ focus = false }: { focus?: boolean }) {
   useEffect(() => { if (focus) ref.current?.scrollIntoView({ block: "start" }); }, [focus]);
   return (
     <section className="stack-lg vendors-sec" ref={ref} aria-labelledby="vendors-h" id="vendors">
-      <h2 className="set-title" id="vendors-h">الموردين</h2>
+      <h2 className="set-title" id="vendors-h">{t("الموردين")}</h2>
       <ul className="rows card-list">
         {data.vendors.map((v) => {
           const ok = digits(v.phone).length === 8;
@@ -22,10 +23,10 @@ export function Vendors({ focus = false }: { focus?: boolean }) {
               <span className="row-actions">
                 {ok ? (
                   <>
-                    <a className="icon-btn press" href={`tel:+973${digits(v.phone)}`} aria-label={`اتصال ${v.name}`}>{Icon.phone}</a>
-                    <a className="icon-btn press wa" href={`https://wa.me/973${digits(v.phone)}`} target="_blank" rel="noreferrer" aria-label={`واتساب ${v.name}`}>WA</a>
+                    <a className="icon-btn press" href={`tel:+973${digits(v.phone)}`} aria-label={t("اتصال {v1}", { v1: v.name })}>{Icon.phone}</a>
+                    <a className="icon-btn press wa" href={`https://wa.me/973${digits(v.phone)}`} target="_blank" rel="noreferrer" aria-label={t("واتساب {v1}", { v1: v.name })}>WA</a>
                   </>
-                ) : <span className="muted small">رقم تجريبي</span>}
+                ) : <span className="muted small">{t("رقم تجريبي")}</span>}
               </span>
             </li>
           );

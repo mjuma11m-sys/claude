@@ -35,7 +35,7 @@ ok(/apple-mobile-web-app-capable/.test(html) && /apple-touch-icon/.test(html) &&
 {
   const tsx = fs.readFileSync("src/pages/Privacy.tsx", "utf8"), pub = fs.readFileSync("public/privacy.html", "utf8");
   const ver = tsx.match(/POLICY_VERSION = "([^"]+)"/)[1];
-  const strip = (x) => x.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+  const strip = (x) => x.replace(/\{t\("((?:[^"\\]|\\.)*)"\)\}/g, (_, s) => JSON.parse(`"${s}"`)).replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim(); // DW-049: النص داخل t()
   const items = [...tsx.matchAll(/<li>([\s\S]*?)<\/li>/g)].map((m) => strip(m[1]));
   const pubText = strip(pub);
   const missing = items.filter((t) => !pubText.includes(t));
