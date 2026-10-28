@@ -1,8 +1,9 @@
 // مخزن البيانات: useReducer + localStorage. لما ينربط Supabase، يتبدل load/save بس والشاشات ما تتغيّر.
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import type { Bill, BudgetCat, Cheque, Data, DepositLog, Doc, Expense, Method, Payment, Recurring, Unit, VatCfg } from "./types";
+import type { Bill, BudgetCat, Cheque, Contract, Data, DepositLog, Doc, Expense, Method, Payment, Recurring, Unit, VatCfg } from "./types";
 import { demoData, emptyData } from "./demo";
-import { dueRecurring, findBill, nextInvoiceNo, isoDay, monthKey, nextUnpaid, owedMonths, rentAt } from "./logic";
+import { DEFAULT_CONTRACT, activeContract, dueRecurring, fillContract, findBill, nextInvoiceNo, isoDay, monthKey, nextUnpaid, owedMonths, rentAt, snapshotContract } from "./logic";
+import { removeFile } from "./files";
 import { SyncEngine, loadSyncConfig, saveSyncConfig, type SyncAction, type SyncConfig, type SyncStatus } from "./sync";
 
 const KEY = "idarati:v2";
@@ -51,7 +52,12 @@ type Store = {
   unexpense: (id: string) => void;
   toggleTask: (id: string) => void;
   saveUnit: (unit: Omit<Unit, "id"> & { id?: string }) => Unit;
-  vacate: (id: string, depositReturned?: boolean) => DepositLog | null;
+  /** DW-047: يعتمد عقد الوحدة بنسخة ثابتة؛ لو فيه عقد معتمد قبله ينتهي ويروح الأرشيف مع ملفه */
+  signContract: (unitId: string) => Contract | null;
+  /** DW-047: يحذف عقد من الأرشيف (مع ملفه) */
+  removeContract: (id: string) => Contract | null;
+  /** يرجّع سجل التأمين، ودالة ترجّع العقد للحالة قبل الإخلاء (DW-047) */
+  vacate: (id: string, depositReturned?: boolean) => { log: DepositLog | null; undoContract: () => void };
   undeposit: (id: string) => void;
   addRecurring: (catId: string, label: string, amount: number) => Recurring;
   removeRecurring: (id: string) => void;
@@ -248,16 +254,50 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "unit", unit });
       return unit;
     },
+    signContract: (unitId) => {
+      const unit = data.units.find((u) => u.id === unitId);
+      if (!unit?.tenant) return null;
+      const now = new Date();
+      const prev = activeContract(data, unitId);
+      // العقد القديم ينتهي ويروح الأرشيف مع ملفه الموقّع؛ الجديد يبدأ بدون ملف
+      // ملف قديم من قبل الأرشيف لمستأجر سابق: يروح الأرشيف بعد
+      const legacy = !prev && unit.contractFile && unit.contractFile.tenant !== unit.tenant.name ? unit.contractFile : undefined;
+      if (prev || legacy) {
+        const rec = prev ?? { ...snapshotContract("k" + uid(), unit, ""), tenant: legacy!.tenant, phone: "", signedAt: legacy!.uploadedAt };
+        dispatch({ type: "contractrec", contract: { ...rec, endedAt: isoDay(now), file: unit.contractFile ?? rec.file } });
+        if (unit.contractFile) { const { contractFile: _moved, ...rest } = unit; dispatch({ type: "unit", unit: rest }); }
+      }
+      const c = snapshotContract("k" + uid(), unit, fillContract(data.contractTemplate ?? DEFAULT_CONTRACT, unit, data.contractOwner ?? "", now), now);
+      dispatch({ type: "contractrec", contract: c });
+      return c;
+    },
+    removeContract: (id) => {
+      const c = (data.contracts ?? []).find((x) => x.id === id) ?? null;
+      if (!c) return null;
+      dispatch({ type: "uncontractrec", id });
+      if (c.file) void removeFile(c.file.id, c.file.path);
+      return c;
+    },
     // الإخلاء: لو فيه تأمين، ينسجل رجع أو انخصم — والسجل يبقى بعد ما يروح المستأجر
     vacate: (id, depositReturned) => {
       const unit = data.units.find((u) => u.id === id);
+      // DW-047: العقد المعتمد ينتهي ويروح الأرشيف مع ملفه (الملف ما ينمسح)
+      const act = activeContract(data, id);
+      let undoContract = () => {};
+      if (unit && (act || unit.contractFile)) {
+        const today = isoDay(new Date());
+        const rec = act ?? { ...snapshotContract("k" + uid(), unit, ""), signedAt: unit.contractFile!.uploadedAt };
+        dispatch({ type: "contractrec", contract: { ...rec, endedAt: today, file: unit.contractFile ?? rec.file } });
+        if (unit.contractFile) { const { contractFile: _moved, ...rest } = unit; dispatch({ type: "unit", unit: rest }); }
+        undoContract = () => dispatch(act ? { type: "contractrec", contract: act } : { type: "uncontractrec", id: rec.id });
+      }
       let log: DepositLog | null = null;
       if (unit?.tenant?.deposit) {
         log = { id: uid(), unitId: id, tenant: unit.tenant.name, amount: unit.tenant.deposit, returned: !!depositReturned, date: isoDay(new Date()) };
         dispatch({ type: "deposit", log });
       }
       dispatch({ type: "vacate", id });
-      return log;
+      return { log, undoContract };
     },
     undeposit: (id) => dispatch({ type: "undeposit", id }),
     addRecurring: (catId, label, amount) => {

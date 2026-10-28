@@ -45,6 +45,8 @@ export type DepositLog = { id: string; unitId: string; tenant: string; amount: F
 
 /** DW-023: وثائق العقار والنشاط (مو هويات شخصية — DW-014) */
 export type DocKind = "cr" | "insurance" | "license" | "civil" | "service" | "other";
+/** DW-047: عقد معتمد — نسخة ثابتة ببيانات وقت الاعتماد. endedAt = انتهى (إخلاء أو عقد جديد) ← الأرشيف. file = ملفه الموقّع بعد ما ينتهي (الحالي يظل بـ unit.contractFile) */
+export type Contract = { id: string; unitId: string; unit: string; building: string; tenant: string; phone: string; trn?: string; since?: string; until?: string; rent: Fils; dueDay: number; deposit?: Fils; text: string; signedAt: string; endedAt?: string; file?: ContractFile };
 export type DocFile = { id: string; name: string; type: string; size: number; uploadedAt: string; path?: string };
 export type Doc = { id: string; kind: DocKind; title: string; ref?: string; unitId?: string; expires?: string; file?: DocFile }; // expires = YYYY-MM-DD
 
@@ -78,4 +80,5 @@ export type Data = {
   cheques?: Cheque[];        // DW-029
   vat?: VatCfg;              // DW-035: للإيجار التجاري بس
   credits?: CreditNote[];    // DW-036: الإشعارات الدائنة
+  contracts?: Contract[];    // DW-047: العقود المعتمدة والأرشيف
 };

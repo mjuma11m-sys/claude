@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Method, Payment, Unit } from "../data/types";
 import { useStore } from "../data/store";
-import { reminderUrl, arrears, billsDue, chequeHeld, contractAlerts, fmt, monthKey, rentAt, upcomingRent, monthLabel, monthName, nextUnpaid, owedMonths, paidThrough, parseBHD, prepaid, unitStatus } from "../data/logic";
+import { reminderUrl, arrears, billsDue, chequeHeld, contractAlerts, fmt, monthKey, rentAt, upcomingRent, monthLabel, monthName, nextUnpaid, owedMonths, paidThrough, pastContracts, parseBHD, prepaid, unitStatus } from "../data/logic";
 import { Chips, Sheet, useToast } from "../ui/kit";
 import { Money, StatusPill } from "../theme/AppShell";
 import { Icon } from "../ui/icons";
@@ -50,10 +50,10 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onCont
   const doVacate = (returned?: boolean) => {
     if (!u) return;
     const before = u;
-    const log = vacate(u.id, returned);
+    const { log, undoContract } = vacate(u.id, returned);
     onClose();
     const dep = log ? ` · التأمين ${fmt(log.amount)} د.ب ${log.returned ? "رجع" : "انخصم"}` : "";
-    toast({ text: `${u.name} صارت شاغرة${dep}`, undo: () => { saveUnit(before); if (log) undeposit(log.id); } });
+    toast({ text: `${u.name} صارت شاغرة${dep}`, undo: () => { saveUnit(before); undoContract(); if (log) undeposit(log.id); } });
   };
 
   const pickMonth = (m: string) => {
@@ -176,7 +176,7 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onCont
 
           <div className="unit-actions">
             {u.tenant && <button type="button" className="btn btn-ghost press" onClick={() => onStatement(u)}>كشف حساب</button>}
-            {u.tenant && <button type="button" className="btn btn-ghost press" onClick={() => onContract(u)}>العقد{u.contractFile ? " ✓" : ""}</button>}
+            {(u.tenant || pastContracts(data, u.id).length > 0) && <button type="button" className="btn btn-ghost press" onClick={() => onContract(u)}>{u.tenant ? "العقد" : "العقود السابقة"}{u.contractFile ? " ✓" : ""}</button>}
             {u.tenant?.until && <button type="button" className={`btn press ${renewSoon ? "" : "btn-ghost"}`} onClick={() => onRenew(u)}>جدّد العقد</button>}
             <button type="button" className="btn btn-ghost press" onClick={() => onEdit(u)}>{u.tenant ? "تعديل" : "أضف مستأجر"}</button>
             {u.tenant && !confirmVacate && <button type="button" className="btn btn-ghost press danger-text" onClick={() => setConfirmVacate(true)}>إخلاء الوحدة</button>}

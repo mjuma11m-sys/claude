@@ -987,6 +987,53 @@ try {
     await g.close();
   }
 
+  // 30) DW-047: العقد المعتمد يثبت ببياناته + تنبيه التغيير + عقد جديد + الأرشيف بعد الإخلاء + التراجع + الحذف
+  {
+    const k = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const kErr = []; k.on("pageerror", (e) => kErr.push(e.message));
+    const openContract = async () => {
+      await k.goto(URL + "#tenants"); await k.waitForTimeout(600);
+      await k.locator(".unit-card", { hasText: "شقة 3 " }).first().click(); await k.waitForTimeout(450);
+      await k.getByRole("button", { name: /^(العقد|العقود السابقة)/ }).click(); await k.waitForTimeout(450);
+    };
+    const store = () => k.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")));
+    await k.goto(URL + "#tenants"); await k.evaluate(() => localStorage.clear()); await k.reload(); await k.waitForTimeout(800);
+    const phone0 = (await store()).units.find((u) => u.id === "u3").tenant.phone;
+    await openContract();
+    ok((await k.locator("#contract-status").innerText()).includes("مسودة"), "DW-047: قبل الاعتماد: مسودة");
+    await k.locator("#contract-sign").click(); await k.waitForTimeout(400);
+    ok((await k.locator("#contract-status").innerText()).includes("العقد المعتمد"), "DW-047: الاعتماد يثبّت العقد");
+    ok((await k.locator(".contract-text").first().innerText()).includes(phone0), "العقد المعتمد فيه هاتف المستأجر", phone0);
+    await k.keyboard.press("Escape"); await k.waitForTimeout(400);
+    await k.locator(".unit-card", { hasText: "شقة 3 " }).first().click(); await k.waitForTimeout(450);
+    await k.getByRole("button", { name: "تعديل" }).click(); await k.waitForTimeout(450);
+    await k.locator("#u-phone").fill("39999999"); await k.getByRole("button", { name: "احفظ التعديل" }).click(); await k.waitForTimeout(500);
+    await openContract();
+    const t1 = await k.locator(".contract-text").first().innerText();
+    ok(t1.includes(phone0) && !t1.includes("39999999"), "تعديل الهاتف بعد الاعتماد: العقد يظل بالهاتف القديم");
+    ok((await k.locator("#contract-changed").innerText()).includes("هاتف المستأجر"), "تنبيه: يذكر الخانة اللي تغيّرت");
+    await k.locator("#contract-renew").click(); await k.waitForTimeout(400);
+    ok((await k.locator(".contract-text").first().innerText()).includes("39999999") && await k.locator("#contract-changed").count() === 0, "عقد جديد: بالبيانات الحالية وبدون تنبيه");
+    ok((await k.locator("#contract-archive").innerText()).includes("(1)"), "العقد القديم راح «العقود السابقة»");
+    await k.locator("#contract-file").setInputFiles({ name: "موقع.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4 x") }); await k.waitForTimeout(800);
+    await k.keyboard.press("Escape"); await k.waitForTimeout(400);
+    await k.locator(".unit-card", { hasText: "شقة 3 " }).first().click(); await k.waitForTimeout(450);
+    await k.getByRole("button", { name: "إخلاء الوحدة" }).click(); await k.waitForTimeout(200);
+    await k.getByRole("button", { name: /أخلِها/ }).first().click(); await k.waitForTimeout(500);
+    let d = await store();
+    const arch = d.contracts.filter((c) => c.unitId === "u3");
+    ok(arch.length === 2 && arch.every((c) => c.endedAt) && arch.some((c) => c.file?.name === "موقع.pdf") && !d.units.find((u) => u.id === "u3").contractFile, "الإخلاء: العقدين بالأرشيف والملف الموقّع انتقل معاه");
+    await k.locator(".toast button").first().click(); await k.waitForTimeout(400);
+    d = await store();
+    ok(d.contracts.filter((c) => c.unitId === "u3" && !c.endedAt).length === 1 && d.units.find((u) => u.id === "u3").tenant, "تراجع الإخلاء: المستأجر والعقد المعتمد يرجعون");
+    await openContract();
+    await k.locator("#contract-archive summary").first().click(); await k.waitForTimeout(200);
+    await k.getByRole("button", { name: "احذفه من الأرشيف" }).first().click(); await k.waitForTimeout(400);
+    ok(await k.locator("#contract-archive").count() === 0 && (await store()).contracts.length === 1, "الحذف من الأرشيف يشيل العقد");
+    ok(kErr.length === 0, "DW-047: بدون أخطاء", kErr.join(" | "));
+    await k.close();
+  }
+
   if (process.env.SHOTS) {
     for (const [n, w, h, s] of [["home-phone", 390, 844, "light"], ["home-dark", 390, 844, "dark"], ["home-desk", 1280, 800, "light"], ["tenants-tab", 820, 1180, "light"], ["budget-phone", 390, 844, "light"]]) {
       const q = await browser.newPage({ viewport: { width: w, height: h }, colorScheme: s });

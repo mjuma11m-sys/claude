@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import type { Unit } from "../data/types";
+import type { ContractFile, Unit } from "../data/types";
 import { useStore } from "../data/store";
-import { DEFAULT_CONTRACT, fillContract, isoDay } from "../data/logic";
+import { DEFAULT_CONTRACT, activeContract, contractChanges, fillContract, isoDay, pastContracts } from "../data/logic";
 import { ACCEPT, checkFile, fetchFile, putLocal, removeFile, uploadCloud } from "../data/files";
 import { Sheet, useToast } from "../ui/kit";
 import logoUrl from "../../brand/logo-horizontal.svg";
@@ -13,7 +13,7 @@ const kb = (n: number) => (n > 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)}MB`
 
 /** عقد الوحدة (DW-020): النموذج الثابت معبّى ببيانات المستأجر + العقد الموقّع المرفوع */
 export function ContractSheet({ unit, onClose }: { unit: Unit | null; onClose: () => void }) {
-  const { data, saveUnit } = useStore();
+  const { data, saveUnit, signContract, removeContract } = useStore();
   const toast = useToast();
   const [shown, setShown] = useState<Unit | null>(unit);
   const [busy, setBusy] = useState(false);
@@ -23,9 +23,19 @@ export function ContractSheet({ unit, onClose }: { unit: Unit | null; onClose: (
 
   // دايماً آخر نسخة من الوحدة (بعد الرفع أو الحذف)
   const u = shown ? data.units.find((x) => x.id === shown.id) ?? shown : null;
-  const text = u ? fillContract(data.contractTemplate ?? DEFAULT_CONTRACT, u, data.contractOwner ?? "") : "";
+  // DW-047: المعتمد نص ثابت؛ بدونه مسودة حية من بيانات الوحدة
+  const act = u ? activeContract(data, u.id) : undefined;
+  const past = u ? pastContracts(data, u.id) : [];
+  const changes = act && u ? contractChanges(act, u) : [];
+  const text = act ? act.text : u?.tenant ? fillContract(data.contractTemplate ?? DEFAULT_CONTRACT, u, data.contractOwner ?? "") : "";
   const cf = u?.contractFile;
-  const oldTenant = !!(cf && u?.tenant && cf.tenant !== u.tenant.name);
+  const oldTenant = !act && !!(cf && u?.tenant && cf.tenant !== u.tenant.name);
+
+  const sign = (fresh: boolean) => {
+    if (!u) return;
+    signContract(u.id);
+    toast({ text: fresh ? "انعتمد عقد جديد، والقديم راح «العقود السابقة»" : "انعتمد العقد — يظل بهالبيانات حتى لو تعدّلت" });
+  };
 
   const share = async () => {
     try {
@@ -44,19 +54,21 @@ export function ContractSheet({ unit, onClose }: { unit: Unit | null; onClose: (
       let path: string | undefined;
       try { path = await uploadCloud(id, f, f.name); } catch (err) { setError(err instanceof Error ? err.message : String(err)); }
       const before = u.contractFile;
+      const moved = !act && before && before.tenant !== (u.tenant?.name ?? ""); // ملف مستأجر سابق: يروح الأرشيف، ما ينمسح
+      if (!act && u.tenant) signContract(u.id); // الرفع = توقيع: يعتمد العقد لو ما انعتمد
       saveUnit({ ...u, contractFile: { id, name: f.name, type: f.type, size: f.size, tenant: u.tenant?.name ?? "", uploadedAt: isoDay(new Date()), path } });
-      if (before) void removeFile(before.id, before.path); // ملف واحد لكل وحدة: القديم ينمسح
+      if (before && !moved) void removeFile(before.id, before.path); // نفس العقد: الملف القديم ينبدل
       toast({ text: path ? "انحفظ العقد الموقّع بالسحابة" : "انحفظ العقد الموقّع على هالجهاز" });
     } catch {
       setError("ما قدرنا نحفظ الملف على هالجهاز");
     } finally { setBusy(false); }
   };
 
-  const view = async () => {
-    if (!cf) return;
-    const blob = await fetchFile(cf.id, cf.path);
-    if (!blob) return setError(cf.path ? "ما قدرنا نجيب الملف من السحابة. تأكد من النت" : "الملف محفوظ على جهاز ثاني");
-    await openFile(cf.name, blob);
+  const view = async (f: ContractFile | undefined = cf) => {
+    if (!f) return;
+    const blob = await fetchFile(f.id, f.path);
+    if (!blob) return setError(f.path ? "ما قدرنا نجيب الملف من السحابة. تأكد من النت" : "الملف محفوظ على جهاز ثاني");
+    await openFile(f.name, blob);
   };
 
   const remove = async () => {
@@ -71,6 +83,24 @@ export function ContractSheet({ unit, onClose }: { unit: Unit | null; onClose: (
     <Sheet open={!!unit} onClose={onClose} title="العقد">
       {u && (
         <div className="stack">
+          {u.tenant && (act ? (
+            <div className="sync-box stack" id="contract-status">
+              <div className="strong">✓ العقد المعتمد <span className="muted small">· <bdi className="num">{act.signedAt}</bdi></span></div>
+              {changes.length ? (
+                <>
+                  <div className="field-error" id="contract-changed">تغيّرت بعد الاعتماد: {changes.join("، ")}. العقد المعتمد يظل بالبيانات القديمة.</div>
+                  <button className="btn press" id="contract-renew" onClick={() => sign(true)}>عقد جديد بالبيانات الحالية</button>
+                </>
+              ) : <p className="muted small" style={{ margin: 0 }}>نسخة ثابتة: لو عدّلت بيانات المستأجر بعدين، هالعقد ما يتغيّر.</p>}
+            </div>
+          ) : (
+            <div className="sync-box stack" id="contract-status">
+              <div className="strong">مسودة — ما انعتمدت</div>
+              <p className="muted small" style={{ margin: 0 }}>تتعبّى من بيانات الوحدة الحين. لما توقّعون، اعتمدها عشان تثبت بهالبيانات.</p>
+              <button className="btn press" id="contract-sign" onClick={() => sign(false)}>اعتمد العقد</button>
+            </div>
+          ))}
+          {u.tenant && (<>
           <div className="sync-box stack contract-file">
             <div className="strong">العقد الموقّع</div>
             {cf ? (
@@ -78,7 +108,7 @@ export function ContractSheet({ unit, onClose }: { unit: Unit | null; onClose: (
                 <div className="small">{cf.name} <span className="muted num">· {kb(cf.size)} · {cf.uploadedAt}</span> <span className="muted">· {cf.path ? "بالسحابة" : "على هالجهاز"}</span></div>
                 {oldTenant && <div className="field-error">هالملف لمستأجر سابق ({cf.tenant}). ارفع عقد {u.tenant?.name}.</div>}
                 <div className="grid-2">
-                  <button className="btn press" onClick={view}>افتح الملف</button>
+                  <button className="btn press" onClick={() => void view()}>افتح الملف</button>
                   <button className="btn btn-ghost press danger-text" onClick={remove}>احذفه</button>
                 </div>
               </>
@@ -92,7 +122,7 @@ export function ContractSheet({ unit, onClose }: { unit: Unit | null; onClose: (
           <div className="receipt contract" id="contract">
             <div className="receipt-top">
               <img src={logoUrl} alt="إداراتي" height={30} />
-              <div className="num muted small">{isoDay(new Date())}</div>
+              <div className="num muted small">{act?.signedAt ?? isoDay(new Date())}</div>
             </div>
             <pre className="contract-text">{text}</pre>
           </div>
@@ -101,6 +131,25 @@ export function ContractSheet({ unit, onClose }: { unit: Unit | null; onClose: (
             {canPrint() && <button className="btn press" onClick={() => window.print()}>طباعة / PDF</button>}
             <button className="btn btn-ghost press" onClick={share}>مشاركة النص</button>
           </div>
+          </>)}
+
+          {past.length > 0 && (
+            <div className="stack" id="contract-archive">
+              <div className="strong">العقود السابقة ({past.length})</div>
+              {past.map((c) => (
+                <details key={c.id} className="sync-box archive-item">
+                  <summary><span className="strong">{c.tenant || "—"}</span> <span className="muted small">· من <bdi className="num">{c.signedAt}</bdi> لين <bdi className="num">{c.endedAt}</bdi></span></summary>
+                  <div className="stack" style={{ marginTop: 10 }}>
+                    {c.text ? <pre className="contract-text">{c.text}</pre> : <p className="muted small" style={{ margin: 0 }}>عقد قبل الأرشيف: الملف الموقّع بس.</p>}
+                    <div className="grid-2">
+                      {c.file && <button className="btn press" onClick={() => void view(c.file)}>افتح الملف الموقّع</button>}
+                      <button className="btn btn-ghost press danger-text" onClick={() => { removeContract(c.id); toast({ text: "انحذف العقد من الأرشيف" }); }}>احذفه من الأرشيف</button>
+                    </div>
+                  </div>
+                </details>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </Sheet>

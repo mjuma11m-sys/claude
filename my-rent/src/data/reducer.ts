@@ -1,6 +1,6 @@
 // المحوّل الصافي (DW-032): كل تعديل على البيانات حدث، والـ reducer يطبّقه. بدون React ولا تخزين — يتزامن ويُختبر لحاله.
 import type { Bill, BudgetCat, Cheque, Data, DepositLog, Doc, Expense, Payment, Recurring, Unit, VatCfg } from "./types";
-import type { CreditNote } from "./types";
+import type { Contract, CreditNote } from "./types";
 
 export const FORMER = "مستأجر سابق";
 
@@ -21,6 +21,8 @@ export type Action =
   | { type: "deposit"; log: DepositLog }
   | { type: "undeposit"; id: string }
   | { type: "contract"; template: string; owner: string }
+  | { type: "contractrec"; contract: Contract } // DW-047: اعتماد/إنهاء عقد (نفس id = تعديل)
+  | { type: "uncontractrec"; id: string }
   | { type: "doc"; doc: Doc }
   | { type: "undoc"; id: string }
   | { type: "bill"; bill: Bill }
@@ -93,6 +95,11 @@ export function reducer(state: Data, a: Action): Data {
       cats: state.cats.filter((c) => !a.catIds.includes(c.id)),
     };
     case "contract": return { ...state, contractTemplate: a.template, contractOwner: a.owner };
+    case "contractrec": {
+      const list = state.contracts ?? [];
+      return { ...state, contracts: list.some((c) => c.id === a.contract.id) ? list.map((c) => (c.id === a.contract.id ? a.contract : c)) : [a.contract, ...list] };
+    }
+    case "uncontractrec": return { ...state, contracts: (state.contracts ?? []).filter((c) => c.id !== a.id) };
     case "doc": { // DW-023: إضافة أو تعديل
       const docs = state.docs ?? [];
       return { ...state, docs: docs.some((d) => d.id === a.doc.id) ? docs.map((d) => (d.id === a.doc.id ? a.doc : d)) : [...docs, a.doc] };

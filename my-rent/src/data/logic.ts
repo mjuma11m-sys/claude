@@ -1,5 +1,5 @@
 import { isEn, t } from "../i18n";
-import type { Bill, BillKind, ChequeState, Data, Doc, DocKind, Fils, Kind, Payment, Status, Unit } from "./types";
+import type { Bill, BillKind, ChequeState, Contract, Data, Doc, DocKind, Fils, Kind, Payment, Status, Unit } from "./types";
 
 export const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 export const isoDay = (d: Date) => `${monthKey(d)}-${String(d.getDate()).padStart(2, "0")}`;
@@ -226,6 +226,36 @@ export function fillContract(template: string, unit: Unit, owner: string, now = 
     "تاريخ اليوم": isoDay(now),
   };
   return template.replace(/\{([^{}]+)\}/g, (m, k: string) => (k.trim() in v ? v[k.trim()] : m));
+}
+
+// ── DW-047: العقد المعتمد (نسخة ثابتة) والأرشيف ─────────
+
+/** نسخة ثابتة من العقد ببيانات الوحدة والمستأجر الحين */
+export function snapshotContract(id: string, unit: Unit, text: string, now = new Date()): Contract {
+  const t = unit.tenant;
+  return { id, unitId: unit.id, unit: unit.name, building: unit.building, tenant: t?.name ?? "", phone: t?.phone ?? "", trn: t?.trn, since: t?.since, until: t?.until, rent: unit.rent, dueDay: unit.dueDay, deposit: t?.deposit, text, signedAt: isoDay(now) };
+}
+
+/** العقد المعتمد الحالي للوحدة (ما انتهى) */
+export const activeContract = (data: Data, unitId: string) => (data.contracts ?? []).find((c) => c.unitId === unitId && !c.endedAt);
+/** العقود السابقة للوحدة، الأحدث أول */
+export const pastContracts = (data: Data, unitId: string) =>
+  (data.contracts ?? []).filter((c) => c.unitId === unitId && c.endedAt).sort((a, b) => (b.endedAt ?? "").localeCompare(a.endedAt ?? ""));
+
+/** شنو تغيّر بالوحدة بعد اعتماد العقد (أسماء الخانات) — فاضي = العقد مطابق */
+export function contractChanges(c: Contract, unit: Unit): string[] {
+  const t = unit.tenant;
+  const diff: [boolean, string][] = [
+    [(t?.name ?? "") !== c.tenant, "المستأجر"],
+    [(t?.phone ?? "") !== c.phone, "هاتف المستأجر"],
+    [(t?.trn ?? "") !== (c.trn ?? ""), "الرقم الضريبي"],
+    [unit.rent !== c.rent, "الإيجار"],
+    [unit.dueDay !== c.dueDay, "يوم الاستحقاق"],
+    [(t?.since ?? "") !== (c.since ?? ""), "بداية العقد"],
+    [(t?.until ?? "") !== (c.until ?? ""), "نهاية العقد"],
+    [(t?.deposit ?? 0) !== (c.deposit ?? 0), "التأمين"],
+  ];
+  return diff.filter(([d]) => d).map(([, k]) => k);
 }
 
 // ── DW-022: ملف متابعة حالة الإيجار ─────────────────────

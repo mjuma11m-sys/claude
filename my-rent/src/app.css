@@ -528,3 +528,4 @@ select.input { appearance: auto; }
 /* DW-045: الإنقليزية (LTR) — العملة BHD، والأشرطة تنملي من اليسار */
 :root[lang="en"] .bhd::after { content: " BHD"; }
 [dir="ltr"] .hero-bar span, [dir="ltr"] .bar-fill, [dir="ltr"] .setup-bar span { transform-origin: left; }
+.archive-item summary { cursor: pointer; list-style: none; } .archive-item summary::-webkit-details-marker { display: none; } .archive-item[open] summary { margin-bottom: 4px; }
