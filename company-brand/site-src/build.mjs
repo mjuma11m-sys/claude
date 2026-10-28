@@ -28,7 +28,8 @@ const T = {
   nav_values: ['قيمنا', 'Values'], nav_apps: ['تطبيقاتنا', 'Apps'], nav_contact: ['تواصل', 'Contact'],
   lang_other: ['English', 'عربي'],
   skip: ['تخطَّ للمحتوى', 'Skip to content'],
-  footer_rights: ['© 2026 ودقة · WADQA Studio · مملكة البحرين', '© 2026 WADQA Studio · Kingdom of Bahrain'],
+  // الاسم الرسمي للسجل التجاري وD-U-N-S وGoogle Play (قرار المالك 2026-10-28، DW-067)
+  footer_rights: ['© 2026 ودقة · WADQA Studio · مملكة البحرين · السجل التجاري: قيد التسجيل', '© 2026 WADQA Studio · Kingdom of Bahrain · Commercial registration: pending'],
   footer_privacy: ['سياسة الخصوصية', 'Privacy policy'], footer_support: ['الدعم', 'Support'],
   footer_status: ['قيد التطوير', 'In development'],
   name_l: ['الاسم (اختياري)', 'Name (optional)'], email_l: ['الإيميل', 'Email'],
