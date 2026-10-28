@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>قوالب إنستقرام ودقة</title>
+<style>
+/* هوية إنستقرام ودقة (ديوانية 2026-10-27): نفس ألوان الموقع وخطوطه. كل إطار يتصوّر لحاله بـ render.cjs */
+@font-face { font-family: Display; src: url("../../.claude/skills/video-ad-editor/motion/fonts/Tajawal-Black.ttf"); }
+@font-face { font-family: Body; src: url("../../.claude/skills/video-ad-editor/motion/fonts/IBMPlexSansArabic-Regular.ttf"); }
+@font-face { font-family: Body; font-weight: 700; src: url("../../.claude/skills/video-ad-editor/motion/fonts/IBMPlexSansArabic-Bold.ttf"); }
+:root { --ink: #0B1514; --slate: #1C2B2A; --line: #2c403e; --bone: #F2EBDD; --mist: #8FA09C; --gold: #C8A04A; --coral: #FF6B4A; --teal: #13636B; }
+* { box-sizing: border-box; margin: 0; }
+body { background: #444; display: flex; flex-wrap: wrap; gap: 40px; padding: 40px; font-family: Body, sans-serif; }
+.f { position: relative; overflow: hidden; }
+.post { width: 1080px; height: 1350px; }
+.story { width: 1080px; height: 1920px; }
+.dark { background: var(--ink); color: var(--bone); }
+.light { background: var(--bone); color: var(--ink); }
+.logo { position: absolute; top: 70px; right: 80px; display: flex; gap: 16px; align-items: center; font: 900 40px Display; }
+.logo svg { width: 54px; height: 54px; }
+.foot { position: absolute; bottom: 64px; right: 80px; left: 80px; display: flex; justify-content: space-between; align-items: center; font: 700 28px Body; color: var(--mist); }
+.light .foot { color: #6b6455; }
+.pill { background: var(--gold); color: var(--ink); border-radius: 99px; padding: 8px 24px; font: 700 26px Body; }
+.eyebrow { font: 700 36px Body; color: var(--gold); }
+.light .eyebrow { color: #7A5A12; }
+h1 { font: 900 96px/1.15 Display; }
+h2 { font: 900 78px/1.2 Display; }
+p.lead { font: 400 42px/1.6 Body; }
+.dark p.lead { color: #D9D2C2; }
+.content { position: absolute; top: 200px; right: 80px; left: 80px; display: flex; flex-direction: column; gap: 34px; }
+.phone { width: 380px; height: 640px; border-radius: 52px; border: 12px solid #26302f; overflow: hidden; align-self: center; box-shadow: 0 30px 90px #0009; }
+.phone img { width: 100%; display: block; }
+.demo { font: 400 26px Body; color: var(--mist); text-align: center; }
+.story h1 { font-size: 150px; }
+.story p.lead { font-size: 60px; }
+.story .eyebrow { font-size: 52px; }
+.story .logo { top: 220px; }
+.big { font: 900 300px/1 Display; color: var(--gold); direction: ltr; text-align: right; }
+.light .big { color: var(--teal); }
+.rows { display: grid; gap: 20px; }
+.r { display: flex; justify-content: space-between; align-items: center; background: var(--slate); border-radius: 28px; padding: 30px 40px; font: 700 44px Body; }
+.r b { font: 900 76px Display; direction: ltr; color: var(--coral); }
+.r b.ok { color: #4FC79E; }
+.center { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+.hl { width: 1080px; height: 1920px; background: var(--ink); }
+.hl .ring { width: 640px; height: 640px; border-radius: 50%; background: var(--slate); border: 10px solid var(--gold); display: grid; place-items: center; font: 900 260px Display; color: var(--bone); }
+.hl .ring img { width: 70%; border-radius: 22%; }
+.num { direction: ltr; unicode-bidi: isolate; }
+</style><style>
+.ps { width:1080px; height:1920px; }
+.ps .mid { position:absolute; inset:0; display:grid; place-content:center; justify-items:center; gap:56px; padding:0 100px; text-align:center; }
+.ps h1 { font:900 140px/1.15 Display; }
+.ps p.lead { font:400 62px/1.55 Body; }
+.ps .sticker { border:6px dashed var(--gold); border-radius:40px; padding:34px 60px; font:700 52px Body; color:var(--gold); }
+.light.ps .sticker { border-color:#7A5A12; color:#7A5A12; }
+.ps .note { font:400 34px Body; color:var(--mist); }
+.ps .drop svg { width:300px; height:300px; color:var(--bone); }
+.ps .gk { font-size:200px; }
+</style></head><body>
+<template id="logo"><svg viewBox="0 0 512 512"><path d="M256 104C256 104 160 228 160 310A96 96 0 0 0 352 310C352 228 256 104 256 104Z" fill="none" stroke="currentColor" stroke-width="28"/><circle cx="256" cy="316" r="38" fill="#C8A04A"/></svg></template><div class="f ps dark" id="p1-secret"><div class="mid"><div class="gk">🧤💻</div><h1>كنت أشتغل<br>على شي بالليل</h1><p class="lead">بعد التمرين والجامعة.<br>اليوم أقدر أوريكم 👇</p></div></div><div class="f ps dark" id="p2-wadqa"><div class="mid"><div class="drop"><i data-logo></i></div><h1>اسمه ودقة</h1><p class="lead">شركتي الصغيرة. نبني تطبيقات بحرينية بالعربي أول: «حياتي» و«إداراتي».</p><div class="note">قيد التطوير · نسخة تجريبية</div></div></div><div class="f ps light" id="p3-follow"><div class="mid"><h1>تابعوا الحساب<br>الجديد 🙏</h1><div class="sticker">حط ملصق @wadqa.bh هني</div><p class="lead">هناك بنوريكم كل شي وهو ينبني، بدون تجميل.</p></div></div><div class="f ps light" id="p4-testers"><div class="mid"><h1>وأبي منكم<br>12 مختبر</h1><p class="lead">تجربون «حياتي» على جوالاتكم 14 يوم، وتقولون لي وش ما اشتغل. بدون فلوس.</p><div class="sticker">حط ملصق الرابط هني</div><div class="note" style="color:#6b6455">قيد التطوير · نسخة تجريبية</div></div></div><script>
+const svg = document.getElementById('logo').innerHTML;
+document.querySelectorAll('[data-logo]').forEach((el) => { el.outerHTML = svg; });
+</script></body></html>
