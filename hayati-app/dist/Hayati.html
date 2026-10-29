@@ -3068,6 +3068,29 @@ window.HAYATI_EN = {
 "نبني «حياتي» بروحنا من البحرين. لو مرة وحدة كتبت رأيك بـ App Store، يساعد غيرك يلقاه.": "We build Hayati ourselves in Bahrain. A short App Store review helps others find it.",
 "ما بنسألك مرة ثانية. وعندك ملاحظة؟ «الإعدادات ← رأيك بالتطبيق».": "We won't ask again. Have feedback? Settings → Your feedback.",
 "• «كم سعرة في المجبوس؟» أو «كم أحتاج سعرات؟»": "• “How many calories in machboos?” or “How many calories do I need?”",
+"الأجهزة المسجّلة بحسابك": "Devices signed in to your account",
+"هذا الجهاز": "This device",
+"آخر استخدام": "Last used",
+"اطلع": "Sign out",
+"ما تعرف جهاز؟ طلّعه، وغيّر كلمة السر، وفعّل التحقق بخطوتين.": "Don't recognize a device? Sign it out, change your password and turn on two-step verification.",
+"تطلّع هالجهاز من حسابك؟ بيحتاج يسجّل دخول من جديد.": "Sign this device out of your account? It will need to sign in again.",
+"تطلّع كل الأجهزة الثانية من حسابك؟ هذا الجهاز يظل داخل.": "Sign out all other devices? This device stays signed in.",
+"اطلعهم": "Sign them out",
+"انطلع ✓": "Signed out ✓",
+"انطلعت كل الأجهزة الثانية ✓": "All other devices signed out ✓",
+"ما قدرنا نجيب الأجهزة · جرّب بعدين": "Couldn't load devices · try later",
+"ما قدرنا نطلّع هالجهاز · جرّب بعدين": "Couldn't sign that device out · try later",
+"ما قدرنا نطلّع الأجهزة · جرّب بعدين": "Couldn't sign the devices out · try later",
+"ما فيه أجهزة": "No devices",
+"تطبيق حياتي": "Hayati app",
+"آيباد": "iPad",
+"أندرويد": "Android",
+"ويندوز": "Windows",
+"لينكس": "Linux",
+"جهاز": "Device",
+"🛡️ بخطوتين": "🛡️ two-step",
+"الأجهزة المسجّلة": "Signed-in devices",
+"من «حسابك»: شوف وين حسابك مفتوح، وطلّع أي جهاز ما تعرفه (اقتراح أبو جعفر)": "In “Your account”: see where your account is signed in, and sign out any device you don’t recognize (suggested by Abu Jafar)",
 };
 
 </script>
@@ -3843,6 +3866,21 @@ window.HAYATI_CONFIG = {
     onSession(s);
   }
   const mfaError = (e) => new Error(/invalid|code|challenge/i.test((e && e.message) || '') ? 'الرمز غلط أو انتهى · جرّب الرمز الجديد' : 'ما قدرنا نتحقق · جرّب مرة ثانية');
+  // DW-090: الأجهزة المسجّلة بحسابك (جلسات Supabase) — كل واحد يشوف جلساته بس (RPC محمية)
+  async function mySessions() {
+    if (!sb || !status.signedIn) throw new Error('سجّل دخول أول');
+    const { data, error } = await sb.rpc('my_sessions');
+    if (error) throw new Error('ما قدرنا نجيب الأجهزة · جرّب بعدين');
+    return data || [];
+  }
+  async function revokeSession(id) {
+    const { data, error } = await sb.rpc('revoke_session', { sid: id });
+    if (error || !data) throw new Error('ما قدرنا نطلّع هالجهاز · جرّب بعدين');
+  }
+  async function signOutOthers() {
+    const { error } = await sb.auth.signOut({ scope: 'others' });
+    if (error) throw new Error('ما قدرنا نطلّع الأجهزة · جرّب بعدين');
+  }
   async function mfaFactors() {
     const { data, error } = await sb.auth.mfa.listFactors();
     if (error) throw mfaError(error);
@@ -4356,7 +4394,7 @@ window.HAYATI_CONFIG = {
     subscribe: (fn) => { listeners.add(fn); return () => listeners.delete(fn); },
     upsert, remove, setSettings,
     init, getConfig, saveConfig, clearConfig,
-    signIn, signUp, signOut, mfaFactors, mfaEnroll, mfaVerify, mfaLogin, mfaDisable, mfaCancel, mfaAll, mfaEnrollPhone, mfaVerifySms, mfaSmsSend, mfaStart, sync, resolveMerge, signInWithProvider, exchangeCode, resetPassword, updatePassword, providers, checkProviders, localCount, getSeed, processInbox, smsToTransaction,
+    signIn, signUp, signOut, mySessions, revokeSession, signOutOthers, mfaFactors, mfaEnroll, mfaVerify, mfaLogin, mfaDisable, mfaCancel, mfaAll, mfaEnrollPhone, mfaVerifySms, mfaSmsSend, mfaStart, sync, resolveMerge, signInWithProvider, exchangeCode, resetPassword, updatePassword, providers, checkProviders, localCount, getSeed, processInbox, smsToTransaction,
     ensureIngestToken, rotateIngestToken, exportJSON, importJSON, wipeAll,
   };
 })(window);
@@ -14544,6 +14582,75 @@ window.HAYATI_CONFIG = {
 })();
 
 </script>
+  <script>/* js/features/devices.js */
+// DW-090: «الأجهزة المسجّلة» بصفحة «حسابك»: وين حسابك مفتوح، ومتى آخر مرة، وتطلّع أي جهاز ما تعرفه
+// (اقتراح المالك). الجهاز الحالي ما ينطلع من هني؛ «تسجيل خروج» موجود فوق.
+(function () {
+  'use strict';
+
+  const A = window.App, E = window.Extras;
+  if (!A || !E) return;
+  const { S, I, h } = A;
+  const on = () => !!(S.status && S.status.signedIn && S.mySessions);
+
+  // اسم الجهاز من user agent (تقريبي)
+  function device(ua) {
+    ua = String(ua || '');
+    const os = /iPad/.test(ua) ? ['📱', 'آيباد'] : /iPhone/.test(ua) ? ['📱', 'آيفون'] : /Android/.test(ua) ? ['📱', 'أندرويد']
+      : /Macintosh|Mac OS X/.test(ua) ? ['💻', 'ماك'] : /Windows/.test(ua) ? ['💻', 'ويندوز'] : /Linux/.test(ua) ? ['💻', 'لينكس'] : ['🔑', 'جهاز'];
+    const app = /Hayati|Capacitor|wv\)|; wv/.test(ua) || (/iPhone|iPad/.test(ua) && !/Safari\//.test(ua));
+    const br = app ? 'تطبيق حياتي' : /Edg\//.test(ua) ? 'Edge' : /Chrome\//.test(ua) ? 'Chrome' : /Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : 'متصفح';
+    return { icon: os[0], name: os[1] + ' · ' + br };
+  }
+  function ago(iso) {
+    const m = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+    if (m < 2) return 'الحين';
+    if (m < 60) return 'قبل ' + m + ' دقيقة';
+    const hr = Math.round(m / 60);
+    if (hr < 24) return 'قبل ' + hr + ' ساعة';
+    const d = Math.round(hr / 24);
+    return d === 1 ? 'أمس' : 'قبل ' + d + ' يوم';
+  }
+
+  const box = () => '<div class="group-title">' + I('key') + 'الأجهزة المسجّلة بحسابك</div><div class="card" id="devBox"><p class="small muted" style="margin:0">…</p></div>';
+  async function fill() {
+    const el = document.getElementById('devBox');
+    if (!el) return;
+    let list;
+    try { list = await S.mySessions(); } catch (e) { el.innerHTML = '<p class="small muted" style="margin:0">' + h(e.message) + '</p>'; return; }
+    if (!list.length) { el.innerHTML = '<p class="small muted" style="margin:0">ما فيه أجهزة</p>'; return; }
+    const others = list.filter((s) => !s.is_current).length;
+    el.innerHTML = '<ul class="list" style="margin:0 0 6px">' + list.map((s) => {
+      const d = device(s.user_agent);
+      return '<li class="row"><div style="font-size:24px">' + d.icon + '</div><div class="main"><div class="title"><b>' + h(d.name) + '</b>' + (s.is_current ? ' <span class="tag" style="margin-inline-start:6px">هذا الجهاز</span>' : '') + '</div>' +
+        '<div class="sub">آخر استخدام ' + h(ago(s.last_active)) + (s.aal === 'aal2' ? ' · 🛡️ بخطوتين' : '') + '</div></div>' +
+        (s.is_current ? '' : '<button class="btn ghost" data-set="dev-out" data-id="' + h(s.id) + '">اطلع</button>') + '</li>';
+    }).join('') + '</ul>' +
+      '<p class="small muted" style="margin:0 0 10px">ما تعرف جهاز؟ طلّعه، وغيّر كلمة السر، وفعّل التحقق بخطوتين.</p>' +
+      (others ? '<button class="btn danger block" data-set="dev-out-all">اطلع من كل الأجهزة الثانية (' + others + ')</button>' : '');
+  }
+
+  const prevExtra = E.accountExtra;
+  E.accountExtra = (...a) => (prevExtra ? prevExtra(...a) : '') + (on() ? (setTimeout(fill, 0), box()) : '');
+
+  const prevAct = E.settingsAction;
+  E.settingsAction = async (act, root, b) => {
+    if (act === 'dev-out') {
+      if (!(await A.ask('تطلّع هالجهاز من حسابك؟ بيحتاج يسجّل دخول من جديد.', 'اطلع'))) return true;
+      try { await S.revokeSession(b.dataset.id); A.toast('انطلع ✓'); fill(); } catch (e) { A.toast(e.message); }
+      return true;
+    }
+    if (act === 'dev-out-all') {
+      if (!(await A.ask('تطلّع كل الأجهزة الثانية من حسابك؟ هذا الجهاز يظل داخل.', 'اطلعهم'))) return true;
+      try { await S.signOutOthers(); A.toast('انطلعت كل الأجهزة الثانية ✓'); fill(); } catch (e) { A.toast(e.message); }
+      return true;
+    }
+    return prevAct ? prevAct(act, root, b) : false;
+  };
+  E._device = device; // للاختبار
+})();
+
+</script>
   <script>/* js/features/fit.js */
 // المبالغ الكبيرة تركب بمكانها (DW-025): أي مبلغ (فيه .cur) ما يركب بعرضه، يصغر خطه شوي شوي لين 55%
 // بدل ما يطلع برا الكرت أو ينقص من أوله «…567.892». الأرقام العادية ما تتأثر.
@@ -15165,6 +15272,7 @@ window.HAYATI_CONFIG = {
   const NEWS = {
     v28: [
       ['🔥', 'سعرات الوصفات', 'كل وصفة بالمطبخ تقول لك كم سعرة للحصة وللكل (تقدير من المقادير)، ويتغيّر مع عدد الأشخاص'],
+      ['📱', 'الأجهزة المسجّلة', 'من «حسابك»: شوف وين حسابك مفتوح، وطلّع أي جهاز ما تعرفه (اقتراح أبو جعفر)'],
       ['💪', 'احسب احتياجك', 'من «صحتي»: كم سعرة وكم بروتين تحتاج باليوم حسب هدفك. الأرقام تبقى على جهازك'],
     ],
     v27: [

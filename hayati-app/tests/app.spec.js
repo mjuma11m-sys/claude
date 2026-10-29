@@ -1439,7 +1439,7 @@ const fakeSupabase = () => {
         onAuthStateChange: (cb) => { srv.cb = cb; return { data: { subscription: { unsubscribe() {} } } }; },
         signInWithPassword: async ({ email }) => { window.__signInAs('u-' + email.split('@')[0], email); return { error: null }; },
         signUp: async ({ email }) => { window.__signInAs('u-' + email.split('@')[0], email); return { data: { session: srv.session }, error: null }; },
-        signOut: async () => { srv.calls.push(['signOut']); window.__signInAs(null); return { error: null }; },
+        signOut: async (o) => { if (o && o.scope === 'others') { srv.calls.push(['signOut-others']); srv.sessions = (srv.sessions || []).filter((x) => x.is_current); return { error: null }; } srv.calls.push(['signOut']); window.__signInAs(null); return { error: null }; },
         signInWithOAuth: async (o) => { srv.calls.push(['oauth', o.provider, o.options]); return { data: { url: 'https://auth.example/' + o.provider }, error: null }; },
         exchangeCodeForSession: async (code) => { srv.calls.push(['exchange', code]); window.__signInAs('u-apple', 'a@privaterelay.appleid.com', 'apple'); return { error: null }; },
         resetPasswordForEmail: async (email, o) => { srv.calls.push(['reset', email, o.redirectTo]); return { error: null }; },
@@ -1455,7 +1455,13 @@ const fakeSupabase = () => {
           unenroll: async ({ factorId }) => { srv.factors = srv.factors.filter((f) => f.id !== factorId); srv.aal = 'aal1'; return { error: null }; },
         },
       },
-      from: q, rpc: async () => ({ error: null }),
+      from: q,
+      // DW-090: الأجهزة المسجّلة (my_sessions / revoke_session)
+      rpc: async (fn, args) => {
+        if (fn === 'my_sessions') return { data: srv.sessions || [], error: null };
+        if (fn === 'revoke_session') { srv.calls.push(['revoke', args.sid]); const n = (srv.sessions || []).length; srv.sessions = (srv.sessions || []).filter((x) => x.id !== args.sid || x.is_current); return { data: srv.sessions.length < n, error: null }; }
+        return { error: null };
+      },
       channel: () => ({ on() { return this; }, subscribe() { return this; } }), removeChannel() {},
     }),
   };
@@ -2010,7 +2016,7 @@ test('«جديد بحياتي»: an existing user sees what is new once after th
   await store(page, () => localStorage.setItem('hayati-seen-version', 'v27'));   // كان على النسخة اللي قبل
   await open(page);
   await expect(page.locator('#sheetTitle')).toHaveText('جديد بحياتي ✨', { timeout: 5000 });
-  await expect(page.locator('#sheetBody .news-item')).toHaveCount(2);
+  await expect(page.locator('#sheetBody .news-item')).toHaveCount(3);
   await page.click('#sheetCancel');
   expect(await store(page, () => localStorage.getItem('hayati-seen-version'))).toBe(await store(page, () => App.APP_VERSION));
   await open(page);
@@ -3388,4 +3394,37 @@ test('assistant calories + rating prompt (DW-089)', async ({ page }) => {
   expect(await page.evaluate(() => Extras._ratePrompt.due({ days: ['1', '2', '3', '4', '5'], done: true }, Date.now()))).toBe(false);
   expect(await page.evaluate(() => Extras._ratePrompt.due({ days: ['1', '2', '3', '4', '5'], later: Date.now() - 864e5 }, Date.now()))).toBe(false);
   void R;
+});
+
+// DW-090: الأجهزة المسجّلة بحسابك: تشوفها وتطلّع اللي ما تعرفه، والجهاز الحالي ما ينطلع من هني
+test('signed-in devices (DW-090): list, sign out one device, sign out all others', async ({ page }) => {
+  await useFakeSupabase(page);
+  await open(page);
+  const now = Date.now();
+  await store(page, (n) => {
+    App.S.setSettings({ onboarded: true });
+    window.__srv.sessions = [
+      { id: 's1', is_current: true, aal: 'aal1', last_active: new Date(n).toISOString(), user_agent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148' },
+      { id: 's2', is_current: false, aal: 'aal1', last_active: new Date(n - 3 * 3600e3).toISOString(), user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36' },
+      { id: 's3', is_current: false, aal: 'aal1', last_active: new Date(n - 2 * 864e5).toISOString(), user_agent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15' },
+    ];
+    window.__signInAs('u-sara', 'sara@example.com');
+  }, now);
+  await expect.poll(() => store(page, () => App.S.status.signedIn)).toBe(true);
+  await store(page, () => App.accountSheet());
+  const box = page.locator('#devBox');
+  await expect(box.locator('li')).toHaveCount(3);
+  await expect(box).toContainText('هذا الجهاز');
+  await expect(box).toContainText('آيفون · تطبيق حياتي');
+  await expect(box).toContainText('ويندوز · Chrome');
+  await expect(box).toContainText('قبل 3 ساعة');
+  await expect(box.locator('[data-set="dev-out"]')).toHaveCount(2);   // الجهاز الحالي بدون زر
+  await box.locator('[data-set="dev-out"][data-id="s2"]').click();
+  await page.click('#askDlg [data-ok]');
+  await expect(box.locator('li')).toHaveCount(2);
+  expect(await store(page, () => window.__srv.calls.filter((c) => c[0] === 'revoke'))).toEqual([['revoke', 's2']]);
+  await box.locator('[data-set="dev-out-all"]').click();
+  await page.click('#askDlg [data-ok]');
+  await expect(box.locator('li')).toHaveCount(1);
+  expect(await store(page, () => App.S.status.signedIn)).toBe(true);   // هذا الجهاز يظل داخل
 });

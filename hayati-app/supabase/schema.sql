@@ -370,3 +370,31 @@ begin
       with check ((select auth.jwt()->>'aal') = 'aal2' or not (select public.user_has_mfa()))$p$, t);
   end loop;
 end $$;
+
+-- DW-090: «الأجهزة المسجّلة» — كل مستخدم يشوف جلساته هو بس، ويقدر يطلّع غير الجهاز الحالي
+create or replace function public.my_sessions()
+returns table (id uuid, created_at timestamptz, last_active timestamptz, user_agent text, aal text, is_current boolean)
+language sql security definer set search_path = '' stable as $$
+  select s.id, s.created_at,
+         coalesce(s.refreshed_at::timestamptz, s.updated_at, s.created_at) as last_active,
+         left(coalesce(s.user_agent, ''), 300), s.aal::text,
+         s.id = nullif(auth.jwt() ->> 'session_id', '')::uuid as is_current
+  from auth.sessions s
+  where s.user_id = auth.uid() and (s.not_after is null or s.not_after > now())
+  order by 3 desc limit 20;
+$$;
+create or replace function public.revoke_session(sid uuid)
+returns boolean language plpgsql security definer set search_path = '' as $$
+declare n int;
+begin
+  if auth.uid() is null then return false; end if;
+  if sid = nullif(auth.jwt() ->> 'session_id', '')::uuid then return false; end if;
+  delete from auth.sessions where id = sid and user_id = auth.uid();
+  get diagnostics n = row_count;
+  return n > 0;
+end;
+$$;
+revoke all on function public.my_sessions() from public, anon;
+revoke all on function public.revoke_session(uuid) from public, anon;
+grant execute on function public.my_sessions() to authenticated;
+grant execute on function public.revoke_session(uuid) to authenticated;

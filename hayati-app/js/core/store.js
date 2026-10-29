@@ -285,6 +285,21 @@
     onSession(s);
   }
   const mfaError = (e) => new Error(/invalid|code|challenge/i.test((e && e.message) || '') ? 'الرمز غلط أو انتهى · جرّب الرمز الجديد' : 'ما قدرنا نتحقق · جرّب مرة ثانية');
+  // DW-090: الأجهزة المسجّلة بحسابك (جلسات Supabase) — كل واحد يشوف جلساته بس (RPC محمية)
+  async function mySessions() {
+    if (!sb || !status.signedIn) throw new Error('سجّل دخول أول');
+    const { data, error } = await sb.rpc('my_sessions');
+    if (error) throw new Error('ما قدرنا نجيب الأجهزة · جرّب بعدين');
+    return data || [];
+  }
+  async function revokeSession(id) {
+    const { data, error } = await sb.rpc('revoke_session', { sid: id });
+    if (error || !data) throw new Error('ما قدرنا نطلّع هالجهاز · جرّب بعدين');
+  }
+  async function signOutOthers() {
+    const { error } = await sb.auth.signOut({ scope: 'others' });
+    if (error) throw new Error('ما قدرنا نطلّع الأجهزة · جرّب بعدين');
+  }
   async function mfaFactors() {
     const { data, error } = await sb.auth.mfa.listFactors();
     if (error) throw mfaError(error);
@@ -798,7 +813,7 @@
     subscribe: (fn) => { listeners.add(fn); return () => listeners.delete(fn); },
     upsert, remove, setSettings,
     init, getConfig, saveConfig, clearConfig,
-    signIn, signUp, signOut, mfaFactors, mfaEnroll, mfaVerify, mfaLogin, mfaDisable, mfaCancel, mfaAll, mfaEnrollPhone, mfaVerifySms, mfaSmsSend, mfaStart, sync, resolveMerge, signInWithProvider, exchangeCode, resetPassword, updatePassword, providers, checkProviders, localCount, getSeed, processInbox, smsToTransaction,
+    signIn, signUp, signOut, mySessions, revokeSession, signOutOthers, mfaFactors, mfaEnroll, mfaVerify, mfaLogin, mfaDisable, mfaCancel, mfaAll, mfaEnrollPhone, mfaVerifySms, mfaSmsSend, mfaStart, sync, resolveMerge, signInWithProvider, exchangeCode, resetPassword, updatePassword, providers, checkProviders, localCount, getSeed, processInbox, smsToTransaction,
     ensureIngestToken, rotateIngestToken, exportJSON, importJSON, wipeAll,
   };
 })(window);
