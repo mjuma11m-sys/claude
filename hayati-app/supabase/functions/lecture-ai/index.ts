@@ -160,7 +160,10 @@ const TASKS = {
 };
 // DW-056: the same reader for a work shift roster or a training schedule
 const KIND_HINT = (k?: string) =>
-  k === "work" ? " This is a work shift roster, not a class timetable: name = the shift or job as written (or \"دوام\" if none); a day range like Sun–Thu means every day in between; room = the workplace if shown."
+  k === "work" ? " This is a work schedule, not a class timetable, in any format: a weekly shift roster, a monthly rota with dates, an app screenshot, a photo or text. " +
+    "name = the shift or job as written (e.g. «دوام صباحي», «Night shift»), or \"دوام\" if none; a day range like Sun–Thu or «الأحد – الخميس» means every day in between; room = the workplace or branch if shown. " +
+    "Shift codes: M/AM/صباحي = morning, E/PM/A/مسائي = evening, N/ليلي = night; use the times printed in the legend or header for each code, and skip any code with no time shown. Skip OFF, Rest, إجازة, عطلة and leave days. " +
+    "If dates are shown for one or more weeks, map each date to its weekday and list the usual weekly pattern once (if weeks differ, use the first full week). A night shift that ends after midnight keeps its printed start and end."
   : k === "gym" ? " This is a training or workout schedule, not a class timetable: name = the session as written (e.g. \"جيم صدر\", \"Running\"), or \"تمرين\" if none; room = the gym, pitch or place if shown. Sessions without am/pm between 1:00 and 9:59 are usually in the evening."
   : "";
 const MEDIA = ["image/jpeg", "image/png", "image/webp"];
