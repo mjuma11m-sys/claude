@@ -1,0 +1,172 @@
+<!doctype html>
+<html dir="rtl" lang="ar"><head><meta charset="utf-8">
+<!-- فيلم «رحلة حياتي»: من فكرة لين App Store · 30 ث · 1080×1920 · كل فريم من setT(t)
+     الفصول: 0 هوك · 1 فكرة (0–6) · 2 بناء (6–12) · 3 رفضين (12–18) · 4 قبول (18–23) · 5 بين يديك (23–30) -->
+<style>
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Bold.ttf);font-weight:700}
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Regular.ttf);font-weight:400}
+:root{--sea:#0E3B43;--deep:#0A1A1E;--pearl:#E8DCC4;--coral:#FF6B4A;--mint:#2F9E7A;--red:#E5484D}
+*{box-sizing:border-box}
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:var(--deep);font-family:P,'Helvetica Neue',Arial,sans-serif;color:var(--pearl)}
+#stage{position:absolute;inset:0;overflow:hidden;background:radial-gradient(120% 75% at 50% 42%,#145a62 0%,var(--sea) 42%,var(--deep) 100%)}
+.c{color:var(--coral)}
+.abs{position:absolute;left:0;right:0;text-align:center}
+#hook{top:110px;font-size:62px;font-weight:700;padding:0 60px}
+#hook .q{display:inline-block;padding:14px 34px;border-radius:999px;background:rgba(10,26,30,.6);border:2px solid rgba(232,220,196,.2)}
+#chap{top:250px;font-size:40px;letter-spacing:2px;opacity:.75}
+/* 1. فكرة */
+#bulb{position:absolute;left:50%;top:560px;width:420px;height:420px;margin-left:-210px}
+#idea{top:1050px;font-size:120px;font-weight:700}
+#date1{top:1210px;font-size:54px}
+/* 2. بناء */
+#grid{position:absolute;left:90px;right:90px;top:430px;height:1100px}
+.tile{position:absolute;width:270px;height:585px;border-radius:40px;overflow:hidden;background:#F7F4EE;box-shadow:0 30px 60px -20px rgba(0,0,0,.7);border:6px solid #0b1416}
+.tile img{width:100%;display:block}
+#count{top:1580px;font-size:110px;font-weight:700;direction:ltr}
+#countL{top:1710px;font-size:46px}
+/* 3. رفض */
+#env{position:absolute;left:50%;top:560px;width:640px;height:420px;margin-left:-320px;border-radius:36px;background:#F7F4EE;color:#0B2328;box-shadow:0 40px 80px -30px rgba(0,0,0,.7);padding:46px 50px;text-align:right}
+#env h3{margin:0 0 14px;font-size:48px}
+#env p{margin:0;font-size:36px;color:#5E6C6E}
+.stamp{position:absolute;left:50%;width:520px;margin-left:-260px;text-align:center;font-weight:700;font-size:96px;border:12px solid;border-radius:30px;padding:10px 0;transform-origin:center}
+#rej1{top:620px;white-space:nowrap;color:var(--red);border-color:var(--red)}
+#rej2{top:880px;width:700px;margin-left:-350px;font-size:76px;white-space:nowrap;color:var(--red);border-color:var(--red)}
+#fixes{top:1150px;font-size:50px;line-height:1.7}
+#fixes div span{color:var(--mint)}
+/* 4. قبول */
+#ok{top:700px;color:var(--mint);border-color:var(--mint);font-size:110px;width:640px;margin-left:-320px}
+#date2{top:960px;font-size:64px;font-weight:700}
+#days{top:1070px;font-size:50px}
+.conf{position:absolute;width:22px;height:34px;border-radius:5px}
+/* 5. بين يديك */
+#phoneWrap{position:absolute;left:50%;top:420px;width:560px;height:1210px;margin-left:-280px}
+#phone{position:absolute;inset:0;border-radius:86px;background:#0b1416;padding:17px;box-shadow:0 70px 120px -40px rgba(0,0,0,.75),inset 0 0 0 3px #2a4a50}
+#screen{position:relative;width:100%;height:100%;border-radius:70px;overflow:hidden;background:#F7F4EE}
+#screen img{position:absolute;left:0;top:0;width:100%}
+#home{position:absolute;inset:0;background:linear-gradient(160deg,#1c5f68,#0b2b31);display:flex;flex-direction:column;align-items:center;justify-content:center}
+#home img{width:190px;border-radius:44px;box-shadow:0 20px 40px -10px rgba(0,0,0,.6)}
+#home b{margin-top:16px;font-size:36px;color:#fff}
+#feat{top:1680px;font-size:58px;font-weight:700}
+#logo{position:absolute;left:50%;top:430px;width:330px;height:330px;margin-left:-165px}
+#brand{top:800px}
+#brand h1{margin:0;font-size:170px;line-height:1}
+#brand p{margin:20px 0 0;font-size:58px}
+#cta{top:1150px}
+#cta span{display:inline-block;padding:26px 54px;border-radius:999px;background:var(--coral);color:#fff;font-weight:700;font-size:56px}
+#plat{top:1320px;font-size:46px;opacity:.85}
+#demo{bottom:34px;font-size:30px;opacity:.7}
+</style></head><body><div id="stage">
+  <div class="abs" id="hook"><span class="q">Apple رفضته <span class="c">مرتين</span>… وبعدين؟</span></div>
+  <div class="abs" id="chap"></div>
+
+  <svg id="bulb" viewBox="0 0 200 200"><circle id="glow" cx="100" cy="86" r="90" fill="#FF6B4A" opacity=".15"/>
+    <path id="bulbP" d="M100 30 C62 30 44 58 44 84 C44 108 62 120 70 138 L130 138 C138 120 156 108 156 84 C156 58 138 30 100 30 Z M76 152 L124 152 M82 166 L118 166" fill="none" stroke="#E8DCC4" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1"/></svg>
+  <div class="abs" id="idea">💡 <span class="c">فكرة</span></div>
+  <div class="abs" id="date1">11 أكتوبر 2026</div>
+
+  <div id="grid"></div>
+  <div class="abs" id="count">0</div>
+  <div class="abs" id="countL">تعديل بالكود</div>
+
+  <div id="env"><h3>📨 أرسلناه لـ Apple</h3><p>«حياتي» · نسخة للمراجعة</p></div>
+  <div class="stamp" id="rej1">❌ رفض</div>
+  <div class="stamp" id="rej2">❌ رفض مرة ثانية</div>
+  <div class="abs" id="fixes"><div><span>✓</span> الدخول بـ Apple</div><div><span>✓</span> الآيباد</div><div><span>✓</span> صلاحيات ما نحتاجها</div></div>
+
+  <div class="stamp" id="ok">✅ انقبل</div>
+  <div class="abs" id="date2">29 أكتوبر 2026</div>
+  <div class="abs" id="days">18 يوم من الفكرة</div>
+  <div id="conf"></div>
+
+  <div id="phoneWrap"><div id="phone"><div id="screen"><img id="sA" src="shots/money.png"><div id="home"><img src="shots/icon.png"><b>حياتي</b></div></div></div></div>
+  <div class="abs" id="feat"></div>
+
+  <svg id="logo" viewBox="0 0 512 512">
+    <rect width="512" height="512" rx="116" fill="#0E3B43" stroke="#E8DCC4" stroke-opacity=".15" stroke-width="4"/>
+    <path id="arc" d="M 383.3 172.7 A 160 160 0 1 1 300 102.2" fill="none" stroke="#E8DCC4" stroke-opacity=".28" stroke-width="22" stroke-linecap="round" pathLength="1" stroke-dasharray="1"/>
+    <path id="ha" d="M 304 166 L 196 166 L 264 222 C 204 222 168 254 168 292 C 168 336 206 360 256 360 C 292 360 318 348 338 332" fill="none" stroke="#E8DCC4" stroke-width="38" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1"/>
+    <circle id="dot" cx="352" cy="128" r="30" fill="#FF6B4A"/>
+  </svg>
+  <div class="abs" id="brand"><h1>حياتي</h1><p>مصاريفك ودراستك وصلاتك بمكان واحد</p></div>
+  <div class="abs" id="cta"><span>متوفر الحين على App Store</span></div>
+  <div class="abs" id="plat">📱 مجاني للآيفون · أندرويد قريباً 👀</div>
+  <div class="abs" id="demo">* لقطات ببيانات تجريبية</div>
+</div>
+<script>
+const $ = (i) => document.getElementById(i);
+const cl = (x) => Math.max(0, Math.min(1, x));
+const p = (t, a, b) => cl((t - a) / (b - a));
+const eo = (x) => 1 - Math.pow(1 - x, 3);
+const eb = (x) => { const c = 1.7; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const win = (t, a, b, f = 0.35) => cl(Math.min(p(t, a, a + f), 1 - p(t, b - f, b)));   // يطلع ويختفي
+const SH = ['money', 'bank', 'timetable', 'kitchen', 'subs', 'day', 'goals', 'zakat'];
+// شبكة البناء: 8 شاشات تتجمّع (3 أعمدة متداخلة)
+const POS = [[0, 0], [295, 60], [590, 0], [0, 520], [295, 580], [590, 520], [148, 280], [442, 300]];
+SH.forEach((s, i) => { const d = document.createElement('div'); d.className = 'tile'; d.innerHTML = '<img src="shots/' + s + '.png">'; d.style.left = POS[i][0] + 'px'; d.style.top = POS[i][1] + 'px'; $('grid').appendChild(d); });
+const tiles = [...$('grid').children];
+// قصاصات القبول
+const CONF = Array.from({ length: 46 }, (_, i) => { const d = document.createElement('i'); d.className = 'conf'; d.style.background = ['#FF6B4A', '#2F9E7A', '#E8DCC4', '#6EC5C0'][i % 4]; $('conf').appendChild(d); return { el: d, x: 540 + Math.sin(i * 12.9898) * 480, vx: Math.cos(i * 7.3) * 260, vy: -900 - (i % 7) * 120, r: i * 47 }; });
+const FEAT = [['money', 'مصاريفك بثانية'], ['bank', 'الصق رسالة البنك'], ['timetable', 'جدولك من PDF']];
+const CH = [[0, 6, '١ · الفكرة'], [6, 12, '٢ · البناء'], [12, 18, '٣ · المراجعة'], [18, 23, '٤ · القبول'], [23, 27, '٥ · بين يديك']];
+
+function setT(t) {
+  // الهوك ثابت فوق لين نهاية القبول
+  $('hook').style.opacity = 1 - p(t, 22.6, 23);
+  $('hook').style.transform = `scale(${1.05 - 0.05 * eo(p(t, 0, 0.4))})`;
+  const ch = CH.find(([a, b]) => t >= a && t < b);
+  $('chap').textContent = ch ? ch[2] : ''; $('chap').style.opacity = ch ? win(t, ch[0], ch[1], 0.3) * 0.8 : 0;
+  $('chap').style.display = t < 0.6 ? 'none' : '';
+
+  // ١. الفكرة 0–6
+  const b1 = win(t, 0, 6, 0.4);
+  $('bulb').style.opacity = b1; $('bulbP').style.strokeDashoffset = 0.65 * (1 - eo(p(t, 0, 1.4)));
+  $('glow').setAttribute('r', 70 + 30 * Math.sin(t * 4)); $('glow').style.opacity = 0.1 + 0.2 * p(t, 1.4, 2);
+  $('bulb').style.transform = `translateY(${-p(t, 5.4, 6) * 120}px) scale(${0.9 + 0.1 * eo(p(t, 0, 0.8))})`;
+  const i1 = eb(p(t, 1.6, 2.1)); $('idea').style.opacity = cl(i1) * b1; $('idea').style.transform = `scale(${0.7 + 0.3 * i1})`;
+  $('date1').style.opacity = cl(p(t, 2.4, 2.9)) * b1;
+
+  // ٢. البناء 6–12: الشاشات تتجمّع وحدة وحدة، والعداد يعدّ لـ 151
+  const g = win(t, 5.8, 12.2, 0.4);
+  tiles.forEach((d, i) => { const a = eb(p(t, 6.1 + i * 0.45, 6.6 + i * 0.45)); d.style.opacity = cl(a) * g; d.style.transform = `translateY(${(1 - a) * 300}px) rotate(${(i % 2 ? 1 : -1) * (1 - a) * 12 + (i % 3 - 1) * 2}deg) scale(${0.85 + 0.15 * a})`; });
+  $('count').textContent = Math.round(151 * eo(p(t, 6.4, 10.4)));
+  $('count').style.opacity = $('countL').style.opacity = g * cl(p(t, 6.2, 6.6));
+
+  // ٣. المراجعة 12–18: ظرف ← رفض ← رفض ← صلّحنا
+  const e = win(t, 12, 18.2, 0.4);
+  $('env').style.opacity = e; $('env').style.transform = `translateY(${(1 - eo(p(t, 12, 12.6))) * 200}px) rotate(${-2 + 4 * p(t, 12, 18)}deg)`;
+  const s1 = p(t, 13.2, 13.5), s2 = p(t, 14.6, 14.9);
+  $('rej1').style.opacity = cl(s1 * 3) * e; $('rej1').style.transform = `rotate(-10deg) scale(${2.2 - 1.2 * eo(s1)})`;
+  $('rej2').style.opacity = cl(s2 * 3) * e; $('rej2').style.transform = `rotate(7deg) scale(${2.2 - 1.2 * eo(s2)})`;
+  [...$('fixes').children].forEach((d, i) => { const f = eb(p(t, 15.6 + i * 0.5, 16 + i * 0.5)); d.style.opacity = cl(f) * e; d.style.transform = `translateX(${(1 - f) * -60}px)`; });
+
+  // ٤. القبول 18–23
+  const k = win(t, 18, 23, 0.4), ok = p(t, 18.4, 18.75);
+  $('ok').style.opacity = cl(ok * 3) * k; $('ok').style.transform = `rotate(-6deg) scale(${2.4 - 1.4 * eo(ok)})`;
+  $('date2').style.opacity = cl(p(t, 19.1, 19.5)) * k; $('days').style.opacity = cl(p(t, 19.6, 20)) * k;
+  const ct = t - 18.6;
+  CONF.forEach((c) => { if (ct < 0 || t > 23) { c.el.style.opacity = 0; return; } const x = c.x + c.vx * ct, y = 900 + c.vy * ct + 900 * ct * ct; c.el.style.opacity = 1 - p(t, 21.5, 23); c.el.style.transform = `translate(${x}px,${y}px) rotate(${c.r + ct * 400}deg)`; });
+
+  // ٥. بين يديك 23–27: الجوال ← أيقونة حياتي ← تنفتح ← 3 ميزات
+  const ph = eo(p(t, 22.8, 23.5)), pout = eo(p(t, 26.6, 27.1));
+  $('phoneWrap').style.opacity = ph * (1 - pout);
+  $('phoneWrap').style.transform = `translateY(${(1 - ph) * 600 + pout * 600}px)`;
+  const open = eo(p(t, 23.9, 24.3));
+  $('home').style.opacity = 1 - open; $('home').style.transform = `scale(${1 + open * 0.6})`;
+  const fi = Math.max(0, Math.min(2, Math.floor((t - 24.2) / 0.85)));
+  $('sA').src = 'shots/' + FEAT[fi][0] + '.png';
+  $('sA').style.top = `${-((t - 24.2) % 0.85) * 40}px`;
+  $('feat').innerHTML = FEAT[fi][1]; $('feat').style.opacity = cl(p(t, 24.2, 24.5)) * (1 - pout);
+
+  // الخاتمة 27–30
+  const L = p(t, 27.0, 27.8);
+  $('logo').style.opacity = cl(L * 3); $('logo').style.transform = `scale(${0.85 + 0.15 * eo(L)})`;
+  $('arc').style.strokeDashoffset = 1 - eo(p(t, 27.0, 27.7)); $('ha').style.strokeDashoffset = 1 - eo(p(t, 27.1, 27.9));
+  $('dot').style.transformOrigin = '352px 128px'; $('dot').style.transform = `scale(${eb(p(t, 27.7, 28.0))})`;
+  const B = eo(p(t, 27.5, 28)); $('brand').style.opacity = B; $('brand').style.transform = `translateY(${(1 - B) * 30}px)`;
+  const C = eb(p(t, 28.0, 28.4)); $('cta').style.opacity = cl(C); $('cta').style.transform = `scale(${0.9 + 0.1 * C})`;
+  $('plat').style.opacity = cl(p(t, 28.4, 28.8));
+}
+window.setT = setT;
+const imgs = [...document.images];
+window.READY = Promise.all([document.fonts.ready, ...imgs.map((i) => new Promise((r) => (i.complete && i.naturalWidth) ? r() : (i.onload = i.onerror = r)))]).then(() => setT(0));
+</script></body></html>
