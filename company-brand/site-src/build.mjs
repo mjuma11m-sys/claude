@@ -42,7 +42,7 @@ const T = {
 // stores: روابط المتاجر. null = «قريباً» (زر باهت بدون رابط)، ورابط = زر يشتغل. التطبيق بدون stores ما تطلع له أزرار أبداً
 //   (ما نعد بمتجر ما فيه خطة له). الشعارات الرسمية للمتاجر ممنوعة قبل ما يكون التطبيق متاح، فالأزرار نص بس (DW-050).
 const apps = {
-  hayati: { stores: { ios: null, android: null }, ic: '<img src="IMG/hayati-icon.png" alt="">', cls: 'ic-hayati', name: ['حياتي', 'Hayati'], pill: ['نسخة تجريبية · قيد التطوير', 'Beta · In development'], beta: true, short: ['يومك بمكان واحد: الميزانية، المواعيد، العبادة، والمحاضرات.', 'Your day in one place: budget, reminders, worship and lectures.'] },
+  hayati: { stores: { ios: 'https://apps.apple.com/bh/app/%D8%AD%D9%8A%D8%A7%D8%AA%D9%8A-hayati/id6823956749', android: null }, ic: '<img src="IMG/hayati-icon.png" alt="">', cls: 'ic-hayati', name: ['حياتي', 'Hayati'], pill: ['على App Store · أندرويد قريباً', 'On the App Store · Android coming soon'], beta: true, short: ['يومك بمكان واحد: الميزانية، المواعيد، العبادة، والمحاضرات.', 'Your day in one place: budget, reminders, worship and lectures.'] },
   'sports-hub': { ic: '⚽', cls: 'ic-sports', name: ['Sports Hub', 'Sports Hub'], pill: ['قيد التطوير', 'In development'], short: ['إدارة الفرق واللاعبين والأندية.', 'Running teams, players and clubs.'] },
   idarati: { ic: '<img src="IMG/idarati-icon.png" alt="">', cls: 'ic-idarati', name: ['إداراتي', 'Idarati'], pill: ['نسخة تجريبية · قيد التطوير', 'Beta · In development'], beta: true, short: ['إدارة أملاك وميزانية العائلة: الإيجارات، الفواتير، والشيكات.', 'Family property and budget management: rent, bills and cheques.'] },
 };
@@ -291,7 +291,7 @@ P.testers = (L) => ({
     ${(L === 0 ? [['1 · سجّل', 'إيميلك ونوع جوالك بالنموذج تحت.'], ['2 · ثبّت', 'نرسلك دعوة: TestFlight للآيفون أو رابط Google Play للأندرويد.'], ['3 · استخدمه 14 يوم', 'سجّل مصاريفك أو جدولك مثل العادة. خله مثبّت لين تخلص المدة.'], ['4 · قول لنا', 'من الإعدادات ← «بلّغ عن مشكلة» أو «رأيك بالتطبيق».']]
       : [['1 · Sign up', 'Your email and phone type in the form below.'], ['2 · Install', 'We send an invite: TestFlight for iPhone or a Google Play link for Android.'], ['3 · Use it for 14 days', 'Log your spending or timetable as usual. Keep it installed for the whole period.'], ['4 · Tell us', 'From Settings → “Report a problem” or “Your feedback”.']]).map(([t, d]) => `<div class="card"><h3>${t}</h3><p>${d}</p></div>`).join('')}
   </div>
-  <p class="note">${L === 0 ? 'أندرويد: نبدأ أول ما Google يفعّل حساب المطوّر. آيفون: بعد ما تخلص مراجعة آبل. قبلها نحفظ اسمك بالقائمة بس.' : 'Android: we start once Google activates our developer account. iPhone: once Apple’s review is done. Until then we only keep you on the list.'}</p>
+  <p class="note">${L === 0 ? 'آيفون: «حياتي» صار على App Store، حمّله مباشرة. أندرويد: نبدأ الاختبار المغلق أول ما Google يفعّل حساب المطوّر، وقبلها نحفظ اسمك بالقائمة.' : 'iPhone: Hayati is now on the App Store, so download it directly. Android: closed testing starts once Google activates our developer account; until then we keep you on the list.'}</p>
 </div></section>
 <section><div class="wrap prose">
   <h2>${L === 0 ? 'اتفاقية المختبر' : 'Tester agreement'}</h2>
