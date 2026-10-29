@@ -178,7 +178,7 @@ export function statement(data: Data, unit: Unit, now = new Date()) {
 }
 
 /** تذكير النسخة الاحتياطية: ما فيه نسخة أبد، أو آخر وحدة قبل 30 يوم أو أكثر */
-export const BACKUP_DAYS = 30;
+export const BACKUP_DAYS = 7; // DW-051: أسبوعي وقت التجربة (البيانات حقيقية والنسخة تجريبية)
 export function backupDue(last: string | undefined, now = new Date()) {
   if (!last) return true;
   const days = (now.getTime() - new Date(last + "T00:00:00").getTime()) / 86_400_000;

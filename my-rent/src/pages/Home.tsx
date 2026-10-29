@@ -2,13 +2,14 @@ import { useState } from "react";
 import { useStore } from "../data/store";
 import { remindList, arrears, chequesDue, monthKey, rentAt, backupDue, balances, budget, collection, contractAlerts, docAlerts, fmt, monthName, unitStatus } from "../data/logic";
 import { DocPill } from "./Docs";
+import { FEEDBACK_TO } from "./Feedback";
 import { RemindSheet } from "./Remind";
 import type { Unit } from "../data/types";
 import { Money, StatusPill } from "../theme/AppShell";
 import { useStagger } from "../theme/motion";
 import { Bar, DemoNote, EmptyState, SectionHead, SkeletonCards, useToast } from "../ui/kit";
 import { Icon } from "../ui/icons";
-import { getLastBackup, setSetup, setWelcomed, setupOpen, welcomed } from "../data/prefs";
+import { getLastBackup, priceAskDue, setPriceAsked, setSetup, setStarted, setWelcomed, setupOpen, welcomed } from "../data/prefs";
 import { t } from "../i18n";
 
 /** حلقة التحصيل: تنرسم لما تتغيّر النسبة (stroke-dashoffset) */
@@ -31,6 +32,7 @@ export function Home({ onOpenUnit, go, onQuick }: { onOpenUnit: (u: Unit) => voi
   const { data, loading, quickPay, unpay, eraseAll, sync } = useStore();
   const [welcome, setWelcome] = useState(() => !welcomed()); // DW-031
   const [setup, setSetupShown] = useState(setupOpen); // DW-035
+  const [priceAsk, setPriceAsk] = useState(priceAskDue); // DW-051: بعد أسبوع من «ابدأ ببياناتي»، مرة وحدة
   const [reminding, setReminding] = useState(false); // DW-043
   const toast = useToast();
   const received = (u: Unit) => {
@@ -56,16 +58,30 @@ export function Home({ onOpenUnit, go, onQuick }: { onOpenUnit: (u: Unit) => voi
           <h2 className="set-title" id="wl-h">{t("أهلاً بإداراتي 👋")}</h2>
           <p className="small" style={{ margin: 0 }}>{t("اللي تشوفه الحين")} <b>{t("بيانات تجريبية")}</b> {t("عشان تتعرّف على التطبيق. لما تكون جاهز، ابدأ ببياناتك: التطبيق يفضى وتضيف أول وحدة.")}</p>
           <div className="grid-2">
-            <button className="btn press" id="welcome-start" onClick={() => { setWelcomed(); setWelcome(false); setSetup("open"); setSetupShown(true); eraseAll(); onQuick("unit"); }}>{t("ابدأ ببياناتي")}</button>
+            <button className="btn press" id="welcome-start" onClick={() => { setWelcomed(); setWelcome(false); setSetup("open"); setSetupShown(true); setStarted(new Date().toISOString().slice(0, 10)); eraseAll(); onQuick("unit"); }}>{t("ابدأ ببياناتي")}</button>
             <button className="btn btn-ghost press" id="welcome-demo" onClick={() => { setWelcomed(); setWelcome(false); }}>{t("خلّني أجرب أول")}</button>
           </div>
           <p className="muted small" style={{ margin: 0 }}>{t("قيد التطوير · نسخة تجريبية. بدون حساب كل شي على جوالك بس.")}</p>
+        </section>
+      )}
+      {priceAsk && !welcome && (
+        <section className="card stack" id="price-ask" aria-labelledby="price-h">
+          <h2 className="set-title" id="price-h" style={{ margin: 0 }}>{t("سؤال واحد بس 🙏")}</h2>
+          <p style={{ margin: 0 }}>{t("لو المزامنة ومشاركة العائلة صارت اشتراك بـ 1.500 د.ب بالشهر، تدفع؟")}</p>
+          <p className="muted small" style={{ margin: 0 }}>{t("هذا سؤال بس، مو اشتراك — التطبيق على الجوال يظل مجاني. جوابك يروح بالواتساب.")}</p>
+          <div className="grid-3">
+            {([["yes", t("إيه")], ["maybe", t("يمكن")], ["no", t("لا")]] as const).map(([k, l]) => (
+              <a key={k} className="btn btn-ghost press" id={`price-${k}`} href={`https://wa.me/${FEEDBACK_TO}?text=${encodeURIComponent(t("سؤال السعر (إداراتي): 1.500 د.ب بالشهر للمزامنة؟ جوابي: {a}", { a: l }))}`} target="_blank" rel="noreferrer" onClick={() => { setPriceAsked(); setPriceAsk(false); }}>{l}</a>
+            ))}
+          </div>
+          <button className="link press" id="price-skip" style={{ justifySelf: "start" }} onClick={() => { setPriceAsked(); setPriceAsk(false); }}>{t("ما أبي أجاوب")}</button>
         </section>
       )}
       {setup && !welcome && (() => {
         const steps = [
           { id: "unit", label: t("أضف أول وحدة"), done: data.units.length > 0, act: () => onQuick("unit") },
           { id: "pay", label: t("سجّل أول دفعة"), done: data.payments.length > 0, act: () => go("tenants") },
+          { id: "contract", label: t("اعتمد أول عقد (أو استورد عقدك من الإعدادات)"), done: (data.contracts ?? []).length > 0, act: () => go("tenants") }, // DW-051
           { id: "sync", label: t("فعّل المزامنة (اختياري، للعائلة وجهاز ثاني)"), done: !!sync, act: () => go("settings") },
           { id: "backup", label: t("خذ نسخة احتياطية"), done: !!last, act: () => go("settings") },
         ];

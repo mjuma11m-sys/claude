@@ -1,10 +1,11 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
-import { applyPrefs, loadPrefs } from "./data/prefs";
+import { applyPrefs, loadPrefs, snapshotOnUpdate } from "./data/prefs";
 import { initNative } from "./native";
 import { applyLang } from "./i18n";
 
+snapshotOnUpdate(); // DW-051: قبل ما النسخة الجديدة تقرا البيانات
 applyPrefs(loadPrefs()); // قبل أول رسم عشان ما يرمش الخط أو الثيم
 applyLang(); // DW-045: lang + dir
 void initNative();

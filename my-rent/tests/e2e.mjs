@@ -228,10 +228,10 @@ try {
   await k.goto(URL + "#home"); await k.evaluate(() => localStorage.clear()); await k.reload(); await k.waitForTimeout(900);
   ok(await k.locator(".nudge").isVisible(), "تذكير النسخة يطلع لو ما فيه نسخة");
   ok(!!(await k.evaluate(() => localStorage.getItem("idarati:persist"))), "انطلب storage.persist مرة وحدة");
-  await k.evaluate((d) => localStorage.setItem("idarati:lastBackup", d), ago(29)); await k.reload(); await k.waitForTimeout(700);
-  ok(await k.locator(".nudge").count() === 0, "29 يوم: ما فيه تذكير");
-  await k.evaluate((d) => localStorage.setItem("idarati:lastBackup", d), ago(30)); await k.reload(); await k.waitForTimeout(700);
-  ok(await k.locator(".nudge").isVisible(), "30 يوم بالضبط: التذكير يطلع");
+  await k.evaluate((d) => localStorage.setItem("idarati:lastBackup", d), ago(6)); await k.reload(); await k.waitForTimeout(700);
+  ok(await k.locator(".nudge").count() === 0, "6 أيام: ما فيه تذكير");
+  await k.evaluate((d) => localStorage.setItem("idarati:lastBackup", d), ago(7)); await k.reload(); await k.waitForTimeout(700);
+  ok(await k.locator(".nudge").isVisible(), "DW-051: أسبوع بالضبط: التذكير يطلع");
   await k.locator(".nudge .link").click(); await k.waitForTimeout(500);
   const bk = k.waitForEvent("download"); await k.getByRole("button", { name: "تنزيل نسخة" }).click(); await bk;
   ok((await k.locator(".backup-state").innerText()).includes(ago(0)), "بعد التنزيل: «آخر نسخة» = اليوم");
@@ -644,7 +644,7 @@ try {
     await q.locator(".unit-card", { hasText: "شقة 4" }).first().click(); await q.waitForTimeout(400);
     await q.getByRole("button", { name: /^تعديل$/ }).first().click(); await q.waitForTimeout(400);
     await q.locator("#u-notes").fill("المكيف تبدّل 2026"); await q.getByRole("button", { name: "احفظ التعديل" }).click(); await q.waitForTimeout(400);
-    await q.locator(".hdr-btn").click(); await q.waitForTimeout(300);
+    await q.locator(".hdr-btn[aria-label=\"بحث\"]").click(); await q.waitForTimeout(300);
     await q.locator("#search-q").fill("المكيف"); await q.waitForTimeout(300);
     ok((await q.locator(".dlg").innerText()).includes("شقة 4"), "البحث يلقى الملاحظة");
     await q.locator("#search-q").fill("تأمين"); await q.waitForTimeout(300);
@@ -850,13 +850,13 @@ try {
     await v.goto(URL + "#home"); await v.evaluate(() => localStorage.clear()); await v.reload(); await v.waitForTimeout(900);
     ok(await v.locator("#setup").count() === 0, "بالبيانات التجريبية: قائمة التجهيز ما تطلع");
     await v.locator("#welcome-start").click(); await v.waitForTimeout(600); await v.keyboard.press("Escape"); await v.waitForTimeout(400);
-    ok((await v.locator("#setup").innerText()).includes("0 من 4"), "بعد «ابدأ ببياناتي»: جهّز إداراتي 0 من 4");
+    ok((await v.locator("#setup").innerText()).includes("0 من 5"), "بعد «ابدأ ببياناتي»: جهّز إداراتي 0 من 5");
     await v.evaluate(() => { const d = JSON.parse(localStorage.getItem("idarati:v2"));
       d.units.push({ id: "n1", name: "شقة تجربة", building: "ع", rent: 100000, dueDay: 1, tenant: { name: "س", phone: "", since: "2026-01" } });
       d.payments.push({ id: "np1", unitId: "n1", month: "2026-01", amount: 100000, method: "نقد", date: "2026-01-03" });
       localStorage.setItem("idarati:v2", JSON.stringify(d)); });
     await v.reload(); await v.waitForTimeout(800);
-    ok((await v.locator("#setup").innerText()).includes("2 من 4") && await v.locator("#setup-unit").isDisabled(), "الخطوات تتأشر بروحها (وحدة + دفعة)");
+    ok((await v.locator("#setup").innerText()).includes("2 من 5") && await v.locator("#setup-unit").isDisabled(), "الخطوات تتأشر بروحها (وحدة + دفعة)");
     await v.locator("#setup-hide").click(); await v.waitForTimeout(200); await v.reload(); await v.waitForTimeout(600);
     ok(await v.locator("#setup").count() === 0, "إخفاء القائمة يثبت بعد إعادة الفتح");
     ok(vErr.length === 0, "DW-035: بدون أخطاء", vErr.join(" | "));
@@ -1107,6 +1107,40 @@ try {
     ok((await e.locator(".contract-text").first().innerText()).includes("عقد"), "DW-049: نص العقد نفسه يظل عربي (مستند للمستأجر)");
     ok(eErr.length === 0, "DW-049: بدون أخطاء", eErr.join(" | "));
     await e.close();
+  }
+
+  // 33) DW-051: تجهيز التجربة — خطوة العقد، ملاحظة من كل شاشة، سؤال السعر بعد أسبوع، نسخة تلقائية قبل التحديث
+  {
+    const j = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const jErr = []; j.on("pageerror", (x) => jErr.push(x.message));
+    const ago = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
+    await j.goto(URL + "#home"); await j.evaluate(() => localStorage.clear()); await j.reload(); await j.waitForTimeout(900);
+    // ملاحظة من شاشة الميزانية: اسم الشاشة يروح مع الرسالة
+    await j.goto(URL + "#budget"); await j.waitForTimeout(500);
+    await j.locator("#note-btn").click(); await j.waitForTimeout(350);
+    await j.locator("#note-text").fill("الرقم ما ضبط");
+    const href = decodeURIComponent(await j.locator("#note-send").getAttribute("href"));
+    ok(href.includes("شاشة «الميزانية»") && href.includes("الرقم ما ضبط"), "DW-051: الملاحظة فيها اسم الشاشة والنص", href.slice(0, 80));
+    await j.keyboard.press("Escape"); await j.waitForTimeout(300);
+    // «ابدأ ببياناتي» ← خطوة «اعتمد أول عقد» بالقائمة + تاريخ البداية
+    await j.goto(URL + "#home"); await j.waitForTimeout(500);
+    await j.locator("#welcome-start").click(); await j.waitForTimeout(500); await j.keyboard.press("Escape"); await j.waitForTimeout(300);
+    ok(await j.locator("#setup-contract").isVisible(), "DW-051: قائمة التجهيز فيها «اعتمد أول عقد»");
+    ok(await j.locator("#price-ask").count() === 0, "سؤال السعر ما يطلع بأول أسبوع");
+    await j.evaluate((d) => localStorage.setItem("idarati:startedAt", d), ago(7)); await j.reload(); await j.waitForTimeout(700);
+    ok(await j.locator("#price-ask").isVisible() && decodeURIComponent(await j.locator("#price-maybe").getAttribute("href")).includes("جوابي: يمكن"), "بعد أسبوع: سؤال السعر يطلع ويرسل الجواب");
+    await j.locator("#price-skip").click(); await j.waitForTimeout(200); await j.reload(); await j.waitForTimeout(600);
+    ok(await j.locator("#price-ask").count() === 0, "سؤال السعر مرة وحدة بس");
+    // نسخة تلقائية: البناء القديم ≠ الجديد ← تنحفظ نسخة، ونرجعها بعد تعديل
+    await j.evaluate(() => { const d = JSON.parse(localStorage.getItem("idarati:v2")); d.units.push({ id: "uSnap", name: "وحدة قبل التحديث", building: "", rent: 1000, dueDay: 1 }); localStorage.setItem("idarati:v2", JSON.stringify(d)); localStorage.setItem("idarati:build", "old-build"); });
+    await j.goto(URL + "#settings"); await j.reload(); await j.waitForTimeout(800);
+    ok(await j.locator("#snapshot-box").isVisible(), "DW-051: بعد التحديث تطلع «نسخة تلقائية قبل آخر تحديث»");
+    await j.evaluate(() => { const d = JSON.parse(localStorage.getItem("idarati:v2")); d.units = d.units.filter((u) => u.id !== "uSnap"); localStorage.setItem("idarati:v2", JSON.stringify(d)); });
+    await j.reload(); await j.waitForTimeout(800);
+    await j.locator("#snapshot-restore").click(); await j.waitForTimeout(500);
+    ok(await j.evaluate(() => JSON.parse(localStorage.getItem("idarati:v2")).units.some((u) => u.id === "uSnap")), "رجّع بيانات ما قبل التحديث: الوحدة رجعت");
+    ok(jErr.length === 0, "DW-051: بدون أخطاء", jErr.join(" | "));
+    await j.close();
   }
 
   if (process.env.SHOTS) {

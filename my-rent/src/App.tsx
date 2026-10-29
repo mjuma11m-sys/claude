@@ -15,6 +15,7 @@ import { Settings } from "./pages/Settings";
 import { ReceiptSheet, type ReceiptRef } from "./pages/Receipt";
 import { StatementSheet } from "./pages/Statement";
 import { ContractSheet } from "./pages/Contract";
+import { FeedbackNote } from "./pages/Feedback";
 import { UnitForm } from "./pages/UnitForm";
 import { Reports } from "./pages/Reports";
 import { SearchSheet } from "./pages/Search";
@@ -108,6 +109,8 @@ function Idarati() {
   const closeRenew = useCallback(() => setRenew(null), []);
   const closeEditing = useCallback(() => setEditing(null), []);
   const closeSearch = useCallback(() => setSearching(false), []);
+  const [noting, setNoting] = useState(false); // DW-051
+  const closeNote = useCallback(() => setNoting(false), []);
   const closeDoc = useCallback(() => setDocEdit(null), []);
 
   return (
@@ -117,7 +120,7 @@ function Idarati() {
       onNavigate={go}
       title={page === "home" ? <span className="brand-title"><img src={symbolUrl} alt="" width={28} height={28} />{t("إداراتي")}</span> : TITLES[page]}
       onAdd={onAdd}
-      actions={<button className="hdr-btn press" onClick={() => setSearching(true)} aria-label={t("بحث")}>{Icon.search}</button>}
+      actions={<><button className="hdr-btn press" id="note-btn" onClick={() => setNoting(true)} aria-label={t("ملاحظة على هالشاشة")}>{Icon.note}</button><button className="hdr-btn press" onClick={() => setSearching(true)} aria-label={t("بحث")}>{Icon.search}</button></>}
     >
       {sync && !sync.canEdit && <div className="ro-banner" id="ro-banner" role="status">{t("مشاهدة بس — تشوف كل شي، والتعديل للمالك واللي يعطيهم صلاحية")}</div>}
       {page === "home" && (
@@ -143,6 +146,7 @@ function Idarati() {
       <ReceiptSheet value={receipt} onClose={closeReceipt} />
       <StatementSheet unit={stmt} onClose={closeStmt} />
       <ContractSheet unit={contract} onClose={closeContract} />
+      <FeedbackNote open={noting} screen={page === "home" ? t("الرئيسية") : String(TITLES[page] ?? page)} onClose={closeNote} />
       <RenewSheet unit={renew} onClose={closeRenew} />
       <PickUnitSheet open={picking} onClose={closePick} onPick={(u) => { setPicking(false); setUnit(u); }} />
       <ExpenseSheet open={expense} onClose={closeExpense} />

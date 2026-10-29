@@ -53,3 +53,28 @@ export function setWelcomed() { try { localStorage.setItem(WELCOME_KEY, "1"); } 
 const SETUP_KEY = "idarati:setup";
 export function setupOpen(): boolean { try { return localStorage.getItem(SETUP_KEY) === "open"; } catch { return false; } }
 export function setSetup(v: "open" | "done") { try { localStorage.setItem(SETUP_KEY, v); } catch { /* ignore */ } }
+
+// DW-051: نسخة تلقائية قبل التحديث — لو رقم البناء تغيّر، بيانات الجهاز تنحفظ نسخة قبل ما النسخة الجديدة تلمسها
+const BUILD_KEY = "idarati:build", SNAP_KEY = "idarati:snapshot";
+export type Snapshot = { at: string; data: string };
+export function snapshotOnUpdate(build = String(import.meta.env.VITE_BUILD ?? "")) {
+  try {
+    const prev = localStorage.getItem(BUILD_KEY);
+    const raw = localStorage.getItem("idarati:v2");
+    if (prev && prev !== build && raw) localStorage.setItem(SNAP_KEY, JSON.stringify({ at: new Date().toISOString().slice(0, 10), data: raw } satisfies Snapshot));
+    localStorage.setItem(BUILD_KEY, build);
+  } catch { /* التخزين ممتلي أو مقفل: نكمل عادي */ }
+}
+export function getSnapshot(): Snapshot | null { try { const v = localStorage.getItem(SNAP_KEY); return v ? (JSON.parse(v) as Snapshot) : null; } catch { return null; } }
+
+// DW-051: تاريخ «ابدأ ببياناتي» — سؤال السعر يطلع بعد أسبوع، مرة وحدة
+const START_KEY = "idarati:startedAt", PRICE_KEY = "idarati:priceAsked";
+export function setStarted(day: string) { try { localStorage.setItem(START_KEY, day); } catch { /* ignore */ } }
+export function priceAskDue(now = new Date()): boolean {
+  try {
+    const s = localStorage.getItem(START_KEY);
+    if (!s || localStorage.getItem(PRICE_KEY)) return false;
+    return (now.getTime() - new Date(s + "T00:00:00").getTime()) / 86_400_000 >= 7;
+  } catch { return false; }
+}
+export function setPriceAsked() { try { localStorage.setItem(PRICE_KEY, "1"); } catch { /* ignore */ } }

@@ -12,7 +12,7 @@ import { ContractTemplateEditor } from "./Contract";
 import { VatPanel } from "./VatPanel";
 import symbolUrl from "../../brand/symbol.svg";
 import pkg from "../../package.json";
-import { getLastBackup, loadPrefs, savePrefs, setLastBackup, type Prefs, type TextSize, type Theme } from "../data/prefs";
+import { getLastBackup, getSnapshot, loadPrefs, savePrefs, setLastBackup, type Prefs, type TextSize, type Theme } from "../data/prefs";
 import { isNative, saveFile } from "../native";
 import { getLang, setLang, t, type Lang } from "../i18n";
 
@@ -33,6 +33,19 @@ export function Settings() {
     const day = isoDay(new Date());
     setLastBackup(day); setLast(day);
     toast({ text: isNative() ? t("انحفظت النسخة الاحتياطية") : t("انحفظت النسخة الاحتياطية بالتنزيلات") });
+  };
+
+  // DW-051: لو التحديث خرّب شي، ترجع البيانات مثل ما كانت قبله (مع تراجع)
+  const snap = getSnapshot();
+  const restoreSnap = () => {
+    if (!snap) return;
+    try {
+      const parsed = JSON.parse(snap.data);
+      if (!isData(parsed)) throw new Error("shape");
+      const before = data;
+      replace(parsed);
+      toast({ text: t("رجعت البيانات لما قبل التحديث"), undo: () => replace(before) });
+    } catch { setError(t("النسخة التلقائية تالفة — استخدم نسخة من ملف")); }
   };
 
   const importJson = async (f: File) => {
@@ -71,7 +84,7 @@ export function Settings() {
 
       <section className="card stack">
         <h2 className="set-title">{t("النسخة الاحتياطية")}</h2>
-        <p className="muted small" style={{ margin: 0 }}>{t("البيانات الحين محفوظة على هالجهاز بس. خذ نسخة كل شهر على الأقل لين ينربط التطبيق بالسحابة.")}</p>
+        <p className="muted small" style={{ margin: 0 }}>{t("البيانات الحين محفوظة على هالجهاز بس. خذ نسخة كل أسبوع وقت التجربة، لين ينربط التطبيق بالسحابة.")}</p>
         <div className={`backup-state ${backupDue(lastBackup) ? "is-due" : ""}`} role="status">
           {lastBackup ? <>{t("آخر نسخة:")} <span className="num">{lastBackup}</span></> : t("ما فيه نسخة احتياطية لين الحين")}
         </div>
@@ -81,6 +94,12 @@ export function Settings() {
         </div>
         <input ref={file} type="file" accept="application/json,.json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) importJson(f); e.target.value = ""; }} />
         {error && <div className="field-error">{error}</div>}
+        {snap && (
+          <div className="sync-box stack" id="snapshot-box">
+            <div className="small">{t("نسخة تلقائية قبل آخر تحديث للتطبيق:")} <span className="num">{snap.at}</span></div>
+            <button className="btn btn-ghost press" id="snapshot-restore" disabled={!!sync} onClick={restoreSnap}>{t("رجّع بيانات ما قبل التحديث")}</button>
+          </div>
+        )}
       </section>
 
       <ContractTemplateEditor />

@@ -18,7 +18,7 @@ try {
   await go("#bank"); await shot("bank");
   await go("#reports"); await p.locator("#year-report").scrollIntoViewIfNeeded(); await p.evaluate(() => scrollBy(0, -90)); await shot("year");
   await go("#home"); await p.evaluate(() => scrollTo(0, document.body.scrollHeight)); await shot("home-follow");
-  await go("#home"); await p.locator(".shell-actions button").first().click(); await p.waitForTimeout(300);
+  await go("#home"); await p.locator(".shell-actions button").last().click(); await p.waitForTimeout(300);
   await p.fill("#search-q", "شقة"); await shot("search");
   await go("#tenants"); await p.locator(".unit-card").first().click(); await p.waitForTimeout(400); await shot("unit");
   await p.locator(".unit-tabs [role=radio]", { hasText: "السجل" }).first().click(); await p.waitForTimeout(200); await p.locator(".dlg .rows-tap li button").first().click(); await p.waitForTimeout(600); await shot("receipt");
