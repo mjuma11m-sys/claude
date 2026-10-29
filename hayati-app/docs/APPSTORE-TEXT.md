@@ -91,3 +91,6 @@ Background audio (UIBackgroundModes: audio): used only while the user records th
 ## Pricing and Availability
 - **Price:** Free · **Availability:** البحرين (أو كل الدول)
 - **App Store Version Release:** Manually release this version
+
+## روابط المتاجر
+- App Store (البحرين): https://apps.apple.com/bh/app/%D8%AD%D9%8A%D8%A7%D8%AA%D9%8A-hayati/id6823956749
