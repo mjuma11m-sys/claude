@@ -3358,3 +3358,15 @@ test('calories (DW-086): recipe kcal per serving shows and scales, needs calcula
   await expect(page.locator('#view')).toContainText('2,650');
   expect(await store(page, () => App.st.settings.body_needs.w)).toBe(72);
 });
+
+// بعد الإطلاق: «قيّم حياتي» و«شارك حياتي» بالإعدادات
+test('settings: rate and share Hayati point to the App Store page', async ({ page }) => {
+  await open(page);
+  await page.evaluate(() => { window.__opened = []; window.HayatiNative = Object.assign(window.HayatiNative || {}, { openLink: (u) => window.__opened.push(u), shareText: (t) => window.__opened.push(t) }); });
+  await page.click('#settingsBtn').catch(() => page.evaluate(() => Extras.action && App.openSettings && App.openSettings()));
+  await page.click('[data-set="rate"]');
+  await page.click('[data-set="share-app"]');
+  const o = await page.evaluate(() => window.__opened);
+  expect(o[0]).toBe('https://apps.apple.com/app/id6823956749?action=write-review');
+  expect(o[1]).toContain('https://apps.apple.com/app/id6823956749');
+});

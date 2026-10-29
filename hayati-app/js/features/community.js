@@ -155,6 +155,17 @@
   new MutationObserver(() => { const c = document.getElementById('obCard'); if (c && !c.dataset.b) { c.dataset.b = 1; bind(c); } })
     .observe(document.getElementById('view'), { childList: true });
 
+  // ---------- قيّمنا وشارك التطبيق ----------
+  const STORE = (window.HAYATI_CONFIG || {}).APP_STORE_URL || '';
+  const openStore = (url) => { const N = window.HayatiNative; if (N && N.openLink) N.openLink(url); else window.open(url, '_blank', 'noopener'); };
+  async function shareApp() {
+    const text = '«حياتي»: مصاريفك ودراستك وصلاتك بمكان واحد. مجاني على App Store:\n' + STORE;
+    const N = window.HayatiNative;
+    try { if (N && N.shareText) { await N.shareText(text); return; } if (navigator.share) { await navigator.share({ text }); return; } } catch (e) { return; }
+    try { await navigator.clipboard.writeText(text); A.toast('انتسخ الرابط ✓'); } catch (e) { A.toast(STORE); }
+  }
+  E._shareApp = shareApp; // للاختبار
+
   // ---------- «ملفك» بالإعدادات ----------
   const prevExtra = E.settingsExtra;
   E.settingsExtra = function () {
@@ -167,7 +178,10 @@
       // «سوّ ميزتك»: الاقتراح يروح رسالة على إنستقرام، وكل أسبوع وحدة تنبني
       '<button data-set="feedback"><div class="ico" style="' + A.tint('#13636B') + '">' + I('message') + '</div><div style="flex:1;min-width:0"><b>رأيك بالتطبيق</b><small>دقيقة وحدة، وكل رأي ينقرا</small></div>' + I('chevL') + '</button>' +
       '<button data-set="bug"><div class="ico" style="' + A.tint('#e11d48') + '">' + I('alert') + '</div><div style="flex:1;min-width:0"><b>🐞 بلّغ عن مشكلة</b><small>نرسل رقم النسخة ونوع الجهاز بس، بدون بياناتك</small></div></button>' +
-      '<a class="menu-link" href="https://ig.me/m/hayati.bh" target="_blank" rel="noopener"><div class="ico" style="' + A.tint('#FF6B4A') + '">' + I('sparkle') + '</div><div style="flex:1;min-width:0"><b>💡 اقترح ميزة</b><small>كل أسبوع نبني اقتراح، ونذكر اسمك</small></div>' + I('chevL') + '</a></div>' +
+      '<a class="menu-link" href="https://ig.me/m/hayati.bh" target="_blank" rel="noopener"><div class="ico" style="' + A.tint('#FF6B4A') + '">' + I('sparkle') + '</div><div style="flex:1;min-width:0"><b>💡 اقترح ميزة</b><small>كل أسبوع نبني اقتراح، ونذكر اسمك</small></div>' + I('chevL') + '</a>' +
+      // بعد الإطلاق: التقييم والمشاركة (بدون مقابل، وبدون طلب نجوم معيّنة: إرشادات Apple)
+      (STORE ? '<button data-set="rate"><div class="ico" style="' + A.tint('#B45309') + '">⭐</div><div style="flex:1;min-width:0"><b>قيّم حياتي</b><small>رأيك بـ App Store يساعد غيرك يلقاه</small></div>' + I('chevL') + '</button>' +
+        '<button data-set="share-app"><div class="ico" style="' + A.tint('#13636B') + '">📤</div><div style="flex:1;min-width:0"><b>شارك حياتي مع ربعك</b><small>رابط التطبيق</small></div>' + I('chevL') + '</button>' : '') + '</div>' +
       (prevExtra ? prevExtra.apply(this, arguments) : '');
   };
   const prevSet = E.settingsAction;
@@ -175,6 +189,8 @@
     if (act === 'profile') { A.closeSheet(); setTimeout(profileSheet, 280); return true; }
     if (act === 'feedback') { A.closeSheet(); setTimeout(feedbackSheet, 280); return true; }
     if (act === 'bug') { A.closeSheet(); setTimeout(bugSheet, 280); return true; }
+    if (act === 'rate' && STORE) { openStore(STORE + '?action=write-review'); return true; }
+    if (act === 'share-app' && STORE) { shareApp(); return true; }
     return prevSet ? prevSet.apply(this, arguments) : false;
   };
   function profileSheet() {

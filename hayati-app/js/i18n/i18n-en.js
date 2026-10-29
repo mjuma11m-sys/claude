@@ -2298,4 +2298,9 @@ window.HAYATI_EN = {
 "سعرات الوصفات": "Recipe calories",
 "كل وصفة بالمطبخ تقول لك كم سعرة للحصة وللكل (تقدير من المقادير)، ويتغيّر مع عدد الأشخاص": "Every kitchen recipe shows calories per serving and for everyone (estimated from the ingredients), and updates with the number of people",
 "من «صحتي»: كم سعرة وكم بروتين تحتاج باليوم حسب هدفك. الأرقام تبقى على جهازك": "In Health: how many calories and how much protein you need a day for your goal. The numbers stay on your device",
+"قيّم حياتي": "Rate Hayati",
+"رأيك بـ App Store يساعد غيرك يلقاه": "Your App Store review helps others find it",
+"شارك حياتي مع ربعك": "Share Hayati with friends",
+"رابط التطبيق": "App link",
+"انتسخ الرابط ✓": "Link copied ✓",
 };

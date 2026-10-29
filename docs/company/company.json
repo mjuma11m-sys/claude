@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 89,
+  "next": 90,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -706,6 +706,14 @@
       "status": "new",
       "opened": "2026-10-28",
       "updated": "2026-10-28"
+    },
+    "DW-089": {
+      "title": "تقييم المجلس بعد إطلاق App Store + تطوير السلبيات",
+      "owner": "CEO",
+      "priority": "P1",
+      "status": "review",
+      "opened": "2026-10-29",
+      "updated": "2026-10-29"
     }
   }
 }

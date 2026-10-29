@@ -17,4 +17,6 @@ window.HAYATI_CONFIG = {
   HIDE_PROVIDERS: [],
   // DW-085: التحقق بخطوتين برسالة SMS. خله false لين تربط Twilio بـ Supabase (Authentication ← Providers ← Phone + Multi-Factor ← Phone)
   MFA_SMS: false,
+  // صفحة التطبيق بـ App Store (قيّمنا / شارك التطبيق)
+  APP_STORE_URL: 'https://apps.apple.com/app/id6823956749',
 };

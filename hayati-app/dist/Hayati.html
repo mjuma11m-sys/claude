@@ -3058,6 +3058,11 @@ window.HAYATI_EN = {
 "سعرات الوصفات": "Recipe calories",
 "كل وصفة بالمطبخ تقول لك كم سعرة للحصة وللكل (تقدير من المقادير)، ويتغيّر مع عدد الأشخاص": "Every kitchen recipe shows calories per serving and for everyone (estimated from the ingredients), and updates with the number of people",
 "من «صحتي»: كم سعرة وكم بروتين تحتاج باليوم حسب هدفك. الأرقام تبقى على جهازك": "In Health: how many calories and how much protein you need a day for your goal. The numbers stay on your device",
+"قيّم حياتي": "Rate Hayati",
+"رأيك بـ App Store يساعد غيرك يلقاه": "Your App Store review helps others find it",
+"شارك حياتي مع ربعك": "Share Hayati with friends",
+"رابط التطبيق": "App link",
+"انتسخ الرابط ✓": "Link copied ✓",
 };
 
 </script>
@@ -3192,6 +3197,8 @@ window.HAYATI_CONFIG = {
   HIDE_PROVIDERS: [],
   // DW-085: التحقق بخطوتين برسالة SMS. خله false لين تربط Twilio بـ Supabase (Authentication ← Providers ← Phone + Multi-Factor ← Phone)
   MFA_SMS: false,
+  // صفحة التطبيق بـ App Store (قيّمنا / شارك التطبيق)
+  APP_STORE_URL: 'https://apps.apple.com/app/id6823956749',
 };
 
 </script>
@@ -15485,6 +15492,17 @@ window.HAYATI_CONFIG = {
   new MutationObserver(() => { const c = document.getElementById('obCard'); if (c && !c.dataset.b) { c.dataset.b = 1; bind(c); } })
     .observe(document.getElementById('view'), { childList: true });
 
+  // ---------- قيّمنا وشارك التطبيق ----------
+  const STORE = (window.HAYATI_CONFIG || {}).APP_STORE_URL || '';
+  const openStore = (url) => { const N = window.HayatiNative; if (N && N.openLink) N.openLink(url); else window.open(url, '_blank', 'noopener'); };
+  async function shareApp() {
+    const text = '«حياتي»: مصاريفك ودراستك وصلاتك بمكان واحد. مجاني على App Store:\n' + STORE;
+    const N = window.HayatiNative;
+    try { if (N && N.shareText) { await N.shareText(text); return; } if (navigator.share) { await navigator.share({ text }); return; } } catch (e) { return; }
+    try { await navigator.clipboard.writeText(text); A.toast('انتسخ الرابط ✓'); } catch (e) { A.toast(STORE); }
+  }
+  E._shareApp = shareApp; // للاختبار
+
   // ---------- «ملفك» بالإعدادات ----------
   const prevExtra = E.settingsExtra;
   E.settingsExtra = function () {
@@ -15497,7 +15515,10 @@ window.HAYATI_CONFIG = {
       // «سوّ ميزتك»: الاقتراح يروح رسالة على إنستقرام، وكل أسبوع وحدة تنبني
       '<button data-set="feedback"><div class="ico" style="' + A.tint('#13636B') + '">' + I('message') + '</div><div style="flex:1;min-width:0"><b>رأيك بالتطبيق</b><small>دقيقة وحدة، وكل رأي ينقرا</small></div>' + I('chevL') + '</button>' +
       '<button data-set="bug"><div class="ico" style="' + A.tint('#e11d48') + '">' + I('alert') + '</div><div style="flex:1;min-width:0"><b>🐞 بلّغ عن مشكلة</b><small>نرسل رقم النسخة ونوع الجهاز بس، بدون بياناتك</small></div></button>' +
-      '<a class="menu-link" href="https://ig.me/m/hayati.bh" target="_blank" rel="noopener"><div class="ico" style="' + A.tint('#FF6B4A') + '">' + I('sparkle') + '</div><div style="flex:1;min-width:0"><b>💡 اقترح ميزة</b><small>كل أسبوع نبني اقتراح، ونذكر اسمك</small></div>' + I('chevL') + '</a></div>' +
+      '<a class="menu-link" href="https://ig.me/m/hayati.bh" target="_blank" rel="noopener"><div class="ico" style="' + A.tint('#FF6B4A') + '">' + I('sparkle') + '</div><div style="flex:1;min-width:0"><b>💡 اقترح ميزة</b><small>كل أسبوع نبني اقتراح، ونذكر اسمك</small></div>' + I('chevL') + '</a>' +
+      // بعد الإطلاق: التقييم والمشاركة (بدون مقابل، وبدون طلب نجوم معيّنة: إرشادات Apple)
+      (STORE ? '<button data-set="rate"><div class="ico" style="' + A.tint('#B45309') + '">⭐</div><div style="flex:1;min-width:0"><b>قيّم حياتي</b><small>رأيك بـ App Store يساعد غيرك يلقاه</small></div>' + I('chevL') + '</button>' +
+        '<button data-set="share-app"><div class="ico" style="' + A.tint('#13636B') + '">📤</div><div style="flex:1;min-width:0"><b>شارك حياتي مع ربعك</b><small>رابط التطبيق</small></div>' + I('chevL') + '</button>' : '') + '</div>' +
       (prevExtra ? prevExtra.apply(this, arguments) : '');
   };
   const prevSet = E.settingsAction;
@@ -15505,6 +15526,8 @@ window.HAYATI_CONFIG = {
     if (act === 'profile') { A.closeSheet(); setTimeout(profileSheet, 280); return true; }
     if (act === 'feedback') { A.closeSheet(); setTimeout(feedbackSheet, 280); return true; }
     if (act === 'bug') { A.closeSheet(); setTimeout(bugSheet, 280); return true; }
+    if (act === 'rate' && STORE) { openStore(STORE + '?action=write-review'); return true; }
+    if (act === 'share-app' && STORE) { shareApp(); return true; }
     return prevSet ? prevSet.apply(this, arguments) : false;
   };
   function profileSheet() {
