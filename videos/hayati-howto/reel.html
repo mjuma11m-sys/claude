@@ -1,0 +1,133 @@
+<!doctype html>
+<html dir="rtl" lang="ar"><head><meta charset="utf-8">
+<!-- «ابدأ بحياتي في دقيقة»: شرح 6 خطوات بإصبع على الزر الحقيقي · 42 ث · 1080×1920 · setT(t) -->
+<style>
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Bold.ttf);font-weight:700}
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Regular.ttf);font-weight:400}
+:root{--sea:#0E3B43;--deep:#0A1A1E;--pearl:#E8DCC4;--coral:#FF6B4A}
+*{box-sizing:border-box}
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:var(--deep);font-family:P,'Helvetica Neue',Arial,sans-serif;color:var(--pearl)}
+#stage{position:absolute;inset:0;overflow:hidden;background:radial-gradient(120% 75% at 50% 42%,#145a62 0%,var(--sea) 42%,var(--deep) 100%)}
+.c{color:var(--coral)}
+.abs{position:absolute;left:0;right:0;text-align:center}
+#intro{top:640px}
+#intro h1{margin:0;font-size:130px;line-height:1.15}
+#intro p{margin:24px 0 0;font-size:54px;opacity:.9}
+#num{top:110px;font-size:44px;font-weight:700}
+#num span{display:inline-block;padding:10px 30px;border-radius:999px;background:rgba(255,107,74,.16);border:2px solid rgba(255,107,74,.5)}
+#title{top:200px;font-size:84px;font-weight:700;line-height:1.15;padding:0 50px}
+#sub{top:320px;font-size:44px;opacity:.88;padding:0 60px}
+#phoneWrap{position:absolute;left:50%;top:430px;width:560px;height:1212px;margin-left:-280px}
+#phone{position:absolute;inset:0;border-radius:86px;background:#0b1416;padding:17px;box-shadow:0 70px 120px -40px rgba(0,0,0,.75),inset 0 0 0 3px #2a4a50}
+#screen{position:relative;width:100%;height:100%;border-radius:70px;overflow:hidden;background:#F7F4EE}
+#screen img.s{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;object-position:top}
+#home{position:absolute;inset:0;background:linear-gradient(160deg,#1c5f68,#0b2b31);display:grid;grid-template-columns:repeat(4,1fr);gap:28px;padding:120px 34px;align-content:start}
+#home i{display:block;aspect-ratio:1;border-radius:24px;background:rgba(255,255,255,.12)}
+#home .me{background:none;display:flex;flex-direction:column;align-items:center}
+#home .me img{width:100%;border-radius:24px}
+#home .me b{font-size:20px;color:#fff;margin-top:6px;font-style:normal}
+#tap{position:absolute;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;background:rgba(255,107,74,.35);border:6px solid var(--coral);pointer-events:none}
+#ring{position:absolute;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;border:5px solid var(--coral)}
+#bar{position:absolute;left:120px;right:120px;top:1700px;display:flex;gap:12px}
+#bar i{flex:1;height:12px;border-radius:6px;background:rgba(232,220,196,.22)}
+#bar i.on{background:var(--coral)}
+#logo{position:absolute;left:50%;top:430px;width:320px;height:320px;margin-left:-160px}
+#brand{top:790px}
+#brand h1{margin:0;font-size:160px;line-height:1}
+#brand p{margin:20px 0 0;font-size:56px}
+#cta{top:1120px}
+#cta span{display:inline-block;padding:26px 54px;border-radius:999px;background:var(--coral);color:#fff;font-weight:700;font-size:54px}
+#help{top:1290px;font-size:44px;opacity:.85}
+#demo{bottom:34px;font-size:30px;opacity:.7}
+</style></head><body><div id="stage">
+  <div class="abs" id="intro"><h1>ابدأ بـ <span class="c">حياتي</span><br>في دقيقة</h1><p>6 خطوات · تابع الإصبع 👆</p></div>
+  <div class="abs" id="num"><span></span></div>
+  <div class="abs" id="title"></div>
+  <div class="abs" id="sub"></div>
+  <div id="phoneWrap"><div id="phone"><div id="screen">
+    <img class="s" id="sA" src="shots/money.png">
+    <div id="home"><i></i><i></i><i></i><i></i><i></i><div class="me"><img src="shots/icon.png"><b>حياتي</b></div><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div id="ring"></div><div id="tap"></div>
+  </div></div></div>
+  <div id="bar"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <svg id="logo" viewBox="0 0 512 512">
+    <rect width="512" height="512" rx="116" fill="#0E3B43" stroke="#E8DCC4" stroke-opacity=".15" stroke-width="4"/>
+    <path id="arc" d="M 383.3 172.7 A 160 160 0 1 1 300 102.2" fill="none" stroke="#E8DCC4" stroke-opacity=".28" stroke-width="22" stroke-linecap="round" pathLength="1" stroke-dasharray="1"/>
+    <path id="ha" d="M 304 166 L 196 166 L 264 222 C 204 222 168 254 168 292 C 168 336 206 360 256 360 C 292 360 318 348 338 332" fill="none" stroke="#E8DCC4" stroke-width="38" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1"/>
+    <circle id="dot" cx="352" cy="128" r="30" fill="#FF6B4A"/>
+  </svg>
+  <div class="abs" id="brand"><h1>حياتي</h1><p>مجاني على App Store</p></div>
+  <div class="abs" id="cta"><span>جرّبها الحين بنفسك 👆</span></div>
+  <div class="abs" id="help">سؤال؟ راسلنا <span style="direction:ltr;unicode-bidi:isolate">@hayati.bh</span></div>
+  <div class="abs" id="demo">* لقطات ببيانات تجريبية</div>
+</div>
+<script>
+const $ = (i) => document.getElementById(i);
+const cl = (x) => Math.max(0, Math.min(1, x));
+const p = (t, a, b) => cl((t - a) / (b - a));
+const eo = (x) => 1 - Math.pow(1 - x, 3);
+const eio = (x) => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const eb = (x) => { const c = 1.7; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+// كل خطوة: الشاشة، العنوان، الشرح، والضغطات [x, y, وقت الضغط من بداية الخطوة، شاشة بعد الضغط]
+const T0 = 2, STEP = 6;
+const STEPS = [
+  { s: 'home', t: 'افتح <span class="c">حياتي</span>', d: 'ما تحتاج حساب، ابدأ على طول', taps: [[0.615, 0.25, 2.2]] },
+  { s: 'money', t: 'سجّل مصروفك بـ <span class="c">＋</span>', d: 'المبلغ والمحل، وخلاص', taps: [[0.5, 0.948, 2.2]] },
+  { s: 'money', t: 'الصق <span class="c">رسالة البنك</span>', d: 'انسخ الرسالة ← الصقها ← راجعها ← إضافة', taps: [[0.77, 0.657, 1.8, 'bank'], [0.12, 0.562, 4.0]] },
+  { s: 'timetable', t: 'جدولك الجامعي <span class="c">من PDF</span>', d: 'المواد تنضاف بأيامها ووقتها', taps: [[0.55, 0.612, 2.2]] },
+  { s: 'payday-summary', t: 'راتبك <span class="c">وين راح؟</span>', d: 'أكثر 3 أشياء صرفت عليها بالشهر', taps: [[0.6, 0.73, 2.2]] },
+  { s: 'kitchen', t: '<span class="c">المطبخ</span>: اختار وصفة', d: 'المقادير والسعرات حسب عدد الأشخاص', taps: [[0.65, 0.41, 2.2]] },
+];
+const SW = 526, SH = 1178;   // حجم الشاشة داخل الجوال
+
+function setT(t) {
+  const iv = 1 - p(t, 1.6, 2.0);
+  $('intro').style.opacity = cl(p(t, 0, 0.3) + (t > 0 ? 1 : 0)) * iv;
+  $('intro').style.transform = `scale(${1.06 - 0.06 * eo(p(t, 0, 0.4))})`;
+  const inP = eo(p(t, 1.8, 2.3)), outP = eo(p(t, 37.6, 38.1));
+  $('phoneWrap').style.opacity = inP * (1 - outP);
+  $('phoneWrap').style.transform = `translateY(${(1 - inP) * 700 + outP * 700}px)`;
+  ['num', 'title', 'sub', 'bar'].forEach((id) => { $(id).style.opacity = inP * (1 - outP); });
+
+  const k = Math.max(0, Math.min(5, Math.floor((t - T0) / STEP))), L = t - T0 - k * STEP, S = STEPS[k];
+  $('num').firstChild.textContent = (k + 1) + ' من 6';
+  const ti = eb(p(L, 0, 0.45));
+  $('title').innerHTML = S.t; $('title').style.transform = `translateY(${(1 - ti) * 30}px)`;
+  $('sub').textContent = S.d; $('sub').style.opacity = cl(p(L, 0.3, 0.7)) * inP * (1 - outP);
+  [...$('bar').children].forEach((d, i) => d.classList.toggle('on', i <= k));
+
+  // الشاشة (تتبدل بعد ضغطة فيها شاشة ثانية)
+  let scr = S.s;
+  S.taps.forEach(([, , at, next]) => { if (next && L >= at + 0.25) scr = next; });
+  $('home').style.display = scr === 'home' ? 'grid' : 'none';
+  if (scr !== 'home') { const src = 'shots/' + scr + '.png'; if (!$('sA').src.endsWith(src)) $('sA').src = src; }
+  if (k === 0 && L > 2.45) { const z = eo(p(L, 2.45, 2.9)); $('home').style.transform = `scale(${1 + z * 2})`; $('home').style.opacity = 1 - z; $('sA').src.endsWith('money.png') || ($('sA').src = 'shots/money.png'); }
+  else { $('home').style.transform = ''; $('home').style.opacity = 1; }
+  $('sA').style.transform = `scale(${1 + 0.015 * Math.sin(L)})`;
+
+  // الإصبع: يتحرك من الضغطة اللي قبل للي بعدها، وينبض وقت الضغط
+  let tap = null, prev = [0.5, 0.75];
+  for (const tp of S.taps) { if (L < tp[2] + 0.9) { tap = tp; break; } prev = tp; }
+  if (!tap) tap = S.taps[S.taps.length - 1];
+  const mv = eio(p(L, tap[2] - 1.1, tap[2] - 0.1));
+  const x = (prev[0] + (tap[0] - prev[0]) * mv) * SW, y = (prev[1] + (tap[1] - prev[1]) * mv) * SH;
+  const press = p(L, tap[2] - 0.1, tap[2] + 0.15), rel = p(L, tap[2] + 0.15, tap[2] + 0.5);
+  $('tap').style.left = $('ring').style.left = x + 'px'; $('tap').style.top = $('ring').style.top = y + 'px';
+  $('tap').style.opacity = cl(p(L, 0.5, 0.9)) * (1 - p(L, 5.5, 5.9));
+  $('tap').style.transform = `scale(${1 - 0.3 * press + 0.3 * rel})`;
+  const rg = p(L, tap[2], tap[2] + 0.7);
+  $('ring').style.opacity = rg > 0 && rg < 1 ? 1 - rg : 0; $('ring').style.transform = `scale(${1 + rg * 1.6})`;
+
+  // الخاتمة 38–42
+  const Lg = p(t, 38.1, 38.9);
+  $('logo').style.opacity = cl(Lg * 3); $('logo').style.transform = `scale(${0.85 + 0.15 * eo(Lg)})`;
+  $('arc').style.strokeDashoffset = 1 - eo(p(t, 38.1, 38.8)); $('ha').style.strokeDashoffset = 1 - eo(p(t, 38.2, 39.0));
+  $('dot').style.transformOrigin = '352px 128px'; $('dot').style.transform = `scale(${eb(p(t, 38.8, 39.1))})`;
+  const B = eo(p(t, 38.6, 39.1)); $('brand').style.opacity = B; $('brand').style.transform = `translateY(${(1 - B) * 30}px)`;
+  const C = eb(p(t, 39.1, 39.5)); $('cta').style.opacity = cl(C); $('cta').style.transform = `scale(${0.9 + 0.1 * C})`;
+  $('help').style.opacity = cl(p(t, 39.5, 39.9));
+}
+window.setT = setT;
+const pre = ['money', 'bank', 'timetable', 'payday-summary', 'kitchen'].map((s) => { const i = new Image(); i.src = 'shots/' + s + '.png'; return i; });
+window.READY = Promise.all([document.fonts.ready, ...pre.concat([...document.images]).map((i) => new Promise((r) => (i.complete && i.naturalWidth) ? r() : (i.onload = i.onerror = r)))]).then(() => setT(0));
+</script></body></html>
