@@ -1,21 +1,38 @@
-In Meta Business Suite (business.facebook.com), schedule 9 Instagram posts for @wadqa.bh.
-Don't type any password. If it asks to sign in, connect an account, or for a code, stop and tell me.
+Help me set up Instagram @wadqa.bh and my personal account for the Hayati App Store launch.
+Rules: never type a password or a code. If anything asks me to sign in, verify, connect an account, or pay, stop and tell me.
+Stop before every final button (Submit / Save / Schedule / Publish) and show me. I press it myself.
 
+PART A · Company bio (instagram.com → @wadqa.bh → Edit profile)
+Bio, exactly 4 lines:
+ودقة · نبني تطبيقات بحرينية بالعربي 🇧🇭
+📱 حياتي على App Store
+🏠 إداراتي على الويب · نسخة تجريبية
+حمّل حياتي 👇
+Links, in this order (Add external link):
+1. Title "حياتي · App Store" → https://apps.apple.com/bh/app/%D8%AD%D9%8A%D8%A7%D8%AA%D9%8A-hayati/id6823956749
+2. Title "موقع ودقة" → https://myrent-sigma.vercel.app
+3. Title "مختبرين أندرويد" → https://myrent-sigma.vercel.app/testers
+Stop before Submit.
+
+PART B · Personal bio (switch to my personal account → Edit profile)
+Change only the second line of the bio to:
+💻 Founder, WADQA Studio · Hayati on the App Store 👇
+Links: put "Hayati · App Store" (same App Store link as above) first, then @wadqa.bh, keep the rest.
+Stop before Submit.
+
+PART C · Schedule the 9 starter posts (business.facebook.com → Planner → Create post)
+If @wadqa.bh is not in the account list, stop and tell me (I must connect it first).
 Images + captions: https://claude.ai/artifact/8TtiYcaKgmEgCtDVPxGy45 → section "أول 9 منشورات".
-
 For each post N from 1 to 9:
-1. On the artifact page: right-click image N → Save image as… → Downloads → wadqa-N.png
-   (post 7 = 5 images: 7-1 … 7-5, save all 5).
-2. Business Suite → Planner → Create post.
-3. Post to: Instagram @wadqa.bh only (untick Facebook).
-4. Add media → upload wadqa-N.png (post 7: all 5 in order = carousel).
-5. Caption: copy the text under image N exactly, then add these two lines at the end:
+1. Right-click image N on that page → Save image as… → Downloads → wadqa-N.png
+   (post 7 = 5 images 7-1 … 7-5 → one carousel, keep the order).
+2. Create post → Instagram @wadqa.bh only (untick Facebook) → Add media → wadqa-N.png.
+3. Caption: copy the text under image N exactly, then add at the end:
 
 🔗 الرابط بالبايو
-myrent-sigma.vercel.app/testers
 
-6. Schedule, Bahrain time, tomorrow:
+4. Schedule, Bahrain time, tomorrow:
    1=6:00PM · 2=6:30 · 3=7:00 · 4=7:30 · 5=8:00 · 6=8:30 · 7=9:00 · 8=9:30 · 9=10:00PM
-7. Stop before the final "Schedule" button and show me the preview. I'll confirm it myself.
+5. Stop before "Schedule" and show me the preview.
 
-At the end, give me a table: N | time | number of images | first 5 words of the caption.
+At the end: a table N | time | images | first 5 words of the caption, and a reminder to Pin post 8 («حمّل حياتي») after it goes live.
