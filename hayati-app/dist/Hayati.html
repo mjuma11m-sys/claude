@@ -3055,6 +3055,9 @@ window.HAYATI_EN = {
 "الطول بالسنتيمتر (120–230)": "Height in centimetres (120–230)",
 "الوزن بالكيلو (30–250)": "Weight in kilograms (30–250)",
 "غم بروتين": "g protein",
+"سعرات الوصفات": "Recipe calories",
+"كل وصفة بالمطبخ تقول لك كم سعرة للحصة وللكل (تقدير من المقادير)، ويتغيّر مع عدد الأشخاص": "Every kitchen recipe shows calories per serving and for everyone (estimated from the ingredients), and updates with the number of people",
+"من «صحتي»: كم سعرة وكم بروتين تحتاج باليوم حسب هدفك. الأرقام تبقى على جهازك": "In Health: how many calories and how much protein you need a day for your goal. The numbers stay on your device",
 };
 
 </script>
@@ -4713,7 +4716,7 @@ window.HAYATI_CONFIG = {
   const S = window.Store;
   const st = S.state;
   const I = window.icon;
-  const APP_VERSION = 'v27';   // نفس رقم sw.js (فيه اختبار يتأكد)
+  const APP_VERSION = 'v28';   // نفس رقم sw.js (فيه اختبار يتأكد)
 
   // ---------- ثوابت ----------
   const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
@@ -15129,6 +15132,10 @@ window.HAYATI_CONFIG = {
 
   // الجديد لكل نسخة (نصوص قصيرة وصادقة: شي يشتغل اليوم بس)
   const NEWS = {
+    v28: [
+      ['🔥', 'سعرات الوصفات', 'كل وصفة بالمطبخ تقول لك كم سعرة للحصة وللكل (تقدير من المقادير)، ويتغيّر مع عدد الأشخاص'],
+      ['💪', 'احسب احتياجك', 'من «صحتي»: كم سعرة وكم بروتين تحتاج باليوم حسب هدفك. الأرقام تبقى على جهازك'],
+    ],
     v27: [
       ['🌍', 'المطبخ من العالم', 'أكثر من 100 وصفة حلال من العالم: منسف، مسخن، دولمة، برياني، باستا… و35 مشروب وعصير، وحلا من كل مكان'],
       ['🔑', 'ادخل بـ Google أو Apple', 'من «حسابك» بضغطة، والإيميل وكلمة السر يظلون موجودين'],

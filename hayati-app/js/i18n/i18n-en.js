@@ -2295,4 +2295,7 @@ window.HAYATI_EN = {
 "الطول بالسنتيمتر (120–230)": "Height in centimetres (120–230)",
 "الوزن بالكيلو (30–250)": "Weight in kilograms (30–250)",
 "غم بروتين": "g protein",
+"سعرات الوصفات": "Recipe calories",
+"كل وصفة بالمطبخ تقول لك كم سعرة للحصة وللكل (تقدير من المقادير)، ويتغيّر مع عدد الأشخاص": "Every kitchen recipe shows calories per serving and for everyone (estimated from the ingredients), and updates with the number of people",
+"من «صحتي»: كم سعرة وكم بروتين تحتاج باليوم حسب هدفك. الأرقام تبقى على جهازك": "In Health: how many calories and how much protein you need a day for your goal. The numbers stay on your device",
 };

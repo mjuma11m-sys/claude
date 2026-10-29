@@ -94,3 +94,11 @@ Background audio (UIBackgroundModes: audio): used only while the user records th
 
 ## روابط المتاجر
 - App Store (البحرين): https://apps.apple.com/bh/app/%D8%AD%D9%8A%D8%A7%D8%AA%D9%8A-hayati/id6823956749
+
+## English (U.S.) — لغة ثانية (من 0.28)
+العربي يبقى Primary. أضف English (U.S.) قبل **Add for Review**.
+- **Subtitle:** `Expenses, study and prayer`
+- **Keywords:** `budget,expenses,salary,Bahrain,schedule,study,prayer,zakat,tasks,students,bank,savings,bill,split`
+- **Promotional Text:** `Your expenses, studies, prayers and tasks in one place. Paste a bank SMS and review it, split a bill with friends, and see where your salary went.`
+- **Description:** نفس النص الإنجليزي في `videos/hayati-reels-series/captions.txt`؟ لا: استخدم النص في رسالة 0.28 بالشات (EXPENSES / ZAKAT AND KHUMS / STUDY AND SCHEDULE / WORSHIP / KITCHEN / ON IPHONE / YOUR PRIVACY) + سطر الكيتشن: «calories per serving (estimate)» وسطر Health: «daily calorie and protein needs, kept on your device».
+- **What's New (0.28):** `Recipe calories: every kitchen recipe shows estimated calories per serving. Calculate your needs: daily calories and protein for your goal, kept on your device. Arabic and English are now listed as app languages.`
