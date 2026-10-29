@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>قوالب إنستقرام ودقة</title>
+<style>
+/* هوية إنستقرام ودقة (ديوانية 2026-10-27): نفس ألوان الموقع وخطوطه. كل إطار يتصوّر لحاله بـ render.cjs */
+@font-face { font-family: Display; src: url("../../.claude/skills/video-ad-editor/motion/fonts/Tajawal-Black.ttf"); }
+@font-face { font-family: Body; src: url("../../.claude/skills/video-ad-editor/motion/fonts/IBMPlexSansArabic-Regular.ttf"); }
+@font-face { font-family: Body; font-weight: 700; src: url("../../.claude/skills/video-ad-editor/motion/fonts/IBMPlexSansArabic-Bold.ttf"); }
+:root { --ink: #0B1514; --slate: #1C2B2A; --line: #2c403e; --bone: #F2EBDD; --mist: #8FA09C; --gold: #C8A04A; --coral: #FF6B4A; --teal: #13636B; }
+* { box-sizing: border-box; margin: 0; }
+body { background: #444; display: flex; flex-wrap: wrap; gap: 40px; padding: 40px; font-family: Body, sans-serif; }
+.f { position: relative; overflow: hidden; }
+.post { width: 1080px; height: 1350px; }
+.story { width: 1080px; height: 1920px; }
+.dark { background: var(--ink); color: var(--bone); }
+.light { background: var(--bone); color: var(--ink); }
+.logo { position: absolute; top: 70px; right: 80px; display: flex; gap: 16px; align-items: center; font: 900 40px Display; }
+.logo svg { width: 54px; height: 54px; }
+.foot { position: absolute; bottom: 64px; right: 80px; left: 80px; display: flex; justify-content: space-between; align-items: center; font: 700 28px Body; color: var(--mist); }
+.light .foot { color: #6b6455; }
+.pill { background: var(--gold); color: var(--ink); border-radius: 99px; padding: 8px 24px; font: 700 26px Body; }
+.eyebrow { font: 700 36px Body; color: var(--gold); }
+.light .eyebrow { color: #7A5A12; }
+h1 { font: 900 96px/1.15 Display; }
+h2 { font: 900 78px/1.2 Display; }
+p.lead { font: 400 42px/1.6 Body; }
+.dark p.lead { color: #D9D2C2; }
+.content { position: absolute; top: 200px; right: 80px; left: 80px; display: flex; flex-direction: column; gap: 34px; }
+.phone { width: 380px; height: 640px; border-radius: 52px; border: 12px solid #26302f; overflow: hidden; align-self: center; box-shadow: 0 30px 90px #0009; }
+.phone img { width: 100%; display: block; }
+.demo { font: 400 26px Body; color: var(--mist); text-align: center; }
+.story h1 { font-size: 150px; }
+.story p.lead { font-size: 60px; }
+.story .eyebrow { font-size: 52px; }
+.story .logo { top: 220px; }
+.big { font: 900 300px/1 Display; color: var(--gold); direction: ltr; text-align: right; }
+.light .big { color: var(--teal); }
+.rows { display: grid; gap: 20px; }
+.r { display: flex; justify-content: space-between; align-items: center; background: var(--slate); border-radius: 28px; padding: 30px 40px; font: 700 44px Body; }
+.r b { font: 900 76px Display; direction: ltr; color: var(--coral); }
+.r b.ok { color: #4FC79E; }
+.center { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+.hl { width: 1080px; height: 1920px; background: var(--ink); }
+.hl .ring { width: 640px; height: 640px; border-radius: 50%; background: var(--slate); border: 10px solid var(--gold); display: grid; place-items: center; font: 900 260px Display; color: var(--bone); }
+.hl .ring img { width: 70%; border-radius: 22%; }
+.num { direction: ltr; unicode-bidi: isolate; }
+</style><style>
+.slide .k { position:absolute; top:70px; left:80px; font:700 30px Body; color:var(--mist); direction:ltr; }
+.slide .content { top:300px; gap:44px; }
+.slide h2 { font-size:92px; }
+.slide p.lead { font-size:50px; }
+.slide .q { font:900 210px/1 Display; color:var(--gold); }
+.light .q { color:var(--teal); }
+.swipe { position:absolute; bottom:150px; left:80px; font:700 34px Body; color:var(--gold); }
+.light .swipe { color:#7A5A12; }
+</style></head><body><template id="logo"><svg viewBox="0 0 512 512"><path d="M256 104C256 104 160 228 160 310A96 96 0 0 0 352 310C352 228 256 104 256 104Z" fill="none" stroke="currentColor" stroke-width="28"/><circle cx="256" cy="316" r="38" fill="#C8A04A"/></svg></template>
+<div class="f post dark slide" id="n1-1"><div class="logo"><i data-logo></i>ودقة</div><div class="k">1/7</div><div class="content"><div class="eyebrow">مثال بالأرقام</div><h1>ميزانية طالب<br>جامعة بـ 150 د.ب</h1><p class="lead">كيف تقسّمها عشان توصل آخر الشهر.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n1-2"><div class="logo"><i data-logo></i>ودقة</div><div class="k">2/7</div><div class="content"><div class="q">30</div><h2>مواصلات</h2><p class="lead">بنزين أو تاكسي. ثابتة تقريباً، احسبها أول.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n1-3"><div class="logo"><i data-logo></i>ودقة</div><div class="k">3/7</div><div class="content"><div class="q">60</div><h2>أكل</h2><p class="lead">الأكبر دايماً. حط له سقف أسبوعي: 15 د.ب.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n1-4"><div class="logo"><i data-logo></i>ودقة</div><div class="k">4/7</div><div class="content"><div class="q">20</div><h2>قهوة وطلعات</h2><p class="lead">هني تتسرب الفلوس. عدّها كم مرة بالأسبوع.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n1-5"><div class="logo"><i data-logo></i>ودقة</div><div class="k">5/7</div><div class="content"><div class="q">10</div><h2>اشتراكات</h2><p class="lead">اللي ما فتحته هالشهر، ألغه.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n1-6"><div class="logo"><i data-logo></i>ودقة</div><div class="k">6/7</div><div class="content"><div class="q">30</div><h2>ادخار</h2><p class="lead">أول ما يوصل المصروف، مو آخر الشهر.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post dark slide" id="n1-7"><div class="logo"><i data-logo></i>ودقة</div><div class="k">7/7</div><div class="content"><h2>عدّل الأرقام<br>على وضعك</h2><p class="lead">«حياتي» يسجّل مصروفك من رسالة البنك. حمّله من App Store، الرابط بالبايو.</p><p class="demo">مثال تقديري، مو نصيحة مالية</p></div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post dark slide" id="n2-1"><div class="logo"><i data-logo></i>ودقة</div><div class="k">1/5</div><div class="content"><div class="eyebrow">حياتي · الدراسة</div><h1>جدولك من البورتال<br>لجوالك</h1><p class="lead">بنسخة ولصق. 3 خطوات.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n2-2"><div class="logo"><i data-logo></i>ودقة</div><div class="k">2/5</div><div class="content"><div class="q">1</div><h2>افتح جدولك<br>ببوابة الجامعة</h2><p class="lead">الصفحة اللي فيها موادك وأوقاتها.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n2-3"><div class="logo"><i data-logo></i>ودقة</div><div class="k">3/5</div><div class="content"><div class="q">2</div><h2>انسخ الجدول<br>كامل</h2><p class="lead">حدّد النص وانسخه مثل ما هو.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n2-4"><div class="logo"><i data-logo></i>ودقة</div><div class="k">4/5</div><div class="content"><div class="q">3</div><h2>الصقه<br>بـ «حياتي»</h2><p class="lead">المحاضرات تطلع بأيامها وأوقاتها.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post dark slide" id="n2-5"><div class="logo"><i data-logo></i>ودقة</div><div class="k">5/5</div><div class="content"><h2>جرّبه هالفصل</h2><p class="lead">حمّل «حياتي» من App Store للآيفون. الرابط بالبايو.</p></div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n3-1"><div class="logo"><i data-logo></i>ودقة</div><div class="content"><div class="eyebrow">سؤال 👇</div><h1>وش أكثر تطبيق<br>تفتحه كل يوم؟</h1><p class="lead">اكتبه بالتعليقات. نبي نعرف وش الناس تحتاج فعلاً.</p></div><div class="foot"><span class="pill">ودقة · WADQA Studio</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post dark slide" id="n4-1"><div class="logo"><i data-logo></i>ودقة</div><div class="k">1/7</div><div class="content"><div class="eyebrow">إداراتي · الإيجارات</div><h1>5 أخطاء<br>بمتابعة الإيجارات</h1><p class="lead">لو عندك عقار عائلة، غالباً واحد منها يصير عندك.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">إداراتي · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n4-2"><div class="logo"><i data-logo></i>ودقة</div><div class="k">2/7</div><div class="content"><div class="q">1</div><h2>بدون إيصال</h2><p class="lead">كل دفعة لها إيصال، حتى لو كاش.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">إداراتي · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n4-3"><div class="logo"><i data-logo></i>ودقة</div><div class="k">3/7</div><div class="content"><div class="q">2</div><h2>بدون تاريخ<br>استحقاق</h2><p class="lead">«آخر الشهر» مو تاريخ. حدّد يوم.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">إداراتي · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n4-4"><div class="logo"><i data-logo></i>ودقة</div><div class="k">4/7</div><div class="content"><div class="q">3</div><h2>دفتر بإيد<br>شخص واحد</h2><p class="lead">لو غاب، محد يعرف مين دفع.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">إداراتي · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n4-5"><div class="logo"><i data-logo></i>ودقة</div><div class="k">5/7</div><div class="content"><div class="q">4</div><h2>تأخير بدون<br>تذكير</h2><p class="lead">رسالة لطيفة يوم الاستحقاق توفر إحراج.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">إداراتي · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n4-6"><div class="logo"><i data-logo></i>ودقة</div><div class="k">6/7</div><div class="content"><div class="q">5</div><h2>عقد بدون<br>نسخة</h2><p class="lead">صوّره واحفظه بمكان الكل يوصله.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">إداراتي · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post dark slide" id="n4-7"><div class="logo"><i data-logo></i>ودقة</div><div class="k">7/7</div><div class="content"><h2>إداراتي يرتّبها<br>بمكان واحد</h2><p class="lead">تنجرّب على الويب الحين. الرابط بالبايو.</p><p class="demo">مو استشارة قانونية</p></div><div class="foot"><span class="pill">إداراتي · نسخة تجريبية</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post dark slide" id="n5-1"><div class="logo"><i data-logo></i>ودقة</div><div class="k">1/5</div><div class="content"><div class="eyebrow">ثقة</div><h1>وين تنحفظ<br>بياناتك؟</h1><p class="lead">بـ «حياتي»، بالمختصر.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n5-2"><div class="logo"><i data-logo></i>ودقة</div><div class="k">2/5</div><div class="content"><div class="q">1</div><h2>بدون حساب:<br>على جوالك بس</h2><p class="lead">ما تطلع منه لأي سيرفر.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n5-3"><div class="logo"><i data-logo></i>ودقة</div><div class="k">3/5</div><div class="content"><div class="q">2</div><h2>الحساب اختياري</h2><p class="lead">لو سجّلت، بياناتك تتزامن بسيرفر بألمانيا عشان توصلها من أكثر من جهاز.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n5-4"><div class="logo"><i data-logo></i>ودقة</div><div class="k">4/5</div><div class="content"><div class="q">3</div><h2>ما يشوفها غيرك</h2><p class="lead">وأرقام بطاقتك وحسابك البنكي تنخفى قبل الحفظ، ما يظل منها إلا آخر رقمين.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post dark slide" id="n5-5"><div class="logo"><i data-logo></i>ودقة</div><div class="k">5/5</div><div class="content"><h2>التفاصيل كاملة</h2><p class="lead">بسياسة الخصوصية داخل التطبيق وبالموقع. الرابط بالبايو.</p></div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post dark slide" id="n6-1"><div class="logo"><i data-logo></i>ودقة</div><div class="k">1/6</div><div class="content"><div class="eyebrow">قبل الامتحانات</div><h1>خطة أسبوع<br>الامتحانات</h1><p class="lead">على جدولك، مو جدول غيرك.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">ودقة · WADQA Studio</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n6-2"><div class="logo"><i data-logo></i>ودقة</div><div class="k">2/6</div><div class="content"><div class="q">1</div><h2>حط الامتحانات<br>أول</h2><p class="lead">تواريخها وأوقاتها، قبل أي شي.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">ودقة · WADQA Studio</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n6-3"><div class="logo"><i data-logo></i>ودقة</div><div class="k">3/6</div><div class="content"><div class="q">2</div><h2>قسّم المواد<br>على الأيام الفاضية</h2><p class="lead">الأصعب ياخذ أيام أكثر.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">ودقة · WADQA Studio</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n6-4"><div class="logo"><i data-logo></i>ودقة</div><div class="k">4/6</div><div class="content"><div class="q">3</div><h2>ساعتين<br>بالجلسة</h2><p class="lead">وبعدها استراحة 15 دقيقة.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">ودقة · WADQA Studio</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n6-5"><div class="logo"><i data-logo></i>ودقة</div><div class="k">5/6</div><div class="content"><div class="q">4</div><h2>يوم مراجعة<br>قبل كل امتحان</h2><p class="lead">بدون مادة جديدة فيه.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">ودقة · WADQA Studio</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post dark slide" id="n6-6"><div class="logo"><i data-logo></i>ودقة</div><div class="k">6/6</div><div class="content"><h2>احفظه 🔖</h2><p class="lead">وأرسله لصاحبك اللي يبدأ يذاكر ليلة الامتحان.</p></div><div class="foot"><span class="pill">ودقة · WADQA Studio</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post dark slide" id="n7-1"><div class="logo"><i data-logo></i>ودقة</div><div class="k">1/5</div><div class="content"><div class="eyebrow">حياتي · عبادتي</div><h1>الورد والمسبحة<br>والتقويم الهجري</h1><p class="lead">بنفس التطبيق اللي فيه فلوسك ودراستك.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n7-2"><div class="logo"><i data-logo></i>ودقة</div><div class="k">2/5</div><div class="content"><div class="q">📖</div><h2>ورد القرآن</h2><p class="lead">حدّد وردك وتابعه يوم بيوم.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n7-3"><div class="logo"><i data-logo></i>ودقة</div><div class="k">3/5</div><div class="content"><div class="q">📿</div><h2>المسبحة</h2><p class="lead">عدّاد بسيط بلمسة.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n7-4"><div class="logo"><i data-logo></i>ودقة</div><div class="k">4/5</div><div class="content"><div class="q">🗓️</div><h2>التقويم الهجري</h2><p class="lead">مع مناسبات البحرين والخليج.</p></div><div class="swipe">اسحب ←</div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post dark slide" id="n7-5"><div class="logo"><i data-logo></i>ودقة</div><div class="k">5/5</div><div class="content"><h2>كله بمكان واحد</h2><p class="lead">حمّل «حياتي» من App Store للآيفون. الرابط بالبايو.</p></div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post dark slide" id="n8-1"><div class="logo"><i data-logo></i>ودقة</div><div class="content"><div class="eyebrow">دورك 🫵</div><h1>اقترح ميزة</h1><p class="lead">لو تنفع الكل، نبنيها. اكتبها بالتعليقات أو من «اقترح ميزة» داخل «حياتي».</p></div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post dark slide" id="n9-1"><div class="logo"><i data-logo></i>ودقة</div><div class="content"><div class="eyebrow">من الملعب للكود 🧤</div><h1>الحارس<br>آخر خط</h1><p class="lead">بالتطبيق نفس الشي: 189 اختبار يمر عليها كل تحديث قبل ما يوصلك.</p></div><div class="foot"><span class="pill">ودقة · WADQA Studio</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f post light slide" id="n10-1"><div class="logo"><i data-logo></i>ودقة</div><div class="content"><div class="eyebrow">شكراً 🤍</div><h1>أول شهر<br>لـ «حياتي»<br>على App Store</h1><p class="lead">كل تحميل وكل تعليق وصلنا. أندرويد قريباً 👀</p></div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f story dark" id="st1"><div class="logo"><i data-logo></i>ودقة</div><div class="content" style="top:420px"><div class="eyebrow">سؤال سريع</div><h1>جوالك<br>آيفون ولا<br>أندرويد؟</h1><p class="lead">⬇️ صوّت</p></div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f story light" id="st2"><div class="logo"><i data-logo></i>ودقة</div><div class="content" style="top:420px"><div class="eyebrow">خمّن</div><h1>كم تصرف<br>على القهوة<br>بالشهر؟</h1><p class="lead">⬇️ حط رقمك</p></div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f story dark" id="st3"><div class="logo"><i data-logo></i>ودقة</div><div class="content" style="top:420px"><div class="eyebrow">نسمعك</div><h1>وش تبي<br>«حياتي»<br>يسوي لك؟</h1><p class="lead">⬇️ اكتب</p></div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<div class="f story light" id="st4"><div class="logo"><i data-logo></i>ودقة</div><div class="content" style="top:420px"><div class="eyebrow">للآيفون 📱</div><h1>«حياتي»<br>على App Store</h1><p class="lead">ابحث «حياتي Hayati» أو اضغط الرابط ⬇️</p></div><div class="foot"><span class="pill">حياتي على App Store</span><span class="num">@wadqa.bh</span></div></div>
+<script>
+const svg = document.getElementById('logo').innerHTML;
+document.querySelectorAll('[data-logo]').forEach((el) => { el.outerHTML = svg; });
+</script></body></html>
