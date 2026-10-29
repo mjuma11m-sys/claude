@@ -3552,3 +3552,31 @@ test('bank SMS shortcut one-tap: hidden without a link; with a link it copies th
   const token = await page.evaluate(() => App.S.ensureIngestToken());
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(token);
 });
+
+// DW-094: «وين نروح الويكند؟» أفكار على قد الباقي من الميزانية، وتنضاف لمهام الجمعة
+test('weekend ideas (DW-094): fit the budget left and the number of people, add a plan to Friday tasks', async ({ page }) => {
+  await open(page);
+  await store(page, () => {
+    App.S.setSettings({ onboarded: true, budget: 300, payday: 1 });
+    App.S.upsert('transactions', { kind: 'expense', amount: 150, category: 'بقالة', occurred_at: new Date().toISOString() });
+  });
+  const r = await page.evaluate(() => Extras.Weekend.room());
+  expect(r.left).toBe(150);
+  expect(r.per).toBeGreaterThan(0);
+  expect(r.per).toBeLessThanOrEqual(50);
+  // كل الاقتراحات أقل سعرها يدخل بالمبلغ × عدد الناس
+  const ok = await page.evaluate(() => Extras.Weekend.pick(6, 2, 'all', 0).every((x) => x.lo * 2 <= 6));
+  expect(ok).toBe(true);
+  expect(await page.evaluate(() => Extras.Weekend.pick(0, 1, 'all', 0).every((x) => x.lo === 0))).toBe(true);
+  // الصيف: الداخلي أول
+  expect(await page.evaluate(() => Extras.Weekend.pick(null, 1, 'all', 6)[0].indoor)).toBe(true);
+  await page.click('button.tab[data-tab="money"]');
+  await page.click('[data-action="weekend"]');
+  await expect(page.locator('#sheetTitle')).toContainText('الويكند');
+  await page.fill('[name=wk_c]', '0');
+  await expect(page.locator('#wkList li').first()).toContainText('مجاني');
+  await page.locator('#wkList [data-wk]').first().click();
+  await expect(page.locator('#toast')).toContainText('مهام الجمعة');
+  const t = await store(page, () => App.st.tasks.slice(-1)[0]);
+  expect(new Date(t.due_at).getDay()).toBe(5);
+});
