@@ -9869,8 +9869,8 @@ window.HAYATI_CONFIG = {
   const signedIn = () => !!(S.status && S.status.signedIn && S.invokeFn && !S.status.aiOff);
   let samplePromise = null;
   const getSample = () => (samplePromise = samplePromise || (window.claude && typeof window.claude.use === 'function' ? window.claude.use('sample').catch(() => null) : Promise.resolve(null)));
-  const PROMPT = 'This is a university student\'s weekly class timetable. Return only JSON: {"courses":[{"name":"course code and title","days":[0-6, 0=Sunday],"start":"HH:MM 24h","end":"HH:MM","room":""}]}. ' +
-    'Day letters: U=Sunday M=Monday T=Tuesday W=Wednesday H or R=Thursday. Classes run 07:00–21:00, so 1:00–7:59 without am/pm is afternoon. Copy only what is shown; never guess.';
+  const PROMPT = 'This is a student\'s weekly timetable in any format (university portal, school grid in Arabic or English, photo, table or text). Return only JSON: {"courses":[{"name":"course or subject name","days":[0-6, 0=Sunday],"start":"HH:MM 24h","end":"HH:MM","room":""}]}. ' +
+    'Day letters: U=Sunday M=Monday T=Tuesday W=Wednesday H or R=Thursday. In school grids each cell takes its period\'s time from the header; merged or back-to-back periods of one subject are one meeting; split cells join both names with « / »; skip breaks, teachers and class codes; write abbreviations (ريض، عرب، إنج) in full. A time from 12:00 to 7:59 without am/pm is afternoon. Copy only what is shown; never guess.';
   const aiError = (e) => { const m = String(e && e.message || ''); return m === 'quota' ? 'خلصت محاولاتك المجانية لهالشهر ✨ · ترجع أول الشهر' : m === 'limit' ? 'خلصت محاولات اليوم ✨ · جرّب بكرة' : m === 'signin' ? 'سجّل دخول أول' : m === 'unavailable' ? 'الذكاء قيد التجهيز · الصق الجدول كنص أو ارفع PDF' : 'ما قدرنا نوصل للخدمة · جرّب بعدين'; };
 
   // ---------- الواجهة ----------
