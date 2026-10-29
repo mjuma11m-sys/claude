@@ -1,0 +1,94 @@
+<!doctype html>
+<html dir="rtl" lang="ar"><head><meta charset="utf-8">
+<!-- ريل إطلاق «حياتي نزل على App Store» · 15 ث · 1080×1920 · كل فريم من setT(t) -->
+<style>
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Bold.ttf);font-weight:700}
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Regular.ttf);font-weight:400}
+:root{--sea:#0E3B43;--deep:#0A1A1E;--pearl:#E8DCC4;--coral:#FF6B4A}
+*{box-sizing:border-box}
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:var(--deep);font-family:P,'Helvetica Neue',Arial,sans-serif;color:var(--pearl)}
+#stage{position:absolute;inset:0;overflow:hidden;background:radial-gradient(120% 75% at 50% 38%,#145a62 0%,var(--sea) 42%,var(--deep) 100%)}
+.c{color:var(--coral)}
+#icon{position:absolute;left:50%;top:250px;width:300px;height:300px;margin-left:-150px;border-radius:68px;box-shadow:0 40px 80px -30px rgba(0,0,0,.7)}
+#t1{position:absolute;left:0;right:0;top:600px;text-align:center;font-weight:700;font-size:150px;line-height:1.1}
+#t2{position:absolute;left:0;right:0;top:790px;text-align:center;font-size:62px}
+#t2 b{color:var(--coral)}
+#label{position:absolute;left:60px;right:60px;top:170px;text-align:center;font-weight:700;font-size:92px;line-height:1.15}
+#phoneWrap{position:absolute;left:50%;top:420px;width:600px;height:1298px;margin-left:-300px}
+#phone{position:absolute;inset:0;border-radius:92px;background:#0b1416;padding:18px;box-shadow:0 70px 120px -40px rgba(0,0,0,.75),inset 0 0 0 3px #2a4a50,inset 0 0 0 7px #0b1416}
+#screen{position:relative;width:100%;height:100%;border-radius:76px;overflow:hidden;background:#F7F4EE}
+#screen img{position:absolute;left:0;top:0;width:100%}
+#dots{position:absolute;left:0;right:0;top:1750px;text-align:center}
+#dots i{display:inline-block;width:16px;height:16px;border-radius:50%;background:rgba(232,220,196,.3);margin:0 8px}
+#dots i.on{background:var(--coral);width:44px;border-radius:8px}
+#vals{position:absolute;left:0;right:0;top:560px;text-align:center}
+#vals div{font-weight:700;font-size:96px;line-height:1.35}
+#logo{position:absolute;left:50%;top:420px;width:300px;height:300px;margin-left:-150px}
+#brand{position:absolute;left:0;right:0;top:760px;text-align:center}
+#brand h1{margin:0;font-size:170px;line-height:1}
+#brand p{margin:26px 0 0;font-size:60px}
+#cta{position:absolute;left:0;right:0;top:1120px;text-align:center}
+#cta span{display:inline-block;padding:26px 56px;border-radius:999px;background:var(--coral);color:#fff;font-weight:700;font-size:58px}
+#plat{position:absolute;left:0;right:0;top:1290px;text-align:center;font-size:46px;opacity:.85}
+#demo{position:absolute;left:0;right:0;bottom:34px;text-align:center;font-size:30px;opacity:.7}
+</style></head><body><div id="stage">
+  <img id="icon" src="shots/icon.png">
+  <div id="t1">حياتي <span class="c">نزل</span> 🎉</div>
+  <div id="t2">على <b>App Store</b></div>
+  <div id="label"></div>
+  <div id="phoneWrap"><div id="phone"><div id="screen"><img id="sA"><img id="sB"></div></div></div>
+  <div id="dots"><i></i><i></i><i></i><i></i></div>
+  <div id="vals"><div>مجاني</div><div>بدون إعلانات</div><div class="c">بياناتك على جهازك</div></div>
+  <svg id="logo" viewBox="0 0 512 512">
+    <rect width="512" height="512" rx="116" fill="#0E3B43" stroke="#E8DCC4" stroke-opacity=".15" stroke-width="4"/>
+    <path id="arc" d="M 383.3 172.7 A 160 160 0 1 1 300 102.2" fill="none" stroke="#E8DCC4" stroke-opacity=".28" stroke-width="22" stroke-linecap="round" pathLength="1" stroke-dasharray="1"/>
+    <path id="ha" d="M 304 166 L 196 166 L 264 222 C 204 222 168 254 168 292 C 168 336 206 360 256 360 C 292 360 318 348 338 332" fill="none" stroke="#E8DCC4" stroke-width="38" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1"/>
+    <circle id="dot" cx="352" cy="128" r="30" fill="#FF6B4A"/>
+  </svg>
+  <div id="brand"><h1>حياتي</h1><p>مصاريفك ودراستك وصلاتك بمكان واحد</p></div>
+  <div id="cta"><span>ابحث «حياتي» في App Store</span></div>
+  <div id="plat">📱 للآيفون الحين · أندرويد قريباً 👀</div>
+  <div id="demo">* لقطات ببيانات تجريبية</div>
+</div>
+<script>
+const $ = (i) => document.getElementById(i);
+const cl = (x) => Math.max(0, Math.min(1, x));
+const p = (t, a, b) => cl((t - a) / (b - a));
+const eo = (x) => 1 - Math.pow(1 - x, 3);
+const eb = (x) => { const c = 1.7; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const SH = [['money', 'مصاريفك <span class="c">بثانية</span>'], ['bank', 'الصق <span class="c">رسالة البنك</span>'], ['timetable', 'جدولك <span class="c">من PDF</span>'], ['kitchen', '<span class="c">166</span> وصفة حلال']];
+const T0 = 1.6, STEP = 1.85;
+const imgs = SH.map(([s]) => { const i = new Image(); i.src = 'shots/' + s + '.png'; return i; });
+function setT(t) {
+  // 0 ← 1.6: نزل 🎉
+  const a = eb(p(t, 0, 0.5)), out1 = eo(p(t, 1.3, 1.6));
+  $('icon').style.transform = `scale(${0.6 + 0.4 * a}) translateY(${-out1 * 200}px)`; $('icon').style.opacity = cl(a * 2) * (1 - out1);
+  $('t1').style.transform = `scale(${1.08 - 0.08 * eo(p(t, 0, 0.4))})`; $('t1').style.opacity = 1 - out1;
+  $('t2').style.opacity = cl(p(t, 0.35, 0.7)) * (1 - out1);
+  // 1.6 ← 9: الشاشات
+  const inP = eo(p(t, 1.4, 1.9)), outP = eo(p(t, 8.8, 9.2));
+  $("phoneWrap").style.transform = `translateY(${(1 - inP) * 1600 + outP * 1600}px)`; $("phoneWrap").style.opacity = inP * (1 - outP);
+  $('dots').style.opacity = $('label').style.opacity = inP * (1 - outP);
+  const k = Math.max(0, Math.min(3, Math.floor((t - T0) / STEP)));
+  const local = t - T0 - k * STEP, sw = eo(p(local, 0, 0.35));
+  const A = $('sA'), B = $('sB');
+  if (A.dataset.k !== String(k)) { A.src = imgs[k].src; A.dataset.k = k; B.src = imgs[Math.max(0, k - 1)].src; }
+  A.style.transform = `translateX(${k > 0 ? (1 - sw) * -100 : 0}%)`; B.style.transform = `translateX(${k > 0 ? sw * 100 : 100}%)`;
+  A.style.top = B.style.top = `${-local * 18}px`;
+  $('label').innerHTML = SH[k][1];
+  $('label').style.transform = `translateY(${(1 - eb(p(local, 0, 0.4))) * 30}px)`;
+  [...$('dots').children].forEach((d, i) => d.classList.toggle('on', i === k));
+  // 9.2 ← 12: القيم
+  [...$('vals').children].forEach((d, i) => { const v = eb(p(t, 9.2 + i * 0.45, 9.6 + i * 0.45)); d.style.opacity = cl(v) * (1 - p(t, 11.8, 12.1)); d.style.transform = `translateY(${(1 - v) * 40}px)`; });
+  // 12 ← 15: الشعار والدعوة
+  const L = p(t, 12.0, 12.8);
+  $('logo').style.opacity = cl(L * 3); $('logo').style.transform = `scale(${0.85 + 0.15 * eo(L)})`;
+  $('arc').style.strokeDashoffset = 1 - eo(p(t, 12.0, 12.7)); $('ha').style.strokeDashoffset = 1 - eo(p(t, 12.1, 12.9));
+  $('dot').style.transformOrigin = '352px 128px'; $('dot').style.transform = `scale(${eb(p(t, 12.7, 13.0))})`;
+  const B2 = eo(p(t, 12.5, 13.0)); $('brand').style.opacity = B2; $('brand').style.transform = `translateY(${(1 - B2) * 30}px)`;
+  const C = eb(p(t, 13.0, 13.4)); $('cta').style.opacity = cl(C); $('cta').style.transform = `scale(${0.9 + 0.1 * C})`;
+  $('plat').style.opacity = cl(p(t, 13.4, 13.8));
+}
+window.setT = setT;
+window.READY = Promise.all([document.fonts.ready, ...imgs.map((i) => new Promise((r) => i.complete ? r() : i.onload = r)), new Promise((r) => { const i = $('icon'); i.complete ? r() : i.onload = r; })]).then(() => setT(0));
+</script></body></html>
