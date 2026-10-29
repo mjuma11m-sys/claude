@@ -2016,7 +2016,7 @@ test('«جديد بحياتي»: an existing user sees what is new once after th
   await store(page, () => localStorage.setItem('hayati-seen-version', 'v27'));   // كان على النسخة اللي قبل
   await open(page);
   await expect(page.locator('#sheetTitle')).toHaveText('جديد بحياتي ✨', { timeout: 5000 });
-  await expect(page.locator('#sheetBody .news-item')).toHaveCount(3);
+  await expect(page.locator('#sheetBody .news-item')).toHaveCount(5);
   await page.click('#sheetCancel');
   expect(await store(page, () => localStorage.getItem('hayati-seen-version'))).toBe(await store(page, () => App.APP_VERSION));
   await open(page);
@@ -3427,4 +3427,108 @@ test('signed-in devices (DW-090): list, sign out one device, sign out all others
   await page.click('#askDlg [data-ok]');
   await expect(box.locator('li')).toHaveCount(1);
   expect(await store(page, () => App.S.status.signedIn)).toBe(true);   // هذا الجهاز يظل داخل
+});
+
+// DW-092: Apple Pay ← اختصار الآيفون ← bh.hayati.app://pay ← تأكيد بضغطة (بدون حفظ تلقائي)
+test('Apple Pay shortcut (DW-092): the pay link opens a prefilled confirm, amounts in any format, duplicates skipped', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__wg = { url: null };
+    window.Capacitor = { isNativePlatform: () => true, getPlatform: () => 'ios', Plugins: {
+      HayatiWidget: { update: async () => {}, take: async () => ({}), addListener: () => Promise.resolve({ remove() {} }) },
+      App: { addListener: (ev, fn) => { if (ev === 'appUrlOpen') window.__wg.url = fn; return Promise.resolve({ remove() {} }); } },
+    } };
+  });
+  await open(page);
+  await store(page, () => App.S.setSettings({ onboarded: true }));
+  expect(await page.evaluate(() => [Extras._amountOf('BHD 3.750'), Extras._amountOf('3,750'), Extras._amountOf('١٢٫٥٠٠ د.ب.'), Extras._amountOf('1,250.000'), Extras._amountOf('abc')])).toEqual([3.75, 3.75, 12.5, 1250, null]);
+  await page.waitForFunction(() => typeof window.__wg.url === 'function');
+  await store(page, () => window.__wg.url({ url: 'bh.hayati.app://pay?amount=BHD%203.750&merchant=COSTA%20COFFEE&card=Visa' }));
+  await expect(page.locator('#sheetTitle')).toContainText('Apple Pay', { timeout: 5000 });
+  expect(await store(page, () => App.st.transactions.filter((t) => t.source === 'applepay').length)).toBe(0);   // ما ينحفظ قبل التأكيد
+  await page.click('#sheetSave');
+  await expect.poll(() => store(page, () => App.st.transactions.filter((t) => t.source === 'applepay').map((t) => [t.amount, t.merchant, t.note]))).toEqual([[3.75, 'COSTA COFFEE', 'Visa']]);
+  await store(page, () => window.__wg.url({ url: 'bh.hayati.app://pay?amount=3.750&merchant=COSTA%20COFFEE' }));
+  await expect(page.locator('#toast')).toContainText('انسجّلت قبل');
+  // الشرح بالإعدادات (آيفون)
+  await page.click('#settingsBtn');
+  await page.click('#sheetBody [data-set="applepay"]');
+  await expect(page.locator('#sheetBody code')).toContainText('bh.hayati.app://pay?amount=');
+});
+
+// DW-091: دخول من جهاز جديد بعد آخر مرة ← «هذا أنت؟»؛ أول مرة بالجهاز ما ينبّه عن القديم
+test('new-device alert (DW-091): first run sets a baseline, a later new session asks «هذا أنت؟», «مو أنا» revokes it', async ({ page }) => {
+  await useFakeSupabase(page);
+  await open(page);
+  const ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36';
+  await store(page, (u) => {
+    App.S.setSettings({ onboarded: true });
+    localStorage.removeItem('hayati-dev-seen');
+    window.__srv.sessions = [{ id: 'me', is_current: true, aal: 'aal1', created_at: new Date(Date.now() - 864e5).toISOString(), last_active: new Date().toISOString(), user_agent: 'iPhone' },
+      { id: 'old', is_current: false, aal: 'aal1', created_at: new Date(Date.now() - 5 * 864e5).toISOString(), last_active: new Date(Date.now() - 5 * 864e5).toISOString(), user_agent: u }];
+    window.__signInAs('u-sara', 'sara@example.com');
+  }, ua);
+  await expect.poll(() => store(page, () => !!localStorage.getItem('hayati-dev-seen')), { timeout: 6000 }).toBe(true);
+  await expect(page.locator('#sheet[open]')).toHaveCount(0);   // القديم ما ينبّه
+  // جهاز جديد يدخل بعدها
+  await store(page, (u) => { window.__srv.sessions.push({ id: 'new', is_current: false, aal: 'aal1', created_at: new Date(Date.now() + 1000).toISOString(), last_active: new Date().toISOString(), user_agent: u }); }, ua);
+  await store(page, () => Extras._devCheck(true));
+  await expect(page.locator('#sheetTitle')).toHaveText('🔔 دخول جديد لحسابك', { timeout: 5000 });
+  await expect(page.locator('#sheetBody')).toContainText('ويندوز · Chrome');
+  await page.click('#sheetSave');
+  await expect.poll(() => store(page, () => window.__srv.calls.filter((c) => c[0] === 'revoke').map((c) => c[1]))).toEqual(['new']);
+  // ما يسأل مرة ثانية عن نفس الجلسة
+  await store(page, () => Extras._devCheck(true));
+  await page.waitForTimeout(500);
+  await expect(page.locator('#sheet[open]')).toHaveCount(0);
+});
+
+// DW-093: «حياتي 2026» صورة ستوري من بيانات السنة؛ المبالغ والأماكن مخفية افتراضياً
+test('year wrapped (DW-093): story image from this year, amounts and places hidden until asked', async ({ page }) => {
+  await open(page);
+  await store(page, () => {
+    App.S.setSettings({ onboarded: true });
+    const y = new Date().getFullYear(), d = (m, day) => new Date(y, m, day, 12).toISOString();
+    [[0, 3, 2.5, 'COSTA'], [0, 4, 3, 'COSTA'], [1, 10, 40, 'LULU'], [1, 12, 1.2, 'COSTA']].forEach(([m, day, amount, merchant]) =>
+      App.S.upsert('transactions', { kind: 'expense', amount, merchant, category: merchant === 'LULU' ? 'بقالة' : 'قهوة', occurred_at: d(m, day) }));
+    App.S.upsert('transactions', { kind: 'income', amount: 500, category: 'راتب', occurred_at: d(0, 1) });
+    App.S.upsert('transactions', { kind: 'expense', amount: 999, merchant: 'OLD', category: 'قهوة', occurred_at: new Date(y - 1, 5, 1).toISOString() });
+  });
+  const d = await page.evaluate(() => Extras.Wrapped.data(new Date().getFullYear()));
+  expect([d.count, d.exp, d.inc, d.place, d.cat.name, d.cat.pct, d.month]).toEqual([5, 46.7, 500, { name: 'COSTA', n: 3 }, 'بقالة', 86, 1]);
+  expect(d.noSpend).toBeGreaterThan(20);
+  await page.click('button.tab[data-tab="money"]');
+  await page.click('[data-action="wrapped"]');
+  await expect(page.locator('#sheetTitle')).toContainText('حياتي');
+  await expect.poll(() => page.evaluate(() => (document.getElementById('wrImg') || {}).src || '')).toContain('data:image/png');
+  expect(await page.locator('#wrDetails').isChecked()).toBe(false);
+});
+
+// 0.28 تحديث كبير: بيانات المستخدم من v27 تظل كما هي (العمليات والمهام والإعدادات ومفاتيح ما نعرفها)
+test('upgrade safety: data saved by v27 survives v28 untouched, new features only add keys', async ({ page }) => {
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem('seeded')) return;
+    sessionStorage.setItem('seeded', '1');
+    localStorage.setItem('hayati-seen-version', 'v27');
+    localStorage.setItem('hayati-v1', JSON.stringify({
+      owner: 'legacy',
+      transactions: [{ id: 't1', kind: 'expense', amount: 3.75, merchant: 'COSTA', category: 'قهوة', occurred_at: '2026-10-01T09:00:00.000Z', updated_at: '2026-10-01T09:00:00.000Z' }],
+      tasks: [{ id: 'k1', title: 'تسليم المشروع', done: false, updated_at: '2026-10-02T09:00:00.000Z' }],
+      settings: { onboarded: true, budget: 300, name: 'محمد', futureKey: 'keep-me' },
+      somethingFromTheFuture: [1, 2, 3],
+    }));
+  });
+  await open(page);
+  const s = await page.evaluate(() => JSON.parse(localStorage.getItem('hayati-v1')));
+  expect(s.transactions.map((t) => [t.id, t.amount, t.merchant])).toEqual([['t1', 3.75, 'COSTA']]);
+  expect(s.tasks.map((t) => t.title)).toEqual(['تسليم المشروع']);
+  expect([s.settings.budget, s.settings.name, s.settings.futureKey]).toEqual([300, 'محمد', 'keep-me']);
+  expect(s.somethingFromTheFuture).toEqual([1, 2, 3]);
+  // الميزات الجديدة تقرا بس: فتح «حياتي السنة» وفحص الأجهزة ما يغيّرون شي
+  const before = await page.evaluate(() => localStorage.getItem('hayati-v1'));
+  await page.evaluate(() => { Extras.Wrapped.data(2026); Extras._devFresh([], null); });
+  expect(await page.evaluate(() => localStorage.getItem('hayati-v1'))).toBe(before);
+  // بعد إعادة التشغيل نفس البيانات
+  await page.reload();
+  await page.waitForFunction(() => window.App && App.st);
+  expect(await page.evaluate(() => [App.st.transactions.length, App.st.settings.budget, App.st.settings.futureKey])).toEqual([1, 300, 'keep-me']);
 });

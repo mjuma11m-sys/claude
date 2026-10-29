@@ -63,4 +63,58 @@
     return prevAct ? prevAct(act, root, b) : false;
   };
   E._device = device; // للاختبار
+
+  // ---------- DW-091: تنبيه دخول من جهاز جديد ----------
+  // كل ما ينفتح التطبيق (مرة كل 6 ساعات بالكثير): لو فيه جلسة ثانية انفتحت بعد آخر مرة شيّكنا، نسأل «هذا أنت؟»
+  // أول مرة بهالجهاز: نحفظ الوقت بس وما ننبّه عن الأجهزة القديمة.
+  const SEEN = 'hayati-dev-seen';
+  const readSeen = () => { try { return JSON.parse(localStorage.getItem(SEEN)) || null; } catch (e) { return null; } };
+  const writeSeen = (v) => { try { localStorage.setItem(SEEN, JSON.stringify(v)); } catch (e) { /* تجاهل */ } };
+  function fresh(list, seen) {
+    if (!seen) return [];
+    return list.filter((s) => !s.is_current && !(seen.ok || []).includes(s.id) && new Date(s.created_at || s.last_active).getTime() > seen.base);
+  }
+  let checking = false;
+  async function checkNew(force) {
+    if (checking || !on()) return;
+    const seen = readSeen(), now = Date.now();
+    if (!force && seen && seen.at && now - seen.at < 6 * 3600e3) return;
+    checking = true;
+    try {
+      const list = await S.mySessions();
+      if (!seen) { writeSeen({ base: now, at: now, ok: [] }); return; }
+      const nw = fresh(list, seen);
+      writeSeen(Object.assign(seen, { at: now }));
+      if (!nw.length) return;
+      const busy = () => document.querySelector('#sheet[open]') || (S.status && S.status.mfaNeeded) || document.querySelector('#askDlg[open]');
+      const show = () => { if (busy()) { setTimeout(show, 3000); return; } alertNew(nw[0], nw.length); };
+      setTimeout(show, force ? 0 : 3000);
+    } catch (e) { /* بدون نت: نجرّب المرة الجاية */ } finally { checking = false; }
+  }
+  function alertNew(s, n) {
+    const d = device(s.user_agent);
+    let answered = false;
+    const okAll = () => { const v = readSeen() || { base: Date.now(), ok: [] }; v.ok = Array.from(new Set((v.ok || []).concat(s.id))).slice(-40); writeSeen(v); };
+    A.openSheet({
+      title: '🔔 دخول جديد لحسابك',
+      saveLabel: 'مو أنا، طلّعه',
+      cancelLabel: 'هذا أنا',
+      body: '<div class="card" style="display:flex;gap:12px;align-items:center"><div style="font-size:30px">' + d.icon + '</div><div><b>' + h(d.name) + '</b><div class="small muted">' + h(ago(s.created_at || s.last_active)) + '</div></div></div>' +
+        (n > 1 ? '<p class="small muted" style="margin:8px 4px 0">و' + (n - 1) + ' دخول ثاني جديد. شوفهم بـ «حسابك ← الأجهزة المسجّلة».</p>' : '') +
+        '<p class="small" style="margin:10px 4px 0">لو مو أنت: نطلّعه الحين، وغيّر كلمة السر، وفعّل التحقق بخطوتين.</p>',
+      async onSave() {
+        answered = true;
+        await S.revokeSession(s.id);
+        okAll();
+        A.toast('انطلع ✓ غيّر كلمة السر من «حسابك»');
+      },
+    });
+    const sh = document.getElementById('sheet');
+    if (sh) sh.addEventListener('close', () => { if (!answered) okAll(); }, { once: true });
+  }
+  let wasIn = false;
+  S.subscribe(() => { const now = !!(S.status && S.status.signedIn); if (now && !wasIn) setTimeout(() => checkNew(), 1500); wasIn = now; });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkNew(); });
+  if (on()) setTimeout(() => checkNew(), 1500);
+  E._devCheck = checkNew; E._devFresh = fresh;
 })();

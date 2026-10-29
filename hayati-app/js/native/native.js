@@ -442,6 +442,15 @@
     if (W && W.onAction && m[1] !== 'open') W.onAction(m[1]);
     return true;
   }
+  // DW-092: اختصار Apple Pay ← bh.hayati.app://pay?amount=…&merchant=…&card=…
+  function onPayUrl(url) {
+    if (!/^bh\.hayati\.app:\/\/pay\b/.test(url || '')) return false;
+    const q = new URL(url.replace(/^bh\.hayati\.app:\/\//, 'https://pay.local/')).searchParams;
+    const E = window.Extras;
+    const go = () => E && E.payFromShortcut && E.payFromShortcut({ amount: q.get('amount'), merchant: q.get('merchant'), card: q.get('card') });
+    setTimeout(go, 400);   // بعد ما يرجع التطبيق للواجهة
+    return true;
+  }
   async function onAuthUrl(url) {
     if (!url || url.indexOf(AUTH_URL) !== 0) return false;
     try { if (Browser) await Browser.close(); } catch (e) { /* انسكر */ }
@@ -453,7 +462,7 @@
     return true;
   }
   if (AppP && typeof AppP.addListener === 'function') {
-    try { const r = AppP.addListener('appUrlOpen', (ev) => { if (!onWidgetUrl(ev && ev.url)) onAuthUrl(ev && ev.url); }); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
+    try { const r = AppP.addListener('appUrlOpen', (ev) => { const u = ev && ev.url; if (!onPayUrl(u) && !onWidgetUrl(u)) onAuthUrl(u); }); if (r && r.catch) r.catch(() => {}); } catch (e) { /* تجاهل */ }
   }
 
   // ◀️ زر الرجوع بأندرويد: يسكّر النافذة المفتوحة، أو يرجع لـ «اليوم»، وبعدها بس يطلع من التطبيق

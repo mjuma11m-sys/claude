@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 91,
+  "next": 94,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -720,6 +720,30 @@
       "owner": "CEO",
       "priority": "P2",
       "status": "review",
+      "opened": "2026-10-29",
+      "updated": "2026-10-29"
+    },
+    "DW-091": {
+      "title": "تنبيه دخول من جهاز جديد",
+      "owner": "CEO",
+      "priority": "P2",
+      "status": "done",
+      "opened": "2026-10-29",
+      "updated": "2026-10-29"
+    },
+    "DW-092": {
+      "title": "Apple Pay يسجّل لحاله (اختصارات الآيفون)",
+      "owner": "CEO",
+      "priority": "P2",
+      "status": "done",
+      "opened": "2026-10-29",
+      "updated": "2026-10-29"
+    },
+    "DW-093": {
+      "title": "حياتي 2026 بأسلوب Wrapped",
+      "owner": "CEO",
+      "priority": "P2",
+      "status": "done",
       "opened": "2026-10-29",
       "updated": "2026-10-29"
     }
