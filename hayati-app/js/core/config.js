@@ -19,4 +19,6 @@ window.HAYATI_CONFIG = {
   MFA_SMS: false,
   // صفحة التطبيق بـ App Store (قيّمنا / شارك التطبيق)
   APP_STORE_URL: 'https://apps.apple.com/app/id6823956749',
+  // رابط iCloud لاختصار «حياتي - رسايل البنك» (shortcuts/hayati-bank-sms.shortcut). فاضي = زر التثبيت بضغطة مخفي
+  SMS_SHORTCUT_URL: '',
 };

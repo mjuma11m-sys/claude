@@ -2051,6 +2051,12 @@
       const token = S.ensureIngestToken();
       const url = cfg.url + '/rest/v1/rpc/ingest_sms';
       const copy = (label, value) => '<div class="copy-box"><code>' + h(label) + '</code><button data-copy="' + h(value) + '">' + I('copy') + 'نسخ</button></div>';
+      const SC = (window.HAYATI_CONFIG || {}).SMS_SHORTCUT_URL;
+      if (SC) body += '<p class="small muted" style="margin:0 0 10px">ضغطة وحدة تثبّت الاختصار، والكود السري ينتسخ لك عشان تلصقه لما يسأل.</p>' +
+        '<button class="btn primary block" data-set="sms-shortcut">⚡ ثبّت اختصار رسايل البنك</button>' +
+        '<ol class="steps" style="margin-top:12px"><li>بعد ما تضيفه: <b>الاختصارات</b> ← <b>الأتمتة</b> ← <b>+</b> ← <b>الرسائل</b> ← «الرسالة تحتوي على» <code>BHD</code> ← <b>تشغيل فوراً</b>.</li>' +
+        '<li>أضف إجراء <b>تشغيل اختصار</b> ← «حياتي - رسايل البنك» ← تم ✓</li></ol>' +
+        '<details style="margin:6px 0 10px"><summary class="small muted">الطريقة اليدوية (بدون الاختصار الجاهز)</summary>';
       body += '<p class="small muted" style="margin:0 0 8px">نسوي أتمتة في تطبيق <b>الاختصارات</b>، وكل ما توصلك رسالة من البنك أو Benefit تنرسل للتطبيق.</p>' +
         '<ol class="steps">' +
         '<li>افتح <b>الاختصارات</b> ← <b>الأتمتة</b> ← <b>+</b> ← <b>الرسائل</b>.</li>' +
@@ -2060,6 +2066,7 @@
         '<ol class="steps" start="5"><li><b>نص الطلب: JSON</b>، حقل <code>token</code> بهذي القيمة:</li></ol>' + copy(token.slice(0, 16) + '…', token) +
         '<ol class="steps" start="6"><li>وحقل <code>body</code> قيمته <b>«مُدخل الاختصار»</b> أو <b>«المحتوى»</b>.</li>' +
         '<li>خلاص ✓ الرسايل الجديدة تطلع في المصاريف لما تفتح التطبيق.</li></ol>' +
+        (SC ? '</details>' : '') +
         '<p class="small muted" style="margin:4px 0 10px">الرمز السري مثل المفتاح، لا تشاركه مع أحد.</p>' +
         '<button class="btn ghost block" data-set="rotate">' + I('key') + 'تغيير الرمز السري</button>';
     }
@@ -2168,6 +2175,12 @@
         S.clearConfig(); back();
       } else if (act === 'sync') {
         await S.sync(); toast(S.status.error || 'تمت المزامنة ✓'); back();
+      } else if (act === 'sms-shortcut') {
+        const SC = (window.HAYATI_CONFIG || {}).SMS_SHORTCUT_URL;
+        if (SC) {
+          try { await navigator.clipboard.writeText(S.ensureIngestToken()); toast('انتسخ الكود السري ✓ الصقه لما يسأل'); } catch (e) { toast('انسخ الكود من الطريقة اليدوية تحت'); }
+          const N = window.HayatiNative; setTimeout(() => { if (N && N.openLink) N.openLink(SC); else window.open(SC, '_blank', 'noopener'); }, 600);
+        }
       } else if (act === 'rotate') {
         if (await ask('بعد التغيير لازم تحدّث الرمز في الاختصار. أكمل؟')) { S.rotateIngestToken(); settingsSheet(); toast('تغيّر الرمز'); }
       } else if (act === 'notify') {

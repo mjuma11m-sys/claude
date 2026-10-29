@@ -2364,4 +2364,9 @@ window.HAYATI_EN = {
 "آيفون: اختصار مرة وحدة، وبعدها كل دفعة تطلع لك جاهزة وتأكدها بضغطة. من الإعدادات": "iPhone: set up one shortcut, then every payment shows up ready to confirm with one tap. In Settings",
 "سنتك بصورة ستوري: أيام بدون صرف، أغلى شهر، وين راحت فلوسك. المبالغ مخفية إلا لو تبي. من «فلوسي»": "Your year as a story image: no-spend days, priciest month, where your money went. Amounts hidden unless you want them. In “Money”",
 "سنتك بصورة": "Your year in a picture",
+"ضغطة وحدة تثبّت الاختصار، والكود السري ينتسخ لك عشان تلصقه لما يسأل.": "One tap installs the shortcut, and your secret code is copied so you can paste it when asked.",
+"⚡ ثبّت اختصار رسايل البنك": "⚡ Install the bank-messages shortcut",
+"الطريقة اليدوية (بدون الاختصار الجاهز)": "Manual setup (without the ready shortcut)",
+"انتسخ الكود السري ✓ الصقه لما يسأل": "Secret code copied ✓ paste it when asked",
+"انسخ الكود من الطريقة اليدوية تحت": "Copy the code from the manual steps below",
 };

@@ -3532,3 +3532,23 @@ test('upgrade safety: data saved by v27 survives v28 untouched, new features onl
   await page.waitForFunction(() => window.App && App.st);
   expect(await page.evaluate(() => [App.st.transactions.length, App.st.settings.budget, App.st.settings.futureKey])).toEqual([1, 300, 'keep-me']);
 });
+
+// اختصار رسايل البنك بضغطة: الزر يطلع بس لما يكون فيه رابط iCloud، وينسخ الكود السري ويفتح الرابط
+test('bank SMS shortcut one-tap: hidden without a link; with a link it copies the secret and opens it', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await useFakeSupabase(page);
+  await page.addInitScript(() => { window.__opened = []; window.open = (u) => { window.__opened.push(u); return null; }; });
+  await open(page);
+  await store(page, () => { App.S.setSettings({ onboarded: true }); window.__signInAs('u-sara', 'sara@example.com'); });
+  await page.click('#settingsBtn');
+  await expect(page.locator('#sheetBody [data-set="rotate"]')).toBeVisible();
+  await expect(page.locator('#sheetBody [data-set="sms-shortcut"]')).toHaveCount(0);
+  await page.evaluate(() => { HAYATI_CONFIG.SMS_SHORTCUT_URL = 'https://www.icloud.com/shortcuts/abc123'; });
+  await page.click('#sheetCancel');
+  await page.click('#settingsBtn');
+  await page.click('#sheetBody [data-set="sms-shortcut"]');
+  await expect(page.locator('#toast')).toContainText('انتسخ الكود السري');
+  await expect.poll(() => page.evaluate(() => window.__opened)).toEqual(['https://www.icloud.com/shortcuts/abc123']);
+  const token = await page.evaluate(() => App.S.ensureIngestToken());
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(token);
+});

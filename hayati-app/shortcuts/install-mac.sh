@@ -6,4 +6,10 @@ cd "$(dirname "$0")"
 OUT="$HOME/Desktop/حياتي - رسايل البنك.shortcut"
 shortcuts sign --mode anyone --input hayati-bank-sms.shortcut --output "$OUT"
 open "$OUT"
-echo "✓ انفتح بالاختصارات: اضغط Add Shortcut والصق الكود السري من حياتي"
+cat <<'MSG'
+✓ انفتح بالاختصارات بالماك.
+1) لما يسأل عن الكود السري: خلّه فاضي ← Add Shortcut.
+2) كلك يمين على «حياتي - رسايل البنك» ← Share ← Copy iCloud Link.
+3) أرسل الرابط لـ Claude: ينحط بالتطبيق، وزر «ثبّت اختصار رسايل البنك» يشتغل للكل.
+   (كل واحد يلصق كوده هو وقت التثبيت، والرابط ما فيه أي كود)
+MSG
