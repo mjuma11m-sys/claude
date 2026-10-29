@@ -33,11 +33,11 @@ html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:var(--d
 #plat{top:1420px;font-size:44px;opacity:.85}
 #demo{bottom:34px;font-size:30px;opacity:.7}
 </style></head><body><div id="stage">
-  <div class="abs big" id="l1">طالب بحريني 👋</div>
-  <div class="abs" id="l1b">وعندي شي أبي أوريكم</div>
-  <div class="abs big" id="l2">و<span class="c">سويت تطبيق</span></div>
+  <div class="abs big" id="l1">سويت <span class="c">تطبيق</span> 🤍</div>
+  <div class="abs" id="l1b">اسمه «حياتي»، ونزل على App Store</div>
+  <div class="abs big" id="l2">يرتّب <span class="c">يومك كله</span></div>
   <img id="icon" src="shots/icon.png">
-  <div class="abs" id="l2b">اسمه «حياتي» 🤍</div>
+  <div class="abs" id="l2b">مصاريف · دراسة · صلاة</div>
   <div class="stamp" id="r1">❌ رفض</div>
   <div class="stamp" id="r2">❌ رفض</div>
   <div class="stamp" id="ok">✅ انقبل</div>
@@ -60,7 +60,7 @@ const win = (t, a, b, f = 0.3) => cl(Math.min(p(t, a, a + f), 1 - p(t, b - f, b)
 const pop = (el, t, a, b) => { const v = eb(p(t, a, a + 0.45)); el.style.opacity = cl(v) * win(t, a, b); el.style.transform = `translateY(${(1 - v) * 40}px)`; };
 const FEAT = [['money', 'مصاريفك بثانية'], ['bank', 'الصق رسالة البنك'], ['timetable', 'جدولك من PDF'], ['kitchen', 'وصفات وسعراتها']];
 function setT(t) {
-  // 0–3: طالب بحريني (ظاهر من الفريم 0)
+  // 0–3: سويت تطبيق (الناس يعرفونه، بدون تعريف) (ظاهر من الفريم 0)
   $('l1').style.opacity = 1 - p(t, 2.7, 3); $('l1').style.transform = `scale(${1.06 - 0.06 * eo(p(t, 0, 0.4))})`;
   pop($('l1b'), t, 0.5, 3);
   // 3–6: سويت تطبيق
