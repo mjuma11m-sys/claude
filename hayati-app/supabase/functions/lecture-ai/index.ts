@@ -146,6 +146,11 @@ const TASKS = {
     "days = weekday numbers, 0=Sunday 1=Monday 2=Tuesday 3=Wednesday 4=Thursday 5=Friday 6=Saturday. Day letters on Bahraini portals: U=Sunday, M=Monday, T=Tuesday, W=Wednesday, H=Thursday (R also means Thursday), so UTH = [0,2,4] and MW = [1,3]; " +
     "start and end = 24-hour HH:MM (classes run about 07:00–21:00, so 1:00–7:59 without am/pm means afternoon); room = building and room as written, or empty. " +
     "Put meetings of the same course at different times as separate items. Copy only what is in the timetable; never guess a time or day that is not shown. " +
+    "School timetable grids (Bahrain public schools, primary/intermediate/secondary): columns are periods (الحصة الأولى، الثانية…) with the time range printed in the column header, and rows are days (احد، اثنين، ثلاثاء، اربعاء، خميس). " +
+    "Each cell takes the time of its column; a cell that spans several period columns is one meeting from the first period's start to the last period's end. School times run about 07:00–14:30, so 12:15, 1:00 or 2:00 without am/pm mean 12:15, 13:00 and 14:00. " +
+    "Skip break columns (الفسحة/الفسحة الأولى/استراحة), the grade or class title (e.g. «الثالث الإعدادي فرقة 5»), teacher names and class codes like «3ع 5» or «مجال1». " +
+    "Write subject names in full: ريض=رياضيات، عرب=لغة عربية، إنج=لغة إنجليزية، دين=تربية إسلامية، رياضة=تربية رياضية، اسرية=تربية أسرية، علوم، اجتماعيات، مواطنة، تلاوة، اقتصاد، حاسوب، مجالات؛ keep anything you are not sure of exactly as written (e.g. «ت ريض» → «ت رياضيات»). " +
+    "When one cell is split into two stacked subjects for the same period (two groups, e.g. حاسوب over اسرية, or مجالات 1 over مجالات 2), return one meeting named with both joined by « / » (e.g. «حاسوب / تربية أسرية»), or just the name once if both halves are the same subject. " +
     "If this is not a timetable or nothing is readable, return no courses.",
 };
 // DW-056: the same reader for a work shift roster or a training schedule
