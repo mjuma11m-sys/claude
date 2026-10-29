@@ -3063,6 +3063,11 @@ window.HAYATI_EN = {
 "شارك حياتي مع ربعك": "Share Hayati with friends",
 "رابط التطبيق": "App link",
 "انتسخ الرابط ✓": "Link copied ✓",
+"عاجبك حياتي؟ ⭐": "Enjoying Hayati? ⭐",
+"قيّمه بـ App Store": "Rate it on the App Store",
+"نبني «حياتي» بروحنا من البحرين. لو مرة وحدة كتبت رأيك بـ App Store، يساعد غيرك يلقاه.": "We build Hayati ourselves in Bahrain. A short App Store review helps others find it.",
+"ما بنسألك مرة ثانية. وعندك ملاحظة؟ «الإعدادات ← رأيك بالتطبيق».": "We won't ask again. Have feedback? Settings → Your feedback.",
+"• «كم سعرة في المجبوس؟» أو «كم أحتاج سعرات؟»": "• “How many calories in machboos?” or “How many calories do I need?”",
 };
 
 </script>
@@ -14302,6 +14307,25 @@ window.HAYATI_CONFIG = {
     // مساعدة
     [/^(وش|شو|ايش|شنو)\s+(تقدر|تسوي)|^مساعد[ةه]$|^help$/i, () => ({ text: helpText() })],
 
+    // DW-086: «كم أحتاج سعرات؟» · «كم بروتين احتاج» ← من «احسب احتياجك» (على الجهاز)
+    [/^كم\s+(?:احتاج|أحتاج|يحتاج جسمي)|^(?:كم\s+)?(?:سعرات|بروتين)\s+(?:احتاج|أحتاج)/, () => {
+      const p = st.settings && st.settings.body_needs, c = p && E._needsCalc ? E._needsCalc(p) : null;
+      if (!c) return { text: 'ما حسبنا احتياجك للحين. افتح «الدراسة ← صحتي ← احسب احتياجك» وحط وزنك وطولك 💪' };
+      return { text: 'احتياجك باليوم تقريباً: ' + c.kcal.toLocaleString('en') + ' سعرة و' + c.protein + ' غم بروتين (' + c.goal + ') · تقدير، مو نصيحة طبية' };
+    }],
+
+    // DW-086: «كم سعرة في المجبوس؟» ← من وصفات المطبخ (تقدير من المقادير)
+    [/^كم\s+سعر[ةه]\s+/, (q) => {
+      const C = window.HayatiCalories, R = window.HAYATI_RECIPES;
+      if (!C || !R) return null;
+      const name = q.replace(/^كم\s+سعر[ةه]\s+/, '').replace(/^(في|فى|بـ?|ب)\s*/, '').replace(/^ال(?=\S{3,})/, '').trim();
+      if (name.length < 2) return null;
+      const hit = R.find((r) => r.name.replace(/^ال/, '').includes(name)) || R.find((r) => r.name.includes(name.split(' ')[0]));
+      if (!hit) return { text: 'ما لقيت «' + name + '» بالمطبخ. جرّب اسم الأكلة مثل: «كم سعرة في المجبوس؟»' };
+      const k = C.recipeKcal(hit);
+      return { text: k ? hit.icon + ' ' + hit.name + ': ≈ ' + k.toLocaleString('en') + ' سعرة للحصة (تقدير من مقادير الوصفة)' : hit.name + ': سعراتها قليلة جداً' };
+    }],
+
     // ذكّرني / موعد ← مهمة بوقت
     [/^(ذكرني|ذكّرني|نبهني|نبّهني|فكرني|موعد|عندي موعد)(?=\s|$)/, (q) => {
       const w = whenOf(q);
@@ -14377,7 +14401,7 @@ window.HAYATI_CONFIG = {
   ];
 
   function helpText() {
-    return 'أقدر بدون نت:\n• «صرفت 1.5 قهوة» ← أسجّل المصروف\n• «ذكّرني بكرة الساعة 5 م أدفع الإيجار»\n• «ضيف حليب وخبز للمشتريات»\n• «وش عندي اليوم؟» أو بكرة\n• «كم صرفت هالشهر على الأكل؟»\n• «كم باقي من الميزانية؟»\n• 📎 ارفع أي ملف وأرتّبه' +
+    return 'أقدر بدون نت:\n• «صرفت 1.5 قهوة» ← أسجّل المصروف\n• «ذكّرني بكرة الساعة 5 م أدفع الإيجار»\n• «ضيف حليب وخبز للمشتريات»\n• «وش عندي اليوم؟» أو بكرة\n• «كم صرفت هالشهر على الأكل؟»\n• «كم باقي من الميزانية؟»\n• «كم سعرة في المجبوس؟» أو «كم أحتاج سعرات؟»\n• 📎 ارفع أي ملف وأرتّبه' +
       (aiReady() ? '\nوأي سؤال ثاني أسأل فيه Claude ✨' : '');
   }
   const aiReady = () => !!(window.__hayatiSample || (S.status && S.status.signedIn && S.invokeFn && !S.status.aiOff));
@@ -15618,6 +15642,69 @@ window.HAYATI_CONFIG = {
 
   window.HayatiProfile = { ROLES, isNew };
   A.render();
+})();
+
+</script>
+  <script>/* js/features/rateprompt.js */
+// DW-089: «عاجبك حياتي؟» — طلب تقييم مؤدب، مرة وحدة، للي يستخدم التطبيق فعلاً
+// بالآيفون بس (التطبيق من App Store). بعد 5 أيام استخدام مختلفة و10 عمليات أو مهام على الأقل.
+// «لاحقاً» = نسأل مرة ثانية بعد 60 يوم بس. بدون مقابل وبدون طلب نجوم معيّنة (إرشادات Apple).
+(function () {
+  'use strict';
+
+  const A = window.App, E = window.Extras;
+  if (!A || !E) return;
+  const { st } = A;
+  const KEY = 'hayati-rate';
+  const DAY = 864e5;
+  const STORE = (window.HAYATI_CONFIG || {}).APP_STORE_URL || '';
+
+  const read = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
+  const write = (v) => { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch (e) { /* تجاهل */ } };
+  const today = () => new Date().toISOString().slice(0, 10);
+  const native = () => { try { const C = window.Capacitor; return !!(C && C.isNativePlatform && C.isNativePlatform() && C.getPlatform && C.getPlatform() === 'ios'); } catch (e) { return false; } };
+
+  function due(r, now) {
+    if (!STORE || r.done) return false;
+    if (r.later && now - r.later < 60 * DAY) return false;
+    if ((r.days || []).length < 5) return false;
+    const used = (st.transactions || []).length + (st.tasks || []).length;
+    return used >= 10;
+  }
+
+  function ask() {
+    A.openSheet({
+      title: 'عاجبك حياتي؟ ⭐',
+      saveLabel: 'قيّمه بـ App Store',
+      cancelLabel: 'لاحقاً',
+      body: '<p style="margin:0 4px 10px">نبني «حياتي» بروحنا من البحرين. لو مرة وحدة كتبت رأيك بـ App Store، يساعد غيرك يلقاه.</p>' +
+        '<p class="small muted" style="margin:0 4px">ما بنسألك مرة ثانية. وعندك ملاحظة؟ «الإعدادات ← رأيك بالتطبيق».</p>',
+      onSave() {
+        write(Object.assign(read(), { done: true }));
+        const N = window.HayatiNative;
+        if (N && N.openLink) N.openLink(STORE + '?action=write-review'); else window.open(STORE + '?action=write-review', '_blank', 'noopener');
+      },
+    });
+    // «لاحقاً» أو سكّرها: نرجع بعد 60 يوم
+    const sh = document.getElementById('sheet');
+    if (sh) sh.addEventListener('close', () => { const r = read(); if (!r.done) write(Object.assign(r, { later: Date.now() })); }, { once: true });
+  }
+
+  function check(force) {
+    if (!force && !native()) return;
+    const r = read(), d = today();
+    r.days = Array.from(new Set((r.days || []).concat(d))).slice(-30);
+    write(r);
+    if (!due(r, Date.now())) return;
+    // بعد ما يستقر التطبيق، وبس لو ما فيه نافذة ثانية مفتوحة أو قفل أو رمز تحقق
+    setTimeout(() => {
+      const busy = document.querySelector('#sheet[open]') || (A.S.status && A.S.status.mfaNeeded) || document.querySelector('.lock[open], #lock:not([hidden])');
+      if (!busy) ask();
+    }, 4000);
+  }
+
+  E._ratePrompt = { check, due, read, KEY };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => check(), { once: true }); else check();
 })();
 
 </script>

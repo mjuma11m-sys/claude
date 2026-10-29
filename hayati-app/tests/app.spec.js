@@ -3370,3 +3370,22 @@ test('settings: rate and share Hayati point to the App Store page', async ({ pag
   expect(o[0]).toBe('https://apps.apple.com/app/id6823956749?action=write-review');
   expect(o[1]).toContain('https://apps.apple.com/app/id6823956749');
 });
+
+// DW-089: المساعد يجاوب عن السعرات والاحتياج، وطلب التقييم يطلع مرة وحدة للمستخدم الفعلي بس
+test('assistant calories + rating prompt (DW-089)', async ({ page }) => {
+  await open(page);
+  const a = await page.evaluate(() => Extras.localSkill('كم سعرة في المجبوس؟').text);
+  expect(a).toContain('سعرة للحصة');
+  const n0 = await page.evaluate(() => Extras.localSkill('كم احتاج سعرات').text);
+  expect(n0).toContain('احسب احتياجك');
+  await page.evaluate(() => App.S.setSettings({ body_needs: { sex: 'm', age: 22, h: 175, w: 72, act: 1.55, goal: 'keep' } }));
+  expect(await page.evaluate(() => Extras.localSkill('كم احتاج سعرات').text)).toContain('2,650');
+  // طلب التقييم: ما يطلع لمستخدم جديد، ويطلع بعد 5 أيام و10 عمليات، ومرة وحدة
+  const R = 'Extras._ratePrompt';
+  expect(await page.evaluate(() => Extras._ratePrompt.due({ days: ['a', 'b'] }, Date.now()))).toBe(false);
+  await page.evaluate(() => { for (let i = 0; i < 10; i++) App.S.upsert('transactions', { id: 'r' + i, kind: 'expense', amount: 1, merchant: 'x', category: 'أخرى', occurred_at: new Date().toISOString() }); });
+  expect(await page.evaluate(() => Extras._ratePrompt.due({ days: ['1', '2', '3', '4', '5'] }, Date.now()))).toBe(true);
+  expect(await page.evaluate(() => Extras._ratePrompt.due({ days: ['1', '2', '3', '4', '5'], done: true }, Date.now()))).toBe(false);
+  expect(await page.evaluate(() => Extras._ratePrompt.due({ days: ['1', '2', '3', '4', '5'], later: Date.now() - 864e5 }, Date.now()))).toBe(false);
+  void R;
+});

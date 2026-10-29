@@ -2303,4 +2303,9 @@ window.HAYATI_EN = {
 "شارك حياتي مع ربعك": "Share Hayati with friends",
 "رابط التطبيق": "App link",
 "انتسخ الرابط ✓": "Link copied ✓",
+"عاجبك حياتي؟ ⭐": "Enjoying Hayati? ⭐",
+"قيّمه بـ App Store": "Rate it on the App Store",
+"نبني «حياتي» بروحنا من البحرين. لو مرة وحدة كتبت رأيك بـ App Store، يساعد غيرك يلقاه.": "We build Hayati ourselves in Bahrain. A short App Store review helps others find it.",
+"ما بنسألك مرة ثانية. وعندك ملاحظة؟ «الإعدادات ← رأيك بالتطبيق».": "We won't ask again. Have feedback? Settings → Your feedback.",
+"• «كم سعرة في المجبوس؟» أو «كم أحتاج سعرات؟»": "• “How many calories in machboos?” or “How many calories do I need?”",
 };
