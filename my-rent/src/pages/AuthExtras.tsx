@@ -19,8 +19,17 @@ function useRun() {
  *  ما نسأل السيرفر قبل الدخول: ولا طلب للسحابة قبل الموافقة. أبل أول وبنفس الحجم (شرط أبل 4.8) */
 const PROVIDERS = String(import.meta.env.VITE_AUTH_PROVIDERS ?? "").split(",").map((x) => x.trim());
 export function OAuthButtons({ sb, disabled, onStart }: { sb: SupabaseClient | null; disabled: boolean; onStart: () => void }) {
-  const p = { google: PROVIDERS.includes("google"), apple: PROVIDERS.includes("apple") };
   const { busy, error, run } = useRun();
+  // DW-050: بعد الموافقة بس نسأل المشروع شنو مفعّل فعلاً — زر مزوّد ما انحفظ بـ Supabase ما يطلع
+  const [live, setLive] = useState<{ apple: boolean; google: boolean } | null>(null);
+  const wanted = PROVIDERS.includes("google") || PROVIDERS.includes("apple");
+  useEffect(() => {
+    if (disabled || !sb || !wanted) return;
+    let off = false;
+    void import("../data/supabase").then((m) => m.enabledProviders()).then((v) => { if (!off && v) setLive(v); });
+    return () => { off = true; };
+  }, [disabled, sb, wanted]);
+  const p = { google: PROVIDERS.includes("google") && (live?.google ?? true), apple: PROVIDERS.includes("apple") && (live?.apple ?? true) };
   if (!p.google && !p.apple) return null;
   const go = (provider: "google" | "apple") => run(async () => {
     if (!sb) throw new Error(t("الاتصال ما جهز، حاول مرة ثانية"));

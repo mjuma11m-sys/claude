@@ -10,8 +10,20 @@ export async function getClient(url: string, key: string): Promise<SupabaseClien
   if (client && clientFor === url + key) return client;
   const { createClient } = await import("@supabase/supabase-js");
   client = createClient(url, key, { auth: { flowType: "pkce", persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
-  clientFor = url + key;
+  clientFor = url + key; conn = { url, key };
   return client;
+}
+let conn: { url: string; key: string } | null = null;
+
+/** DW-050: أي مزوّد دخول مفعّل فعلاً بالمشروع (أبل/قوقل). يُستدعى بس بعد موافقة المستخدم على السحابة. null = ما نعرف */
+export async function enabledProviders(): Promise<{ apple: boolean; google: boolean } | null> {
+  if (!conn) return null;
+  try {
+    const r = await fetch(`${conn.url}/auth/v1/settings`, { headers: { apikey: conn.key } });
+    if (!r.ok) return null;
+    const ext = ((await r.json()) as { external?: Record<string, boolean> }).external ?? {};
+    return { apple: !!ext.apple, google: !!ext.google };
+  } catch { return null; }
 }
 
 export function supabaseRemote(sb: SupabaseClient): Remote {

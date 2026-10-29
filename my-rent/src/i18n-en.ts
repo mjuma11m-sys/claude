@@ -556,7 +556,7 @@ export const EN: Record<string, string> = {
   "عليه متأخرات": "Has arrears",
   "— بعد الإخلاء ما تبين بالمتأخرات. سجّلها أو اطبع كشف قبل.": "— after vacating they won't show in arrears. Log them or print a statement first.",
   "الدفعات السابقة تبقى بالسجل والتقارير.": "Past payments stay in the history and reports.",
-  ": رجّعته له؟": ": did you return it?",
+  ": رجّعته له؟": " \u2014 did you return it?",
   "رجّعته، أخلِها": "Returned, vacate",
   "انخصم، أخلِها": "Deducted, vacate",
   "أكيد، أخلِها": "Yes, vacate",
@@ -751,4 +751,6 @@ export const EN: Record<string, string> = {
   "تحويل": "Transfer",
   "نقد": "Cash",
   "شيك": "Cheque",
+  "إخلاء {unit} من {tenant}؟": "Vacate {unit} (tenant: {tenant})?",
+  "ما لقيت «{q}».": "Nothing found for \u201c{q}\u201d.",
 };

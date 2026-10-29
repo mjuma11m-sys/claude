@@ -29,7 +29,7 @@ export function SearchSheet({ open, onClose, onPick, go }: { open: boolean; onCl
         {Icon.search}
         <input ref={input} id="search-q" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("اسم، شقة، وثيقة، مورّد، أو رقم")} autoComplete="off" />
       </div>
-      {n && none && <p className="muted" style={{ textAlign: "center" }}>{t("ما لقيت «")}{q}».</p>}
+      {n && none && <p className="muted" style={{ textAlign: "center" }}>{t("ما لقيت «{q}».", { q })}</p>}
       {hits.length > 0 && (
         <ul className="rows rows-tap card-list" style={{ marginTop: 12 }}>
           {hits.map((u) => (

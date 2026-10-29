@@ -187,7 +187,7 @@ export function PaySheet({ unit, onClose, onReceipt, onEdit, onStatement, onCont
           </div>
           {confirmVacate && u.tenant && (
             <div className="confirm-box" role="alert">
-              <div className="strong">{t("إخلاء")} {u.name} {isEn() ? "from" : "من"} {u.tenant.name}{t("؟")}</div>
+              <div className="strong">{t("إخلاء {unit} من {tenant}؟", { unit: u.name, tenant: u.tenant.name })}</div>
               {billsDue(data, u).amount > 0 && <div className="small" id="vacate-bills">{t("عليه فواتير كهرباء وماء غير مسددة")} <Money fils={billsDue(data, u).amount} /> {t("— اخصمها من التأمين لو اتفقتوا.")}</div>}
               {arr.amount > 0 && <div className="small">{t("عليه متأخرات")} <Money fils={arr.amount} /> {t("— بعد الإخلاء ما تبين بالمتأخرات. سجّلها أو اطبع كشف قبل.")}</div>}
               <div className="small muted">{t("الدفعات السابقة تبقى بالسجل والتقارير.")}</div>

@@ -299,7 +299,8 @@ try {
     await z.locator("#sync-consent").check(); await z.locator("#sync-pass").fill("123");
     await z.getByRole("button", { name: "سوّ الحساب" }).click(); await z.waitForTimeout(200);
     ok((await z.locator(".field-error").first().innerText()).includes("8"), "كلمة سر قصيرة تنرفض قبل ما يتصل");
-    ok(calls.length === 0, "بدون دخول: ولا طلب للسحابة", calls.join(" "));
+    const leaked = calls.filter((u) => !u.includes("/auth/v1/settings")); // DW-050: بعد الموافقة بس — قراءة عامة لأي مزوّد مفعّل، بدون بيانات
+    ok(leaked.length === 0, "بدون دخول: ولا طلب للسحابة (غير فحص المزوّدين بعد الموافقة)", leaked.join(" "));
     ok(await z.evaluate(() => localStorage.getItem("idarati:syncConfig")) === null, "ما ينحفظ شي قبل الدخول");
     ok(await z.getByRole("button", { name: "رجّع البيانات التجريبية" }).isVisible(), "بدون مزامنة: البيانات التجريبية متاحة");
     ok(zErr.length === 0, "DW-019: بدون أخطاء", zErr.join(" | "));
@@ -950,6 +951,14 @@ try {
         const [wa, wg] = await Promise.all(["#oauth-apple", "#oauth-google"].map(async (q) => (await a.locator(q).boundingBox()).width));
         ok(Math.abs(wa - wg) <= 1, "زر أبل بنفس حجم قوقل", `${wa}/${wg}`);
         ok(await a.locator("#oauth-apple").isDisabled(), "أبل/قوقل مقفلة لين يوافق على الحفظ بالسحابة");
+        // DW-050: بعد الموافقة يسأل المشروع — المزوّد اللي ما انحفظ بـ Supabase زرّه يختفي
+        ok(calls.length === 0, "DW-050: قبل الموافقة ولا طلب للسحابة", calls.join(" "));
+        let asked = 0;
+        await a.route(/\/auth\/v1\/settings/, (r) => { asked++; r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ external: { apple: false, google: true } }) }); });
+        await a.locator("#sync-consent").first().check(); await a.waitForTimeout(800);
+        ok(asked === 1 && await a.locator("#oauth-apple").count() === 0 && await a.locator("#oauth-google").isEnabled(), "DW-050: بعد الموافقة: زر المزوّد غير المفعّل يختفي، والمفعّل يشتغل", `asked=${asked}`);
+        await a.locator("#sync-consent").first().uncheck(); await a.waitForTimeout(200);
+        calls.length = 0; // الطلب اللي فوق بعد الموافقة ومقصود
       }
     }
     ok(await a.locator("#two-factor").count() === 0 && await a.locator("#otp-step").count() === 0, "التحقق بخطوتين ما يطلع قبل الدخول");
