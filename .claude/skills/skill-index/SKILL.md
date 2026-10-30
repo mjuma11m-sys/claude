@@ -20,6 +20,7 @@ description: فهرس وموجّه الـ skills — يحدد أي skill (أو �
 | عقد، سياسة خصوصية، شروط، PDPL، سجل تجاري، «المحامي» | `company-lawyer` | `bh-business` |
 | خطأ / error / ما يشتغل | `bug-hunter` | — |
 | قبل النشر / بعد فشل النشر | `deploy-check` | — |
+| فحص أمني، ثغرات، RLS، مفاتيح ظاهرة، rate limit | `security-audit` | `deploy-check` |
 | Swift / iOS native | `write-swift` | — |
 | اختيار مكتبة frontend | `pick-ui-library` | — |
 | Graph الكود / أسئلة البنية | `graphify` | — |
