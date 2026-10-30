@@ -3726,3 +3726,30 @@ test('trip share links (DW-098): each place has a map link, each day a full rout
   expect(r.day2).not.toContain('ميدان');
   expect(r.day2).not.toContain('مسار اليوم');    // مكان واحد ما يحتاج مسار
 });
+
+// DW-100: أمان أكثر — شاشة خصوصية لما يطلع من التطبيق (حتى بدون قفل) + «فحص الأمان» بالإعدادات بأزرار تصليح
+test('security checkup and privacy screen (DW-100): app switcher hides data without a lock, checkup scores and fixes', async ({ page }) => {
+  await open(page);
+  await store(page, () => { localStorage.removeItem('hayati-lock'); localStorage.removeItem('hayati-cover'); });
+  await store(page, () => Extras.Secure.cover(true));
+  await expect(page.locator('body')).toHaveClass(/covered/);
+  await store(page, () => Extras.Secure.cover(false));
+  await expect(page.locator('body')).not.toHaveClass(/covered/);
+  await page.click('#settingsBtn');
+  await page.click('#sheetBody [data-set="sec-check"]');
+  await expect(page.locator('#sheetTitle')).toContainText('فحص الأمان');
+  await expect(page.locator('#sheetBody .hero .big')).toHaveText('2 / 3');   // بدون قفل: القفل ❌، الإخفاء ✅، الجهاز بس ✅
+  await expect(page.locator('#sheetBody [data-fix="lock-set"]')).toBeVisible();
+  await expect(page.locator('#sheetBody [data-fix="secure-backup"]')).toBeVisible();
+  // طفّ الإخفاء من الإعدادات ← ما يتغطى، والفحص يعطيه زر تشغيل
+  await store(page, () => localStorage.setItem('hayati-cover', 'off'));
+  await store(page, () => Extras.Secure.cover(true));
+  await expect(page.locator('body')).not.toHaveClass(/covered/);
+  await store(page, () => Extras.Secure.sheet());
+  await page.click('#sheetBody [data-fix="cover-on"]');
+  expect(await page.evaluate(() => localStorage.getItem('hayati-cover'))).toBeNull();
+  // لو القفل مفعّل، القفل نفسه يغطي — ما نضاعف
+  await store(page, () => { localStorage.setItem('hayati-lock', '{}'); Extras.Secure.cover(true); });
+  await expect(page.locator('body')).not.toHaveClass(/covered/);
+  await store(page, () => localStorage.removeItem('hayati-lock'));
+});
