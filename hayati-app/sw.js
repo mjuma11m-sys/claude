@@ -1,6 +1,6 @@
 // Service worker: يخلّي «حياتي» يفتح بدون نت، ويوصل التنبيهات للآيفون (iOS يطلب showNotification من SW)
 // كود التطبيق بس ينحفظ هني — بياناتك ما تمر من الكاش أبداً.
-const VERSION = 'hayati-v28';
+const VERSION = 'hayati-v29';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest',
   'js/core/errlog.js', 'js/i18n/i18n-en.js', 'js/i18n/i18n.js', 'js/core/config.js', 'js/core/sms.js', 'js/core/store.js', 'js/features/calendar.js', 'js/core/icons.js', 'js/core/app.js', 'js/features/extras.js', 'js/features/extras2.js', 'js/features/extras3.js',

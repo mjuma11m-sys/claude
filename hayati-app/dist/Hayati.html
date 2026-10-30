@@ -3418,6 +3418,16 @@ window.HAYATI_EN = {
 "شغّال ✓": "On ✓",
 "طافي": "Off",
 "كلمة المرور 10 حروف أو أكثر، فيها حروف وأرقام": "Password must be 10+ characters with letters and numbers",
+"مخطط الرحلات بالذكاء الاصطناعي": "AI trip planner",
+"اكتب المدينة وعدد الأيام وأسلوبك، ويطلع لك برنامج يومي وميزانية تقديرية وقائمة شنطة. تعدّل عليه وتحفظه برحلتك": "Enter the city, number of days and your style to get a day-by-day plan, an estimated budget and a packing list. Edit it and save it to your trip",
+"كل شي للسفر بمكان واحد": "Everything for travel in one place",
+"وقت المدينة وطقسها المعتاد والقبلة والصلاة هناك والفيش، والجواز وصلاحيته، وحجوزاتك مع تذكير قبلها": "Local time, typical weather, qibla, prayer times and plug type there, your passport validity, and your bookings with reminders",
+"شارك الرحلة مع القروب": "Share the trip with the group",
+"صورة أنيقة أو رسالة واتساب فيها رابط خريطة لكل مكان ومسار كل يوم، عشان محد يضيع. بدون مبالغ ولا أرقام حجوزات": "A neat image or a WhatsApp message with a map link for each place and each day's route, so nobody gets lost. No amounts or booking numbers",
+"اقتراحات طلعات على قد ميزانيتك وعدد الأشخاص، وتضيفها مهمة للجمعة بضغطة": "Outing ideas that fit your budget and group size, added as a Friday task in one tap",
+"يقرا أي جدول": "Reads any timetable",
+"جدول المدرسة أو الجامعة أو الدوام بأي شكل: صورة أو PDF أو نص": "School, university or work timetables in any format: image, PDF or text",
+"من الإعدادات: شوف وين أمانك وقوّيه بضغطة، والشاشة تتغطى لما تطلع من التطبيق": "From settings: see where your security stands and strengthen it in one tap, and the screen hides when you leave the app",
 };
 
 </script>
@@ -5095,7 +5105,7 @@ window.HAYATI_CONFIG = {
   const S = window.Store;
   const st = S.state;
   const I = window.icon;
-  const APP_VERSION = 'v28';   // نفس رقم sw.js (فيه اختبار يتأكد)
+  const APP_VERSION = 'v29';   // نفس رقم sw.js (فيه اختبار يتأكد)
 
   // ---------- ثوابت ----------
   const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
@@ -16751,6 +16761,14 @@ window.HAYATI_CONFIG = {
 
   // الجديد لكل نسخة (نصوص قصيرة وصادقة: شي يشتغل اليوم بس)
   const NEWS = {
+    v29: [
+      ['✈️', 'مخطط الرحلات بالذكاء الاصطناعي', 'اكتب المدينة وعدد الأيام وأسلوبك، ويطلع لك برنامج يومي وميزانية تقديرية وقائمة شنطة. تعدّل عليه وتحفظه برحلتك'],
+      ['🧳', 'كل شي للسفر بمكان واحد', 'وقت المدينة وطقسها المعتاد والقبلة والصلاة هناك والفيش، والجواز وصلاحيته، وحجوزاتك مع تذكير قبلها'],
+      ['💬', 'شارك الرحلة مع القروب', 'صورة أنيقة أو رسالة واتساب فيها رابط خريطة لكل مكان ومسار كل يوم، عشان محد يضيع. بدون مبالغ ولا أرقام حجوزات'],
+      ['🌴', 'وين نروح الويكند؟', 'اقتراحات طلعات على قد ميزانيتك وعدد الأشخاص، وتضيفها مهمة للجمعة بضغطة'],
+      ['🗓️', 'يقرا أي جدول', 'جدول المدرسة أو الجامعة أو الدوام بأي شكل: صورة أو PDF أو نص'],
+      ['🛡️', 'فحص الأمان', 'من الإعدادات: شوف وين أمانك وقوّيه بضغطة، والشاشة تتغطى لما تطلع من التطبيق'],
+    ],
     v28: [
       ['🔥', 'سعرات الوصفات', 'كل وصفة بالمطبخ تقول لك كم سعرة للحصة وللكل (تقدير من المقادير)، ويتغيّر مع عدد الأشخاص'],
       ['📱', 'الأجهزة المسجّلة', 'من «حسابك»: شوف وين حسابك مفتوح، وطلّع أي جهاز ما تعرفه، وينبّهك لو دخل جهاز جديد (اقتراح أبو جعفر)'],
