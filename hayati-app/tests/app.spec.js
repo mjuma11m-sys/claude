@@ -3849,3 +3849,31 @@ test('travel extras (DW-103): travel mode on Today, schedule clashes, savings ja
   await expect(page.locator('#tmMoney')).not.toBeChecked();
   await expect(page.locator('#tmImg')).toHaveAttribute('src', /^data:image\/png/);
 });
+
+// DW-104: وضع رمضان — عد تنازلي من نص شعبان، الإمساك والفطور، الختمة، الميزانية والغبقات، وتذكير السحور
+test('Ramadan mode (DW-104): countdown before, imsak/iftar and khatma during, budget with gatherings, suhoor reminders', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2027-02-20T13:00:00+03:00'));
+  await open(page);
+  await store(page, () => { App.S.setSettings({ onboarded: true }); App.render(); });
+  const r = await store(page, () => { const x = Extras.Ramadan.range(new Date()); return { start: x.start.getDate(), n: x.n, days: x.days, before: Extras.Ramadan.phase(new Date(2027, 1, 1)).mode }; });
+  expect(r).toMatchObject({ start: 8, n: 13, before: 'soon' });
+  expect(r.days).toBeGreaterThanOrEqual(29);
+  const card = page.locator('section[data-tk="ramadan"]');
+  await expect(card).toContainText('الفطور');
+  await expect(card).toContainText('13/');
+  await page.click('[data-action="ramadan-juz"]');
+  await expect(card).toContainText('قريت جزء اليوم');
+  await expect(card).toContainText('1/30');
+  // غبقة + تذكير قبلها بيوم + السحور
+  await store(page, () => Extras.Ramadan.sheet());
+  await page.click('#rmAdd');
+  await page.fill('#sheetBody [name=name]', 'غبقة الربع');
+  await page.fill('#sheetBody [name=date]', '2027-02-25');
+  await page.fill('#sheetBody [name=cost]', '40');
+  await page.click('#sheetSave');
+  const rem = await store(page, () => Extras.Ramadan.reminders().map((x) => x.key));
+  expect(rem.some((k) => k.startsWith('suhoor:'))).toBe(true);
+  expect(rem.some((k) => k.startsWith('ghabga:'))).toBe(true);
+  // بعد رمضان ما تطلع البطاقة
+  expect(await store(page, () => Extras.Ramadan.phase(new Date(2027, 4, 1)))).toBeNull();
+});
