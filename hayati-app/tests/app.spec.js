@@ -3877,3 +3877,26 @@ test('Ramadan mode (DW-104): countdown before, imsak/iftar and khatma during, bu
   // بعد رمضان ما تطلع البطاقة
   expect(await store(page, () => Extras.Ramadan.phase(new Date(2027, 4, 1)))).toBeNull();
 });
+
+// DW-105: «الخط والعرض» — خط أكبر لكل التطبيق بدون ما يطلع شي برّا الشاشة، والشاشة المبسّطة
+test('text size and simple screen (DW-105): bigger text scales the app without horizontal scroll, simple mode keeps only the basics', async ({ page }) => {
+  await open(page);
+  await store(page, () => { App.S.setSettings({ onboarded: true }); App.render(); });
+  await page.click('#settingsBtn');
+  await page.click('#sheetBody [data-set="view"]');
+  await page.click('#vwSize [data-k="1.25"]');
+  await page.check('#vwSimple');
+  expect(await store(page, () => JSON.parse(localStorage.getItem('hayati-view')))).toEqual({ size: '1.25', simple: true });
+  expect(await store(page, () => getComputedStyle(document.body).zoom)).toBe('1.25');
+  await store(page, () => App.closeSheet());
+  await expect(page.locator('#findBtn')).toBeHidden();
+  await expect(page.locator('#noteBtn')).toBeVisible();
+  for (const t of ['today', 'money', 'tasks', 'schedule']) {
+    await page.click('#tabbar [data-tab="' + t + '"]');
+    expect(await store(page, () => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  }
+  // يرجع عادي
+  await store(page, () => Extras.View.write({ size: '1', simple: false }));
+  expect(await store(page, () => getComputedStyle(document.body).zoom)).toBe('1');
+  await expect(page.locator('#findBtn')).toBeVisible();
+});

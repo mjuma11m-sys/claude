@@ -269,8 +269,10 @@
     .cta > svg.i { color: var(--brand); }
 
     /* ---------- المهام ---------- */
-    .seg { display: flex; background: var(--surface-2); border-radius: 14px; padding: 4px; margin-bottom: 14px; gap: 2px; }
-    .seg button { flex: 1; border: 0; background: none; padding: 8px 4px; border-radius: 11px; font-weight: 600; color: var(--muted); font-size: 14px; white-space: nowrap; }
+    .seg { display: flex; background: var(--surface-2); border-radius: 14px; padding: 4px; margin-bottom: 14px; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+    .seg::-webkit-scrollbar { display: none; }
+    /* DW-105: بالإنجليزي أو الخط الكبير ما تطلع برّا الشاشة: تنسحب أفقي */
+    .seg button { flex: 1 0 auto; border: 0; background: none; padding: 8px 4px; border-radius: 11px; font-weight: 600; color: var(--muted); font-size: 14px; white-space: nowrap; }
     .seg button.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm); }
     .seg button.on.expense { color: var(--expense); }
     .seg button.on.income { color: var(--income); }
@@ -749,6 +751,7 @@
   <script src="js/features/secure.js"></script>
   <script src="js/features/life.js"></script>
   <script src="js/features/ramadan.js"></script>
+  <script src="js/features/view.js"></script>
   <script src="js/features/anyfile.js"></script>
   <script src="js/features/skills.js"></script>
   <script src="js/features/twofa.js"></script>

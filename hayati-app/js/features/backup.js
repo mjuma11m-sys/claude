@@ -9,7 +9,7 @@
 
   const ITER = 250000, MIN = 8;
   // مفاتيح الجهاز اللي تستاهل ترجع (بدون جلسة الدخول ولا القفل ولا أي توكن)
-  const LOCAL = ['hayati-trips', 'hayati-gpa-target', 'hayati-theme', 'hayati-lang', 'hayati-notif-prefs', 'hayati-cal', 'hayati-first-step', 'hayati-seen-version', 'hayati-merchant-cats', 'hayati-life', 'hayati-ramadan'];
+  const LOCAL = ['hayati-trips', 'hayati-gpa-target', 'hayati-theme', 'hayati-lang', 'hayati-notif-prefs', 'hayati-cal', 'hayati-first-step', 'hayati-seen-version', 'hayati-merchant-cats', 'hayati-life', 'hayati-ramadan', 'hayati-view'];
   const enc = new TextEncoder(), dec = new TextDecoder();
 
   function b64(buf) {
