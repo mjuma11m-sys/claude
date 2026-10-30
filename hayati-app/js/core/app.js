@@ -113,7 +113,7 @@
       body: '<div class="field"><label>كلمة المرور الجديدة</label><input name="newpw" type="password" class="ltr" autocomplete="new-password"></div>',
       async onSave(root) {
         const pw = root.querySelector('[name=newpw]').value;
-        if (pw.length < 6) throw new Error('كلمة المرور لازم ٦ أحرف أو أكثر');
+        if (!strongPw(pw)) throw new Error('كلمة المرور 10 حروف أو أكثر، فيها حروف وأرقام');
         await S.updatePassword(pw);
         toast('تغيّرت كلمة المرور ✓');
       },
@@ -127,6 +127,8 @@
   // 💾 آخر نسخة احتياطية: بياناتك على هالجهاز بس، فنذكّرك (privacy.js يعرض البطاقة)
   const LAST_BACKUP = 'hayati-last-backup';
   function lastBackup() { try { const v = localStorage.getItem(LAST_BACKUP); return v ? new Date(v) : null; } catch (e) { return null; } }
+  // نفس شرط السيرفر (Supabase Auth): 10 حروف على الأقل، فيها حروف وأرقام
+  const strongPw = (pw) => pw.length >= 10 && /[A-Za-z\u0600-\u06FF]/.test(pw) && /\d/.test(pw);
   function markBackup() { try { localStorage.setItem(LAST_BACKUP, new Date().toISOString()); } catch (e) { /* تجاهل */ } }
   async function backupNow() {
     const ok = await saveFile('hayati-backup-' + new Date().toISOString().slice(0, 10) + '.json', S.exportJSON(), 'application/json');
@@ -2135,7 +2137,7 @@
         const msg = root.querySelector('#accMsg');
         const say = (t, bad) => { if (msg) { msg.textContent = t; msg.style.color = bad ? 'var(--expense)' : 'var(--brand)'; } };
         if (!email || !pw) { say('اكتب الإيميل وكلمة المرور فوق', true); throw new Error('اكتب الإيميل وكلمة المرور'); }
-        if (act === 'signup' && pw.length < 6) { say('كلمة المرور 6 حروف أو أكثر', true); throw new Error('كلمة المرور 6 حروف أو أكثر'); }
+        if (act === 'signup' && !strongPw(pw)) { say('كلمة المرور 10 حروف أو أكثر، فيها حروف وأرقام', true); throw new Error('كلمة المرور 10 حروف أو أكثر، فيها حروف وأرقام'); }
         b.disabled = true;
         say(act === 'signin' ? 'ندخلك…' : 'نسوي حسابك…');
         try {

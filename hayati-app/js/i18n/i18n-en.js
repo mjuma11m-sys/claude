@@ -2657,4 +2657,5 @@ window.HAYATI_EN = {
 "شاشة الخصوصية طافية": "Privacy screen off",
 "شغّال ✓": "On ✓",
 "طافي": "Off",
+"كلمة المرور 10 حروف أو أكثر، فيها حروف وأرقام": "Password must be 10+ characters with letters and numbers",
 };

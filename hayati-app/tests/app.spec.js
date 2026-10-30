@@ -2940,10 +2940,10 @@ test('new account on iPad (DW-081): the button always answers on the page itself
   await expect(page.locator('#accMsg')).toContainText('اكتب الإيميل وكلمة المرور');
   await page.fill('#sheetBody [name=email]', 'new@example.com'); await page.fill('#sheetBody [name=password]', '123');
   await page.click('[data-set="signup"]');
-  await expect(page.locator('#accMsg')).toContainText('6 حروف');
+  await expect(page.locator('#accMsg')).toContainText('10 حروف');
   await store(page, () => { window.__fakeSignUpNoSession = true; });
   await page.evaluate(() => { const c = App.S; const orig = c.signUp; c.signUp = async () => true; });
-  await page.fill('#sheetBody [name=password]', 'secret123');
+  await page.fill('#sheetBody [name=password]', 'secret12345');
   await page.click('[data-set="signup"]');
   await expect(page.locator('#accMsg')).toContainText('أرسلنا إيميل تأكيد لـ new@example.com');
   await page.waitForTimeout(800);
@@ -3327,7 +3327,7 @@ test('sign-up catches email typos before the server (.con, gmial) and says it in
   await open(page);
   await store(page, () => App.accountSheet());
   await page.fill('#sheetBody [name=email]', 'someone@gmail.con');
-  await page.fill('#sheetBody [name=password]', 'secret123');
+  await page.fill('#sheetBody [name=password]', 'secret12345');
   await page.click('#sheetBody [data-set="signup"]');
   await expect(page.locator('#toast')).toContainText('someone@gmail.com');
   await page.fill('#sheetBody [name=email]', 'someone@site.con');
