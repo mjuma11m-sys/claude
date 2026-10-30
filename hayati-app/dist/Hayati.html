@@ -3380,6 +3380,9 @@ window.HAYATI_EN = {
 "🌪️ غبار": "🌪️ Dust",
 "🔥 حار": "🔥 Hot",
 "🥶 برد قارس": "🥶 Freezing",
+"الرحلة كاملة": "Whole trip",
+"💬 أرسل الرسالة مع روابط المواقع": "💬 Send the message with location links",
+"الرسالة فيها رابط خريطة لكل مكان، و«مسار اليوم» يفتح كل الأماكن بالترتيب، عشان محد يضيع. ما فيها مبالغ ولا أرقام حجوزات.": "The message has a map link for each place, and “Day route” opens all the places in order, so nobody gets lost. No amounts or booking numbers.",
 };
 
 </script>
@@ -14120,7 +14123,7 @@ window.HAYATI_CONFIG = {
     const ag = (t.agenda || []).slice().sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
     if (ag.length) {
       const by = new Map();
-      ag.forEach((x) => { if (!by.has(x.date)) by.set(x.date, []); by.get(x.date).push({ time: x.time, title: x.title, emo: '📌' }); });
+      ag.forEach((x) => { if (!by.has(x.date)) by.set(x.date, []); by.get(x.date).push({ time: x.time, title: x.title, emo: '📌', map: x.map || '', q: x.place || x.title }); });
       const go = t.go ? new Date(t.go + 'T00:00:00') : null;
       return [...by.entries()].map(([d, items]) => ({ label: (go ? 'اليوم ' + (A.daysBetween(go, new Date(d + 'T00:00:00')) + 1) + ' · ' : '') + pretty(d), items }));
     }
@@ -14128,22 +14131,38 @@ window.HAYATI_CONFIG = {
     if (!p) return [];
     const go = t.go ? new Date(t.go + 'T00:00:00') : null;
     return p.days.map((d, i) => ({ label: 'اليوم ' + (i + 1) + (go ? ' · ' + pretty(dstr(new Date(go.getFullYear(), go.getMonth(), go.getDate() + i))) : '') + ' · ' + d.title,
-      items: d.places.map((x) => ({ time: x.time, title: x.name, emo: EMO[x.tag] || '📌' })) }));
+      items: d.places.map((x) => ({ time: x.time, title: x.name, emo: EMO[x.tag] || '📌', q: x.name_en || x.name })) }));
   }
   const has = (t) => daysOf(t).length > 0;
 
-  function text(t) {
-    const days = daysOf(t), name = (t.aiPlan && t.aiPlan.city) || t.name;
+  const cityName = (t) => (t.aiPlan && t.aiPlan.city) || t.name;
+  const enc = encodeURIComponent;
+  const link = (it, city) => it.map || (it.q ? 'https://www.google.com/maps/search/?api=1&query=' + enc(it.q + ', ' + city) : '');
+  // مسار اليوم: كل الأماكن بالترتيب على خريطة وحدة
+  function route(d, city) {
+    const q = d.items.map((x) => x.q).filter(Boolean).map((x) => x + ', ' + city);
+    if (q.length < 2) return '';
+    return 'https://www.google.com/maps/dir/?api=1&origin=' + enc(q[0]) + '&destination=' + enc(q[q.length - 1]) + (q.length > 2 ? '&waypoints=' + enc(q.slice(1, -1).join('|')) : '');
+  }
+  const pick = (t, idx) => { const all = daysOf(t); return idx == null ? all : all.slice(idx, idx + 1); };
+
+  function text(t, idx) {
+    const days = pick(t, idx), name = cityName(t);
     const L = ['✈️ *رحلة ' + name + '*'];
-    if (t.go) L.push('🗓️ ' + pretty(t.go) + (t.back ? ' ← ' + pretty(t.back) : ''));
+    if (t.go && idx == null) L.push('🗓️ ' + pretty(t.go) + (t.back ? ' ← ' + pretty(t.back) : ''));
     L.push('');
-    days.forEach((d) => { L.push('*' + d.label + '*'); d.items.forEach((x) => L.push(x.emo + ' ' + (x.time ? x.time + ' · ' : '') + x.title)); L.push(''); });
+    days.forEach((d) => {
+      L.push('*' + d.label + '*');
+      d.items.forEach((x) => { L.push(x.emo + ' ' + (x.time ? x.time + ' · ' : '') + x.title); const u = link(x, name); if (u) L.push('   📍 ' + u); });
+      const r = route(d, name); if (r) L.push('🗺️ مسار اليوم كامل: ' + r);
+      L.push('');
+    });
     L.push('_مخطّطة بتطبيق «حياتي» 🤍_');
     return L.join('\n');
   }
 
-  async function draw(t) {
-    const days = daysOf(t).slice(0, 7), name = (t.aiPlan && t.aiPlan.city) || t.name;
+  async function draw(t, idx) {
+    const days = pick(t, idx).slice(0, 7), name = cityName(t);
     try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (e) { /* تجاهل */ }
     const font = getComputedStyle(document.body).fontFamily || 'sans-serif';
     const W = 1080, rows = days.reduce((n, d) => n + 1 + Math.min(4, d.items.length), 0);
@@ -14156,7 +14175,8 @@ window.HAYATI_CONFIG = {
     x.fillStyle = g; x.fillRect(0, 0, W, H);
     x.fillStyle = 'rgba(255,107,74,.16)'; x.beginPath(); x.arc(70, 120, 260, 0, Math.PI * 2); x.fill();
     txt('✈️ رحلة ' + name, W - 80, 170, F('800', 76), '#fff');
-    if (t.go) txt('🗓️ ' + pretty(t.go) + (t.back ? '  ←  ' + pretty(t.back) : ''), W - 80, 245, F('500', 38), 'rgba(232,220,196,.9)');
+    if (t.go && idx == null) txt('🗓️ ' + pretty(t.go) + (t.back ? '  ←  ' + pretty(t.back) : ''), W - 80, 245, F('500', 38), 'rgba(232,220,196,.9)');
+    else if (idx != null) txt('📍 الروابط والمسار بالرسالة', W - 80, 245, F('500', 34), 'rgba(232,220,196,.9)');
     let y = 340;
     for (const d of days) {
       x.fillStyle = '#FF6B4A'; x.beginPath(); x.arc(W - 96, y - 14, 14, 0, Math.PI * 2); x.fill();
@@ -14178,26 +14198,31 @@ window.HAYATI_CONFIG = {
   }
 
   function sheet(t) {
-    let canvas = null;
+    let canvas = null, idx = null;
+    const days = daysOf(t);
     A.openSheet({
       title: '📤 شارك الرحلة مع القروب',
       saveLabel: window.HayatiNative ? 'شارك الصورة' : 'احفظ الصورة',
-      body: '<div style="border-radius:16px;overflow:hidden;background:#0E3B43"><img id="tsImg" alt="" style="width:100%;display:block"></div>' +
-        '<button type="button" class="btn block" id="tsText" style="margin-top:10px">💬 أرسلها رسالة مرتّبة</button>' +
-        '<p class="small muted" style="margin:10px 4px 0">فيها الوجهة والأيام والأماكن بس، بدون مبالغ ولا أرقام حجوزات.</p>',
+      body: (days.length > 1 ? '<div class="seg" id="tsDay" style="margin-bottom:10px;overflow-x:auto;flex-wrap:nowrap"><button type="button" data-k="all" class="on">الرحلة كاملة</button>' +
+          days.map((d, i) => '<button type="button" data-k="' + i + '"><span>يوم الرحلة</span> <bdi>' + (i + 1) + '</bdi></button>').join('') + '</div>' : '') +
+        '<div style="border-radius:16px;overflow:hidden;background:#0E3B43"><img id="tsImg" alt="" style="width:100%;display:block"></div>' +
+        '<button type="button" class="btn primary block" id="tsText" style="margin-top:10px">💬 أرسل الرسالة مع روابط المواقع</button>' +
+        '<p class="small muted" style="margin:10px 4px 0">الرسالة فيها رابط خريطة لكل مكان، و«مسار اليوم» يفتح كل الأماكن بالترتيب، عشان محد يضيع. ما فيها مبالغ ولا أرقام حجوزات.</p>',
       async mount(root) {
-        canvas = await draw(t);
-        const im = root.querySelector('#tsImg'); if (im) im.src = canvas.toDataURL('image/png');
+        const redraw = async () => { canvas = await draw(t, idx); const im = root.querySelector('#tsImg'); if (im) im.src = canvas.toDataURL('image/png'); };
+        const seg = root.querySelector('#tsDay');
+        if (seg) A.segPick(root, '#tsDay', (k) => { idx = k === 'all' ? null : Number(k); redraw(); });
         root.querySelector('#tsText').onclick = () => {
-          const s = text(t), N = window.HayatiNative;
+          const s = text(t, idx), N = window.HayatiNative;
           if (N && N.shareText) N.shareText(s);
           else if (navigator.share) navigator.share({ text: s }).catch(() => {});
           else { try { navigator.clipboard.writeText(s); A.toast('انتسخت ✓ الصقها بالقروب'); } catch (e) { /* تجاهل */ } }
         };
+        await redraw();
       },
       async onSave() {
         if (!canvas) return false;
-        const b64 = canvas.toDataURL('image/png').split(',')[1], N = window.HayatiNative, file = 'hayati-trip.png';
+        const b64 = canvas.toDataURL('image/png').split(',')[1], N = window.HayatiNative, file = 'hayati-trip' + (idx == null ? '' : '-day' + (idx + 1)) + '.png';
         if (N && N.saveImage) return N.saveImage(file, b64);
         const a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = file; document.body.appendChild(a); a.click(); a.remove();
         A.toast('انحفظت الصورة ✓'); return true;
@@ -14205,7 +14230,7 @@ window.HAYATI_CONFIG = {
     });
   }
 
-  E.TravelShare = { has, text, draw, sheet, daysOf };
+  E.TravelShare = { has, text, draw, sheet, daysOf, route, link };
 })();
 
 </script>

@@ -3707,3 +3707,22 @@ test('trip share and weather (DW-098, DW-099): group message has no amounts, ima
   await store(page, () => document.querySelector('#tpShare').click());
   await expect.poll(() => page.evaluate(() => (document.getElementById('tsImg') || {}).src || '')).toContain('data:image/png');
 });
+
+// DW-098: روابط المواقع ومسار اليوم بالرسالة، ومشاركة يوم واحد
+test('trip share links (DW-098): each place has a map link, each day a full route, and one day can be shared alone', async ({ page }) => {
+  await open(page);
+  const r = await store(page, () => {
+    App.S.setSettings({ onboarded: true });
+    const t = { id: 'tl', name: 'طرابزون', kind: 'leisure', go: '2027-06-01', back: '2027-06-02', plan: {}, costs: [], check: [], aiPlan: { city: 'طرابزون', days: [
+      { title: 'المدينة', places: [{ name: 'ميدان', name_en: 'Meydan Park', tag: 'نقطة الانطلاق', time: '10:00' }, { name: 'آيا صوفيا', name_en: 'Hagia Sophia Trabzon', tag: 'معلم مشهور', time: '12:00' }, { name: 'البازار', name_en: 'Trabzon Bazaar', tag: 'تسوق', time: '16:00' }] },
+      { title: 'الطبيعة', places: [{ name: 'أوزنجول', name_en: 'Uzungol', tag: 'طبيعة', time: '09:00' }] }] } };
+    const S = Extras.TravelShare;
+    return { all: S.text(t), day2: S.text(t, 1) };
+  });
+  expect(r.all).toContain('📍 https://www.google.com/maps/search/?api=1&query=Hagia%20Sophia%20Trabzon');
+  expect(r.all).toContain('🗺️ مسار اليوم كامل: https://www.google.com/maps/dir/?api=1&origin=Meydan%20Park');
+  expect(r.all).toContain('waypoints=Hagia%20Sophia%20Trabzon');
+  expect(r.day2).toContain('أوزنجول');
+  expect(r.day2).not.toContain('ميدان');
+  expect(r.day2).not.toContain('مسار اليوم');    // مكان واحد ما يحتاج مسار
+});

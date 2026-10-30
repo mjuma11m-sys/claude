@@ -2620,4 +2620,7 @@ window.HAYATI_EN = {
 "🌪️ غبار": "🌪️ Dust",
 "🔥 حار": "🔥 Hot",
 "🥶 برد قارس": "🥶 Freezing",
+"الرحلة كاملة": "Whole trip",
+"💬 أرسل الرسالة مع روابط المواقع": "💬 Send the message with location links",
+"الرسالة فيها رابط خريطة لكل مكان، و«مسار اليوم» يفتح كل الأماكن بالترتيب، عشان محد يضيع. ما فيها مبالغ ولا أرقام حجوزات.": "The message has a map link for each place, and “Day route” opens all the places in order, so nobody gets lost. No amounts or booking numbers.",
 };
