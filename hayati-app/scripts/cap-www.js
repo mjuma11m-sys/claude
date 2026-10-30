@@ -5,7 +5,7 @@ const D = path.join(__dirname, '..'), OUT = path.join(D, 'www');
 const html = fs.readFileSync(path.join(D, 'index.html'), 'utf8');
 // كل سكربت محلي ينذكر بالصفحة + الصفحات والأيقونات
 const scripts = [...html.matchAll(/<script src="([^":]+)"/g)].map((m) => m[1]);
-const files = ['index.html', 'privacy.html', 'terms.html', 'manifest.webmanifest', 'sw.js', ...scripts];
+const files = ['index.html', 'privacy.html', 'terms.html', 'manifest.webmanifest', 'sw.js', 'media/howto.mp4', 'media/howto.jpg', ...scripts];
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(path.join(OUT, 'icons'), { recursive: true });
 for (const f of files) { fs.mkdirSync(path.dirname(path.join(OUT, f)), { recursive: true }); fs.copyFileSync(path.join(D, f), path.join(OUT, f)); }

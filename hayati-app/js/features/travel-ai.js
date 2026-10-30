@@ -87,13 +87,13 @@
       body: '<div class="hero dark"><span class="eyebrow">✨ <span data-noi18n>' + h(city) + '</span></span><div class="big"><bdi>' + n + '</bdi> <span>أيام</span></div><div class="meta"><span data-noi18n>' + h(plan.style || '') + '</span> · <bdi>' + ppl + '</bdi> <span>شخص</span></div></div>' +
         '<div class="seg" id="taTabs" style="margin:12px 0">' + Object.entries(tabs).map(([k, l], i) => '<button type="button" data-k="' + k + '" class="' + (i ? '' : 'on') + '">' + l + '</button>').join('') + '</div>' +
         '<div data-pane="days">' + daysHtml + '</div><div data-pane="budget" hidden>' + budgetHtml + '</div><div data-pane="pack" hidden>' + packHtml + '</div><div data-pane="tips" hidden>' + tipsHtml + '</div>' +
-        '<button type="button" class="btn block" id="taShare" style="margin-top:12px">💬 شارك الخطة بالواتساب</button>' +
+        '<button type="button" class="btn block" id="taShare" style="margin-top:12px">📤 شارك الخطة مع القروب</button>' +
         '<p class="small muted" style="margin:10px 4px 0">الأماكن والأسعار تقدير من الذكاء الاصطناعي، تأكد منها قبل تروح. «احفظها» تضيف الأيام لخطة الرحلة والأغراض للقائمة، وتعبّي بنود الميزانية الفاضية بس.</p>' +
         '<style>.ta-n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--brand);color:#fff;font-size:13px}.ta-place{border-inline-start:3px solid var(--brand)}</style>',
       mount(root) {
         A.segPick(root, '#taTabs', (k) => root.querySelectorAll('[data-pane]').forEach((p) => { p.hidden = p.dataset.pane !== k; }));
         root.querySelectorAll('[data-map]').forEach((x) => { x.onclick = () => openLink(x.dataset.map); });
-        root.querySelector('#taShare').onclick = () => share(t);
+        root.querySelector('#taShare').onclick = () => (E.TravelShare ? E.TravelShare.sheet(t) : share(t));
       },
       onSave() { apply(t); persist(); A.toast('انحفظت بالرحلة ✓'); setTimeout(rerender, 300); },
     });

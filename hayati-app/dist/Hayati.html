@@ -3328,6 +3328,58 @@ window.HAYATI_EN = {
 "انحفظت بالرحلة ✓": "Saved to the trip ✓",
 "انتسخت الخطة ✓ الصقها بالواتساب": "Plan copied ✓ paste it in WhatsApp",
 "الأماكن والأسعار تقدير من الذكاء الاصطناعي، تأكد منها قبل تروح. «احفظها» تضيف الأيام لخطة الرحلة والأغراض للقائمة، وتعبّي بنود الميزانية الفاضية بس.": "Places and prices are AI estimates; check them before you go. “Save” adds the days to the trip plan and the items to your list, and fills only empty budget lines.",
+"🏠 يومك": "🏠 Your day",
+"كل شي اليوم بمكان واحد: الصلاة الجاية، محاضراتك، ومصروفك.": "Everything today in one place: the next prayer, your classes and your spending.",
+"➕ أضف أي شي": "➕ Add anything",
+"مصروف، مهمة، موعد، أو الصق رسالة البنك وتنسجل لحالها.": "An expense, a task, an appointment, or paste a bank message and it logs itself.",
+"💰 فلوسك": "💰 Your money",
+"وين راحت فلوسك، الميزانية، وتقرير الشهر.": "Where your money went, your budget, and the monthly report.",
+"✨ المساعد": "✨ Assistant",
+"اسأله عن أرقامك: «كم صرفت على القهوة؟» أو «سوّ لي خطة توفير».": "Ask it about your numbers: “How much did I spend on coffee?” or “Make me a saving plan”.",
+"⚙️ الإعدادات": "⚙️ Settings",
+"حسابك، التنبيهات، اللغة، والنسخة الاحتياطية.": "Your account, notifications, language and backup.",
+"🎬 حياتي بـ 40 ثانية": "🎬 Hayati in 40 seconds",
+"* لقطات ببيانات تجريبية": "* Screens with demo data",
+"👆 جولة سريعة على الأزرار": "👆 Quick tour of the buttons",
+"الفيديو موجود بنسخة التطبيق. جرّب الجولة السريعة.": "The video is in the app version. Try the quick tour.",
+"التالي": "Next",
+"يلا 🚀": "Let's go 🚀",
+"يلا ابدأ 💪": "Let's start 💪",
+"تعرّف على حياتي": "Get to know Hayati",
+"فيديو 40 ثانية أو جولة سريعة على الأزرار": "A 40-second video or a quick tour of the buttons",
+"▶️ شوف الفيديو": "▶️ Watch the video",
+"👆 جولة": "👆 Tour",
+"قفل": "Close",
+"🎬 شرح التطبيق": "🎬 How the app works",
+"فيديو الشرح (40 ث)": "Explainer video (40 s)",
+"شوف كيف تستخدم حياتي": "See how to use Hayati",
+"جولة سريعة": "Quick tour",
+"نأشّر لك على الأزرار المهمة": "We point out the important buttons",
+"📤 شارك الرحلة مع القروب": "📤 Share the trip with the group",
+"📤 شارك الخطة مع القروب": "📤 Share the plan with the group",
+"شارك الصورة": "Share image",
+"💬 أرسلها رسالة مرتّبة": "💬 Send it as a tidy message",
+"فيها الوجهة والأيام والأماكن بس، بدون مبالغ ولا أرقام حجوزات.": "It only has the destination, days and places, with no amounts or booking numbers.",
+"انتسخت ✓ الصقها بالقروب": "Copied ✓ paste it in the group",
+"توقعات الطقس": "Weather forecast",
+"☀️ صحو": "☀️ Clear",
+"🌤️ صحو غالباً": "🌤️ Mostly clear",
+"⛅ غيوم جزئية": "⛅ Partly cloudy",
+"🌥️ غائم غالباً": "🌥️ Mostly cloudy",
+"☁️ غائم": "☁️ Cloudy",
+"🌦️ رذاذ": "🌦️ Drizzle",
+"🌧️ مطر غزير": "🌧️ Heavy rain",
+"🌦️ زخات": "🌦️ Showers",
+"❄️ ثلج": "❄️ Snow",
+"🌨️ ثلج خفيف": "🌨️ Flurries",
+"❄️ ثلج كثيف": "❄️ Heavy snow",
+"⛈️ رعد": "⛈️ Thunderstorms",
+"💨 رياح": "💨 Windy",
+"🌫️ ضباب": "🌫️ Fog",
+"🌫️ غبار": "🌫️ Haze",
+"🌪️ غبار": "🌪️ Dust",
+"🔥 حار": "🔥 Hot",
+"🥶 برد قارس": "🥶 Freezing",
 };
 
 </script>
@@ -13736,6 +13788,27 @@ window.HAYATI_CONFIG = {
     return out.filter(([, x]) => !have.has(x)).map(([g, x]) => ({ g, t: x, on: false }));
   }
 
+  // ---------- توقعات حقيقية (Apple WeatherKit) لما تكون الرحلة خلال 10 أيام ----------
+  const WX = { Clear: '☀️ صحو', MostlyClear: '🌤️ صحو غالباً', PartlyCloudy: '⛅ غيوم جزئية', MostlyCloudy: '🌥️ غائم غالباً', Cloudy: '☁️ غائم', Rain: '🌧️ مطر', Drizzle: '🌦️ رذاذ', HeavyRain: '🌧️ مطر غزير', Showers: '🌦️ زخات', Snow: '❄️ ثلج', Flurries: '🌨️ ثلج خفيف', HeavySnow: '❄️ ثلج كثيف', Thunderstorms: '⛈️ رعد', Windy: '💨 رياح', Foggy: '🌫️ ضباب', Haze: '🌫️ غبار', Dust: '🌪️ غبار', Hot: '🔥 حار', Frigid: '🥶 برد قارس' };
+  function wxWanted(t) {
+    if (!cityOf(t) || !t.go || !(S.status && S.status.signedIn && S.invokeFn)) return false;
+    const now = new Date(), go = new Date(t.go + 'T00:00:00'), back = new Date((t.back || t.go) + 'T23:59:59');
+    return back >= now && (go - now) / 864e5 <= 10;
+  }
+  async function wxFill(root, t) {
+    const el = root.querySelector('#tpWxD'); if (!el) return;
+    const c = cityOf(t), k = 'hayati-wx:' + c.key + ':' + new Date().toISOString().slice(0, 13);
+    let r = null;
+    try { r = JSON.parse(sessionStorage.getItem(k) || 'null'); } catch (e) { r = null; }
+    if (!r) { try { r = await S.invokeFn('weather', { lat: c.lat, lng: c.lng, tz: c.tz }); sessionStorage.setItem(k, JSON.stringify(r)); } catch (e) { r = null; } }
+    if (!r || r.unavailable || !Array.isArray(r.days) || !r.days.length) { const row = root.querySelector('#tpWx'); if (row) row.remove(); return; }
+    const from = t.go, to = t.back || t.go;
+    const days = r.days.filter((d) => d.date >= from && d.date <= to);
+    const list = (days.length ? days : r.days.slice(0, 5));
+    el.innerHTML = list.map((d) => '<div style="display:flex;justify-content:space-between;gap:8px"><bdi>' + h(new Date(d.date + 'T00:00:00').getDate() + ' ' + A.MONTHS[new Date(d.date + 'T00:00:00').getMonth()]) + '</bdi><span>' + h(WX[d.code] || '🌡️') + '</span><bdi class="num">' + d.max + '° / ' + d.min + '°' + (d.rain >= 30 ? ' · ☔ ' + d.rain + '%' : '') + '</bdi></div>').join('') +
+      '<a href="' + h(r.attribution) + '" target="_blank" rel="noopener" class="small muted" style="display:inline-block;margin-top:6px">Apple Weather</a>';
+  }
+
   // ---------- الجواز ----------
   // ينصح بصلاحية 6 أشهر بعد الرجعة (كثير من الدول تطلبها)
   function passportCheck(t) {
@@ -13765,12 +13838,14 @@ window.HAYATI_CONFIG = {
     const c = cityOf(t);
     let out = '<button type="button" class="btn primary block" id="tpAI" style="margin:14px 0 4px">✨ خطط رحلتي بالذكاء</button>' +
       (t.aiPlan ? '<button type="button" class="btn ghost block" id="tpAIOpen" style="margin:6px 0 0">📒 ملف رحلتك</button>' : '') +
+      (E.TravelShare && E.TravelShare.has(t) ? '<button type="button" class="btn ghost block" id="tpShare" style="margin:6px 0 0">📤 شارك الرحلة مع القروب</button>' : '') +
       A.secHead('📍 الوجهة', '') + '<div class="card"><div class="field" style="margin:0"><label for="tpCity">المدينة</label><select id="tpCity" style="width:100%"><option value="">غيرها / ما حددت</option>' +
       CITIES.map((x) => '<option value="' + x.key + '"' + (c && c.key === x.key ? ' selected' : '') + '>' + x.name + '</option>').join('') + '</select></div>';
     if (c) {
       const now = localNow(c), w = weatherOf(c, t.go), pr = prayersThere(c, t.go ? new Date(t.go + 'T12:00:00') : new Date());
       out += '<ul class="list" style="margin-top:8px">' +
         (now ? '<li class="row" style="cursor:default"><div class="ico">🕐</div><div class="main"><div class="title"><span>الوقت هناك الحين</span> <bdi class="num">' + now.time + '</bdi></div><div class="sub">' + diffText(now.diff) + '</div></div></li>' : '') +
+        (wxWanted(t) ? '<li class="row" id="tpWx" style="cursor:default"><div class="ico">🌦️</div><div class="main"><div class="title"><span>توقعات الطقس</span></div><div class="sub" id="tpWxD">…</div></div></li>' : '') +
         '<li class="row" style="cursor:default"><div class="ico">🌡️</div><div class="main"><div class="title"><span>' + w.label + '</span> <bdi class="num">' + w.hi + '°</bdi></div><div class="sub"><span>متوسط العظمى بشهر السفر (تقريبي)</span>' + (w.rain ? ' · <span>موسم أمطار ☔</span>' : '') + '</div></div></li>' +
         '<li class="row" style="cursor:default"><div class="ico">🔌</div><div class="main"><div class="title"><span>' + (needsAdapter(c) ? 'تحتاج محوّل كهرباء' : 'نفس فيش البحرين، ما تحتاج محوّل') + '</span></div><div class="sub"><bdi>' + c.plugs.split('').join(' / ') + '</bdi></div></div></li>' +
         '<li class="row" style="cursor:default"><div class="ico">🕋</div><div class="main"><div class="title"><span>اتجاه القبلة هناك</span> <bdi class="num">' + qibla(c) + '°</bdi></div><div class="sub">من الشمال مع عقارب الساعة</div></div></li>' +
@@ -13805,8 +13880,11 @@ window.HAYATI_CONFIG = {
   }
 
   function mount(root, t, persist, rerender) {
+    wxFill(root, t);
     const ai = root.querySelector('#tpAI');
     if (ai) ai.onclick = () => { if (E.TravelAI) E.TravelAI.form(t, persist, rerender); };
+    const shr = root.querySelector('#tpShare');
+    if (shr) shr.onclick = () => E.TravelShare.sheet(t);
     const aio = root.querySelector('#tpAIOpen');
     if (aio) aio.onclick = () => { if (E.TravelAI) E.TravelAI.result(t, persist, rerender); };
     root.querySelectorAll('[data-tpmap]').forEach((b) => { b.onclick = () => { const N = window.HayatiNative; if (N && N.openLink) N.openLink(b.dataset.tpmap); else window.open(b.dataset.tpmap, '_blank', 'noopener'); }; });
@@ -13974,13 +14052,13 @@ window.HAYATI_CONFIG = {
       body: '<div class="hero dark"><span class="eyebrow">✨ <span data-noi18n>' + h(city) + '</span></span><div class="big"><bdi>' + n + '</bdi> <span>أيام</span></div><div class="meta"><span data-noi18n>' + h(plan.style || '') + '</span> · <bdi>' + ppl + '</bdi> <span>شخص</span></div></div>' +
         '<div class="seg" id="taTabs" style="margin:12px 0">' + Object.entries(tabs).map(([k, l], i) => '<button type="button" data-k="' + k + '" class="' + (i ? '' : 'on') + '">' + l + '</button>').join('') + '</div>' +
         '<div data-pane="days">' + daysHtml + '</div><div data-pane="budget" hidden>' + budgetHtml + '</div><div data-pane="pack" hidden>' + packHtml + '</div><div data-pane="tips" hidden>' + tipsHtml + '</div>' +
-        '<button type="button" class="btn block" id="taShare" style="margin-top:12px">💬 شارك الخطة بالواتساب</button>' +
+        '<button type="button" class="btn block" id="taShare" style="margin-top:12px">📤 شارك الخطة مع القروب</button>' +
         '<p class="small muted" style="margin:10px 4px 0">الأماكن والأسعار تقدير من الذكاء الاصطناعي، تأكد منها قبل تروح. «احفظها» تضيف الأيام لخطة الرحلة والأغراض للقائمة، وتعبّي بنود الميزانية الفاضية بس.</p>' +
         '<style>.ta-n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--brand);color:#fff;font-size:13px}.ta-place{border-inline-start:3px solid var(--brand)}</style>',
       mount(root) {
         A.segPick(root, '#taTabs', (k) => root.querySelectorAll('[data-pane]').forEach((p) => { p.hidden = p.dataset.pane !== k; }));
         root.querySelectorAll('[data-map]').forEach((x) => { x.onclick = () => openLink(x.dataset.map); });
-        root.querySelector('#taShare').onclick = () => share(t);
+        root.querySelector('#taShare').onclick = () => (E.TravelShare ? E.TravelShare.sheet(t) : share(t));
       },
       onSave() { apply(t); persist(); A.toast('انحفظت بالرحلة ✓'); setTimeout(rerender, 300); },
     });
@@ -14021,6 +14099,113 @@ window.HAYATI_CONFIG = {
   }
 
   E.TravelAI = { form, result, apply, share, mapUrl, STYLES };
+})();
+
+</script>
+  <script>/* js/features/travel-share.js */
+// DW-098: «شارك الرحلة مع القروب» — صورة مرتّبة (تنرسم بالجوال) أو رسالة منسّقة للواتساب، من خطة الأيام أو ملف الذكاء.
+// ما فيها مبالغ ولا أرقام حجوزات ولا تاريخ الجواز: بس الوجهة والأيام والأماكن.
+(function () {
+  'use strict';
+
+  const A = window.App, E = window.Extras;
+  if (!A || !E) return;
+  const { h } = A;
+  const EMO = { 'نقطة الانطلاق': '📍', 'معلم مشهور': '🏛️', 'طبيعة': '🌿', 'مغامرة': '🧗', 'تسوق': '🛍️', 'مطعم': '🍽️', 'ثقافة': '🎭', 'زيارة دينية': '🕌' };
+  const dstr = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const pretty = (s) => { const d = new Date(s + 'T00:00:00'); return d.getDate() + ' ' + A.MONTHS[d.getMonth()]; };
+
+  // الأيام: [{label, items:[{time, title, emo}]}] من خطة الأيام، وإلا من ملف الذكاء
+  function daysOf(t) {
+    const ag = (t.agenda || []).slice().sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+    if (ag.length) {
+      const by = new Map();
+      ag.forEach((x) => { if (!by.has(x.date)) by.set(x.date, []); by.get(x.date).push({ time: x.time, title: x.title, emo: '📌' }); });
+      const go = t.go ? new Date(t.go + 'T00:00:00') : null;
+      return [...by.entries()].map(([d, items]) => ({ label: (go ? 'اليوم ' + (A.daysBetween(go, new Date(d + 'T00:00:00')) + 1) + ' · ' : '') + pretty(d), items }));
+    }
+    const p = t.aiPlan;
+    if (!p) return [];
+    const go = t.go ? new Date(t.go + 'T00:00:00') : null;
+    return p.days.map((d, i) => ({ label: 'اليوم ' + (i + 1) + (go ? ' · ' + pretty(dstr(new Date(go.getFullYear(), go.getMonth(), go.getDate() + i))) : '') + ' · ' + d.title,
+      items: d.places.map((x) => ({ time: x.time, title: x.name, emo: EMO[x.tag] || '📌' })) }));
+  }
+  const has = (t) => daysOf(t).length > 0;
+
+  function text(t) {
+    const days = daysOf(t), name = (t.aiPlan && t.aiPlan.city) || t.name;
+    const L = ['✈️ *رحلة ' + name + '*'];
+    if (t.go) L.push('🗓️ ' + pretty(t.go) + (t.back ? ' ← ' + pretty(t.back) : ''));
+    L.push('');
+    days.forEach((d) => { L.push('*' + d.label + '*'); d.items.forEach((x) => L.push(x.emo + ' ' + (x.time ? x.time + ' · ' : '') + x.title)); L.push(''); });
+    L.push('_مخطّطة بتطبيق «حياتي» 🤍_');
+    return L.join('\n');
+  }
+
+  async function draw(t) {
+    const days = daysOf(t).slice(0, 7), name = (t.aiPlan && t.aiPlan.city) || t.name;
+    try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (e) { /* تجاهل */ }
+    const font = getComputedStyle(document.body).fontFamily || 'sans-serif';
+    const W = 1080, rows = days.reduce((n, d) => n + 1 + Math.min(4, d.items.length), 0);
+    const H = Math.min(2400, Math.max(1350, 420 + rows * 74 + days.length * 30 + 160));
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const x = c.getContext('2d'); x.direction = 'rtl';
+    const F = (w, px) => w + ' ' + px + 'px ' + font;
+    const txt = (s, X, Y, f, col, al, max) => { x.font = f; x.fillStyle = col; x.textAlign = al || 'right'; x.fillText(s, X, Y, max || W - 160); };
+    const g = x.createLinearGradient(0, 0, W * 0.3, H); g.addColorStop(0, '#0A1A1E'); g.addColorStop(0.5, '#0E3B43'); g.addColorStop(1, '#13636B');
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    x.fillStyle = 'rgba(255,107,74,.16)'; x.beginPath(); x.arc(70, 120, 260, 0, Math.PI * 2); x.fill();
+    txt('✈️ رحلة ' + name, W - 80, 170, F('800', 76), '#fff');
+    if (t.go) txt('🗓️ ' + pretty(t.go) + (t.back ? '  ←  ' + pretty(t.back) : ''), W - 80, 245, F('500', 38), 'rgba(232,220,196,.9)');
+    let y = 340;
+    for (const d of days) {
+      x.fillStyle = '#FF6B4A'; x.beginPath(); x.arc(W - 96, y - 14, 14, 0, Math.PI * 2); x.fill();
+      txt(d.label, W - 130, y, F('700', 40), '#fff', 'right', W - 220);
+      y += 64;
+      for (const it of d.items.slice(0, 4)) {
+        x.fillStyle = 'rgba(255,255,255,.08)';
+        if (x.roundRect) { x.beginPath(); x.roundRect(80, y - 46, W - 160, 62, 18); x.fill(); } else x.fillRect(80, y - 46, W - 160, 62);
+        txt(it.emo + '  ' + it.title, W - 110, y - 4, F('500', 34), '#fff', 'right', W - 420);
+        if (it.time) txt(it.time, 110, y - 4, F('700', 32), 'rgba(232,220,196,.85)', 'left');
+        y += 74;
+      }
+      if (d.items.length > 4) { txt('+' + (d.items.length - 4), W - 110, y - 16, F('500', 28), 'rgba(232,220,196,.7)'); y += 30; }
+      y += 30;
+      if (y > H - 200) break;
+    }
+    txt('مخطّطة بتطبيق «حياتي» 🤍', W / 2, H - 90, F('700', 34), '#FF6B4A', 'center');
+    return c;
+  }
+
+  function sheet(t) {
+    let canvas = null;
+    A.openSheet({
+      title: '📤 شارك الرحلة مع القروب',
+      saveLabel: window.HayatiNative ? 'شارك الصورة' : 'احفظ الصورة',
+      body: '<div style="border-radius:16px;overflow:hidden;background:#0E3B43"><img id="tsImg" alt="" style="width:100%;display:block"></div>' +
+        '<button type="button" class="btn block" id="tsText" style="margin-top:10px">💬 أرسلها رسالة مرتّبة</button>' +
+        '<p class="small muted" style="margin:10px 4px 0">فيها الوجهة والأيام والأماكن بس، بدون مبالغ ولا أرقام حجوزات.</p>',
+      async mount(root) {
+        canvas = await draw(t);
+        const im = root.querySelector('#tsImg'); if (im) im.src = canvas.toDataURL('image/png');
+        root.querySelector('#tsText').onclick = () => {
+          const s = text(t), N = window.HayatiNative;
+          if (N && N.shareText) N.shareText(s);
+          else if (navigator.share) navigator.share({ text: s }).catch(() => {});
+          else { try { navigator.clipboard.writeText(s); A.toast('انتسخت ✓ الصقها بالقروب'); } catch (e) { /* تجاهل */ } }
+        };
+      },
+      async onSave() {
+        if (!canvas) return false;
+        const b64 = canvas.toDataURL('image/png').split(',')[1], N = window.HayatiNative, file = 'hayati-trip.png';
+        if (N && N.saveImage) return N.saveImage(file, b64);
+        const a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = file; document.body.appendChild(a); a.click(); a.remove();
+        A.toast('انحفظت الصورة ✓'); return true;
+      },
+    });
+  }
+
+  E.TravelShare = { has, text, draw, sheet, daysOf };
 })();
 
 </script>
@@ -14798,6 +14983,111 @@ window.HAYATI_CONFIG = {
     if (k === 'acc-add') { A.ui.moneySeg = 'accounts'; A.go('money'); return; }
     run(k);
   });
+})();
+
+</script>
+  <script>/* js/features/tour.js */
+// DW-097: المستخدم الجديد — بطاقة «تعرّف على حياتي» بالرئيسية: فيديو شرح (40 ث، داخل التطبيق بدون نت) + جولة سريعة
+// تأشّر على الأزرار المهمة خطوة خطوة. تختفي لما يشوفها أو يقفلها، وترجع من الإعدادات «شرح التطبيق». الحالة بالجهاز بس.
+(function () {
+  'use strict';
+
+  const A = window.App, E = window.Extras;
+  if (!A || !E) return;
+  const KEY = 'hayati-tour';
+  const read = () => { try { return localStorage.getItem(KEY) || ''; } catch (e) { return 'done'; } };
+  const write = (v) => { try { localStorage.setItem(KEY, v); } catch (e) { /* تجاهل */ } };
+
+  const STEPS = [
+    ['#tabbar [data-tab="today"]', '🏠 يومك', 'كل شي اليوم بمكان واحد: الصلاة الجاية، محاضراتك، ومصروفك.'],
+    ['#addBtn', '➕ أضف أي شي', 'مصروف، مهمة، موعد، أو الصق رسالة البنك وتنسجل لحالها.'],
+    ['#tabbar [data-tab="money"]', '💰 فلوسك', 'وين راحت فلوسك، الميزانية، وتقرير الشهر.'],
+    ['#assistBtn', '✨ المساعد', 'اسأله عن أرقامك: «كم صرفت على القهوة؟» أو «سوّ لي خطة توفير».'],
+    ['#settingsBtn', '⚙️ الإعدادات', 'حسابك، التنبيهات، اللغة، والنسخة الاحتياطية.'],
+  ];
+
+  function video() {
+    write('done');
+    A.openSheet({
+      title: '🎬 حياتي بـ 40 ثانية',
+      cancelLabel: 'تم',
+      body: '<div style="border-radius:18px;overflow:hidden;background:#0E3B43;aspect-ratio:9/16;max-height:66vh;margin:0 auto"><video id="tourVid" src="media/howto.mp4" poster="media/howto.jpg" controls playsinline preload="metadata" style="width:100%;height:100%;display:block;object-fit:contain"></video></div>' +
+        '<p class="small muted" id="tourVidNote" style="margin:10px 4px 0">* لقطات ببيانات تجريبية</p>' +
+        '<button type="button" class="btn block" id="tourGo" style="margin-top:10px">👆 جولة سريعة على الأزرار</button>',
+      mount(root) {
+        const v = root.querySelector('#tourVid');
+        v.onerror = () => { v.parentElement.hidden = true; root.querySelector('#tourVidNote').textContent = 'الفيديو موجود بنسخة التطبيق. جرّب الجولة السريعة.'; };
+        try { const p = v.play(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* يشغّله المستخدم */ }
+        root.querySelector('#tourGo').onclick = () => { A.closeSheet(); setTimeout(tour, 350); };
+      },
+    });
+  }
+
+  // جولة: طبقة شفافة فيها «فتحة» على الزر + بطاقة شرح وتالي/خلاص
+  function tour() {
+    write('done');
+    let i = 0;
+    const wrap = document.createElement('div');
+    wrap.id = 'tourLayer';
+    wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-modal', 'true');
+    wrap.innerHTML = '<div class="tour-hole"></div><div class="tour-card"><b class="tour-t"></b><p class="tour-d"></p><div class="tour-row"><span class="tour-n small muted"></span><span style="flex:1"></span><button type="button" class="btn ghost tour-skip">خلاص</button><button type="button" class="btn primary tour-next">التالي</button></div></div>' +
+      '<style>#tourLayer{position:fixed;inset:0;z-index:9999}#tourLayer .tour-hole{position:fixed;border-radius:18px;box-shadow:0 0 0 9999px rgba(10,26,30,.72);transition:all .35s cubic-bezier(.2,.8,.2,1);pointer-events:none}' +
+      '#tourLayer .tour-card{position:fixed;left:16px;right:16px;background:var(--card,#fff);color:var(--text,#111);border-radius:20px;padding:16px 18px;box-shadow:0 20px 50px -10px rgba(0,0,0,.5);transition:top .35s}#tourLayer .tour-t{font-size:18px}#tourLayer .tour-d{margin:6px 0 12px;line-height:1.6}#tourLayer .tour-row{display:flex;gap:8px;align-items:center}' +
+      '@media (prefers-reduced-motion:reduce){#tourLayer .tour-hole,#tourLayer .tour-card{transition:none}}</style>';
+    document.body.appendChild(wrap);
+    const hole = wrap.querySelector('.tour-hole'), card = wrap.querySelector('.tour-card');
+    const steps = STEPS.filter(([sel]) => document.querySelector(sel));
+    const end = () => { wrap.remove(); document.removeEventListener('keydown', key); };
+    const key = (e) => { if (e.key === 'Escape') end(); };
+    document.addEventListener('keydown', key);
+    function show() {
+      if (i >= steps.length) { end(); A.toast('يلا ابدأ 💪'); return; }
+      const [sel, t, d] = steps[i], el = document.querySelector(sel);
+      const r = el.getBoundingClientRect(), pad = 6;
+      Object.assign(hole.style, { left: r.left - pad + 'px', top: r.top - pad + 'px', width: r.width + pad * 2 + 'px', height: r.height + pad * 2 + 'px' });
+      card.querySelector('.tour-t').textContent = t; card.querySelector('.tour-d').textContent = d;
+      card.querySelector('.tour-n').textContent = (i + 1) + ' / ' + steps.length;
+      card.querySelector('.tour-next').textContent = i === steps.length - 1 ? 'يلا 🚀' : 'التالي';
+      const below = r.top < window.innerHeight / 2;
+      card.style.top = below ? r.bottom + 18 + 'px' : 'auto';
+      card.style.bottom = below ? 'auto' : window.innerHeight - r.top + 18 + 'px';
+    }
+    card.querySelector('.tour-next').onclick = () => { i++; show(); };
+    card.querySelector('.tour-skip').onclick = end;
+    wrap.addEventListener('click', (e) => { if (!card.contains(e.target)) { i++; show(); } });
+    show();
+  }
+
+  // بطاقة بالرئيسية للمستخدم الجديد بس (بعد الترحيب، ولين يشوفها أو يقفلها)
+  const prevTop = E.todayTop;
+  E.todayTop = (...a) => {
+    const s = A.st.settings || {};
+    const card = s.onboarded && !read()
+      ? '<section data-tk="tour"><div class="card" style="display:flex;gap:12px;align-items:center"><div style="font-size:30px">🎬</div><div style="flex:1;min-width:0"><b>تعرّف على حياتي</b><div class="small muted">فيديو 40 ثانية أو جولة سريعة على الأزرار</div>' +
+        '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn primary" data-action="tour-video">▶️ شوف الفيديو</button><button class="btn ghost" data-action="tour-go">👆 جولة</button></div></div>' +
+        '<button type="button" class="icon-x" data-action="tour-close" aria-label="قفل">✕</button></div></section>' : '';
+    return card + (prevTop ? prevTop(...a) : '');
+  };
+  const prevAct = E.action;
+  E.action = (name, el, e) => {
+    if (name === 'tour-video') { video(); A.render(); return; }
+    if (name === 'tour-go') { write('done'); A.render(); setTimeout(tour, 200); return; }
+    if (name === 'tour-close') { write('done'); A.render(); return; }
+    return prevAct ? prevAct(name, el, e) : undefined;
+  };
+  // من الإعدادات: «شرح التطبيق» دايماً
+  const prevExtra = E.settingsExtra;
+  E.settingsExtra = function () {
+    return (prevExtra ? prevExtra.apply(this, arguments) : '') + '<div class="group-title">🎬 شرح التطبيق</div><div class="menu"><button data-set="tour-video"><div class="ico" style="' + A.tint('#13636B') + '">▶️</div><div style="flex:1;min-width:0"><b>فيديو الشرح (40 ث)</b><small>شوف كيف تستخدم حياتي</small></div>' + A.I('chevL') + '</button>' +
+      '<button data-set="tour-go"><div class="ico" style="' + A.tint('#FF6B4A') + '">👆</div><div style="flex:1;min-width:0"><b>جولة سريعة</b><small>نأشّر لك على الأزرار المهمة</small></div>' + A.I('chevL') + '</button></div>';
+  };
+  const prevSet = E.settingsAction;
+  E.settingsAction = async function (act) {
+    if (act === 'tour-video') { A.closeSheet(); setTimeout(video, 300); return true; }
+    if (act === 'tour-go') { A.closeSheet(); setTimeout(tour, 400); return true; }
+    return prevSet ? prevSet.apply(this, arguments) : false;
+  };
+  E.Tour = { video, tour, KEY };
 })();
 
 </script>

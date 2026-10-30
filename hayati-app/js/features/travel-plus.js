@@ -102,6 +102,27 @@
     return out.filter(([, x]) => !have.has(x)).map(([g, x]) => ({ g, t: x, on: false }));
   }
 
+  // ---------- توقعات حقيقية (Apple WeatherKit) لما تكون الرحلة خلال 10 أيام ----------
+  const WX = { Clear: '☀️ صحو', MostlyClear: '🌤️ صحو غالباً', PartlyCloudy: '⛅ غيوم جزئية', MostlyCloudy: '🌥️ غائم غالباً', Cloudy: '☁️ غائم', Rain: '🌧️ مطر', Drizzle: '🌦️ رذاذ', HeavyRain: '🌧️ مطر غزير', Showers: '🌦️ زخات', Snow: '❄️ ثلج', Flurries: '🌨️ ثلج خفيف', HeavySnow: '❄️ ثلج كثيف', Thunderstorms: '⛈️ رعد', Windy: '💨 رياح', Foggy: '🌫️ ضباب', Haze: '🌫️ غبار', Dust: '🌪️ غبار', Hot: '🔥 حار', Frigid: '🥶 برد قارس' };
+  function wxWanted(t) {
+    if (!cityOf(t) || !t.go || !(S.status && S.status.signedIn && S.invokeFn)) return false;
+    const now = new Date(), go = new Date(t.go + 'T00:00:00'), back = new Date((t.back || t.go) + 'T23:59:59');
+    return back >= now && (go - now) / 864e5 <= 10;
+  }
+  async function wxFill(root, t) {
+    const el = root.querySelector('#tpWxD'); if (!el) return;
+    const c = cityOf(t), k = 'hayati-wx:' + c.key + ':' + new Date().toISOString().slice(0, 13);
+    let r = null;
+    try { r = JSON.parse(sessionStorage.getItem(k) || 'null'); } catch (e) { r = null; }
+    if (!r) { try { r = await S.invokeFn('weather', { lat: c.lat, lng: c.lng, tz: c.tz }); sessionStorage.setItem(k, JSON.stringify(r)); } catch (e) { r = null; } }
+    if (!r || r.unavailable || !Array.isArray(r.days) || !r.days.length) { const row = root.querySelector('#tpWx'); if (row) row.remove(); return; }
+    const from = t.go, to = t.back || t.go;
+    const days = r.days.filter((d) => d.date >= from && d.date <= to);
+    const list = (days.length ? days : r.days.slice(0, 5));
+    el.innerHTML = list.map((d) => '<div style="display:flex;justify-content:space-between;gap:8px"><bdi>' + h(new Date(d.date + 'T00:00:00').getDate() + ' ' + A.MONTHS[new Date(d.date + 'T00:00:00').getMonth()]) + '</bdi><span>' + h(WX[d.code] || '🌡️') + '</span><bdi class="num">' + d.max + '° / ' + d.min + '°' + (d.rain >= 30 ? ' · ☔ ' + d.rain + '%' : '') + '</bdi></div>').join('') +
+      '<a href="' + h(r.attribution) + '" target="_blank" rel="noopener" class="small muted" style="display:inline-block;margin-top:6px">Apple Weather</a>';
+  }
+
   // ---------- الجواز ----------
   // ينصح بصلاحية 6 أشهر بعد الرجعة (كثير من الدول تطلبها)
   function passportCheck(t) {
@@ -131,12 +152,14 @@
     const c = cityOf(t);
     let out = '<button type="button" class="btn primary block" id="tpAI" style="margin:14px 0 4px">✨ خطط رحلتي بالذكاء</button>' +
       (t.aiPlan ? '<button type="button" class="btn ghost block" id="tpAIOpen" style="margin:6px 0 0">📒 ملف رحلتك</button>' : '') +
+      (E.TravelShare && E.TravelShare.has(t) ? '<button type="button" class="btn ghost block" id="tpShare" style="margin:6px 0 0">📤 شارك الرحلة مع القروب</button>' : '') +
       A.secHead('📍 الوجهة', '') + '<div class="card"><div class="field" style="margin:0"><label for="tpCity">المدينة</label><select id="tpCity" style="width:100%"><option value="">غيرها / ما حددت</option>' +
       CITIES.map((x) => '<option value="' + x.key + '"' + (c && c.key === x.key ? ' selected' : '') + '>' + x.name + '</option>').join('') + '</select></div>';
     if (c) {
       const now = localNow(c), w = weatherOf(c, t.go), pr = prayersThere(c, t.go ? new Date(t.go + 'T12:00:00') : new Date());
       out += '<ul class="list" style="margin-top:8px">' +
         (now ? '<li class="row" style="cursor:default"><div class="ico">🕐</div><div class="main"><div class="title"><span>الوقت هناك الحين</span> <bdi class="num">' + now.time + '</bdi></div><div class="sub">' + diffText(now.diff) + '</div></div></li>' : '') +
+        (wxWanted(t) ? '<li class="row" id="tpWx" style="cursor:default"><div class="ico">🌦️</div><div class="main"><div class="title"><span>توقعات الطقس</span></div><div class="sub" id="tpWxD">…</div></div></li>' : '') +
         '<li class="row" style="cursor:default"><div class="ico">🌡️</div><div class="main"><div class="title"><span>' + w.label + '</span> <bdi class="num">' + w.hi + '°</bdi></div><div class="sub"><span>متوسط العظمى بشهر السفر (تقريبي)</span>' + (w.rain ? ' · <span>موسم أمطار ☔</span>' : '') + '</div></div></li>' +
         '<li class="row" style="cursor:default"><div class="ico">🔌</div><div class="main"><div class="title"><span>' + (needsAdapter(c) ? 'تحتاج محوّل كهرباء' : 'نفس فيش البحرين، ما تحتاج محوّل') + '</span></div><div class="sub"><bdi>' + c.plugs.split('').join(' / ') + '</bdi></div></div></li>' +
         '<li class="row" style="cursor:default"><div class="ico">🕋</div><div class="main"><div class="title"><span>اتجاه القبلة هناك</span> <bdi class="num">' + qibla(c) + '°</bdi></div><div class="sub">من الشمال مع عقارب الساعة</div></div></li>' +
@@ -171,8 +194,11 @@
   }
 
   function mount(root, t, persist, rerender) {
+    wxFill(root, t);
     const ai = root.querySelector('#tpAI');
     if (ai) ai.onclick = () => { if (E.TravelAI) E.TravelAI.form(t, persist, rerender); };
+    const shr = root.querySelector('#tpShare');
+    if (shr) shr.onclick = () => E.TravelShare.sheet(t);
     const aio = root.querySelector('#tpAIOpen');
     if (aio) aio.onclick = () => { if (E.TravelAI) E.TravelAI.result(t, persist, rerender); };
     root.querySelectorAll('[data-tpmap]').forEach((b) => { b.onclick = () => { const N = window.HayatiNative; if (N && N.openLink) N.openLink(b.dataset.tpmap); else window.open(b.dataset.tpmap, '_blank', 'noopener'); }; });

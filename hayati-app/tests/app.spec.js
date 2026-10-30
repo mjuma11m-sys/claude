@@ -10,6 +10,7 @@ const test = base.extend({
   page: async ({ page, baseURL }, use, testInfo) => {
     if (!/جديد بحياتي/.test(testInfo.title)) await page.addInitScript((v) => { try { localStorage.setItem('hayati-seen-version', v); } catch (e) { /* تجاهل */ } }, APP_V);
     if (!/أول دقيقة/.test(testInfo.title)) await page.addInitScript(() => { try { localStorage.setItem('hayati-first-step', 'done'); } catch (e) { /* تجاهل */ } });
+    if (!/جولة/.test(testInfo.title)) await page.addInitScript(() => { try { localStorage.setItem('hayati-tour', 'done'); } catch (e) { /* تجاهل */ } });
     // DW-050: شاشة «سجّل دخول أو تخطَّ» تطلع أول مرة لأن Supabase مربوط؛ الاختبارات تعتبرها انتخطّت إلا اختبارها هي
     if (!/شاشة الدخول/.test(testInfo.title)) await page.addInitScript(() => { try { localStorage.setItem('hayati-account-step', 'skip'); } catch (e) { /* تجاهل */ } });
     const errors = [];
@@ -3662,4 +3663,47 @@ test('AI trip planner (DW-096): plan file with tabs and map links, saving fills 
   expect(t.check.filter((x) => x.t === 'حذاء مشي').length).toBe(1);   // بدون تكرار
   expect(t.check.map((x) => x.t)).toContain('جاكيت مطر');
   await expect(page.locator('#tpAIOpen')).toBeVisible();
+});
+
+// DW-097: جولة المستخدم الجديد — بطاقة بالرئيسية، فيديو، جولة على الأزرار، وترجع من الإعدادات
+test('new user tour (DW-097) جولة: card on Today, video sheet, guided tour over the main buttons, and again from settings', async ({ page }) => {
+  await open(page);
+  await store(page, () => { App.S.setSettings({ onboarded: true }); App.render(); });
+  await expect(page.locator('[data-tk="tour"]')).toBeVisible();
+  await page.click('[data-action="tour-video"]');
+  await expect(page.locator('#sheetBody video')).toHaveAttribute('src', 'media/howto.mp4');
+  await store(page, () => App.closeSheet());
+  await expect(page.locator('[data-tk="tour"]')).toHaveCount(0);     // ما ترجع بعد ما شافها
+  await store(page, () => Extras.Tour.tour());
+  await expect(page.locator('#tourLayer .tour-t')).toHaveText('🏠 يومك');
+  await page.click('#tourLayer .tour-next');
+  await expect(page.locator('#tourLayer .tour-t')).toHaveText('➕ أضف أي شي');
+  await page.click('#tourLayer .tour-skip');
+  await expect(page.locator('#tourLayer')).toHaveCount(0);
+  await page.click('#settingsBtn');
+  await expect(page.locator('#sheetBody [data-set="tour-go"]')).toBeVisible();
+});
+
+// DW-098 + DW-099: شارك الرحلة مع القروب (صورة/رسالة بدون مبالغ) + توقعات WeatherKit لما تكون الرحلة قريبة
+test('trip share and weather (DW-098, DW-099): group message has no amounts, image renders, forecast shows only when the server has WeatherKit', async ({ page }) => {
+  await useFakeSupabase(page);
+  await open(page);
+  const d = (n) => { const x = new Date(); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); };
+  await store(page, ({ go, back }) => {
+    App.S.setSettings({ onboarded: true }); window.__signInAs('u-sara', 'sara@example.com');
+    App.S.upsert('trips', { id: 'ts', name: 'إسطنبول', kind: 'leisure', go, back, plan: { hotel: 200 }, costs: [{ id: 'c', cat: 'hotel', amount: 120, at: go }], check: [], city: 'istanbul',
+      docs: { passport: '2030-01-01', books: [{ type: 'flight', title: 'GF', ref: 'SECRET1', at: '' }] }, agenda: [{ id: 'a', date: go, time: '10:00', title: 'جولة بالبوسفور', place: '' }] });
+  }, { go: d(3), back: d(5) });
+  const msg = await store(page, () => Extras.TravelShare.text(Extras.Travel.get('ts')));
+  expect(msg).toContain('جولة بالبوسفور');
+  expect(msg).not.toContain('SECRET1'); expect(msg).not.toContain('200'); expect(msg).not.toContain('120');
+  // الطقس: السيرفر بدون مفتاح ← الصف يختفي؛ مع مفتاح ← التوقعات
+  await store(page, () => { window.__wx = { unavailable: true }; const o = App.S.invokeFn; App.S.invokeFn = async (fn, b) => (fn === 'weather' ? window.__wx : o(fn, b)); Extras.Travel.tripSheet('ts'); });
+  await expect(page.locator('#tpWx')).toHaveCount(0);
+  await store(page, ({ go }) => { sessionStorage.clear(); window.__wx = { days: [{ date: go, max: 18, min: 11, code: 'Rain', rain: 70 }], attribution: 'https://developer.apple.com/weatherkit/data-source-attribution/' }; Extras.Travel.tripSheet('ts'); }, { go: d(3) });
+  await expect(page.locator('#tpWxD')).toContainText('🌧️ مطر');
+  await expect(page.locator('#tpWxD')).toContainText('18° / 11°');
+  await expect(page.locator('#tpWxD a')).toHaveText('Apple Weather');
+  await store(page, () => document.querySelector('#tpShare').click());
+  await expect.poll(() => page.evaluate(() => (document.getElementById('tsImg') || {}).src || '')).toContain('data:image/png');
 });
