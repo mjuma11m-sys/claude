@@ -102,7 +102,7 @@ Background audio (UIBackgroundModes: audio): used only while the user records th
 - **Promotional Text:** `Your expenses, studies, prayers and tasks in one place. Paste a bank SMS and review it, split a bill with friends, and see where your salary went.`
 - **Description:** نفس النص الإنجليزي في `videos/hayati-reels-series/captions.txt`؟ لا: استخدم النص في رسالة 0.28 بالشات (EXPENSES / ZAKAT AND KHUMS / STUDY AND SCHEDULE / WORSHIP / KITCHEN / ON IPHONE / YOUR PRIVACY) + سطر الكيتشن: «calories per serving (estimate)» وسطر Health: «daily calorie and protein needs, kept on your device».
 - **What's New (0.28):** `Recipe calories: every kitchen recipe shows estimated calories per serving. Calculate your needs: daily calories and protein for your goal, kept on your device. Arabic and English are now listed as app languages.`
-- **What's New (0.29):** `AI trip planner: a day-by-day plan, estimated budget and packing list for your city. Everything for travel in one place: local time, prayer times, qibla, plug type, passport validity and booking reminders. Share the trip with your group as an image or a message with map links for every place. Weekend ideas that fit your budget. Reads any timetable: school, university or work. Security checkup in settings, and the screen hides when you leave the app.`
+- **What's New (0.29):** `AI trip planner: a day-by-day plan, estimated budget and packing list for your city. Everything for travel in one place: local time, prayer times, qibla, plug type, passport validity and booking reminders. Share the trip with your group as an image or a message with map links for every place. Weekend ideas that fit your budget. Reads any timetable: school, university or work. Your admin in one place: document expiry reminders, house bills, your jam'iya turn, car maintenance, an emergency fund and Eid money. Security checkup in settings, and the screen hides when you leave the app.`
 
 ## ما الجديد 0.29 (عربي)
 ```
@@ -111,6 +111,7 @@ Background audio (UIBackgroundModes: audio): used only while the user records th
 شارك الرحلة مع القروب: صورة أو رسالة فيها رابط خريطة لكل مكان.
 وين نروح الويكند؟ اقتراحات على قد ميزانيتك.
 يقرا أي جدول: مدرسة، جامعة، أو دوام.
+أمورك بمكان واحد: تذكير قبل انتهاء أوراقك، فواتير البيت، الجمعية ودورك، صيانة السيارة، صندوق الطوارئ، والعيدية.
 فحص الأمان من الإعدادات، والشاشة تتغطى لما تطلع من التطبيق.
 ```
 
