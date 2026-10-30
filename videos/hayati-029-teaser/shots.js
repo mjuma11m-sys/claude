@@ -14,7 +14,7 @@ const PLAN = { city: 'إسطنبول', people: 2, currency: 'TRY', days: [
   const p = await ctx.newPage();
   const errs = []; p.on('pageerror', (e) => errs.push(e.message));
   const open = async () => { await p.goto('file:///home/user/claude/hayati-app/dist/Hayati.html'); await p.waitForFunction(() => window.App && App.st && window.Extras && Extras.TravelAI); await p.evaluate(() => App.S.setSettings({ onboarded: true, budget: 300, payday: 1 })); };
-  const shot = async (n) => { await p.waitForTimeout(1000); await p.screenshot({ path: path.join(OUT, n + '.png') }); };
+  const shot = async (n) => { await p.waitForTimeout(1000); await p.screenshot({ path: path.join(OUT, n + '.png') }); if (await p.locator('#sheet[open]').count()) await p.locator('#sheet[open]').screenshot({ path: path.join(OUT, n + '-s.png') }); };
   const go = new Date(Date.now() + 12 * 864e5).toISOString().slice(0, 10), back = new Date(Date.now() + 15 * 864e5).toISOString().slice(0, 10);
   const seed = (plan) => p.evaluate(({ plan, go, back }) => { App.S.upsert('trips', { id: 'ist', name: 'إسطنبول', kind: 'leisure', go, back, city: 'istanbul', plan: { hotel: 105, flight: 160 }, costs: [], check: [], aiPlan: plan }); }, { plan, go, back });
   // 1 ملف الرحلة بالذكاء

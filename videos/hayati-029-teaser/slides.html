@@ -1,0 +1,64 @@
+<!doctype html>
+<html dir="rtl" lang="ar"><head><meta charset="utf-8">
+<!-- كاروسيل تشويق 0.29 (1080×1350) + ستوريات إضافية (1080×1920) · slides.html#post-3 / #story-4 -->
+<style>
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Bold.ttf);font-weight:700}
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Regular.ttf);font-weight:400}
+:root{--sea:#0E3B43;--deep:#0A1A1E;--pearl:#E8DCC4;--coral:#FF6B4A}
+*{box-sizing:border-box}
+html,body{margin:0;overflow:hidden;font-family:P,'Helvetica Neue',Arial,sans-serif;color:var(--pearl)}
+#s{position:relative;width:1080px;height:1350px;overflow:hidden;background:radial-gradient(120% 75% at 50% 42%,#145a62 0%,var(--sea) 42%,var(--deep) 100%)}
+body.story #s{height:1920px}
+.c{color:var(--coral)}
+.n{position:absolute;top:56px;left:60px;font-size:34px;opacity:.6;direction:ltr}
+.tag{position:absolute;top:56px;right:60px;font-size:34px;font-weight:700;padding:10px 26px;border-radius:999px;background:rgba(255,107,74,.15);color:var(--coral)}
+.h{position:absolute;left:0;right:0;text-align:center;padding:0 70px;font-weight:700;line-height:1.2}
+.sub{position:absolute;left:0;right:0;text-align:center;padding:0 90px;font-size:44px;line-height:1.5;opacity:.92}
+.phone{position:absolute;left:50%;width:520px;height:1125px;margin-left:-260px;border-radius:80px;background:#0b1416;padding:16px;box-shadow:0 60px 110px -40px rgba(0,0,0,.8),inset 0 0 0 3px #2a4a50}
+.phone div{width:100%;height:100%;border-radius:64px;overflow:hidden;background:#F7F4EE}
+.phone img{width:100%;display:block}
+.card{position:absolute;left:50%;width:720px;margin-left:-360px;border-radius:40px;overflow:hidden;box-shadow:0 50px 100px -30px rgba(0,0,0,.8)}
+.card img{width:100%;display:block}
+.card.sheet{border-radius:44px;background:#F7F4EE}
+.card.sheet::after{content:'';position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(transparent,#F7F4EE)}
+.pill{display:inline-block;padding:24px 64px;border-radius:999px;background:var(--coral);color:#fff;font-weight:700}
+.demo{position:absolute;bottom:30px;left:0;right:0;text-align:center;font-size:28px;opacity:.65}
+.list{position:absolute;left:0;right:0;padding:0 150px;font-size:46px;line-height:1.85}
+</style></head><body><div id="s"></div>
+<script>
+const [fmt, n] = (location.hash.slice(1) || 'post-1').split('-'); const N = Number(n);
+if (fmt === 'story') document.body.classList.add('story');
+const T = 10;
+// [شارة، عنوان، سطر، لقطة]
+const F = {
+  2: ['✈️ سفر', 'مخطط <span class="c">رحلات</span>', 'المدينة وعدد الأيام، ويقترح برنامج يوم بيوم وميزانية تقديرية', 'ai'],
+  3: ['💬 القروب', 'شاركها مع <span class="c">القروب</span>', 'صورة أو رسالة فيها رابط خريطة لكل مكان، عشان محد يضيع 📍', 'group'],
+  4: ['🧳 الوجهة', 'كل شي <span class="c">هناك</span>', 'الوقت والصلاة والقبلة والفيش، وصلاحية الجواز', 'dest'],
+  5: ['🪪 أوراقك', 'قبل لا <span class="c">تنتهي</span>', 'البطاقة الذكية، الرخصة، الاستمارة، الجواز. نذكّرك قبلها بشهر', 'papers'],
+  6: ['🤝 الجمعية', 'متى <span class="c">دورك؟</span>', 'كم تدفع، ومتى تقبض، وتذكير يوم القسط', 'jamiya'],
+  7: ['💡 الفواتير', 'فواتير <span class="c">البيت</span>', 'الكهرباء والنت والجوال، مع مقارنة بالشهر اللي طاف', 'bills'],
+  8: ['🌴 الويكند', 'وين <span class="c">نروح؟</span>', 'اقتراحات على قد ميزانيتك وعدد الأشخاص', 'weekend'],
+  9: ['🛡️ الأمان', 'فحص <span class="c">الأمان</span>', 'شوف وين أمانك وقوّيه بضغطة', 'security'],
+};
+const s = document.getElementById('s'), H = fmt === 'story' ? 1920 : 1350, off = fmt === 'story' ? 200 : 0;
+let html = '';
+if (fmt === 'post' && N === 1 || fmt === 'story' && N === 4) {
+  html = '<div class="h" style="top:' + (230 + off) + 'px;font-size:84px">تحديث</div><div class="h" style="top:' + (330 + off) + 'px;font-size:230px;color:var(--coral);direction:ltr">0.29</div>' +
+    '<div class="h" style="top:' + (650 + off) + 'px;font-size:72px">' + (fmt === 'story' ? 'أي ميزة <span class="c">تنتظر</span> أكثر؟ 👇' : '8 أشياء جاية <span class="c">لحياتك</span> 👀') + '</div>' +
+    (fmt === 'story' ? '<div class="list" style="top:' + (860 + off) + 'px">✈️ مخطط الرحلات<br>🤝 الجمعية<br>🪪 أوراقك<br>💡 فواتير البيت</div>'
+      : '<div class="sub" style="top:850px">رحلات · القروب · الوجهة · أوراقك<br>الجمعية · الفواتير · الويكند · الأمان</div><div class="h" style="top:1080px;font-size:50px"><span class="pill">اسحب ←</span></div>');
+} else if (fmt === 'post' && N === T) {
+  html = '<div class="h" style="top:300px;font-size:110px">قريباً <span class="c">👀</span></div><div class="h" style="top:470px;font-size:64px">بتحديث 0.29 من «حياتي»</div>' +
+    '<div class="sub" style="top:640px">أي وحدة تنتظرها أكثر؟<br>قول لنا بالتعليقات 👇</div><div class="h" style="top:1010px;font-size:46px;opacity:.85">📱 App Store · أندرويد قريباً</div>';
+} else if (fmt === 'story' && N === 5) {
+  html = '<div class="h" style="top:230px;font-size:96px">تعرف متى<br><span class="c">دورك بالجمعية؟</span> 🤝</div><div class="card sheet" style="top:620px;width:860px;margin-left:-430px"><img src="shots/jamiya-s.png"></div>' +
+    '<div class="h" style="top:1770px;font-size:52px">قريباً بـ«حياتي» 👀</div>';
+} else {
+  const [tag, t, line, img] = F[N];
+  const isCard = img === 'group';
+  html = '<div class="tag">' + tag + '</div><div class="n">' + N + '/' + T + '</div><div class="h" style="top:130px;font-size:92px">' + t + '</div><div class="sub" style="top:255px;font-size:40px">' + line + '</div>' +
+    (isCard ? '<div class="card" style="top:420px"><img src="shots/group.png"></div>' : '<div class="card sheet" style="top:400px;width:780px;margin-left:-390px;max-height:' + (H - 400 - 90) + 'px"><img src="shots/' + img + '-s.png"></div>');
+}
+s.innerHTML = html + '<div class="demo">* لقطات ببيانات تجريبية</div>';
+window.READY = Promise.all([document.fonts.ready, ...[...document.images].map((i) => new Promise((r) => (i.complete && i.naturalWidth) ? r() : (i.onload = i.onerror = r)))]);
+</script></body></html>
