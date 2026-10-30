@@ -2017,7 +2017,7 @@ test('«جديد بحياتي»: an existing user sees what is new once after th
   await store(page, () => localStorage.setItem('hayati-seen-version', 'v28'));   // كان على النسخة اللي قبل
   await open(page);
   await expect(page.locator('#sheetTitle')).toHaveText('جديد بحياتي ✨', { timeout: 5000 });
-  await expect(page.locator('#sheetBody .news-item')).toHaveCount(6);
+  await expect(page.locator('#sheetBody .news-item')).toHaveCount(7);
   await page.click('#sheetCancel');
   expect(await store(page, () => localStorage.getItem('hayati-seen-version'))).toBe(await store(page, () => App.APP_VERSION));
   await open(page);
@@ -3752,4 +3752,42 @@ test('security checkup and privacy screen (DW-100): app switcher hides data with
   await store(page, () => { localStorage.setItem('hayati-lock', '{}'); Extras.Secure.cover(true); });
   await expect(page.locator('body')).not.toHaveClass(/covered/);
   await store(page, () => localStorage.removeItem('hayati-lock'));
+});
+
+// DW-101: أمورك — أوراق تنتهي، فواتير البيت، الجمعية، صيانة السيارة، صندوق الطوارئ، العيدية، القضاء (كله على الجهاز)
+test('life admin (DW-101): documents, bills, jam\'iya, car, emergency fund, Eid money and qada, with reminders and Today rows', async ({ page }) => {
+  await open(page);
+  const r = await store(page, () => {
+    App.S.setSettings({ onboarded: true });
+    const now = new Date(2026, 9, 10, 10, 0), L = Extras.Life;
+    localStorage.setItem(L.KEY, JSON.stringify({
+      papers: [{ id: 'p1', type: 'cpr', exp: '2026-10-25' }, { id: 'p2', type: 'passport', exp: '2027-06-01' }],
+      bills: [{ id: 'b1', type: 'ewa', day: 11, paid: { '2026-09': 30 } }, { id: 'b2', type: 'net', day: 1, paid: {} }],
+      jamiya: [{ id: 'j1', name: 'الدوام', amount: 100, members: 10, start: '2026-08', turn: 3, day: 10, paid: {} }],
+      car: { km: 85000, items: [{ id: 'oil', last: '2026-07-10', lastKm: 80000 }] }, eid: [], qada: {} }));
+    const urg = L.urgent(now).map((x) => x.sec);
+    const rem = L.reminders(now).map((x) => x.key);
+    const j = L.jamState(L.load().jamiya[0], now);
+    const net = L.billLine(L.load().bills[1], now);   // موعدها (1) طاف بأكثر من 5 أيام: الشهر الجاي
+    return { urg, rem, j: [j.k, j.mine, j.pot], net: net.n };
+  });
+  expect(r.urg).toEqual(expect.arrayContaining(['papers', 'bills', 'jamiya', 'car']));
+  expect(r.urg).not.toContain('passport');
+  expect(r.rem).toContain('paper:p1:7');
+  expect(r.rem).toContain('jam:j1:2026-11');
+  expect(r.j).toEqual([3, true, 1000]);
+  expect(r.net).toBe(22);
+  // الشاشات تنفتح، والدفع يسجّل مصروف
+  await store(page, () => Extras.Life.bills());
+  await page.locator('#sheetBody [data-pay]').first().click();
+  await page.fill('#sheetBody [name=amount]', '33');
+  await page.click('#sheetSave');
+  await expect(page.locator('#toast')).toContainText('انسجلت');
+  expect(await store(page, () => App.st.transactions.some((t) => t.amount === 33 && t.category === 'فواتير واتصالات'))).toBe(true);
+  // القضاء: − ما ينزل تحت الصفر
+  await store(page, () => { App.closeSheet(); Extras.Life.qada(); });
+  await page.locator('#sheetBody [data-q="fajr"][data-d="1"]').click();
+  await page.locator('#sheetBody [data-q="fajr"][data-d="-1"]').click();
+  await page.locator('#sheetBody [data-q="fajr"][data-d="-1"]').click();
+  await expect(page.locator('#sheetBody [data-qv="fajr"]')).toHaveText('0');
 });
