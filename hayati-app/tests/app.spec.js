@@ -3903,7 +3903,7 @@ test('text size and simple screen (DW-105): bigger text scales the app without h
 
 // DW-106: «💊 أدويتك» — تذكير بكل جرعة، «أخذته» من الرئيسية، وتنبيه جدّد الوصفة
 test('medicines (DW-106): add a medicine, take a dose from Today, stock counts down and asks for a refill', async ({ page }) => {
-  await page.clock.setFixedTime(new Date('2026-11-02T09:30:00'));
+  await page.clock.setFixedTime(new Date('2026-11-02T09:30:00+03:00'));
   await open(page);
   await store(page, () => { App.S.setSettings({ onboarded: true }); Extras.Meds.sheet(); });
   await page.click('#mdAdd');
@@ -3924,4 +3924,28 @@ test('medicines (DW-106): add a medicine, take a dose from Today, stock counts d
   const rem = await store(page, () => Extras.Meds.reminders().map((r) => r.key));
   expect(rem.filter((k) => k.startsWith('med:'))).toHaveLength(3);   // 9 الليل اليوم + جرعتين بكرة
   expect(rem.some((k) => k.startsWith('medlow:'))).toBe(true);
+});
+
+// DW-107: «عيالك» — جدول الأسبوع، الاختبارات، الرسوم، والمصروف؛ بالرئيسية «بكرة عند عيالك»
+test('kids (DW-107): weekly plan, exams and fees show on Today the evening before, paying a fee logs an expense', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-11-01T19:00:00+03:00'));   // الأحد بالليل (توقيت البحرين)
+  await open(page);
+  await store(page, () => {
+    App.S.setSettings({ onboarded: true });
+    localStorage.setItem(Extras.Kids.KEY, JSON.stringify([{ id: 'k1', name: 'جعفر', emoji: '👦', allow: 0.5, week: { 1: 'رياضيات · الشنطة الرياضية' },
+      exams: [{ id: 'e1', subject: 'رياضيات', date: '2026-11-02' }], fees: [{ id: 'f1', label: 'القسط الثاني', amount: 150, due: '2026-11-05', paid: false }] }]));
+    App.render();
+  });
+  const card = page.locator('section[data-tk="kids"]');
+  await expect(card).toContainText('بكرة عند عيالك');
+  await expect(card).toContainText('الشنطة الرياضية');
+  await expect(card).toContainText('القسط الثاني');
+  const r = await store(page, () => ({ rem: Extras.Kids.reminders().map((x) => x.key), m: Extras.Kids.monthAllowance(Extras.Kids.load()[0], new Date(2026, 10, 1)) }));
+  expect(r.rem).toEqual(['kidexam:e1', 'kidfee:f1']);
+  expect(r.m).toBe(11);   // 22 يوم دراسي بنوفمبر 2026 × 0.5
+  await store(page, () => Extras.Kids.kidSheet('k1'));
+  await page.click('[data-fp="f1"]');
+  await expect(page.locator('#toast')).toContainText('انسجلت');
+  expect(await store(page, () => App.st.transactions.some((t) => t.amount === 150 && t.category === 'جامعة ودراسة'))).toBe(true);
+  expect(await store(page, () => Extras.Kids.load()[0].fees[0].paid)).toBe(true);
 });
