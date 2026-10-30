@@ -126,6 +126,7 @@
       out.push({ key: 'trip3:' + t.id + ':' + t.go, at: at(3), title: icon + ' باقي 3 أيام على ' + t.name, body: leftLine(t), extra });
       out.push({ key: 'trip1:' + t.id + ':' + t.go, at: at(1), title: '✈️ بكرة السفر: ' + t.name, body: leftLine(t), extra });
     }
+    if (E.TravelPlus) for (const t of all()) out.push(...E.TravelPlus.reminders(t));
     return out;
   }
 
@@ -148,7 +149,7 @@
       body: (list.length ? '<div class="card flush"><ul class="list" id="tvTrips">' + list.map(row).join('') + '</ul></div>'
         : '<div class="card">' + A.empty('briefcase', 'ما فيه رحلات', 'خطط لرحلتك: الميزانية، والأغراض عشان ما تنسى شي، وكم باقي على السفر.') + '</div>') +
         '<button type="button" class="btn primary block" id="tvNew" style="margin-top:12px">' + I('plus') + 'رحلة جديدة</button>' +
-        '<p class="small muted" style="margin:12px 4px 0">كل الرحلات على جوالك بس، وما تتزامن مع حسابك.</p>',
+        '<p class="small muted" style="margin:12px 4px 0">الرحلات تتزامن مع حسابك لو مسجّل دخول، ورحلات العمرة تظل على جوالك بس.</p>',
       mount(root) {
         root.querySelector('#tvNew').onclick = () => newSheet();
         const ul = root.querySelector('#tvTrips');
@@ -188,6 +189,7 @@
         '<div class="big" id="tvCount">' + cd.text + '</div>' +
         '<div class="meta"><span>' + (t.go ? 'السفر ' + human(t.go) + (t.back ? ' · الرجعة ' + human(t.back) + (n ? ' · ' + A.nDays(n) : '') : '') : 'حدد التواريخ تحت') + '</span></div></div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><div class="field" style="min-width:0;margin:0"><label for="tvGo">السفر</label><input type="date" id="tvGo" style="width:100%;min-width:0;box-sizing:border-box" value="' + h(t.go) + '"></div><div class="field" style="min-width:0;margin:0"><label for="tvBack">الرجعة</label><input type="date" id="tvBack" style="width:100%;min-width:0;box-sizing:border-box" value="' + h(t.back) + '"></div></div>' +
+      (E.TravelPlus ? E.TravelPlus.section(t) : '') +
       A.secHead('الميزانية', '<button class="link" type="button" id="tvPlan">عدّل</button>') +
       '<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b>صرفت <span class="num" id="tvSpent">' + A.money(sp) + '</span></b><span class="small muted">' + (p ? 'من ' + A.money(p) : 'ما حددت ميزانية') + '</span></div>' +
         (p ? '<div class="meter" style="height:10px;margin:10px 0 4px"><span style="width:' + Math.min(100, (sp / p) * 100) + '%;background:' + (sp > p ? 'var(--expense)' : 'var(--brand)') + '"></span></div>' +
@@ -202,9 +204,10 @@
       '<button type="button" class="btn block" id="tvAdd" style="margin-top:10px">' + I('plus') + 'أضف مصروف للرحلة</button>' +
       curCard(t, p, sp) +
       A.secHead('الأغراض', '<span class="count" id="tvDone">' + done + '/' + t.check.length + '</span>') +
+      (E.TravelPlus ? E.TravelPlus.packButton(t) : '') +
       '<div id="tvList">' + packList(t) + '</div>' +
       '<div class="field" style="display:flex;gap:8px;margin-top:10px"><select id="tvGroup" aria-label="المجموعة" style="flex:none;width:auto">' + GROUPS.map((g) => '<option>' + g + '</option>').join('') + '</select><input id="tvItem" maxlength="80" placeholder="أضف غرض" aria-label="أضف غرض" style="flex:1;min-width:0"><button type="button" class="btn" id="tvItemAdd">أضف</button></div>' +
-      '<p class="small muted" style="margin:12px 4px 0">بيانات الرحلة على جوالك بس، وما تتزامن مع حسابك.</p>' +
+      '<p class="small muted" style="margin:12px 4px 0">' + (isLocal(t) ? 'رحلة العمرة على جوالك بس، وما تتزامن مع حسابك.' : 'الرحلة تتزامن مع حسابك لو مسجّل دخول.') + '</p>' +
       '<button type="button" class="btn ghost block" id="tvDel" style="margin-top:12px;color:var(--expense)">احذف الرحلة</button>';
 
     A.openSheet({
@@ -234,6 +237,7 @@
         };
         root.querySelector('#tvPlan').onclick = () => planSheet(t);
         curMount(root, t);
+        if (E.TravelPlus) E.TravelPlus.mount(root, t, persist, () => tripSheet(t.id));
         root.querySelector('#tvAdd').onclick = () => costSheet(t);
         root.querySelector('#tvDel').onclick = async () => {
           if (!(await A.ask('تحذف هالرحلة من جوالك؟\n' + t.name))) return;

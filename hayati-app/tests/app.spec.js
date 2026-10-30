@@ -3580,3 +3580,47 @@ test('weekend ideas (DW-094): fit the budget left and the number of people, add 
   const t = await store(page, () => App.st.tasks.slice(-1)[0]);
   expect(new Date(t.due_at).getDay()).toBe(5);
 });
+
+// DW-095: السفر أكثر — الوجهة (الوقت والقبلة والجو والفيش)، الجواز، الحجوزات، خطة الأيام، أغراض حسب الجو
+test('travel plus (DW-095): destination info, passport check, bookings, day plan with reminders, packing by weather', async ({ page }) => {
+  await open(page);
+  const r = await store(page, () => {
+    App.S.setSettings({ onboarded: true });
+    const P = Extras.TravelPlus;
+    const c = P.CITIES.find((x) => x.key === 'london');
+    const t = { id: 't1', name: 'لندن', kind: 'leisure', go: '2027-01-10', back: '2027-01-17', plan: {}, costs: [], check: [{ g: 'أوراق', t: 'جواز السفر', on: false }], city: 'london', docs: { passport: '2027-05-01' } };
+    return {
+      qMakkah: P.qibla(P.CITIES.find((x) => x.key === 'istanbul')),
+      offLondonWinter: P.tzOffset('Europe/London', new Date('2027-01-10T12:00:00Z')),
+      offLondonSummer: P.tzOffset('Europe/London', new Date('2027-07-10T12:00:00Z')),
+      weather: P.weatherOf(c, '2027-01-10').kind,
+      sug: P.suggest(t).map((x) => x.t),
+      pass: P.passportCheck(t).level,
+      passOk: P.passportCheck(Object.assign({}, t, { docs: { passport: '2028-01-01' } })).level,
+      passBad: P.passportCheck(Object.assign({}, t, { docs: { passport: '2027-01-12' } })).level,
+      days: P.dates(t).length,
+    };
+  });
+  expect(r.qMakkah).toBeGreaterThan(145); expect(r.qMakkah).toBeLessThan(160);
+  expect([r.offLondonWinter, r.offLondonSummer]).toEqual([0, 1]);
+  expect(r.weather).toBe('cold');
+  expect(r.sug).toContain('جاكيت ثقيل');
+  expect(r.sug).toContain('مظلة أو جاكيت مطر');
+  expect(r.sug.some((x) => x.startsWith('محوّل'))).toBe(false);     // لندن نفس فيش البحرين (G)
+  expect([r.pass, r.passOk, r.passBad]).toEqual(['warn', 'ok', 'bad']);
+  expect(r.days).toBe(8);
+  // من الواجهة: اختار المدينة ← العملة تتعبّى، أضف خطة ← تنبيه قبلها بنص ساعة
+  await store(page, () => { App.S.upsert('trips', { id: 't2', name: 'إسطنبول', kind: 'leisure', go: '2027-01-10', back: '2027-01-12', plan: {}, costs: [], check: [] }); Extras.Travel.tripSheet('t2'); });
+  await page.selectOption('#tpCity', 'istanbul');
+  await expect(page.locator('#sheetBody')).toContainText('اتجاه القبلة هناك');
+  expect(await store(page, () => Extras.Travel.get('t2').cur.code)).toBe('TRY');
+  await page.click('#tpAg');
+  await page.fill('[name=tp_tm]', '10:00');
+  await page.fill('[name=tp_x]', 'جولة بالبوسفور');
+  await page.click('#sheetSave');
+  await expect(page.locator('#sheetBody')).toContainText('جولة بالبوسفور');
+  const rem = await store(page, () => Extras.Travel.reminders().filter((x) => x.key.startsWith('tripag:')).map((x) => [x.title, new Date(x.at).getHours(), new Date(x.at).getMinutes()]));
+  expect(rem).toEqual([['🗓️ بعد نص ساعة: جولة بالبوسفور', 9, 30]]);
+  await page.click('#tpPack');
+  expect(await store(page, () => Extras.Travel.get('t2').check.map((x) => x.t))).toContain('محوّل كهرباء نوع C/F');
+});

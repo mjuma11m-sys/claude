@@ -21,7 +21,7 @@
   applyTheme();
 
   // ================= أوقات الصلاة (حساب فلكي محلي — المنامة) =================
-  const LAT = 26.2235, LNG = 50.5876, TZ = 3;
+  const LAT = 26.2235, LNG0 = 50.5876, TZ0 = 3;
   const METHODS = {
     gulf: { label: 'أم القرى / الخليج', fajr: 18.5, isha: { min: 90 }, maghrib: 0 },
     jafari: { label: 'جعفري (3 أوقات)', fajr: 16, isha: { deg: 14 }, maghrib: 4 },
@@ -40,10 +40,12 @@
     const A0 = Math.floor(y / 100), B = 2 - A0 + Math.floor(A0 / 4);
     return Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + d + B - 1524.5;
   }
-  function prayerTimes(date, methodKey) {
+  // loc اختياري ({lat, lng, tz}) لأوقات مدينة ثانية (السفر)؛ بدونه البحرين
+  function prayerTimes(date, methodKey, loc) {
     const M = METHODS[methodKey] || METHODS.gulf;
+    const LNG = loc ? loc.lng : LNG0, TZ = loc ? loc.tz : TZ0;
     const jd = julian(date.getFullYear(), date.getMonth() + 1, date.getDate()) - LNG / (15 * 24);
-    const lat = rad(LAT);
+    const lat = rad(loc ? loc.lat : LAT);
     const noonAt = (t) => fixH(12 - sun(jd + t / 24).eqt);
     const angleTime = (angle, t, ccw) => {
       const { decl } = sun(jd + t / 24);
