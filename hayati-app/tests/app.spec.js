@@ -3900,3 +3900,28 @@ test('text size and simple screen (DW-105): bigger text scales the app without h
   expect(await store(page, () => getComputedStyle(document.body).zoom)).toBe('1');
   await expect(page.locator('#findBtn')).toBeVisible();
 });
+
+// DW-106: «💊 أدويتك» — تذكير بكل جرعة، «أخذته» من الرئيسية، وتنبيه جدّد الوصفة
+test('medicines (DW-106): add a medicine, take a dose from Today, stock counts down and asks for a refill', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-11-02T09:30:00'));
+  await open(page);
+  await store(page, () => { App.S.setSettings({ onboarded: true }); Extras.Meds.sheet(); });
+  await page.click('#mdAdd');
+  await page.fill('#sheetBody [name=name]', 'فيتامين د');
+  await page.click('#mdMore');
+  await page.locator('.md-t').nth(1).fill('21:00');
+  await page.fill('#sheetBody [name=stock]', '6');
+  await page.click('#sheetSave');
+  await expect(page.locator('#mdAdd')).toBeVisible();   // ترجع القائمة
+  await store(page, () => App.closeSheet());
+  const card = page.locator('section[data-tk="meds"]');
+  await expect(card).toContainText('فيتامين د');
+  await card.locator('[data-action="med-take"]').first().click();
+  const m = await store(page, () => Extras.Meds.load()[0]);
+  expect(m.times).toEqual(['08:00', '21:00']);
+  expect(m.stock).toBe(5);
+  expect(m.taken['2026-11-02']).toEqual(['08:00']);
+  const rem = await store(page, () => Extras.Meds.reminders().map((r) => r.key));
+  expect(rem.filter((k) => k.startsWith('med:'))).toHaveLength(3);   // 9 الليل اليوم + جرعتين بكرة
+  expect(rem.some((k) => k.startsWith('medlow:'))).toBe(true);
+});
