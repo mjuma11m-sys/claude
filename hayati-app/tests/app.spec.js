@@ -3818,3 +3818,34 @@ test('feedback button (DW-102): header button sends straight to the server, sett
   expect(await store(page, () => localStorage.getItem('hayati-fb-queue'))).toBeNull();
   expect(await store(page, () => window.__sent.length)).toBe(2);
 });
+
+// DW-103: السفر أكثر — وضع السفر باليوم، التعارض مع جدولك، الحصّالة، بطاقة الطوارئ، ملخص الرحلة
+test('travel extras (DW-103): travel mode on Today, schedule clashes, savings jar, emergency card and trip summary', async ({ page }) => {
+  await open(page);
+  await store(page, () => {
+    App.S.setSettings({ onboarded: true });
+    const d = (n) => { const x = new Date(Date.now() + n * 864e5); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
+    App.S.upsert('trips', { id: 'now', name: 'إسطنبول', kind: 'leisure', city: 'istanbul', go: d(-1), back: d(2), plan: { hotel: 200 }, costs: [], check: [], agenda: [{ id: 'a1', date: d(0), time: '10:00', title: 'آيا صوفيا', q: 'Hagia Sophia' }] });
+    App.S.upsert('trips', { id: 'soon', name: 'باكو', kind: 'leisure', city: 'baku', go: d(20), back: d(24), plan: { hotel: 150, flight: 120 }, costs: [], check: [] });
+    App.S.upsert('trips', { id: 'past', name: 'دبي', kind: 'leisure', city: 'dubai', go: d(-20), back: d(-16), plan: {}, costs: [{ id: 'x', cat: 'food', amount: 80 }], check: [], agenda: [{ id: 'b1', date: d(-19), time: '10:00', title: 'برج خليفة' }] });
+    App.S.upsert('tasks', { id: 'e1', kind: 'exam', title: 'Accounting 201', due_at: new Date(Date.now() + 22 * 864e5).toISOString(), done: false });
+    App.render();
+  });
+  // وضع السفر
+  await expect(page.locator('section[data-tk="trip-mode"]')).toContainText('إسطنبول');
+  await expect(page.locator('section[data-tk="trip-mode"]')).toContainText('آيا صوفيا');
+  // التعارض والحصّالة
+  await store(page, () => Extras.Travel.tripSheet('soon'));
+  await expect(page.locator('#sheetBody')).toContainText('Accounting 201');
+  await page.click('#tmPiggy');
+  const g = await store(page, () => { const t = Extras.Travel.get('soon'); return App.st.goals.find((x) => x.id === t.goal); });
+  expect(g).toMatchObject({ emoji: '✈️', target: 270 });
+  // الطوارئ: باكو 112
+  expect(await store(page, () => Extras.TripMore.sosOf(Extras.Travel.get('soon')))).toEqual(['112', '102', '103']);
+  // ملخص الرحلة يطلع بعد الرجعة، والمبالغ مخفية افتراضياً
+  await store(page, () => { App.closeSheet(); Extras.Travel.tripSheet('past'); });
+  await expect(page.locator('#tmSum')).toBeVisible();
+  await store(page, () => { App.closeSheet(); Extras.TripMore.summarySheet(Extras.Travel.get('past')); });
+  await expect(page.locator('#tmMoney')).not.toBeChecked();
+  await expect(page.locator('#tmImg')).toHaveAttribute('src', /^data:image\/png/);
+});
