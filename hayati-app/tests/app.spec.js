@@ -802,8 +802,7 @@ test('English: interface switches to LTR English, data stays exactly as saved', 
 
 test('«رأيك بالتطبيق» builds an honest feedback message', async ({ page }) => {
   await open(page);
-  await page.click('#settingsBtn');
-  await page.click('#sheetBody [data-set="feedback"]');
+  await store(page, () => window.HayatiFeedback.feedbackSheet());   // DW-102: نافذة إنستقرام صارت البديل بدون سيرفر
   await page.waitForTimeout(400);
   await page.click('#fbStars [data-n="4"]');
   await page.fill('#fbWant', 'تذكير قبل الاختبار');
@@ -2304,7 +2303,7 @@ test('«أول دقيقة»: «بعدين» hides it for good, and an existing u
 test('bug report: the message has the version and device only, never amounts or names', async ({ page }) => {
   await open(page);
   await store(page, () => { App.S.setSettings({ onboarded: true, name: 'سارة', budget: 380 }); App.S.upsert('transactions', { id: 't1', kind: 'expense', amount: 92.325, category: 'food', note: 'لولو', occurred_at: new Date().toISOString() }); });
-  await store(page, () => window.Extras.settingsAction('bug'));
+  await store(page, () => window.HayatiFeedback.bugSheet());   // DW-102: نافذة إنستقرام صارت البديل بدون سيرفر
   await expect(page.locator('#sheetTitle')).toHaveText('🐞 بلّغ عن مشكلة');
   await page.click('#sheetSave');
   await expect(page.locator('#sheet')).toHaveAttribute('open', '');   // لازم يكتب وش صار
@@ -3166,7 +3165,7 @@ test('error log (DW-046): keeps technical errors on the device without numbers, 
   expect(JSON.stringify(log)).not.toMatch(/92|325|380|سارة|لولو|mail\.com|amount/);
   expect(log[1].m).toMatch(/^Promise: Error: fetch failed/);
 
-  await store(page, () => window.Extras.settingsAction('bug'));
+  await store(page, () => window.HayatiFeedback.bugSheet());   // DW-102: نافذة إنستقرام صارت البديل بدون سيرفر
   await expect(page.locator('#bugLog')).not.toBeChecked();   // مطفّي افتراضياً
   await expect(page.locator('#bugLogText')).toContainText('app.js:120:7');
   await page.fill('#bugWhat', 'التطبيق علّق');
@@ -3790,4 +3789,32 @@ test('life admin (DW-101): documents, bills, jam\'iya, car, emergency fund, Eid 
   await page.locator('#sheetBody [data-q="fajr"][data-d="-1"]').click();
   await page.locator('#sheetBody [data-q="fajr"][data-d="-1"]').click();
   await expect(page.locator('#sheetBody [data-qv="fajr"]')).toHaveText('0');
+});
+
+// DW-102: «💬 ملاحظة» — زر بالترويسة، توصل مباشرة، وبدون نت تنحفظ وتنرسل بعدين
+test('feedback button (DW-102): header button sends straight to the server, settings links open it, offline notes are queued', async ({ page }) => {
+  await open(page);
+  await store(page, () => { App.S.setSettings({ onboarded: true }); App.S.status.configured = true; App.render(); window.__sent = []; App.S.sendFeedback = async (f) => { window.__sent.push(f); return true; }; });
+  await page.click('#noteBtn');
+  await page.click('#nkSeg [data-k="idea"]');
+  await page.fill('#nkMsg', 'أبي نسخة أندرويد');
+  await page.click('#sheetSave');
+  await expect(page.locator('#toast')).toContainText('وصلتنا');
+  const sent = await store(page, () => window.__sent);
+  expect(sent).toHaveLength(1);
+  expect(sent[0]).toMatchObject({ kind: 'idea', message: 'أبي نسخة أندرويد', version: await store(page, () => App.APP_VERSION) });
+  expect(sent[0].errors).toBeNull();
+  // من الإعدادات: «بلّغ عن مشكلة» يفتح نفس النافذة على «مشكلة»
+  await page.click('#settingsBtn');
+  await page.click('#sheetBody [data-set="bug"]');
+  await expect(page.locator('#nkSeg [data-k="bug"]')).toHaveClass(/on/);
+  // بدون نت: تنحفظ، وتنرسل لما يرجع
+  await store(page, () => { App.S.sendFeedback = async () => { throw new Error('failed'); }; });
+  await page.fill('#nkMsg', 'ما يفتح التقرير');
+  await page.click('#sheetSave');
+  await expect(page.locator('#toast')).toContainText('بترسل لما يرجع النت');
+  expect(await store(page, () => JSON.parse(localStorage.getItem('hayati-fb-queue')).length)).toBe(1);
+  await store(page, async () => { App.S.sendFeedback = async (f) => { window.__sent.push(f); return true; }; await Extras.Note.flush(); });
+  expect(await store(page, () => localStorage.getItem('hayati-fb-queue'))).toBeNull();
+  expect(await store(page, () => window.__sent.length)).toBe(2);
 });

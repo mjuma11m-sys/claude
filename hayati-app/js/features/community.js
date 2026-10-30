@@ -277,7 +277,7 @@
       },
     });
   }
-  window.HayatiFeedback = { feedbackText, bugText, deviceInfo };
+  window.HayatiFeedback = { feedbackText, bugText, deviceInfo, feedbackSheet, bugSheet };   // DW-102: البديل لما ما فيه سيرفر
 
   window.HayatiProfile = { ROLES, isNew };
   A.render();

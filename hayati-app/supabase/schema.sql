@@ -402,3 +402,44 @@ grant execute on function public.revoke_session(uuid) to authenticated;
 -- DW-096: «خطط رحلتي» بالذكاء له حصته الشهرية
 alter table public.ai_quota drop constraint if exists ai_quota_feature_check;
 alter table public.ai_quota add constraint ai_quota_feature_check check (feature in ('study', 'slides', 'schedule', 'ask', 'trip'));
+
+-- DW-102: «💬 ملاحظة» من داخل التطبيق — توصل مباشرة بدون نسخ ولا إنستقرام.
+-- الجدول مقفول (RLS بدون policies): ما أحد يقرا ولا يكتب مباشرة. الإرسال بس عن طريق send_feedback،
+-- والقراءة لصاحب المشروع من لوحة Supabase. نحفظ النسخة ونوع الجهاز، وبدون IP ولا بيانات المستخدم.
+create table if not exists public.feedback (
+  id bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  user_id uuid references auth.users (id) on delete set null,
+  kind text not null check (kind in ('bug', 'idea', 'opinion')),
+  message text not null check (char_length(message) between 3 and 1500),
+  rating smallint check (rating between 1 and 5),
+  contact text check (char_length(contact) <= 120),
+  app_version text check (char_length(app_version) <= 20),
+  device text check (char_length(device) <= 120),
+  errors text check (char_length(errors) <= 1200),
+  status text not null default 'new' check (status in ('new', 'seen', 'done'))
+);
+alter table public.feedback enable row level security;
+create index if not exists feedback_created_idx on public.feedback (created_at desc);
+
+create or replace function public.send_feedback(p_kind text, p_message text, p_rating int default null, p_contact text default null,
+  p_version text default null, p_device text default null, p_errors text default null)
+returns boolean language plpgsql security definer set search_path = public as $$
+declare uid uuid := auth.uid(); n int;
+begin
+  if p_kind not in ('bug', 'idea', 'opinion') or char_length(coalesce(trim(p_message), '')) < 3 then raise exception 'invalid'; end if;
+  -- حد للإزعاج: 5 بالساعة لكل حساب، و40 بالساعة لكل اللي بدون حساب مع بعض
+  if uid is not null then
+    select count(*) into n from public.feedback where user_id = uid and created_at > now() - interval '1 hour';
+    if n >= 5 then raise exception 'rate_limited'; end if;
+  else
+    select count(*) into n from public.feedback where user_id is null and created_at > now() - interval '1 hour';
+    if n >= 40 then raise exception 'rate_limited'; end if;
+  end if;
+  insert into public.feedback (user_id, kind, message, rating, contact, app_version, device, errors)
+  values (uid, p_kind, left(trim(p_message), 1500), case when p_rating between 1 and 5 then p_rating end,
+    nullif(left(trim(coalesce(p_contact, '')), 120), ''), left(p_version, 20), left(p_device, 120), left(p_errors, 1200));
+  return true;
+end $$;
+revoke all on function public.send_feedback(text, text, int, text, text, text, text) from public;
+grant execute on function public.send_feedback(text, text, int, text, text, text, text) to anon, authenticated;

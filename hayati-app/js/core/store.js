@@ -808,8 +808,17 @@
     return data;
   }
 
+  // DW-102: «💬 ملاحظة» توصل مباشرة عن طريق send_feedback (مقفول وفيه حد للإزعاج). بدون Supabase ← false
+  async function sendFeedback(f) {
+    if (!sb) return false;
+    const { error } = await sb.rpc('send_feedback', { p_kind: f.kind, p_message: f.message, p_rating: f.rating || null, p_contact: f.contact || null,
+      p_version: f.version || null, p_device: f.device || null, p_errors: f.errors || null });
+    if (error) throw new Error(/rate_limited/.test(error.message || '') ? 'rate_limited' : 'failed');
+    return true;
+  }
+
   global.Store = {
-    state, status, uuid, _stripLocal: stripLocal, stableId, invokeFn, rev: () => rev,
+    state, status, uuid, _stripLocal: stripLocal, stableId, invokeFn, sendFeedback, rev: () => rev,
     subscribe: (fn) => { listeners.add(fn); return () => listeners.delete(fn); },
     upsert, remove, setSettings,
     init, getConfig, saveConfig, clearConfig,
