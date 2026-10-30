@@ -3624,3 +3624,42 @@ test('travel plus (DW-095): destination info, passport check, bookings, day plan
   await page.click('#tpPack');
   expect(await store(page, () => Extras.Travel.get('t2').check.map((x) => x.t))).toContain('محوّل كهرباء نوع C/F');
 });
+
+// DW-096: «خطط رحلتي بالذكاء» — ملف رحلة (جدول + ميزانية + أغراض)، زر الخريطة، الحفظ بالرحلة بدون ما يمسح شي
+test('AI trip planner (DW-096): plan file with tabs and map links, saving fills the day plan, empty budget lines and packing', async ({ page }) => {
+  await open(page);
+  await store(page, () => {
+    App.S.setSettings({ onboarded: true });
+    window.__opened = []; window.open = (u) => { window.__opened.push(u); return null; };
+    App.S.invokeFn = async (fn, body) => {
+      window.__ask = body;
+      return { currency: 'TRY', days: [
+        { title: 'وسط المدينة', places: [{ name: 'ميدان طرابزون', name_en: 'Meydan', tag: 'نقطة الانطلاق', time: '10:00', fee_local: 0, fee_bhd: 0, activities: 'تمشى' }, { name: 'آيا صوفيا طرابزون', name_en: 'Hagia Sophia Trabzon', tag: 'معلم مشهور', time: '13:00', fee_local: 50, fee_bhd: 0.55, activities: 'زيارة' }] },
+        { title: 'الطبيعة', places: [{ name: 'بحيرة أوزنجول', name_en: 'Uzungöl', tag: 'طبيعة', time: '9:30', fee_local: 0, fee_bhd: 0, activities: 'مشي' }] },
+      ], budget: { hotel_night: 30, food_day: 10, transport_day: 5, activities_total: 20 }, packing: ['جاكيت مطر', 'حذاء مشي'], tips: ['خذ تاكسي من المطار'], _quota: undefined };
+    };
+    App.S.upsert('trips', { id: 'tz', name: 'طرابزون', kind: 'leisure', go: '2027-06-01', back: '2027-06-02', plan: { hotel: 99 }, costs: [], check: [{ g: 'ملابس', t: 'حذاء مشي', on: false }], city: 'trabzon' });
+    Extras.Travel.tripSheet('tz');
+  });
+  await page.click('#tpAI');
+  await expect(page.locator('[name=ta_c]')).toHaveValue('طرابزون');
+  await page.fill('[name=ta_d]', '2');
+  await page.click('#sheetSave');
+  await expect(page.locator('#sheetTitle')).toContainText('ملف رحلتك', { timeout: 8000 });
+  expect(await store(page, () => [window.__ask.mode, window.__ask.city, window.__ask.days])).toEqual(['trip', 'طرابزون', 2]);
+  await expect(page.locator('#sheetBody')).toContainText('آيا صوفيا طرابزون');
+  await expect(page.locator('#sheetBody')).toContainText('50 TRY ≈ 0.550');
+  await page.locator('[data-map]').nth(1).click();
+  expect(await store(page, () => window.__opened[0])).toContain('google.com/maps/search/?api=1&query=Hagia%20Sophia%20Trabzon');
+  await page.click('#taTabs [data-k="budget"]');
+  await expect(page.locator('[data-pane="budget"]')).toBeVisible();
+  await page.click('#sheetSave');
+  await expect(page.locator('#toast')).toContainText('انحفظت بالرحلة');
+  const t = await store(page, () => Extras.Travel.get('tz'));
+  expect(t.agenda.map((x) => [x.date, x.time, x.title])).toEqual([['2027-06-01', '10:00', 'ميدان طرابزون'], ['2027-06-01', '13:00', 'آيا صوفيا طرابزون'], ['2027-06-02', '09:30', 'بحيرة أوزنجول']]);
+  expect(t.plan.hotel).toBe(99);              // ما ينمسح اللي كتبته
+  expect(t.plan.food).toBe(20);               // 10 × يومين × شخص
+  expect(t.check.filter((x) => x.t === 'حذاء مشي').length).toBe(1);   // بدون تكرار
+  expect(t.check.map((x) => x.t)).toContain('جاكيت مطر');
+  await expect(page.locator('#tpAIOpen')).toBeVisible();
+});

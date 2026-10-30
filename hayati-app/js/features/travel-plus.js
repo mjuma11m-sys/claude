@@ -129,7 +129,9 @@
 
   function section(t) {
     const c = cityOf(t);
-    let out = A.secHead('📍 الوجهة', '') + '<div class="card"><div class="field" style="margin:0"><label for="tpCity">المدينة</label><select id="tpCity" style="width:100%"><option value="">غيرها / ما حددت</option>' +
+    let out = '<button type="button" class="btn primary block" id="tpAI" style="margin:14px 0 4px">✨ خطط رحلتي بالذكاء</button>' +
+      (t.aiPlan ? '<button type="button" class="btn ghost block" id="tpAIOpen" style="margin:6px 0 0">📒 ملف رحلتك</button>' : '') +
+      A.secHead('📍 الوجهة', '') + '<div class="card"><div class="field" style="margin:0"><label for="tpCity">المدينة</label><select id="tpCity" style="width:100%"><option value="">غيرها / ما حددت</option>' +
       CITIES.map((x) => '<option value="' + x.key + '"' + (c && c.key === x.key ? ' selected' : '') + '>' + x.name + '</option>').join('') + '</select></div>';
     if (c) {
       const now = localNow(c), w = weatherOf(c, t.go), pr = prayersThere(c, t.go ? new Date(t.go + 'T12:00:00') : new Date());
@@ -156,7 +158,7 @@
     out += A.secHead('🗓️ خطة الأيام', ds.length ? '<span class="count">' + (ds.length - empty) + '/' + ds.length + '</span>' : '') + (ds.length ? ds.map((d, i) => {
       const items = ag.filter((x) => x.date === d);
       if (!items.length) return '';
-      return '<div class="group-title">' + dayHtml(d, i) + '</div>' + (items.length ? '<div class="card flush"><ul class="list">' + items.map((x) => '<li class="row" style="cursor:default"><div class="ico num" style="font-size:12px">' + h(x.time || '—') + '</div><div class="main"><div class="title"><span class="t" data-noi18n>' + h(x.title) + '</span></div>' + (x.place ? '<div class="sub" data-noi18n>' + h(x.place) + '</div>' : '') + '</div><button type="button" class="icon-x" data-ag="' + h(x.id) + '" aria-label="احذف">✕</button></li>').join('') + '</ul></div>' : '');
+      return '<div class="group-title">' + dayHtml(d, i) + '</div>' + (items.length ? '<div class="card flush"><ul class="list">' + items.map((x) => '<li class="row" style="cursor:default"><div class="ico num" style="font-size:12px">' + h(x.time || '—') + '</div><div class="main"><div class="title"><span class="t" data-noi18n>' + h(x.title) + '</span></div>' + (x.place ? '<div class="sub" data-noi18n>' + h(x.place) + '</div>' : '') + '</div>' + (x.map ? '<button type="button" class="icon-x" data-tpmap="' + h(x.map) + '" aria-label="الخريطة">📍</button>' : '') + '<button type="button" class="icon-x" data-ag="' + h(x.id) + '" aria-label="احذف">✕</button></li>').join('') + '</ul></div>' : '');
     }).join('') + (empty === ds.length ? '<div class="card"><p class="small muted" style="margin:0">رتّب رحلتك يوم بيوم: الأماكن والأوقات، وننبهك قبل كل شي.</p></div>' : '') + '<button type="button" class="btn ghost block" id="tpAg" style="margin-top:10px">＋ أضف للخطة</button><p class="small muted" style="margin:6px 4px 0">ننبهك قبل كل شي بنص ساعة.</p>'
       : '<div class="card"><p class="small muted" style="margin:0">حدد تاريخ السفر والرجعة عشان تخطط يوم بيوم.</p></div>');
     return out;
@@ -169,6 +171,11 @@
   }
 
   function mount(root, t, persist, rerender) {
+    const ai = root.querySelector('#tpAI');
+    if (ai) ai.onclick = () => { if (E.TravelAI) E.TravelAI.form(t, persist, rerender); };
+    const aio = root.querySelector('#tpAIOpen');
+    if (aio) aio.onclick = () => { if (E.TravelAI) E.TravelAI.result(t, persist, rerender); };
+    root.querySelectorAll('[data-tpmap]').forEach((b) => { b.onclick = () => { const N = window.HayatiNative; if (N && N.openLink) N.openLink(b.dataset.tpmap); else window.open(b.dataset.tpmap, '_blank', 'noopener'); }; });
     const city = root.querySelector('#tpCity');
     if (city) city.onchange = () => {
       t.city = city.value || null;

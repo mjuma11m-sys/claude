@@ -10,13 +10,14 @@
 //   AI_MODEL_ASK       optional, default claude-sonnet-5-5 for «اسأل حياتي» (DW-046: short answers from ready numbers, about half the cost)
 //   AI_DAILY_LIMIT     optional, default 10 calls per user per day (abuse guard)
 //   AI_MONTHLY         optional JSON, free uses per user per month by feature group (DW-068),
-//                      default {"study":3,"slides":3,"schedule":2,"ask":5}
+//                      default {"study":3,"slides":3,"schedule":2,"ask":5,"trip":2}
+// DW-096 — «خطط رحلتي»: city + days + style → a day-by-day plan with places, estimated fees, budget and packing (nothing is stored here).
 import Anthropic from "npm:@anthropic-ai/sdk";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 // DW-068: which free monthly quota each mode spends
-const GROUP: Record<string, string> = { summary: "study", quiz: "study", pdf: "study", photo: "study", slides: "slides", schedule: "schedule", ask: "ask" };
-const MONTHLY_DEFAULT: Record<string, number> = { study: 3, slides: 3, schedule: 2, ask: 5 };
+const GROUP: Record<string, string> = { summary: "study", quiz: "study", pdf: "study", photo: "study", slides: "slides", schedule: "schedule", ask: "ask", trip: "trip" };
+const MONTHLY_DEFAULT: Record<string, number> = { study: 3, slides: 3, schedule: 2, ask: 5, trip: 2 };
 function monthly(): Record<string, number> {
   try { return { ...MONTHLY_DEFAULT, ...JSON.parse(Deno.env.get("AI_MONTHLY") ?? "{}") }; } catch { return MONTHLY_DEFAULT; }
 }
@@ -82,6 +83,45 @@ const SCHEMAS = {
     required: ["courses"],
     additionalProperties: false,
   },
+  trip: {
+    type: "object",
+    properties: {
+      currency: { type: "string" },
+      days: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            title: { type: "string" },
+            places: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string" }, name_en: { type: "string" }, tag: { type: "string" }, time: { type: "string" },
+                  fee_local: { type: "number" }, fee_bhd: { type: "number" }, activities: { type: "string" },
+                },
+                required: ["name", "name_en", "tag", "time", "fee_local", "fee_bhd", "activities"],
+                additionalProperties: false,
+              },
+            },
+          },
+          required: ["title", "places"],
+          additionalProperties: false,
+        },
+      },
+      budget: {
+        type: "object",
+        properties: { hotel_night: { type: "number" }, food_day: { type: "number" }, transport_day: { type: "number" }, activities_total: { type: "number" } },
+        required: ["hotel_night", "food_day", "transport_day", "activities_total"],
+        additionalProperties: false,
+      },
+      packing: { type: "array", items: { type: "string" } },
+      tips: { type: "array", items: { type: "string" } },
+    },
+    required: ["currency", "days", "budget", "packing", "tips"],
+    additionalProperties: false,
+  },
   quiz: {
     type: "object",
     properties: {
@@ -140,6 +180,14 @@ const TASKS = {
     "(each answer shows the formula, the numbers substituted and the result, checked carefully). " +
     "Write in the language the material is mostly written in. Use only what is in the text; do not add outside facts. " +
     "If the text is not study material, return empty notes and summary and no cards." + MATH,
+  trip:
+    "Plan a trip for a traveller from Bahrain. Write everything in Gulf Arabic, except name_en (the place's common English or local Latin name, for map search). " +
+    "Return one day object per trip day, in order: title = a short theme for the day; places = 3–4 real, well-known places in or near the city that fit the trip style, ordered so the day flows by area. " +
+    "For each place: name = Arabic name, tag = one of «نقطة الانطلاق», «معلم مشهور», «طبيعة», «مغامرة», «تسوق», «مطعم», «ثقافة», «زيارة دينية»; time = a sensible start time HH:MM (24-hour); " +
+    "fee_local = typical entry fee per adult in the local currency (0 if free), fee_bhd = the same in Bahraini dinars (approximate); activities = one or two sentences of what to do there. " +
+    "currency = the ISO code of the local currency. budget = typical mid-range costs per person in Bahraini dinars: hotel_night, food_day, transport_day, activities_total. " +
+    "packing = 5–8 items specific to this destination, season and style (not generic basics like passport or charger); tips = 3 short practical tips (transport, money, customs, safety). " +
+    "Prefer halal-friendly food suggestions. Use only real places you are confident exist; never invent a place. Prices are estimates and may have changed.",
   schedule:
     "This is a student's weekly timetable, most likely from Bahrain, in any format: a university portal screenshot or PDF (UOB, Polytechnic, AUBH, RUW, AMA and others), " +
     "a public or private school grid (primary, intermediate, secondary; Arabic or English), an Excel/Word table, a photo of a printed or handwritten sheet, or copied text. " +
@@ -187,9 +235,9 @@ Deno.serve(async (req) => {
   const { data: { user } } = await db.auth.getUser();
   if (!user) return json({ error: "signin" }, 401);
 
-  let body: { kind?: string; mode?: string; title?: string; notes?: string; image?: string; media?: string; data?: string; messages?: { role: string; content: string }[] };
+  let body: { city?: string; days?: number; style?: string; month?: string; people?: number; kind?: string; mode?: string; title?: string; notes?: string; image?: string; media?: string; data?: string; messages?: { role: string; content: string }[] };
   try { body = await req.json(); } catch { return json({ error: "bad" }, 400); }
-  const mode = body.mode === "quiz" ? "quiz" : body.mode === "summary" ? "summary" : body.mode === "photo" ? "photo" : body.mode === "pdf" ? "pdf" : body.mode === "ask" ? "ask" : body.mode === "schedule" ? "schedule" : body.mode === "slides" ? "slides" : null;
+  const mode = body.mode === "quiz" ? "quiz" : body.mode === "summary" ? "summary" : body.mode === "photo" ? "photo" : body.mode === "pdf" ? "pdf" : body.mode === "ask" ? "ask" : body.mode === "schedule" ? "schedule" : body.mode === "slides" ? "slides" : body.mode === "trip" ? "trip" : null;
   // ask: last 8 turns, alternating, ending with the user's question
   const turns = (Array.isArray(body.messages) ? body.messages : []).slice(-8)
     .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content.trim())
@@ -213,6 +261,9 @@ Deno.serve(async (req) => {
     if (!image && notes.length < 20) return json({ error: "bad" }, 400);
   } else if (mode === "slides") {
     if (notes.length < 50) return json({ error: "bad" }, 400);
+  } else if (mode === "trip") {
+    const d = Number(body.days);
+    if (String(body.city ?? "").trim().length < 2 || !(d >= 1 && d <= 14)) return json({ error: "bad" }, 400);
   } else if (mode === "ask") {
     if (!turns.length || turns[turns.length - 1].role !== "user" || !data) return json({ error: "bad" }, 400);
   } else if (notes.length < 200) return json({ error: "bad" }, 400);
@@ -255,7 +306,7 @@ Deno.serve(async (req) => {
       model,
       max_tokens: 8000,   // Edge Function wall-clock limit: keep answers short enough to finish in time
       ...(opus5 ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" } : {}),
-      output_config: { format: { type: "json_schema", schema: SCHEMAS[mode === "slides" ? "pdf" : mode] } },
+      output_config: { format: { type: "json_schema", schema: (SCHEMAS as any)[mode === "slides" ? "pdf" : mode] } },
       messages: [{
         role: "user",
         content: mode === "schedule"
@@ -264,6 +315,9 @@ Deno.serve(async (req) => {
             : image
             ? [{ type: "image", source: { type: "base64", media_type: media, data: image } }, { type: "text", text: TASKS.schedule + KIND_HINT(body.kind) }]
             : TASKS.schedule + KIND_HINT(body.kind) + "\n\n<timetable>\n" + notes + "\n</timetable>")
+          : mode === "trip"
+          ? TASKS.trip + "\n\n<trip>\ncity: " + String(body.city).slice(0, 60) + "\ndays: " + Math.round(Number(body.days)) + "\nstyle: " + String(body.style ?? "").slice(0, 40) +
+            "\nmonth: " + String(body.month ?? "").slice(0, 20) + "\npeople: " + Math.max(1, Math.min(20, Math.round(Number(body.people) || 1))) + "\n</trip>"
           : mode === "slides"
           ? TASKS.slides + (title ? "\n\n<title>" + title + "</title>" : "") + "\n<slides>\n" + notes + "\n</slides>"
           : mode === "pdf"

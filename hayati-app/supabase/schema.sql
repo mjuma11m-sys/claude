@@ -243,7 +243,7 @@ grant execute on function public.bump_ai_usage(int) to authenticated;
 create table if not exists public.ai_quota (
   user_id uuid not null references auth.users(id) on delete cascade,
   month date not null default date_trunc('month', current_date)::date,
-  feature text not null check (feature in ('study', 'slides', 'schedule', 'ask')),
+  feature text not null check (feature in ('study', 'slides', 'schedule', 'ask', 'trip')),
   calls int not null default 0,
   primary key (user_id, month, feature)
 );
@@ -398,3 +398,7 @@ revoke all on function public.my_sessions() from public, anon;
 revoke all on function public.revoke_session(uuid) from public, anon;
 grant execute on function public.my_sessions() to authenticated;
 grant execute on function public.revoke_session(uuid) to authenticated;
+
+-- DW-096: «خطط رحلتي» بالذكاء له حصته الشهرية
+alter table public.ai_quota drop constraint if exists ai_quota_feature_check;
+alter table public.ai_quota add constraint ai_quota_feature_check check (feature in ('study', 'slides', 'schedule', 'ask', 'trip'));
