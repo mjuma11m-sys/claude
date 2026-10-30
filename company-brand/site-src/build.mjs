@@ -325,7 +325,7 @@ P.privacy = (L) => ({
   title: L === 0 ? 'سياسة الخصوصية · ودقة' : 'Privacy policy · WADQA',
   desc: L === 0 ? 'سياسة خصوصية موقع ودقة.' : 'Privacy policy for the WADQA website.',
   body: `<section><div class="wrap prose">
-  <p class="note">${L === 0 ? 'مسودة للمراجعة — مو استشارة قانونية ملزمة. آخر تحديث: 21 أكتوبر 2026' : 'Draft for review, not binding legal advice. Last updated: 21 October 2026'}</p>
+  <p class="note">${L === 0 ? 'مسودة للمراجعة — مو استشارة قانونية ملزمة. آخر تحديث: 30 أكتوبر 2026' : 'Draft for review, not binding legal advice. Last updated: 30 October 2026'}</p>
   <h1 class="sm">${L === 0 ? 'سياسة الخصوصية' : 'Privacy policy'}</h1>
   <p>${L === 0 ? `هذي السياسة لموقع <span dir="ltr">${HOST}</span> بس. كل تطبيق من تطبيقاتنا (مثل «حياتي») له سياسة خاصة داخل التطبيق.` : 'This policy covers the ${HOST} website only. Each of our apps (such as Hayati) has its own policy inside the app.'}</p>
   <h3>${L === 0 ? 'لما تتصفح' : 'When you browse'}</h3>
@@ -333,6 +333,7 @@ P.privacy = (L) => ({
   <h3>${L === 0 ? 'لما تعبّي نموذج' : 'When you fill in a form'}</h3>
   <ul>
     <li>${L === 0 ? '<b>وش نحفظ:</b> إيميلك، واسمك ورسالتك لو كتبتها، والتطبيق اللي سجّلت عليه، ولغة الصفحة، ووقت الإرسال.' : '<b>What we store:</b> your email, your name and message if you wrote them, which app you signed up for, the page language, and the time.'}</li>
+    <li>${L === 0 ? '<b>منع الإزعاج:</b> نحسب بصمة مشفّرة من عنوان IP (sha256 مع سر يتغير كل يوم، ما ترجع للعنوان) عشان نحد الرسائل لـ 5 بالساعة من نفس الجهاز. ما نحفظ العنوان نفسه، والبصمة تنحذف بعد يوم.' : '<b>Spam protection:</b> we compute a one-way fingerprint of your IP address (sha256 with a secret that changes daily; it cannot be turned back into the address) to limit messages to 5 per hour from one device. We do not store the address itself, and the fingerprint is deleted after a day.'}</li>
     <li>${L === 0 ? '<b>ليش:</b> عشان نرد عليك، أو نراسلك مرة وحدة لما التطبيق يجهز. ما نضيفك لأي قائمة بريدية ثانية.' : '<b>Why:</b> to reply to you, or to email you once when the app is ready. We do not add you to any other mailing list.'}</li>
     <li>${L === 0 ? '<b>وين:</b> قاعدة بيانات Supabase بمنطقة فرانكفورت (ألمانيا)، يعني خارج البحرين. نطلب موافقتك على هذا قبل الإرسال.' : '<b>Where:</b> a Supabase database in the Frankfurt region (Germany), outside Bahrain. We ask for your consent to this before you send.'}</li>
     <li>${L === 0 ? '<b>مين يشوفها:</b> مؤسس ودقة بس. ما ننشرها ولا نبيعها.' : '<b>Who sees it:</b> only WADQA’s founder. We do not publish or sell it.'}</li>

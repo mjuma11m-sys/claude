@@ -125,7 +125,7 @@ language plpgsql volatile security definer set search_path = '' as $$
 begin
   if p_path is null or p_path !~ '^/[A-Za-z0-9/._-]{0,59}$' or p_lang not in ('ar', 'en') then return; end if;
   insert into wadqa.page_views as v (path, lang) values (p_path, p_lang)
-  on conflict (day, path, lang) do update set n = v.n + 1 where v.n < 100000;
+  on conflict (day, path, lang) do update set n = v.n + 1 where v.n < 2000;  -- security-audit 5b
 end $$;
 revoke all on function public.wadqa_hit(text, text) from public;
 grant execute on function public.wadqa_hit(text, text) to anon, authenticated;
