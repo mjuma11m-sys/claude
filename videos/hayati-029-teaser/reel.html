@@ -1,0 +1,75 @@
+<!doctype html>
+<html dir="rtl" lang="ar"><head><meta charset="utf-8">
+<!-- تشويق تحديث 0.29 (ما نزل للحين: «قريباً 👀» بدون تاريخ) · 14 ث · 1080×1920 · setT(t) -->
+<style>
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Bold.ttf);font-weight:700}
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Regular.ttf);font-weight:400}
+:root{--sea:#0E3B43;--deep:#0A1A1E;--pearl:#E8DCC4;--coral:#FF6B4A;--mint:#2F9E7A}
+*{box-sizing:border-box}
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:var(--deep);font-family:P,'Helvetica Neue',Arial,sans-serif;color:var(--pearl)}
+#stage{position:absolute;inset:0;overflow:hidden;background:radial-gradient(120% 75% at 50% 42%,#145a62 0%,var(--sea) 42%,var(--deep) 100%)}
+.c{color:var(--coral)}
+.abs{position:absolute;left:0;right:0;text-align:center;padding:0 70px}
+.big{font-weight:700;line-height:1.15}
+#plane{position:absolute;top:430px;left:0;font-size:150px}
+#l1{top:700px;font-size:128px;white-space:nowrap}
+#l1b{top:930px;font-size:62px}
+#l3{top:330px;font-size:64px}
+#phoneWrap{position:absolute;left:50%;top:480px;width:540px;height:1168px;margin-left:-270px}
+#phone{position:absolute;inset:0;border-radius:84px;background:#0b1416;padding:17px;box-shadow:0 70px 120px -40px rgba(0,0,0,.75),inset 0 0 0 3px #2a4a50}
+#screen{position:relative;width:100%;height:100%;border-radius:68px;overflow:hidden;background:#F7F4EE}
+#screen img{position:absolute;left:0;top:0;width:100%}
+#feat{top:1700px;font-size:54px;font-weight:700;line-height:1.3}
+#l5{top:470px;font-size:96px}
+#l5n{top:640px;font-size:210px;font-weight:700;color:var(--coral);direction:ltr}
+#soon{top:950px}
+#soon span{display:inline-block;padding:26px 70px;border-radius:999px;background:var(--coral);color:#fff;font-weight:700;font-size:80px}
+#l5b{top:1200px;font-size:50px;line-height:1.7;opacity:.95}
+#demo{bottom:34px;font-size:30px;opacity:.7}
+</style></head><body><div id="stage">
+  <div id="plane">✈️</div>
+  <div class="abs big" id="l1">وين <span class="c">بتسافر؟</span></div>
+  <div class="abs" id="l1b">شي جاي بـ«حياتي» 👀</div>
+  <div class="abs big" id="l3">قريباً بـ<span class="c">حياتي</span> 👀</div>
+  <div id="phoneWrap"><div id="phone"><div id="screen"><img id="sA" src="shots/ai.png"></div></div></div>
+  <div class="abs" id="feat"></div>
+  <div class="abs big" id="l5">تحديث</div>
+  <div class="abs" id="l5n">0.29</div>
+  <div class="abs" id="soon"><span>قريباً 👀</span></div>
+  <div class="abs" id="l5b">مخطط رحلات · شاركها مع القروب<br>وين نروح الويكند؟ · يقرا أي جدول · أمان أكثر</div>
+  <div class="abs" id="demo">* لقطات ببيانات تجريبية</div>
+</div>
+<script>
+const $ = (i) => document.getElementById(i);
+const cl = (x) => Math.max(0, Math.min(1, x));
+const p = (t, a, b) => cl((t - a) / (b - a));
+const eo = (x) => 1 - Math.pow(1 - x, 3);
+const eb = (x) => { const c = 1.7; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const win = (t, a, b, f = 0.3) => cl(Math.min(p(t, a, a + f), 1 - p(t, b - f, b)));
+const pop = (el, t, a, b) => { const v = eb(p(t, a, a + 0.45)); el.style.opacity = cl(v) * win(t, a, b); el.style.transform = `translateY(${(1 - v) * 40}px)`; };
+const FEAT = [['ai', '✨ يخطط رحلتك يوم بيوم'], ['dest', '🧳 الوقت والصلاة والقبلة هناك'], ['share', '💬 شاركها مع القروب<br>مع رابط كل مكان 📍'], ['security', '🛡️ وأمان أكثر']];
+const A = 2.6, STEP = 2, END = A + STEP * FEAT.length;   // 2.6 → 10.6
+function setT(t) {
+  // 0–2.6: الهوك (ظاهر من الفريم 0)
+  const pl = eo(p(t, 0, 1.6)); $('plane').style.transform = `translate(${-200 + pl * 1300}px,${(1 - pl) * 120}px) rotate(-12deg)`; $('plane').style.opacity = 1 - p(t, 1.4, 1.7);
+  $('l1').style.opacity = 1 - p(t, 2.3, 2.6); $('l1').style.transform = `scale(${1.06 - 0.06 * eo(p(t, 0, 0.4))})`;
+  pop($('l1b'), t, 0.6, 2.6);
+  // 2.6–10.6: الجوال بلقطات حقيقية، كل لقطة تبدأ مغبّشة وتنكشف (تشويق)
+  pop($('l3'), t, A, END);
+  const ph = eo(p(t, A, A + 0.5)), out = eo(p(t, END - 0.4, END));
+  $('phoneWrap').style.opacity = ph * (1 - out); $('phoneWrap').style.transform = `translateY(${(1 - ph) * 700 + out * 700}px)`;
+  const k = Math.max(0, Math.min(FEAT.length - 1, Math.floor((t - A) / STEP))), lt = (t - A) - k * STEP;
+  const src = 'shots/' + FEAT[k][0] + '.png'; if (!$('sA').src.endsWith(src)) $('sA').src = src;
+  $('sA').style.filter = `blur(${(1 - eo(p(lt, 0.1, 0.7))) * 18}px)`;
+  $('sA').style.top = `${-Math.max(0, lt - 0.7) * 30}px`;
+  $('feat').innerHTML = FEAT[k][1]; $('feat').style.opacity = cl(p(lt, 0.3, 0.6)) * (t < A ? 0 : 1) * (1 - out);
+  // 10.6–14: الختام
+  pop($('l5'), t, END, 15); 
+  const n = eb(p(t, END + 0.2, END + 0.7)); $('l5n').style.opacity = cl(n); $('l5n').style.transform = `scale(${0.6 + 0.4 * n})`;
+  const s = eb(p(t, END + 0.9, END + 1.3)); $('soon').style.opacity = cl(s); $('soon').style.transform = `scale(${0.85 + 0.15 * s})`;
+  pop($('l5b'), t, END + 1.4, 15);
+}
+window.setT = setT;
+const pre = FEAT.map(([s]) => { const i = new Image(); i.src = 'shots/' + s + '.png'; return i; });
+window.READY = Promise.all([document.fonts.ready, ...pre.concat([...document.images]).map((i) => new Promise((r) => (i.complete && i.naturalWidth) ? r() : (i.onload = i.onerror = r)))]).then(() => setT(0));
+</script></body></html>
