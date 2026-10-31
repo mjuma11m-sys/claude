@@ -377,10 +377,13 @@
   }
 
   // ================= اختبار تجريبي (من أسئلتك) =================
-  function quiz(ids) {
-    const pool = lectures().filter((l) => !ids || ids.includes(l.id)).flatMap((l) => (l.cards || []).map((c) => ({ c, l })));
+  // DW-113: opts.only = أرقام بطاقات بعينها (مراجعة اليوم، أغلاطك، مادة الاختبار) بنفس ترتيبها، و opts.title عنوان النافذة
+  function quiz(ids, opts) {
+    opts = opts || {};
+    let pool = lectures().filter((l) => !ids || ids.includes(l.id)).flatMap((l) => (l.cards || []).map((c) => ({ c, l })));
+    if (opts.only) { const ord = new Map(opts.only.map((id, i) => [id, i])); pool = pool.filter((x) => ord.has(x.c.id)).sort((a, b) => ord.get(a.c.id) - ord.get(b.c.id)); }
     if (!pool.length) { A.toast('أضف أسئلة بملف المحاضرة أول'); return; }
-    const qs = pool.sort(() => Math.random() - 0.5).slice(0, 10);
+    const qs = (opts.only ? pool : pool.sort(() => Math.random() - 0.5)).slice(0, opts.max || 10);
     let i = 0, right = 0, shown = false;
     const draw = () => i >= qs.length
       ? '<div class="hero" style="padding:18px;text-align:center"><span class="eyebrow">' + I('target') + 'النتيجة</span><div class="amount-big num">' + Math.round((right / qs.length) * 100) + '%</div><p class="small">' + right + ' من ' + qs.length + (right === qs.length ? ' · فاهمها 💪' : ' · راجع اللي ما عرفته') + '</p></div>'
@@ -389,14 +392,14 @@
         (shown ? '<div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="btn primary" style="flex:1" data-qz="yes">عرفتها ✓</button><button type="button" class="btn ghost" style="flex:1" data-qz="no">ما عرفتها</button></div>'
           : '<button type="button" class="btn block" style="margin-top:12px" data-qz="show">شوف الجواب</button>');
     A.openSheet({
-      title: 'اختبار تجريبي', cancelLabel: 'تم',
+      title: opts.title || 'اختبار تجريبي', cancelLabel: 'تم',
       body: '<div id="qzRoot">' + draw() + '</div>',
       mount(root) {
         const box = root.querySelector('#qzRoot');
         box.onclick = (e) => {
           const b = e.target.closest('[data-qz]'); if (!b) return;
           if (b.dataset.qz === 'show') shown = true;
-          else { if (b.dataset.qz === 'yes') right++; i++; shown = false; }
+          else { if (b.dataset.qz === 'yes') right++; if (E.Cards && qs[i].c.id) E.Cards.mark(qs[i].c.id, b.dataset.qz === 'yes'); i++; shown = false; }
           box.innerHTML = draw();
           if (i >= qs.length) {   // نحفظ آخر نتيجة لكل محاضرة دخلت بالاختبار
             const score = Math.round((right / qs.length) * 100);

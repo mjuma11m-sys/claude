@@ -4062,3 +4062,28 @@ test('food log (DW-112): log from the list, from a coffee payment suggestion and
   // الحفظ على الجهاز بس، ويدخل بالنسخة الاحتياطية
   expect(await store(page, () => !!localStorage.getItem('hayati-food'))).toBe(true);
 });
+
+// DW-113: مراجعة ذكية — كل جواب ينحسب (تكرار متباعد)، «راجع أغلاطك»، وقبل اختبار المادة تطلع بالرئيسية
+test('smart review (DW-113): answers move cards between boxes, mistakes list, exam-week card and study streak', async ({ page }) => {
+  await open(page);
+  await store(page, () => {
+    App.S.setSettings({ onboarded: true });
+    App.S.upsert('courses', { id: 'c1', name: 'Accounting', type: 'lecture', days: [1], start_time: '10:00', end_time: '11:00' });
+    App.S.upsert('lectures', { id: 'l1', course_id: 'c1', title: 'Lec 1', date: '2026-10-20', notes: '', summary: '', audio: [], cards: [
+      { id: 'q1', q: 'Asset?', a: 'Resource' }, { id: 'q2', q: 'Cash in?', a: 'Debit' }, { id: 'q3', q: 'Equation?', a: 'A = L + E' }] });
+    App.S.upsert('tasks', { id: 'ex', kind: 'exam', title: 'Midterm', course_id: 'c1', due_at: new Date(Date.now() + 2 * 864e5).toISOString(), done: false });
+    App.render();
+  });
+  await expect(page.locator('section[data-tk="exam-review"]')).toContainText('Accounting');
+  await page.click('[data-action="rv-exam"]');
+  for (const ans of ['yes', 'no', 'yes']) { await page.click('[data-qz="show"]'); await page.click('[data-qz="' + ans + '"]'); }
+  const r = await store(page, () => ({ wrong: Extras.Cards.mistakes(), due: Extras.Cards.due(), s: Extras.Cards.streak(), q1: Extras.Cards.load().cards.q1 }));
+  expect(r.wrong).toEqual(['q2']);
+  expect(r.due).toEqual([]);                 // كلها موعدها بكرة
+  expect(r.s).toBe(1);
+  expect(r.q1.box).toBe(1);
+  // بعد يومين: كلها موعدها، والغلطانة تنحل بعد مرتين صح
+  const later = await store(page, () => { const d = new Date(Date.now() + 2 * 864e5); Extras.Cards.mark('q2', true, d); Extras.Cards.mark('q2', true, d); return { due: Extras.Cards.due(d), wrong: Extras.Cards.mistakes() }; });
+  expect(later.due).toEqual(['q1', 'q3']);
+  expect(later.wrong).toEqual([]);
+});
