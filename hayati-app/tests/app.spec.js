@@ -2013,10 +2013,10 @@ const seedOld = (page) => store(page, () => { App.S.setSettings({ onboarded: tru
 test('«جديد بحياتي»: an existing user sees what is new once after the update, and «تمام» keeps it away', async ({ page }) => {
   await open(page);
   await seedOld(page);
-  await store(page, () => localStorage.setItem('hayati-seen-version', 'v28'));   // كان على النسخة اللي قبل
+  await store(page, () => localStorage.setItem('hayati-seen-version', 'v29'));   // كان على النسخة اللي قبل
   await open(page);
   await expect(page.locator('#sheetTitle')).toHaveText('جديد بحياتي ✨', { timeout: 5000 });
-  await expect(page.locator('#sheetBody .news-item')).toHaveCount(7);
+  await expect(page.locator('#sheetBody .news-item')).toHaveCount(8);
   await page.click('#sheetCancel');
   expect(await store(page, () => localStorage.getItem('hayati-seen-version'))).toBe(await store(page, () => App.APP_VERSION));
   await open(page);

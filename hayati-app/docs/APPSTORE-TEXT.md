@@ -102,6 +102,20 @@ Background audio (UIBackgroundModes: audio): used only while the user records th
 - **Promotional Text:** `Your expenses, studies, prayers and tasks in one place. Paste a bank SMS and review it, split a bill with friends, and see where your salary went.`
 - **Description:** نفس النص الإنجليزي في `videos/hayati-reels-series/captions.txt`؟ لا: استخدم النص في رسالة 0.28 بالشات (EXPENSES / ZAKAT AND KHUMS / STUDY AND SCHEDULE / WORSHIP / KITCHEN / ON IPHONE / YOUR PRIVACY) + سطر الكيتشن: «calories per serving (estimate)» وسطر Health: «daily calorie and protein needs, kept on your device».
 - **What's New (0.28):** `Recipe calories: every kitchen recipe shows estimated calories per serving. Calculate your needs: daily calories and protein for your goal, kept on your device. Arabic and English are now listed as app languages.`
+- **What's New (0.30):** `Send feedback from inside the app. Medicines: dose reminders and a refill alert. Kids: weekly plan, exams, school fees and pocket money. Log your meals: calories and protein against your needs (an estimate). Smart lecture review with your mistakes and a nudge before exams. More for travel: travel mode, schedule clashes, a savings jar, an emergency card and a trip summary. Ready for Ramadan: imsak and iftar, khatma, budget and suhoor reminders. Text size and a simple screen. Fixed the zoom that got stuck on iPhone.`
+
+## ما الجديد 0.30 (عربي)
+```
+أرسل ملاحظتك من داخل التطبيق.
+أدويتك: تذكير الجرعات وتنبيه قبل لا يخلص الدواء.
+عيالك: جدول الأسبوع والاختبارات والرسوم والمصروف.
+سجّل أكلتك: سعرات وبروتين يومك (تقدير).
+مراجعة ذكية للمحاضرات وأغلاطك، وتنبيه قبل الاختبار.
+السفر أكثر: وضع السفر، تعارض المواعيد، حصالة، بطاقة طوارئ، وملخص الرحلة.
+جاهز لرمضان: الإمساك والإفطار والختمة والميزانية وتذكير السحور.
+حجم الخط والشاشة البسيطة، وإصلاح الزوم بالآيفون.
+```
+
 - **What's New (0.29):** `AI trip planner: a day-by-day plan, estimated budget and packing list for your city. Everything for travel in one place: local time, prayer times, qibla, plug type, passport validity and booking reminders. Share the trip with your group as an image or a message with map links for every place. Weekend ideas that fit your budget. Reads any timetable: school, university or work. Your admin in one place: document expiry reminders, house bills, your jam'iya turn, car maintenance, an emergency fund and Eid money. Security checkup in settings, and the screen hides when you leave the app.`
 
 ## ما الجديد 0.29 (عربي)
