@@ -19607,6 +19607,7 @@ window.HAYATI_CONFIG = {
 // DW-110: «عروض الشركاء» — شركات موثّقة (سجل وترخيص) تعرض خدمتها بالمكان اللي يناسبها: الرحلة والعمرة، الويكند،
 // صيانة السيارة، عيالك، ورمضان. مكتوب عليها «إعلان»، عرض واحد بالشاشة، ونفس العرض 3 مرات بالأسبوع بالكثير.
 // السيرفر يرسل كل العروض الشغالة، و**الجهاز** يختار المناسب (وجهة رحلتك، القسم): ولا معلومة عنك تطلع للسيرفر ولا للشركة.
+// الحملات الدينية للمذهبين والسياحية: الاختيار بالوجهة بس، وما نستخدم المذهب أو طريقة الصلاة للإعلانات أبداً.
 // التواصل يبدأ منك (واتساب أو رابط). تقدر تطفيها كلها من الإعدادات، أو «ما يهمني» لعرض واحد.
 (function () {
   'use strict';
@@ -19644,6 +19645,8 @@ window.HAYATI_CONFIG = {
     now = now || new Date();
     const p = prefs(), wk = week(now), today = ymd(now);
     ctx = ctx || {};
+    // بالعدل: نفس الباقة والأولوية ← اللي انعرض أقل هالأسبوع يطلع أول (حملات نفس الوجهة تطلع بالدور)
+    const shown = (o) => ((p.seen[o.id] || {}).w === wk ? (p.seen[o.id] || {}).n : 0);
     const near = (o) => {
       if (!ctx.date) return !o.ends_on || o.ends_on >= today;
       const d = new Date(ctx.date + 'T00:00:00').getTime(), lo = d - 30 * 864e5, hi = d + 30 * 864e5;
@@ -19652,7 +19655,7 @@ window.HAYATI_CONFIG = {
     };
     return cached().list.filter((o) => o.section === section && (!o.city || !ctx.city || o.city === ctx.city) && (!o.city || ctx.city || section !== 'travel') &&
       near(o) && !p.hidden.includes(o.id) && !((p.seen[o.id] || {}).w === wk && (p.seen[o.id] || {}).n >= WEEK_MAX))
-      .sort((a, b) => (b.plan === 'featured' || b.plan === 'sponsor') - (a.plan === 'featured' || a.plan === 'sponsor') || (b.priority || 0) - (a.priority || 0))[0] || null;
+      .sort((a, b) => (b.plan === 'featured' || b.plan === 'sponsor') - (a.plan === 'featured' || a.plan === 'sponsor') || (b.priority || 0) - (a.priority || 0) || shown(a) - shown(b))[0] || null;
   }
   function seen(o, now) {
     now = now || new Date();

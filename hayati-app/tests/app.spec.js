@@ -3987,3 +3987,20 @@ test('anonymous usage count and partner offers (DW-109, DW-110): one ping a day,
   expect(await store(page, () => Extras.Offers.inject('travel', { city: 'karbala' }))).toBeNull();
   expect(await store(page, () => window.__ev)).toContain('view');
 });
+
+// DW-110: حملات نفس الوجهة تطلع بالدور (بالعدل)، والاختيار ما يعتمد على طريقة الصلاة أو المذهب
+test('partner offers take turns (DW-110): two campaigns for the same destination alternate, prayer method does not change the pick', async ({ page }) => {
+  await open(page);
+  const picks = await store(page, async () => {
+    App.S.status.configured = true; App.S.offerEvent = async () => {};
+    App.S.fetchOffers = async () => [
+      { id: 'a', partner: 'حملة أ', section: 'umrah', city: 'makkah', title: 'عمرة 7 أيام', priority: 0, plan: 'pilot' },
+      { id: 'b', partner: 'حملة ب', section: 'umrah', city: 'makkah', title: 'عمرة 5 أيام', priority: 0, plan: 'pilot' }];
+    localStorage.removeItem(Extras.Offers.PREFS);
+    await Extras.Offers.refresh(true);
+    const out = [];
+    for (const m of ['jafari', 'mwl', 'jafari', 'mwl']) { App.S.setSettings({ prayer_method: m }); const o = Extras.Offers.inject('umrah', { city: 'makkah' }, document.createElement('div')); out.push(o && o.id); }
+    return out;
+  });
+  expect(picks).toEqual(['a', 'b', 'a', 'b']);
+});
