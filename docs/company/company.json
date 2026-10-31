@@ -1,7 +1,7 @@
 {
   "name": "شركة أبو جعفر",
   "founded": "2026-10-13",
-  "next": 109,
+  "next": 111,
   "tickets": {
     "DW-001": {
       "title": "حياتي: إطلاق اختبار مغلق على Google Play",
@@ -863,7 +863,23 @@
       "title": "دراسة جدوى: شركة ودقة + قسم شركاء حياتي (هل يسوى؟)",
       "owner": "CEO",
       "priority": "P1",
-      "status": "review",
+      "status": "done",
+      "opened": "2026-10-31",
+      "updated": "2026-10-31"
+    },
+    "DW-109": {
+      "title": "عدّاد الأجهزة النشطة بدون هوية",
+      "owner": "CEO",
+      "priority": "P1",
+      "status": "done",
+      "opened": "2026-10-31",
+      "updated": "2026-10-31"
+    },
+    "DW-110": {
+      "title": "عروض الشركاء داخل التطبيق (تجربة 90 يوم)",
+      "owner": "CEO",
+      "priority": "P1",
+      "status": "done",
       "opened": "2026-10-31",
       "updated": "2026-10-31"
     }

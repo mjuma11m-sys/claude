@@ -443,3 +443,98 @@ begin
 end $$;
 revoke all on function public.send_feedback(text, text, int, text, text, text, text) from public;
 grant execute on function public.send_feedback(text, text, int, text, text, text, text) to anon, authenticated;
+
+-- DW-109: عدّاد الاستخدام بدون هوية — كل جهاز يرسل «+1» مرة باليوم ومرة بالشهر (الجهاز يتذكر إنه أرسل، والسيرفر ما يعرف مين).
+-- ما نحفظ أي معرّف ولا IP ولا حساب: أرقام مجمّعة بس (كم جهاز فتح اليوم / هالشهر، حسب النظام والنسخة).
+create table if not exists public.usage_daily (
+  day date not null,
+  platform text not null check (platform in ('ios', 'android', 'web')),
+  version text not null check (char_length(version) <= 12),
+  dau int not null default 0,
+  mau int not null default 0,
+  primary key (day, platform, version)
+);
+alter table public.usage_daily enable row level security;
+
+create or replace function public.ping_active(p_month boolean, p_platform text, p_version text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if p_platform not in ('ios', 'android', 'web') then return; end if;
+  insert into public.usage_daily (day, platform, version, dau, mau)
+  values ((now() at time zone 'Asia/Bahrain')::date, p_platform, left(coalesce(p_version, '?'), 12), 1, case when p_month then 1 else 0 end)
+  on conflict (day, platform, version) do update set dau = usage_daily.dau + 1, mau = usage_daily.mau + excluded.mau;
+end $$;
+revoke all on function public.ping_active(boolean, text, text) from public;
+grant execute on function public.ping_active(boolean, text, text) to anon, authenticated;
+
+-- DW-110: عروض الشركاء — شركات موثّقة (سجل وترخيص) تعرض خدمتها بالقسم اللي يناسبها.
+-- الجداول مقفولة (RLS بدون policies): الإضافة والتعديل لصاحب المشروع من لوحة Supabase بس.
+-- التطبيق يقرا العروض الشغالة عن طريق active_offers، والاختيار يصير على الجهاز (ولا معلومة عن المستخدم تطلع).
+create table if not exists public.partners (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  name text not null check (char_length(name) between 2 and 80),
+  kind text not null check (kind in ('campaign', 'travel', 'food', 'car', 'education', 'other')),
+  cr_number text check (char_length(cr_number) <= 30),
+  license text check (char_length(license) <= 80),
+  contact_person text check (char_length(contact_person) <= 80),
+  plan text not null default 'pilot' check (plan in ('pilot', 'basic', 'featured', 'sponsor')),
+  status text not null default 'pending' check (status in ('pending', 'active', 'paused')),
+  notes text
+);
+alter table public.partners enable row level security;
+
+create table if not exists public.offers (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  partner_id uuid not null references public.partners (id) on delete cascade,
+  section text not null check (section in ('travel', 'umrah', 'weekend', 'car', 'kids', 'ramadan')),
+  city text check (char_length(city) <= 30),
+  title text not null check (char_length(title) between 3 and 80),
+  body text check (char_length(body) <= 240),
+  price_bhd numeric(10, 3) check (price_bhd >= 0),
+  starts_on date,
+  ends_on date,
+  whatsapp text check (whatsapp ~ '^[0-9]{8,15}$'),
+  url text check (url ~ '^https://'),
+  code text check (char_length(code) <= 20),
+  priority int not null default 0,
+  active boolean not null default true
+);
+alter table public.offers enable row level security;
+create index if not exists offers_section_idx on public.offers (section) where active;
+
+-- أرقام يومية مجمّعة لكل عرض: كم مرة انعرض وكم مرة انضغط (بدون أي هوية)
+create table if not exists public.offer_stats (
+  offer_id uuid not null references public.offers (id) on delete cascade,
+  day date not null,
+  views int not null default 0,
+  clicks int not null default 0,
+  primary key (offer_id, day)
+);
+alter table public.offer_stats enable row level security;
+
+create or replace function public.active_offers()
+returns table (id uuid, partner text, kind text, section text, city text, title text, body text, price_bhd numeric,
+  starts_on date, ends_on date, whatsapp text, url text, code text, priority int, plan text)
+language sql stable security definer set search_path = public as $$
+  select o.id, p.name, p.kind, o.section, o.city, o.title, o.body, o.price_bhd, o.starts_on, o.ends_on, o.whatsapp, o.url, o.code, o.priority, p.plan
+  from public.offers o join public.partners p on p.id = o.partner_id
+  where o.active and p.status = 'active' and (o.ends_on is null or o.ends_on >= (now() at time zone 'Asia/Bahrain')::date)
+  order by o.priority desc, o.created_at
+  limit 200
+$$;
+revoke all on function public.active_offers() from public;
+grant execute on function public.active_offers() to anon, authenticated;
+
+create or replace function public.offer_event(p_offer uuid, p_kind text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if p_kind not in ('view', 'click') then return; end if;
+  if not exists (select 1 from public.offers where id = p_offer and active) then return; end if;
+  insert into public.offer_stats (offer_id, day, views, clicks)
+  values (p_offer, (now() at time zone 'Asia/Bahrain')::date, case when p_kind = 'view' then 1 else 0 end, case when p_kind = 'click' then 1 else 0 end)
+  on conflict (offer_id, day) do update set views = offer_stats.views + excluded.views, clicks = offer_stats.clicks + excluded.clicks;
+end $$;
+revoke all on function public.offer_event(uuid, text) from public;
+grant execute on function public.offer_event(uuid, text) to anon, authenticated;

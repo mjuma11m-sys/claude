@@ -817,8 +817,24 @@
     return true;
   }
 
+  // DW-109/110: عدّاد بدون هوية وعروض الشركاء. كلها ترجع بهدوء لو ما فيه سيرفر أو نت
+  async function pingActive(month, platform, version) {
+    if (!sb) return false;
+    const { error } = await sb.rpc('ping_active', { p_month: !!month, p_platform: platform, p_version: version });
+    return !error;
+  }
+  async function fetchOffers() {
+    if (!sb) return null;
+    const { data, error } = await sb.rpc('active_offers');
+    return error ? null : (data || []);
+  }
+  async function offerEvent(id, kind) {
+    if (!sb) return;
+    try { await sb.rpc('offer_event', { p_offer: id, p_kind: kind }); } catch (e) { /* تجاهل */ }
+  }
+
   global.Store = {
-    state, status, uuid, _stripLocal: stripLocal, stableId, invokeFn, sendFeedback, rev: () => rev,
+    state, status, uuid, _stripLocal: stripLocal, stableId, invokeFn, sendFeedback, pingActive, fetchOffers, offerEvent, rev: () => rev,
     subscribe: (fn) => { listeners.add(fn); return () => listeners.delete(fn); },
     upsert, remove, setSettings,
     init, getConfig, saveConfig, clearConfig,

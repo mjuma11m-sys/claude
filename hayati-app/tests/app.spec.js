@@ -3949,3 +3949,41 @@ test('kids (DW-107): weekly plan, exams and fees show on Today the evening befor
   expect(await store(page, () => App.st.transactions.some((t) => t.amount === 150 && t.category === 'جامعة ودراسة'))).toBe(true);
   expect(await store(page, () => Extras.Kids.load()[0].fees[0].paid)).toBe(true);
 });
+
+// DW-109/110: عدّاد بدون هوية + عروض الشركاء (تتختار على الجهاز، «إعلان»، حد 3 بالأسبوع، «ما يهمني»، ومفتاح إيقاف)
+test('anonymous usage count and partner offers (DW-109, DW-110): one ping a day, offers picked on the device, labelled, capped and removable', async ({ page }) => {
+  await open(page);
+  const pings = await store(page, async () => {
+    const sent = []; App.S.pingActive = async (m, p, v) => { sent.push([m, p, v]); return true; };
+    localStorage.removeItem('hayati-usage');
+    await Extras.Usage.ping(new Date(2026, 10, 1)); await Extras.Usage.ping(new Date(2026, 10, 1)); await Extras.Usage.ping(new Date(2026, 10, 2)); await Extras.Usage.ping(new Date(2026, 11, 1));
+    return sent;
+  });
+  expect(pings.map((x) => x[0])).toEqual([true, false, true]);   // يوم واحد = إرسال واحد، وأول يوم بالشهر يحسب بالشهري
+  await store(page, async () => {
+    App.S.setSettings({ onboarded: true }); App.S.status.configured = true;
+    window.__ev = []; App.S.offerEvent = async (id, k) => { window.__ev.push(k); };
+    App.S.fetchOffers = async () => [
+      { id: 'o1', partner: 'حملة النور', section: 'travel', city: 'karbala', title: 'زيارة كربلاء 5 أيام', price_bhd: 185, whatsapp: '97333333333', priority: 1, plan: 'pilot' },
+      { id: 'o2', partner: 'حملة الهدى', section: 'travel', city: 'mashhad', title: 'زيارة مشهد', whatsapp: '97333333334', priority: 9, plan: 'pilot' }];
+    await Extras.Offers.refresh(true);
+    const d = new Date(Date.now() + 40 * 864e5).toISOString().slice(0, 10);
+    App.S.upsert('trips', { id: 'k', name: 'كربلاء', kind: 'leisure', city: 'karbala', go: d, back: d, plan: {}, costs: [], check: [] });
+    Extras.Travel.tripSheet('k');
+  });
+  const card = page.locator('#sheetBody .offer-card');
+  await expect(card).toContainText('إعلان');
+  await expect(card).toContainText('زيارة كربلاء');          // نفس الوجهة بس، مو مشهد
+  await expect(card).not.toContainText('مشهد');
+  // حد الأسبوع: بعد 3 مرات ما يطلع
+  // حد الأسبوع: انعرض مرة بالرحلة، ومرتين بعد، وبعدها ما يطلع لين الأسبوع الجاي
+  const shown = await store(page, () => [0, 1, 2].map(() => !!Extras.Offers.inject('travel', { city: 'karbala' }, document.createElement('div'))));
+  expect(shown).toEqual([true, true, false]);
+  await page.click('#sheetBody [data-offer-hide]');
+  await expect(card).toHaveCount(0);
+  expect(await store(page, () => Extras.Offers.pick('travel', { city: 'karbala' }))).toBeNull();
+  // مفتاح الإيقاف
+  await store(page, () => { const p = Extras.Offers.prefs(); p.hidden = []; p.off = true; localStorage.setItem(Extras.Offers.PREFS, JSON.stringify(p)); });
+  expect(await store(page, () => Extras.Offers.inject('travel', { city: 'karbala' }))).toBeNull();
+  expect(await store(page, () => window.__ev)).toContain('view');
+});
