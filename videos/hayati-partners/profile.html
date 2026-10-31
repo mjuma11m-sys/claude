@@ -1,0 +1,131 @@
+<!doctype html>
+<html dir="rtl" lang="ar"><head><meta charset="utf-8">
+<!-- ملف تعريفي للشركاء (صفحتين A4) — node render-pdf.js ← hayati-partners.pdf -->
+<title>حياتي · ملف الشركاء</title>
+<style>
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Bold.ttf);font-weight:700}
+@font-face{font-family:P;src:url(IBMPlexSansArabic-Regular.ttf);font-weight:400}
+:root{--sea:#0E3B43;--deep:#0A1A1E;--pearl:#E8DCC4;--coral:#FF6B4A;--mint:#2F9E7A;--paper:#F7F4EE;--ink:#14272b;--muted:#5d6b6e}
+@page{size:A4;margin:0}
+*{box-sizing:border-box}
+html,body{margin:0;font-family:P,'Helvetica Neue',Arial,sans-serif;color:var(--ink);background:#fff}
+.page{width:210mm;height:297mm;position:relative;overflow:hidden;page-break-after:always;background:var(--paper)}
+.page:last-child{page-break-after:auto}
+.top{background:radial-gradient(120% 140% at 80% 0%,#145a62 0%,var(--sea) 45%,var(--deep) 100%);color:var(--pearl);padding:14mm 14mm 12mm}
+.brand{display:flex;align-items:center;gap:4mm}
+.brand img{width:15mm;height:15mm;border-radius:3.5mm}
+.brand b{font-size:22pt;line-height:1}
+.brand small{display:block;font-size:10pt;opacity:.8;margin-top:1mm}
+h1{font-size:25pt;line-height:1.25;margin:9mm 0 3mm}
+h1 .c,.c{color:var(--coral)}
+.lead{font-size:12pt;line-height:1.7;opacity:.95;margin:0}
+.body{padding:9mm 14mm}
+h2{font-size:15pt;margin:0 0 4mm;color:var(--sea)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3mm;margin-bottom:7mm}
+.cell{background:#fff;border-radius:4mm;padding:3.5mm;box-shadow:0 1px 0 rgba(0,0,0,.05)}
+.cell b{display:block;font-size:11pt}
+.cell span{font-size:9pt;color:var(--muted);line-height:1.5;display:block;margin-top:1mm}
+.shots{display:grid;grid-template-columns:1fr 1fr;gap:5mm;align-items:start}
+.shots img{width:100%;border-radius:4mm;box-shadow:0 6px 18px -8px rgba(0,0,0,.35)}
+.cap{font-size:9pt;color:var(--muted);text-align:center;margin-top:2mm}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm;margin-bottom:7mm}
+.step{background:#fff;border-radius:4mm;padding:4mm;position:relative}
+.step i{font-style:normal;display:inline-grid;place-items:center;width:8mm;height:8mm;border-radius:50%;background:var(--coral);color:#fff;font-weight:700;font-size:11pt;margin-bottom:2mm}
+.step b{display:block;font-size:11pt}
+.step span{font-size:9.5pt;color:var(--muted);line-height:1.55}
+ul{margin:0;padding-inline-start:5mm;font-size:10.5pt;line-height:1.75}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:5mm;margin-bottom:6mm}
+.box{background:#fff;border-radius:4mm;padding:4.5mm}
+.box.dark{background:var(--sea);color:var(--pearl)}
+.box.dark h2{color:var(--pearl)}
+.price{display:flex;gap:3mm;margin-top:2mm}
+.price div{flex:1;background:rgba(255,255,255,.1);border-radius:3mm;padding:3mm;text-align:center}
+.price b{display:block;font-size:15pt;color:var(--coral)}
+.price span{font-size:9pt}
+.contact{display:flex;align-items:center;gap:6mm;background:#fff;border-radius:4mm;padding:4.5mm}
+.contact img{width:28mm;height:28mm}
+.contact b{font-size:13pt;display:block;margin-bottom:1mm}
+.contact p{margin:0;font-size:10.5pt;line-height:1.7}
+.foot{position:absolute;bottom:7mm;left:14mm;right:14mm;font-size:8.5pt;color:var(--muted);display:flex;justify-content:space-between}
+bdi{unicode-bidi:isolate}
+</style></head><body>
+
+<section class="page">
+  <div class="top">
+    <div class="brand"><img src="shots/icon.png" alt=""><div><b>حياتي</b><small>شركاء موثّقين · ملف تعريفي</small></div></div>
+    <h1>عرضك يوصل للعميل<br><span class="c">وقت ما يخطط</span> بالضبط</h1>
+    <p class="lead">«حياتي» تطبيق بحريني على App Store يرتّب للناس يومهم بمكان واحد: المصاريف، الدراسة، العبادة، الرحلات والعمرة، العيال، وصيانة السيارة. بالعربي والإنجليزي، ومتاح بـ <bdi>174</bdi> دولة.</p>
+  </div>
+  <div class="body">
+    <h2>وين يطلع عرضك</h2>
+    <div class="grid">
+      <div class="cell"><b>🕋 الحملات والرحلات</b><span>للي يخطط رحلة لنفس الوجهة (كربلاء، مشهد، مكة…) وبنفس الفترة</span></div>
+      <div class="cell"><b>🌴 طلعات الويكند</b><span>مطاعم وكافيهات وترفيه، مع اقتراحات على قد الميزانية</span></div>
+      <div class="cell"><b>🔧 صيانة السيارة</b><span>كراجات وتلميع وغيار زيت، لما يحين موعد الصيانة</span></div>
+      <div class="cell"><b>👨‍👩‍👧 العيال والمدارس</b><span>معاهد ودروس وقرطاسية، بصفحة العيال</span></div>
+      <div class="cell"><b>🌙 رمضان</b><span>مطاعم الغبقات والقاعات والتموين</span></div>
+      <div class="cell"><b>✈️ العمرة</b><span>بمخطط العمرة، قبل السفر</span></div>
+    </div>
+    <h2>شكل عرضك داخل التطبيق</h2>
+    <div class="shots">
+      <div><img src="shots/card_trip.png" alt=""><div class="cap">بصفحة رحلة لكربلاء</div></div>
+      <div><img src="shots/card_week.png" alt=""><div class="cap">باقتراحات الويكند</div></div>
+    </div>
+    <p class="cap" style="margin-top:4mm">* لقطات ببيانات تجريبية. الأسماء والأسعار أمثلة.</p>
+  </div>
+  <div class="foot"><span>حياتي · ملف الشركاء</span><span>1/2</span></div>
+</section>
+
+<section class="page">
+  <div class="body" style="padding-top:12mm">
+    <h2>شلون يشتغل</h2>
+    <div class="steps">
+      <div class="step"><i>1</i><b>العميل يخطط</b><span>يسوي رحلة، أو يدوّر طلعة ويكند، أو يحين موعد صيانة سيارته</span></div>
+      <div class="step"><i>2</i><b>يشوف عرضك</b><span>عرض واحد بالشاشة، مكتوب عليه «إعلان · شريك موثّق»</span></div>
+      <div class="step"><i>3</i><b>يتواصل معك</b><span>يضغط «تواصل واتساب» ويوصلك برسالة جاهزة: «شفت عرضكم بتطبيق حياتي»</span></div>
+    </div>
+
+    <div class="two">
+      <div class="box">
+        <h2>🔒 وعدنا للمستخدم ولك</h2>
+        <ul>
+          <li>ما نبيع ولا نشارك أي بيانات عن المستخدمين، معاك ولا مع غيرك.</li>
+          <li>العرض يتختار على جهاز المستخدم نفسه، ولا شي عنه يطلع.</li>
+          <li>التواصل يبدأ من العميل، فيوصلك عميل مهتم فعلاً.</li>
+          <li>كل شهر يوصلك تقرير: كم مرة انعرض عرضك وكم شخص ضغط تواصل.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h2>✅ الشروط</h2>
+        <ul>
+          <li>سجل تجاري ساري، وترخيص نشاطك (حملات الحج والعمرة والزيارة، وكالة سفر، …).</li>
+          <li>عرض صادق: السعر والخدمة مثل ما هي.</li>
+          <li>ما نقبل: القروض والبطاقات الائتمانية، القمار، العملات الرقمية.</li>
+          <li>خدمتك مسؤوليتك، و«حياتي» مو طرف بينك وبين العميل.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="box dark" style="margin-bottom:6mm">
+      <h2>🎁 عرض الشركاء المؤسسين: أول 10 شركات</h2>
+      <div class="price">
+        <div><b>مجاناً</b><span>أول 3 شهور</span></div>
+        <div><b>تقرير شهري</b><span>مشاهدات وتواصل</span></div>
+        <div><b>بدون التزام</b><span>بعدها تقرر تكمل أو لا</span></div>
+      </div>
+      <p style="margin:3mm 0 0;font-size:10pt;opacity:.9">بعد التجربة، الباقات تبدأ من <bdi>20</bdi> د.ب بالشهر. قسم الشركاء ينزل بالتحديث الجاي من التطبيق.</p>
+    </div>
+
+    <div class="contact">
+      <img src="shots/qr.png" alt="">
+      <div>
+        <b>تبي تكون من أول 10 شركاء؟</b>
+        <p>رد على هالرسالة، أو راسلنا على إنستقرام <bdi dir="ltr">@hayati.bh</bdi><br>
+        محمد جمعة · مطوّر «حياتي»<br>
+        نزّل التطبيق وشوفه بنفسك: امسح الكود 📱</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>حياتي · ملف الشركاء</span><span>2/2</span></div>
+</section>
+</body></html>
