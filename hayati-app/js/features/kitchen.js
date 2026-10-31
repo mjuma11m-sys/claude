@@ -107,6 +107,7 @@
         '<div class="card" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><b>لكم شخص؟</b><div style="display:flex;align-items:center;gap:12px">' +
         '<button type="button" class="icon-btn" id="kMinus" aria-label="أقل">' + I('minus') + '</button><b class="num" id="kN" style="font-size:20px;min-width:28px;text-align:center">' + n + '</b>' +
         '<button type="button" class="icon-btn" id="kPlus" aria-label="أكثر">' + I('plus') + '</button></div></div>' + kcal() +
+        (kc && E.Food ? '<button type="button" class="btn ghost block" id="kAte" style="margin:-2px 0 12px">🍽️ أكلت منها (حصة)</button>' : '') +
         '<div class="group-title">🧺 المقادير · اضغط على اللي ناقصك</div><div class="card flush" id="kIng">' + ingHtml() + '</div>' +
         '<button type="button" class="btn block" id="kShop" style="margin:8px 0 14px">' + I('cart') + 'أضف الناقص للمشتريات</button>' +
         '<div class="group-title">👣 الخطوات · اضغط على اللي خلصته</div><div id="kNote">' + note() + '</div><div class="card flush"><ol class="list" id="kSteps" style="margin:0;padding:0" data-noi18n>' +
@@ -115,6 +116,7 @@
       mount(root) {
         const setN = (v) => { n = Math.max(1, Math.min(30, v)); root.querySelector('#kN').textContent = n; root.querySelector('#kIng').innerHTML = ingHtml(); root.querySelector('#kNote').innerHTML = note(); const kk = root.querySelector('#kKcal'); if (kk) kk.outerHTML = kcal(); };
         root.querySelector('#kBack').onclick = () => { A.closeSheet(); setTimeout(sheet, 280); };
+        const ate = root.querySelector('#kAte'); if (ate) ate.onclick = () => E.Food.add({ name: r.name, kcal: kc, src: 'recipe' });   // DW-112
         root.querySelector('#kMinus').onclick = () => setN(n - 1);
         root.querySelector('#kPlus').onclick = () => setN(n + 1);
         root.querySelector('#kIng').onclick = (e) => {

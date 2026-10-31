@@ -4031,3 +4031,34 @@ test('no iPhone auto-zoom: viewport blocks zoom and every input on a touch phone
   expect(Math.min(...sizes)).toBeGreaterThanOrEqual(16);
   await ctx.close();
 });
+
+// DW-112: «سجّل أكلتك» — من القائمة، ومن مصروف الكوفي (اقتراح)، ومن وصفة المطبخ، مقابل احتياجك؛ كله على الجهاز
+test('food log (DW-112): log from the list, from a coffee payment suggestion and from a recipe, against daily needs', async ({ page }) => {
+  await open(page);
+  await store(page, () => {
+    App.S.setSettings({ onboarded: true, body_needs: { sex: 'm', age: 22, h: 178, w: 80, act: 1.55, goal: 'keep' } });
+    App.S.upsert('transactions', { id: 'c1', kind: 'expense', amount: 2.1, category: 'قهوة', merchant: 'Costa Coffee', occurred_at: new Date().toISOString() });
+    App.render();
+  });
+  const card = page.locator('section[data-tk="food"]');
+  await expect(card).toContainText('سبانش لاتيه');               // اقتراح من مصروف الكوفي
+  await card.locator('[data-action="food-sug"]').click();
+  await page.click('#sheetSave');
+  await expect(card.locator('[data-action="food-sug"]')).toHaveCount(0);   // ما يتكرر بعد ما انسجل
+  await store(page, () => Extras.Food.sheet());
+  await page.fill('#fdQ', 'مجبوس');
+  await expect(page.locator('#fdList [data-pick]:not([hidden])')).toHaveCount(1);
+  await page.locator('#fdList [data-pick]:not([hidden])').click();
+  const t = await store(page, () => Extras.Food.totals());
+  expect(t.list.map((x) => x.name)).toEqual(['سبانش لاتيه', 'مجبوس دجاج']);
+  expect(t.kcal).toBe(260 + 650);
+  // من وصفة المطبخ: «أكلت منها» تسجّل حصة بسعرات الوصفة
+  await store(page, () => { App.closeSheet(); Extras.kitchen(); });
+  await page.locator('#sheetBody [data-recipe]').first().click();
+  await page.click('#kAte');
+  const t2 = await store(page, () => Extras.Food.totals());
+  expect(t2.list).toHaveLength(3);
+  expect(t2.list[2].kcal).toBeGreaterThan(0);
+  // الحفظ على الجهاز بس، ويدخل بالنسخة الاحتياطية
+  expect(await store(page, () => !!localStorage.getItem('hayati-food'))).toBe(true);
+});
