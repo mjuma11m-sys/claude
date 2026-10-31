@@ -2972,4 +2972,11 @@ window.HAYATI_EN = {
 "العروض شغّالة": "Offers on",
 "الإحصائيات طافية": "Statistics off",
 "الإحصائيات شغّالة": "Statistics on",
+"لمستخدمي حياتي": "for Hayati users",
+"🎟️ استخدم الخصم": "🎟️ Use the discount",
+"عرض من تطبيق «حياتي» 📱": "Offer from the Hayati app 📱",
+"الكود": "Code",
+"وريها للكاشير أو للحملة. الخصم حسب شروط المحل.": "Show it to the cashier or the campaign. The discount follows the business's terms.",
+"💬 أرسل للمحل": "💬 Send to the business",
+"رجوع": "Back",
 };

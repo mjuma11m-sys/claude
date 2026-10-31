@@ -3964,7 +3964,7 @@ test('anonymous usage count and partner offers (DW-109, DW-110): one ping a day,
     App.S.setSettings({ onboarded: true }); App.S.status.configured = true;
     window.__ev = []; App.S.offerEvent = async (id, k) => { window.__ev.push(k); };
     App.S.fetchOffers = async () => [
-      { id: 'o1', partner: 'حملة النور', section: 'travel', city: 'karbala', title: 'زيارة كربلاء 5 أيام', price_bhd: 185, whatsapp: '97333333333', priority: 1, plan: 'pilot' },
+      { id: 'o1', partner: 'حملة النور', section: 'travel', city: 'karbala', title: 'زيارة كربلاء 5 أيام', price_bhd: 185, whatsapp: '97333333333', code: 'HAYATI10', discount: 'خصم 10%', priority: 1, plan: 'pilot' },
       { id: 'o2', partner: 'حملة الهدى', section: 'travel', city: 'mashhad', title: 'زيارة مشهد', whatsapp: '97333333334', priority: 9, plan: 'pilot' }];
     await Extras.Offers.refresh(true);
     const d = new Date(Date.now() + 40 * 864e5).toISOString().slice(0, 10);
@@ -3975,6 +3975,14 @@ test('anonymous usage count and partner offers (DW-109, DW-110): one ping a day,
   await expect(card).toContainText('إعلان');
   await expect(card).toContainText('زيارة كربلاء');          // نفس الوجهة بس، مو مشهد
   await expect(card).not.toContainText('مشهد');
+  // DW-111: الخصم شارة واضحة، وشاشة «استخدم الخصم» فيها الكود، وتنحسب مرة باليوم
+  await expect(card).toContainText('خصم 10%');
+  await card.locator('[data-offer-redeem]').click();
+  await expect(page.locator('#offerRedeem')).toContainText('HAYATI10');
+  await page.click('[data-or-close]');
+  await card.locator('[data-offer-redeem]').click();
+  await page.click('[data-or-close]');
+  expect(await store(page, () => window.__ev.filter((k) => k === 'redeem').length)).toBe(1);
   // حد الأسبوع: بعد 3 مرات ما يطلع
   // حد الأسبوع: انعرض مرة بالرحلة، ومرتين بعد، وبعدها ما يطلع لين الأسبوع الجاي
   const shown = await store(page, () => [0, 1, 2].map(() => !!Extras.Offers.inject('travel', { city: 'karbala' }, document.createElement('div'))));

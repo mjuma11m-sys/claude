@@ -1,5 +1,5 @@
--- تقرير الشريك لشهر (غيّر التاريخ): مشاهدات وضغطات كل عرض، ونسبة الضغط
-select p.name as partner, o.title, sum(s.views) as views, sum(s.clicks) as clicks,
+-- تقرير الشريك لشهر (غيّر التاريخ): مشاهدات، وضغطات التواصل، وكم مرة انفتحت شاشة الخصم، ونسبة الضغط
+select p.name as partner, o.title, sum(s.views) as views, sum(s.clicks) as clicks, sum(s.redeems) as discount_opens,
        round(100.0 * sum(s.clicks) / nullif(sum(s.views), 0), 1) as ctr_pct
 from public.offer_stats s
 join public.offers o on o.id = s.offer_id

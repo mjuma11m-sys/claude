@@ -3734,6 +3734,13 @@ window.HAYATI_EN = {
 "العروض شغّالة": "Offers on",
 "الإحصائيات طافية": "Statistics off",
 "الإحصائيات شغّالة": "Statistics on",
+"لمستخدمي حياتي": "for Hayati users",
+"🎟️ استخدم الخصم": "🎟️ Use the discount",
+"عرض من تطبيق «حياتي» 📱": "Offer from the Hayati app 📱",
+"الكود": "Code",
+"وريها للكاشير أو للحملة. الخصم حسب شروط المحل.": "Show it to the cashier or the campaign. The discount follows the business's terms.",
+"💬 أرسل للمحل": "💬 Send to the business",
+"رجوع": "Back",
 };
 
 </script>
@@ -19667,26 +19674,53 @@ window.HAYATI_CONFIG = {
   }
 
   // ---------- البطاقة ----------
-  const wa = (o) => 'https://wa.me/' + o.whatsapp + '?text=' + encodeURIComponent('السلام عليكم، شفت عرضكم «' + o.title + '» بتطبيق حياتي');
+  const wa = (o) => 'https://wa.me/' + o.whatsapp + '?text=' + encodeURIComponent('السلام عليكم، شفت عرضكم «' + o.title + '» بتطبيق حياتي' + (o.discount || o.code ? '، وأبي خصم مستخدمي حياتي' + (o.code ? ' (كود: ' + o.code + ')' : '') : ''));
   function card(o) {
     return '<div class="card offer-card" data-offer="' + h(o.id) + '" style="margin-top:14px;border:1px dashed var(--line,#d9d2c3)">' +
       '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><span class="tag" style="font-size:11px">إعلان · شريك موثّق</span><span style="flex:1"></span>' +
       '<button type="button" class="link small" data-offer-hide>ما يهمني</button></div>' +
       '<div class="small muted" data-noi18n><bdi>' + h(o.partner) + '</bdi></div>' +
+      (o.discount ? '<span class="tag brand" style="display:inline-block;margin:4px 0;font-weight:700">🎟️ <bdi data-noi18n>' + h(o.discount) + '</bdi> <span>لمستخدمي حياتي</span></span>' : '') +
       '<b data-noi18n style="display:block;font-size:16px;margin:2px 0"><bdi>' + h(o.title) + '</bdi></b>' +
       (o.body ? '<p class="small" data-noi18n style="margin:4px 0"><bdi>' + h(o.body) + '</bdi></p>' : '') +
       (o.price_bhd != null ? '<div style="margin:4px 0"><span>من</span> <b><bdi>' + fmt(Number(o.price_bhd)) + '</bdi> د.ب</b></div>' : '') +
-      (o.code ? '<div class="small" style="margin:4px 0"><span>كود حياتي:</span> <b dir="ltr" data-noi18n>' + h(o.code) + '</b></div>' : '') +
       '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">' +
-      (o.whatsapp ? '<button type="button" class="btn primary" data-offer-go="wa">💬 تواصل واتساب</button>' : '') +
+      (o.discount || o.code ? '<button type="button" class="btn primary" data-offer-redeem>🎟️ استخدم الخصم</button>' : '') +
+      (o.whatsapp ? '<button type="button" class="btn ' + (o.discount || o.code ? 'ghost' : 'primary') + '" data-offer-go="wa">💬 تواصل واتساب</button>' : '') +
       (o.url ? '<button type="button" class="btn ghost" data-offer-go="url">🔗 التفاصيل</button>' : '') + '</div></div>';
   }
   function open(u) { const N = window.HayatiNative; if (N && N.openLink) N.openLink(u); else window.open(u, '_blank', 'noopener'); }
   function bind(el, o) {
     el.querySelectorAll('[data-offer-go]').forEach((b) => { b.onclick = () => { S.offerEvent(o.id, 'click'); open(b.dataset.offerGo === 'wa' ? wa(o) : o.url); }; });
+    const rd = el.querySelector('[data-offer-redeem]'); if (rd) rd.onclick = () => redeem(o);
     const hide = el.querySelector('[data-offer-hide]');
     if (hide) hide.onclick = () => { const p = prefs(); if (!p.hidden.includes(o.id)) p.hidden.push(o.id); set(PREFS, p); el.remove(); A.toast('ما راح يطلع لك مرة ثانية'); };
   }
+  // 🎟️ شاشة الخصم: كبيرة يوريها للكاشير، فيها تاريخ اليوم وساعة تمشي (عشان صورة قديمة ما تمشي)
+  function redeem(o, now) {
+    const p = prefs(), day = ymd(now || new Date());
+    p.redeemed = p.redeemed || {};
+    if (p.redeemed[o.id] !== day) { p.redeemed[o.id] = day; set(PREFS, p); S.offerEvent(o.id, 'redeem'); }
+    const box = document.createElement('div');
+    box.id = 'offerRedeem'; box.setAttribute('role', 'dialog');
+    box.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#0E3B43;color:#E8DCC4;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center;gap:10px';
+    box.innerHTML = '<div style="font-size:15px;opacity:.85">عرض من تطبيق «حياتي» 📱</div>' +
+      '<div data-noi18n style="font-size:18px;font-weight:700"><bdi>' + h(o.partner) + '</bdi></div>' +
+      (o.discount ? '<div data-noi18n style="font-size:40px;font-weight:700;color:#FF6B4A;line-height:1.2"><bdi>' + h(o.discount) + '</bdi></div>' : '') +
+      (o.code ? '<div style="font-size:14px;opacity:.85">الكود</div><div dir="ltr" data-noi18n style="font:700 34px/1.2 ui-monospace,Menlo,monospace;letter-spacing:3px;background:#fff;color:#0E3B43;padding:10px 22px;border-radius:14px">' + h(o.code) + '</div>' : '') +
+      '<div id="orClock" dir="ltr" style="font-size:16px;margin-top:6px;opacity:.9"></div>' +
+      '<div style="font-size:13px;opacity:.75;max-width:300px">وريها للكاشير أو للحملة. الخصم حسب شروط المحل.</div>' +
+      '<div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;justify-content:center">' + (o.whatsapp ? '<button type="button" class="btn" style="background:#fff;color:#0E3B43" data-or-wa>💬 أرسل للمحل</button>' : '') +
+      '<button type="button" class="btn" style="background:rgba(255,255,255,.16);color:#fff" data-or-close>رجوع</button></div>';
+    const tick = () => { const d = new Date(), c = box.querySelector('#orClock'); if (c) c.textContent = d.toLocaleDateString('en-GB') + ' · ' + d.toLocaleTimeString('en-GB'); };
+    tick(); const iv = setInterval(tick, 1000);
+    const close = () => { clearInterval(iv); box.remove(); };
+    box.querySelector('[data-or-close]').onclick = close;
+    const w = box.querySelector('[data-or-wa]'); if (w) w.onclick = () => { S.offerEvent(o.id, 'click'); open(wa(o)); };
+    (document.querySelector('#sheet[open]') || document.body).appendChild(box);
+    return box;
+  }
+
   // يحط عرض واحد بآخر النافذة المفتوحة
   function inject(section, ctx, root) {
     if (prefs().off || !(S.status && S.status.configured)) return null;
@@ -19734,7 +19768,7 @@ window.HAYATI_CONFIG = {
   };
 
   setTimeout(() => { refresh(); }, 6000);
-  E.Offers = { refresh, pick, inject, card, prefs, CACHE, PREFS, WEEK_MAX };
+  E.Offers = { refresh, pick, inject, card, redeem, prefs, CACHE, PREFS, WEEK_MAX };
 })();
 
 </script>

@@ -20,12 +20,13 @@ insert into public.partners (name, kind, cr_number, license, contact_person, pla
 values ('حملة النور', 'campaign', '12345-1', 'ترخيص حملات رقم …', 'أبو علي', 'pilot', 'active')
 returning id;
 
-insert into public.offers (partner_id, section, city, title, body, price_bhd, starts_on, ends_on, whatsapp, code, priority)
-values ('<id من فوق>', 'travel', 'karbala', 'زيارة كربلاء 5 أيام', 'فندق قريب · طيران مباشر · مواصلات', 185, '2027-01-01', '2027-03-31', '97333333333', 'HAYATI10', 0);
+insert into public.offers (partner_id, section, city, title, body, price_bhd, starts_on, ends_on, whatsapp, code, discount, priority)
+values ('<id من فوق>', 'travel', 'karbala', 'زيارة كربلاء 5 أيام', 'فندق قريب · طيران مباشر · مواصلات', 185, '2027-01-01', '2027-03-31', '97333333333', 'HAYATI10', 'خصم 10%', 0);
 ```
 
 - `kind`: `campaign` حملات دينية للمذهبين (حج، عمرة، زيارات) · `travel` حملات سياحية ومكاتب سفر · `food` مطاعم وكافيهات · `car` كراجات وتلميع · `education` معاهد · `other`
 - `plan`: `pilot` (تجربة مجانية) · `basic` · `featured` (يطلع أول) · `sponsor`
+- **`discount` شرط لكل شريك**: خصم لمستخدمي حياتي يطلع شارة على العرض (مثل «خصم 10%» أو «قهوة مجاناً مع الفطور»، 40 حرف). `code` اختياري، ويطلع بشاشة «استخدم الخصم» مع تاريخ اليوم وساعة تمشي.
 - `whatsapp`: أرقام بس مع كود الدولة (`973…`)، و`url` لازم يبدأ بـ `https://`
 - إيقاف عرض: `update public.offers set active = false where id = '…';` · إيقاف شريك: `update public.partners set status = 'paused' where id = '…';`
 - التطبيق يحدّث العروض كل 12 ساعة.

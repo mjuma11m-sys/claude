@@ -538,3 +538,34 @@ begin
 end $$;
 revoke all on function public.offer_event(uuid, text) from public;
 grant execute on function public.offer_event(uuid, text) to anon, authenticated;
+
+-- DW-111: خصم لمستخدمي حياتي — شرط لكل شريك. `discount` نص قصير يطلع شارة على العرض («خصم 10%»)، و`redeems` كم مرة
+-- فتح المستخدم شاشة الخصم (مرة باليوم لكل جهاز وعرض، بدون هوية).
+alter table public.offers add column if not exists discount text check (char_length(discount) <= 40);
+alter table public.offer_stats add column if not exists redeems int not null default 0;
+
+drop function if exists public.active_offers();
+create function public.active_offers()
+returns table (id uuid, partner text, kind text, section text, city text, title text, body text, price_bhd numeric,
+  starts_on date, ends_on date, whatsapp text, url text, code text, discount text, priority int, plan text)
+language sql stable security definer set search_path = public as $$
+  select o.id, p.name, p.kind, o.section, o.city, o.title, o.body, o.price_bhd, o.starts_on, o.ends_on, o.whatsapp, o.url, o.code, o.discount, o.priority, p.plan
+  from public.offers o join public.partners p on p.id = o.partner_id
+  where o.active and p.status = 'active' and (o.ends_on is null or o.ends_on >= (now() at time zone 'Asia/Bahrain')::date)
+  order by o.priority desc, o.created_at
+  limit 200
+$$;
+revoke all on function public.active_offers() from public;
+grant execute on function public.active_offers() to anon, authenticated;
+
+create or replace function public.offer_event(p_offer uuid, p_kind text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if p_kind not in ('view', 'click', 'redeem') then return; end if;
+  if not exists (select 1 from public.offers where id = p_offer and active) then return; end if;
+  insert into public.offer_stats (offer_id, day, views, clicks, redeems)
+  values (p_offer, (now() at time zone 'Asia/Bahrain')::date, (p_kind = 'view')::int, (p_kind = 'click')::int, (p_kind = 'redeem')::int)
+  on conflict (offer_id, day) do update set views = offer_stats.views + excluded.views, clicks = offer_stats.clicks + excluded.clicks, redeems = offer_stats.redeems + excluded.redeems;
+end $$;
+revoke all on function public.offer_event(uuid, text) from public;
+grant execute on function public.offer_event(uuid, text) to anon, authenticated;
