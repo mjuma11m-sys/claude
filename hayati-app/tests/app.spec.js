@@ -4012,3 +4012,22 @@ test('partner offers take turns (DW-110): two campaigns for the same destination
   });
   expect(picks).toEqual(['a', 'b', 'a', 'b']);
 });
+
+// إصلاح: الآيفون كان يكبّر الشاشة لما تضغط خانة صغيرة (صفحة الرحلة طلعت مقصوصة) — بالجوال كل الخانات 16px وما فيه تكبير تلقائي
+test('no iPhone auto-zoom: viewport blocks zoom and every input on a touch phone is at least 16px', async ({ browser }) => {
+  expect(await (async () => { const p = await browser.newPage(); await p.goto('/index.html'); const c = await p.getAttribute('meta[name=viewport]', 'content'); await p.close(); return c; })()).toContain('maximum-scale=1');
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const page = await ctx.newPage();
+  await page.addInitScript(() => { localStorage.setItem('hayati-tour', 'done'); });
+  await page.goto('/index.html');
+  await page.waitForFunction(() => window.Extras && Extras.Travel);
+  const sizes = await page.evaluate(() => {
+    App.S.setSettings({ onboarded: true });
+    App.S.upsert('trips', { id: 'l', name: 'لندن', kind: 'leisure', city: 'london', go: '', back: '', plan: {}, costs: [], check: [] });
+    Extras.Travel.tripSheet('l');
+    return [...document.querySelectorAll('#sheetBody input, #sheetBody select, #sheetBody textarea')].map((e) => parseFloat(getComputedStyle(e).fontSize));
+  });
+  expect(sizes.length).toBeGreaterThan(2);
+  expect(Math.min(...sizes)).toBeGreaterThanOrEqual(16);
+  await ctx.close();
+});
