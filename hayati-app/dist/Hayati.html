@@ -9109,7 +9109,8 @@ window.HAYATI_CONFIG = {
     showBtn();
   })();
   if (S && S.subscribe) S.subscribe(showBtn);
-  function dataSnapshot() {
+  // DW-114 الصلاحيات: الوزن (بيان صحي) يطلع للمساعد بس لو السؤال عنه
+  function dataSnapshot(q) {
     const now = new Date(), mk = A.monthKey(now);
     const monthTx = A.txInMonth(mk);
     const byCat = {}, byMer = {};
@@ -9128,12 +9129,13 @@ window.HAYATI_CONFIG = {
       subscriptions: st.subscriptions.filter((s) => s.active !== false).map((s) => ({ name: s.name, amount: s.amount, cycle: s.cycle })),
       gpa: { cumulative: cum.gpa != null ? +cum.gpa.toFixed(2) : null, credits: cum.credits },
       study_minutes_last_7_days: st.study_sessions.filter((x) => Date.now() - new Date(x.started_at) < 7 * 86400000).reduce((s, x) => s + Number(x.minutes), 0),
-      body_weight: st.body.slice(-4).map((b) => ({ date: b.date, kg: b.weight })),
+      ...(/وزن|كيلو|سمن|نحف|ضعف|weight|kg/i.test(q || '') ? { body_weight: st.body.slice(-4).map((b) => ({ date: b.date, kg: b.weight })) } : {}),
     };
   }
   const RULES = () => 'أنت مساعد داخل تطبيق «حياتي» الشخصي لشخص بالبحرين (طالب مدرسة أو جامعة، أو موظف…). جاوب بالعربي بلهجة خليجية بسيطة، باختصار (3–6 أسطر أو نقاط قليلة)، ' +
     'وبالأرقام من البيانات تحت فقط. لا تخترع أرقام أو مواعيد مو موجودة؛ لو المعلومة ناقصة قل كذا. المبالغ بالدينار البحريني بثلاث خانات عشرية. ' +
     'لو طلب خطة (مذاكرة/توفير) اعطه خطة عملية بأيام وأوقات تناسب جدوله.\n\nبيانات المستخدم (JSON):\n' + JSON.stringify(dataSnapshot());
+  const hash = (s) => { let x = 5381; for (let i = 0; i < s.length; i++) x = ((x << 5) + x + s.charCodeAt(i)) | 0; return (x >>> 0).toString(36); };
   function assistantSheet() {
     const ai = !!sampleFn || viaServer();
     const QUICK = ['وش عندي اليوم؟', 'كم صرفت هالشهر؟', 'كم باقي من الميزانية؟'].concat(ai ? ['رتّب لي مذاكرة هالأسبوع حسب جدولي واختباراتي', 'وش أكثر شي يضيّع فلوسي؟'] : ['وش تقدر تسوي؟']);
@@ -9169,8 +9171,15 @@ window.HAYATI_CONFIG = {
           try {
             const turns = chatTurns.filter((t) => !t.local).slice(-8).map((t) => ({ role: t.role, content: t.content }));
             if (viaServer()) {
-              const r = await S.invokeFn('lecture-ai', { mode: 'ask', messages: turns, data: JSON.stringify(dataSnapshot()) });
-              const text = String((r && r.text) || '').trim();
+              // DW-114 الذاكرة المؤقتة: نفس السؤال على نفس البيانات خلال 10 دقايق ← نفس الجواب بدون ما ينحسب من حصتك
+              const data = JSON.stringify(dataSnapshot(q)), ck = 'hayati-ask:' + hash(JSON.stringify(turns) + data);
+              let text = '';
+              try { const c = JSON.parse(sessionStorage.getItem(ck) || 'null'); if (c && Date.now() - c.at < 600000) text = c.text; } catch (e2) { /* تجاهل */ }
+              if (!text) {
+                const r = await S.invokeFn('lecture-ai', { mode: 'ask', messages: turns, data });
+                text = String((r && r.text) || '').trim();
+                if (text) { try { sessionStorage.setItem(ck, JSON.stringify({ at: Date.now(), text })); } catch (e2) { /* تجاهل */ } }
+              }
               if (!text) throw { code: 'empty' };
               bubble.classList.remove('typing'); bubble.innerHTML = h(text).replace(/\n/g, '<br>');
               chatTurns.push({ role: 'assistant', content: text });

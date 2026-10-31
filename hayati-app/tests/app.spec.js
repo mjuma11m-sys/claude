@@ -4087,3 +4087,32 @@ test('smart review (DW-113): answers move cards between boxes, mistakes list, ex
   expect(later.due).toEqual(['q1', 'q3']);
   expect(later.wrong).toEqual([]);
 });
+
+// DW-114: مساعد «حياتي» على مراحل البناء الصح — الوزن يطلع بس لو السؤال عنه، ونفس السؤال على نفس البيانات ما ينحسب مرتين
+test('assistant hardening (DW-114): weight is sent only when asked about, and a repeated question is answered from the short cache', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-11-02T10:00:00+03:00'));
+  await open(page);
+  const setup = () => store(page, () => {
+    App.S.setSettings({ onboarded: true, budget: 100 });
+    App.S.upsert('body', { id: 'b1', date: '2026-11-01', weight: 80 });
+    window.__aiCalls = [];
+    App.S.invokeFn = async (name, body) => { window.__aiCalls.push(body); return { text: 'تمام' }; };
+    App.S.status.signedIn = true; App.S.setSettings({ budget: 100 });
+  });
+  await setup();
+  await page.click('#assistBtn');
+  const say = async (q) => { await page.fill('#chatForm [name=q]', q); await page.click('#chatForm [type=submit]'); };
+  await say('كيف أوفّر أسرع لهدف اللابتوب؟');
+  await expect.poll(() => store(page, () => window.__aiCalls.length)).toBe(1);
+  expect(await store(page, () => 'body_weight' in JSON.parse(window.__aiCalls[0].data))).toBe(false);
+  await say('شلون وزني تغيّر هالشهر؟');
+  await expect.poll(() => store(page, () => window.__aiCalls.length)).toBe(2);
+  expect(await store(page, () => JSON.parse(window.__aiCalls[1].data).body_weight)).toEqual([{ date: '2026-11-01', kg: 80 }]);
+  // نفس السؤال بعد ما تفتح التطبيق من جديد (خلال 10 دقايق) ← من الذاكرة المؤقتة، بدون طلب جديد
+  await page.reload(); await page.waitForFunction(() => window.Extras && window.App);
+  await setup();
+  await page.click('#assistBtn');
+  await say('كيف أوفّر أسرع لهدف اللابتوب؟');
+  await expect(page.locator('#chat .msg.assistant').last()).toContainText('تمام');
+  expect(await store(page, () => window.__aiCalls.length)).toBe(0);
+});
